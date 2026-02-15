@@ -1,6 +1,6 @@
 import { ShoppingCart, ArrowLeft, Loader2, X, Clock, ChefHat, Users, Flame, RefreshCw, Repeat2, MapPin, ArrowRight, Save, Check, Plus, Bell, ExternalLink, Play } from 'lucide-react';
 import { UserPreferences } from '../App';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { ShoppingMode } from './ShoppingMode';
@@ -10,6 +10,7 @@ import { KitchenInventoryWizard } from './KitchenInventoryWizard';
 import { supabase } from '../../utils/supabaseClient';
 import { SavedPlansModal } from './SavedPlansModal';
 import { BottomNavigation, NavTab } from './BottomNavigation';
+import { CelebrationOverlay, CelebrationType } from './CelebrationOverlay';
 
 interface RecommendationsStepProps {
   preferences: UserPreferences;
@@ -219,7 +220,16 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
   const [loadingPlan, setLoadingPlan] = useState(false);
   
   const [user, setUser] = useState<any>(null);
-  
+
+  const [celebration, setCelebration] = useState<{
+    type: CelebrationType;
+    message: string;
+    subMessage?: string;
+    icon?: string;
+  } | null>(null);
+  const [totalCookedEver, setTotalCookedEver] = useState<number>(0);
+  const [currentStreak, setCurrentStreak] = useState<number>(0);
+
   const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'Student';
 
   function getGreeting() {
@@ -298,6 +308,39 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
     };
     getUser();
   }, []);
+
+  // Load persisted cooked meals and stats when user is available
+  useEffect(() => {
+    if (!user) return;
+    const today = new Date().toISOString().split('T')[0];
+
+    // Load today's cooked meals
+    fetch(`https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/cooked-meals`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${publicAnonKey}` },
+      body: JSON.stringify({ userId: user.id, date: today }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.mealIds?.length) {
+          setCookedMeals(new Set(data.mealIds));
+        }
+      })
+      .catch(err => console.error('Failed to load cooked meals:', err));
+
+    // Load user stats for streak and total cooked count
+    fetch(`https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/user-stats`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${publicAnonKey}` },
+      body: JSON.stringify({ userId: user.id }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        setTotalCookedEver(data.mealsLogged || 0);
+        setCurrentStreak(data.currentStreak || 0);
+      })
+      .catch(err => console.error('Failed to load user stats:', err));
+  }, [user]);
 
   // Check if required preferences are set
   const hasRequiredPreferences = preferences.goal !== null;
@@ -528,16 +571,82 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
     setShowMealSwapModal(false);
   };
 
+  const COOK_MESSAGES = [
+    'Great job!', 'Nicely done!', 'Keep it up!', 'Well cooked!',
+    'Tasty!', 'Nailed it!', 'Chef mode!', 'Delicious!',
+  ];
+
+  const handleCelebration = useCallback(() => {
+    setTotalCookedEver(prev => {
+      if (prev === 0) {
+        setCelebration({
+          type: 'first_cook',
+          message: 'First Meal Cooked!',
+          subMessage: 'Your cooking journey begins!',
+          icon: '\u{1F373}',
+        });
+      } else {
+        setCelebration({
+          type: 'cook',
+          message: COOK_MESSAGES[Math.floor(Math.random() * COOK_MESSAGES.length)],
+          icon: '\u2705',
+        });
+      }
+      return prev + 1;
+    });
+  }, []);
+
   const toggleMealCooked = (mealId: string) => {
+    if (!user?.id) return;
+
+    const wasCooked = cookedMeals.has(mealId);
+
+    // Optimistic update
     setCookedMeals(prev => {
       const updated = new Set(prev);
-      if (updated.has(mealId)) {
+      if (wasCooked) {
         updated.delete(mealId);
       } else {
         updated.add(mealId);
       }
       return updated;
     });
+
+    const meal = currentDayMeals.find(m => m.id === mealId);
+    const today = new Date().toISOString().split('T')[0];
+
+    // Persist to backend
+    fetch(`https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/track-meal-cooked`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${publicAnonKey}` },
+      body: JSON.stringify({
+        userId: user.id,
+        mealId,
+        date: today,
+        recipeId: meal?.id || mealId,
+        recipeName: meal?.name || '',
+        mealCost: meal?.totalCost || 0,
+        category: meal?.category || '',
+        isCooked: !wasCooked,
+      }),
+    }).catch(err => {
+      console.error('Failed to persist cooked meal:', err);
+      // Revert on failure
+      setCookedMeals(prev => {
+        const reverted = new Set(prev);
+        if (wasCooked) {
+          reverted.add(mealId);
+        } else {
+          reverted.delete(mealId);
+        }
+        return reverted;
+      });
+    });
+
+    // Trigger celebration on cook (not uncook)
+    if (!wasCooked) {
+      handleCelebration();
+    }
   };
 
   // Group meals by day
@@ -888,8 +997,15 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
       {/* Today's Meals */}
       <div className="px-5 mb-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-white font-semibold text-lg">Today's Meals</h3>
-          <button 
+          <div className="flex items-center gap-2">
+            <h3 className="text-white font-semibold text-lg">Today's Meals</h3>
+            {currentStreak > 0 && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-500/20 border border-orange-500/30 text-orange-400 text-xs font-medium">
+                {'\u{1F525}'} {currentStreak} day streak
+              </span>
+            )}
+          </div>
+          <button
             onClick={onReset}
             className="text-[#22C55E] text-sm font-medium hover:underline"
           >
@@ -919,9 +1035,16 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
                   {/* Meal Image */}
                   <div className="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
                     <img
-                      src={mealImages[meal.id] || getRecipeImage(meal.id, meal.id, meal.tags?.[0] || 'food')}
+                      src={mealImages[meal.id] || meal.imageUrl || getRecipeImage(meal.id, meal.image)}
                       alt={meal.name}
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        if (!target.dataset.fallback) {
+                          target.dataset.fallback = '1';
+                          target.src = getRecipeImage(meal.id);
+                        }
+                      }}
                     />
                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#22C55E]" />
                   </div>
@@ -965,7 +1088,7 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
                     }}
                     className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
                       isCooked
-                        ? 'bg-[#22C55E] text-[#052E16]'
+                        ? 'bg-[#22C55E] text-[#052E16] animate-pulse-glow'
                         : 'bg-[#1E4029] text-[#6B7280] hover:bg-[#2D5A3D]'
                     }`}
                   >
@@ -1280,6 +1403,18 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
             <p className="text-white font-medium">Loading your meal plan...</p>
           </div>
         </div>
+      )}
+
+      {/* Celebration Overlay */}
+      {celebration && (
+        <CelebrationOverlay
+          type={celebration.type}
+          message={celebration.message}
+          subMessage={celebration.subMessage}
+          icon={celebration.icon}
+          onComplete={() => setCelebration(null)}
+          duration={celebration.type === 'cook' ? 1500 : 2500}
+        />
       )}
     </div>
   );
