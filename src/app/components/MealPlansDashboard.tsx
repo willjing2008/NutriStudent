@@ -1,0 +1,367 @@
+import { useLanguage } from '../hooks/useLanguage';
+import React, { useState } from 'react';
+import { Edit2, Search, Plus, ChevronRight, Check, Calendar, Bookmark, Sparkles } from 'lucide-react';
+import { BottomNavigation, NavTab } from './BottomNavigation';
+
+interface MealPlan {
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+  week?: number;
+  calories: number;
+  protein: number;
+  costPerDay: number;
+  isActive?: boolean;
+  onTrack?: boolean;
+  tags?: string[];
+}
+
+interface SuggestedPlan {
+  id: string;
+  badge: string;
+  badgeColor: string;
+  name: string;
+  description: string;
+  saved?: boolean;
+}
+
+interface MealPlansDashboardProps {
+  user: any;
+  onCreateNew: () => void;
+  onViewPlan: (planId: string) => void;
+  onNavigateHome: () => void;
+  onNavigateGrocery: () => void;
+  onNavigateProfile: () => void;
+  activePlan?: MealPlan | null;
+  savedPlans?: MealPlan[];
+}
+
+export function MealPlansDashboard({
+  user,
+  onCreateNew,
+  onViewPlan,
+  onNavigateHome,
+  onNavigateGrocery,
+  onNavigateProfile,
+  activePlan,
+  savedPlans = [],
+}: MealPlansDashboardProps) {
+  const { t } = useLanguage();
+
+  const [activeTab, setActiveTab] = useState<'active' | 'saved' | 'suggested' | 'history'>('active');
+  const [savedSuggestions, setSavedSuggestions] = useState<Set<string>>(new Set());
+
+  const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'Student';
+
+  const tabs = [
+    { id: 'active' as const, label: 'Active' },
+    { id: 'saved' as const, label: 'Saved' },
+    { id: 'suggested' as const, label: 'Suggested' },
+    { id: 'history' as const, label: 'History' },
+  ];
+
+  // Sample saved plans for demo
+    const [savedPlansState, setSavedPlansState] = useState<any[]>(savedPlans);
+
+  const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
+
+  const handleRename = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSavedPlansState(prev => prev.map(p => p.id === id ? { ...p, name: renameValue } : p));
+    setEditingPlanId(null);
+  };
+
+  const handleDelete = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSavedPlansState(prev => prev.filter(p => p.id !== id));
+    setEditingPlanId(null);
+  };
+
+  const startEditing = (id: string, currentName: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingPlanId(id);
+    setRenameValue(currentName);
+  };
+
+  // Suggested plans
+  const suggestedPlans: SuggestedPlan[] = [
+    {
+      id: 's1',
+      badge: 'P+',
+      badgeColor: 'from-pink-500 to-orange-400',
+      name: 'Exam Week Power',
+      description: 'Brain food focus • 20 min prep',
+    },
+    {
+      id: 's2',
+      badge: 'Detox',
+      badgeColor: 'from-green-400 to-cyan-400',
+      name: 'Post-Party Recovery',
+      description: 'Hydration & vitamins • £40/week',
+    },
+    {
+      id: 's3',
+      badge: 'Gym',
+      badgeColor: 'from-red-500 to-pink-500',
+      name: 'Muscle Builder',
+      description: 'High protein • Bulk prep',
+    },
+  ];
+
+  const toggleSaveSuggestion = (id: string) => {
+    setSavedSuggestions(prev => {
+      const updated = new Set(prev);
+      if (updated.has(id)) {
+        updated.delete(id);
+      } else {
+        updated.add(id);
+      }
+      return updated;
+    });
+  };
+
+  const handleNavTabChange = (tab: NavTab) => {
+    switch (tab) {
+      case 'home':
+        onNavigateHome();
+        break;
+      case 'shop':
+        onNavigateGrocery();
+        break;
+      case 'profile':
+        onNavigateProfile();
+        break;
+      case 'plan':
+        onViewPlan('active-plan');
+        break;
+    }
+  };
+
+  // Default active plan for demo
+  const currentActivePlan: MealPlan | null = activePlan || {
+    id: 'active-1',
+    name: 'Budget Bulk',
+    description: 'High protein, low cost plan for finals...',
+    image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400',
+    week: 4,
+    calories: 2400,
+    protein: 160,
+    costPerDay: 8.50,
+    isActive: true,
+    onTrack: true,
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0A0A0A] pb-24">
+      {/* Header */}
+      <div className="px-5 pt-6 pb-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center overflow-hidden">
+              <img
+                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`}
+                alt={userName}
+                className="w-10 h-10 rounded-full"
+              />
+            </div>
+            <h1 className="text-xl font-bold text-white">{t("yourMealPlans")}</h1>
+          </div>
+          <div className="flex items-center gap-3">
+            <button className="p-2 hover:bg-[#1A1A1A] rounded-full transition-colors">
+              <Search className="w-5 h-5 text-white" />
+            </button>
+            <button 
+              onClick={onCreateNew}
+              className="p-2 hover:bg-[#1A1A1A] rounded-full transition-colors"
+            >
+              <Plus className="w-5 h-5 text-white" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Tab Bar */}
+      <div className="px-5 mb-6">
+        <div className="flex gap-2">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                activeTab === tab.id
+                  ? 'bg-[#22C55E] text-[#052E16]'
+                  : 'bg-[#1A1A1A] text-[#9CA3AF] hover:text-white'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="px-5 space-y-6">
+        {/* Currently Active Section */}
+        {activeTab === 'active' && currentActivePlan && (
+          <>
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-white font-semibold">{t("currentlyActive")}</h2>
+                <button className="text-[#22C55E] text-sm font-medium">{t("manage")}</button>
+              </div>
+
+              {/* Active Plan Card */}
+              <div className="relative bg-gradient-to-br from-[#1A2A1F] to-[#0F1A14] rounded-2xl p-5 border border-[#2D5A3D]/30 min-h-[160px]">
+                <div className="flex">
+                  <div className="flex-1 pr-32">
+                    {currentActivePlan.week && (
+                      <span className="inline-block px-2.5 py-1 bg-[#22C55E] text-[#052E16] text-xs font-bold rounded-full mb-3">
+                        WEEK {currentActivePlan.week}
+                      </span>
+                    )}
+                    <h3 className="text-2xl font-bold text-white mb-1">{currentActivePlan.name}</h3>
+                    <p className="text-[#9CA3AF] text-sm mb-4 line-clamp-2">{currentActivePlan.description}</p>
+
+                    {/* Stats */}
+                    <div className="flex gap-2 mb-4">
+                      <div className="bg-[#1A1A1A] rounded-xl px-3 py-2">
+                        <div className="text-[10px] text-[#6B7280] uppercase tracking-wider">{t("calories")}</div>
+                        <div className="text-white font-bold">{currentActivePlan.calories.toLocaleString()}</div>
+                      </div>
+                      <div className="bg-[#1A1A1A] rounded-xl px-3 py-2">
+                        <div className="text-[10px] text-[#6B7280] uppercase tracking-wider">{t("protein")}</div>
+                        <div className="text-[#22C55E] font-bold">{currentActivePlan.protein}g</div>
+                      </div>
+                      <div className="bg-[#1A1A1A] rounded-xl px-3 py-2">
+                        <div className="text-[10px] text-[#6B7280] uppercase tracking-wider">{t("costPerDay")}</div>
+                        <div className="text-white font-bold">£{currentActivePlan.costPerDay.toFixed(2)}</div>
+                      </div>
+                    </div>
+
+                    {/* Status & Action */}
+                    <div className="flex items-center justify-between">
+                      {currentActivePlan.onTrack && (
+                        <div className="flex items-center gap-2">
+                          <div className="w-5 h-5 rounded-full bg-[#22C55E] flex items-center justify-center">
+                            <Check className="w-3 h-3 text-[#052E16]" />
+                          </div>
+                          <span className="text-[#9CA3AF] text-sm">{t("onTrackToday")}</span>
+                        </div>
+                      )}
+                      <button 
+                        onClick={() => onViewPlan(currentActivePlan.id)}
+                        className="flex items-center gap-1 bg-[#2D2D2D] hover:bg-[#3D3D3D] text-white text-sm font-medium px-4 py-2 rounded-full transition-colors"
+                      >
+                        View Details
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Plan Image */}
+                  <div className="absolute top-5 right-5 w-28 h-28 rounded-xl overflow-hidden shadow-lg shadow-black/20 rotate-3 border-2 border-[#2D5A3D]/20">
+                    <img
+                      src={currentActivePlan.image}
+                      alt={currentActivePlan.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Create New Plan Button */}
+            <button
+              onClick={onCreateNew}
+              className="w-full bg-gradient-to-r from-[#22C55E] to-[#16A34A] rounded-2xl p-5 hover:from-[#4ADE80] hover:to-[#22C55E] transition-all shadow-lg shadow-[#22C55E]/20 flex items-center gap-4"
+            >
+              <div className="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center">
+                <Sparkles className="w-7 h-7 text-white" />
+              </div>
+              <div className="flex-1 text-left">
+                <h4 className="text-white font-bold text-lg">{t("createNewPlan")}</h4>
+                <p className="text-white/70 text-sm">{t("aiPowered")}</p>
+              </div>
+              <Plus className="w-6 h-6 text-white" />
+            </button>
+          </>
+        )}
+
+        {/* Saved Plans Section */}
+        {(activeTab === 'active' || activeTab === 'saved') && (
+          <div>
+            <h2 className="text-white font-semibold mb-4">{t("savedPlans")}</h2>
+            <div className="flex gap-4 overflow-x-auto pb-2 hide-scrollbar -mx-5 px-5">
+              {savedPlansState.length === 0 ? (
+              <div className="w-full text-center py-8">
+                <p className="text-[#6B7280] text-sm">{t("noSavedPlans")}</p>
+              </div>
+            ) : savedPlansState.map((plan) => (
+                <div key={plan.id} className="relative flex-shrink-0 w-48 group">
+                   <button onClick={() => onViewPlan(plan.id)} className="w-full text-left">
+                     <div className="w-48 h-32 rounded-2xl overflow-hidden mb-3 relative">
+                       <img src={plan.image} alt={plan.name} className="w-full h-full object-cover" />
+                       <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-all" />
+                     </div>
+                     <h4 className="text-white font-semibold text-sm mb-1">{plan.name}</h4>
+                     <p className="text-[#6B7280] text-xs mb-1 line-clamp-1">{plan.description}</p>
+                     {plan.createdAt && (
+                       <p className="text-[#4B5563] text-[10px] mb-2">
+                         Created: {new Date(plan.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                       </p>
+                     )}
+                     
+                     <div className="flex flex-wrap gap-1 mb-2">
+                       {plan.goal && <span className="text-[10px] px-2 py-0.5 bg-[#1A1A1A] text-[#9CA3AF] rounded-full border border-[#2D2D2D]">{plan.goal}</span>}
+                       {plan.weeklyBudget && <span className="text-[10px] px-2 py-0.5 bg-[#1A1A1A] text-[#22C55E] rounded-full border border-[#2D2D2D]">£{plan.weeklyBudget}</span>}
+                     </div>
+                   </button>
+                   
+                   <button 
+                     onClick={(e) => startEditing(plan.id, plan.name, e)}
+                     className="absolute top-2 right-2 p-1.5 bg-black/50 backdrop-blur-md rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+                   >
+                     <Edit2 className="w-3 h-3" />
+                   </button>
+
+                   {editingPlanId === plan.id && (
+                     <div className="absolute inset-0 bg-[#1A1A1A] rounded-2xl p-3 flex flex-col justify-center gap-2 z-10 border border-[#2D2D2D]">
+                       <input 
+                         autoFocus
+                         value={renameValue}
+                         onChange={(e) => setRenameValue(e.target.value)}
+                         onClick={(e) => e.stopPropagation()}
+                         className="bg-[#0A0A0A] text-white text-sm rounded px-2 py-1 border border-[#2D2D2D] outline-none focus:border-[#22C55E] w-full"
+                       />
+                       <div className="flex gap-2">
+                         <button onClick={(e) => handleRename(plan.id, e)} className="flex-1 bg-[#22C55E] text-[#052E16] text-xs font-bold py-1 rounded">{t("save")}</button>
+                         <button onClick={(e) => { e.stopPropagation(); setEditingPlanId(null); }} className="flex-1 bg-[#2D2D2D] text-white text-xs py-1 rounded">{t("cancel")}</button>
+                       </div>
+                       <button onClick={(e) => handleDelete(plan.id, e)} className="w-full bg-red-500/20 text-red-400 text-xs py-1.5 rounded mt-2 hover:bg-red-500/30 transition-colors">{t("deletePlan")}</button>
+                     </div>
+                   )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* History Tab Content */}
+        {activeTab === 'history' && (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 rounded-full bg-[#1A1A1A] flex items-center justify-center mx-auto mb-4">
+              <Calendar className="w-8 h-8 text-[#6B7280]" />
+            </div>
+            <h3 className="text-white font-semibold mb-2">No History Yet</h3>
+            <p className="text-[#6B7280] text-sm">Your completed meal plans will appear here</p>
+          </div>
+        )}
+      </div>
+
+      {/* Shared Bottom Navigation */}
+      <BottomNavigation activeTab="home" onTabChange={handleNavTabChange} />
+    </div>
+  );
+}
