@@ -44,9 +44,7 @@ export const WORK_EFFICIENCY_RECIPES: any[] = [
     },
     tags: ["breakfast", "high-protein", "meal-prep", "energy-boost", "work-fuel"],
     benefits: ["Sustained energy for 4+ hours", "Complete protein", "Prevents mid-morning crashes", "Brain-boosting nutrients"],
-    suitableFor: ["students", "office-workers", "early-risers", "meal-preppers"],
-    equipment: ['full-kitchen'],
-    mealTiming: ['breakfast', 'pre-exam']
+    suitableFor: ["students", "office-workers", "early-risers", "meal-preppers"]
   },
   {
     id: "lentil-soup-spinach",
@@ -91,9 +89,7 @@ export const WORK_EFFICIENCY_RECIPES: any[] = [
     },
     tags: ["iron-rich", "high-fiber", "budget-friendly", "anti-fatigue", "vegan"],
     benefits: ["Prevents iron-deficiency fatigue", "High folate for mental function", "Steady energy release", "Gut-friendly fiber"],
-    suitableFor: ["students", "office-workers", "vegetarians", "budget-conscious"],
-    equipment: ['hot-plate', 'full-kitchen'],
-    mealTiming: ['lunch', 'dinner']
+    suitableFor: ["students", "office-workers", "vegetarians", "budget-conscious"]
   },
   {
     id: "beef-broccoli-stir-fry",
@@ -138,9 +134,7 @@ export const WORK_EFFICIENCY_RECIPES: any[] = [
     },
     tags: ["high-protein", "iron-rich", "quick-meal", "energy-boost", "vitamin-c"],
     benefits: ["Maximum iron absorption", "Vitamin C enhances alertness", "Quick energy", "Muscle recovery"],
-    suitableFor: ["students", "office-workers", "athletes", "time-pressed"],
-    equipment: ['hot-plate', 'full-kitchen', 'rice-cooker'],
-    mealTiming: ['lunch', 'dinner', 'post-workout']
+    suitableFor: ["students", "office-workers", "athletes", "time-pressed"]
   },
   {
     id: "liver-onions",
@@ -184,9 +178,7 @@ export const WORK_EFFICIENCY_RECIPES: any[] = [
     },
     tags: ["high-protein", "b-vitamins", "iron-powerhouse", "traditional", "mental-stamina"],
     benefits: ["Extreme B-vitamin content", "Combats mental fatigue", "Supports cognitive function", "Energy metabolism"],
-    suitableFor: ["students", "office-workers", "exam-preparation", "high-performers"],
-    equipment: ['hot-plate', 'full-kitchen'],
-    mealTiming: ['lunch', 'dinner', 'pre-exam']
+    suitableFor: ["students", "office-workers", "exam-preparation", "high-performers"]
   },
   {
     id: "black-bean-sweet-potato-bowl",
@@ -231,9 +223,7 @@ export const WORK_EFFICIENCY_RECIPES: any[] = [
     },
     tags: ["high-fiber", "meal-prep", "vegan", "anti-slump", "complex-carbs"],
     benefits: ["Prevents afternoon energy crash", "18g fiber for sustained energy", "Blood sugar stability", "Gut health"],
-    suitableFor: ["students", "office-workers", "meal-preppers", "vegetarians"],
-    equipment: ['full-kitchen', 'rice-cooker'],
-    mealTiming: ['lunch', 'dinner']
+    suitableFor: ["students", "office-workers", "meal-preppers", "vegetarians"]
   },
   {
     id: "sweet-potato-lentil-curry",
@@ -279,9 +269,7 @@ export const WORK_EFFICIENCY_RECIPES: any[] = [
     },
     tags: ["vegan", "high-fiber", "slow-energy", "warming", "shift-work"],
     benefits: ["Sustained energy for long shifts", "Anti-inflammatory spices", "Digestive support", "Blood sugar regulation"],
-    suitableFor: ["students", "shift-workers", "office-workers", "vegetarians"],
-    equipment: ['hot-plate', 'full-kitchen'],
-    mealTiming: ['lunch', 'dinner']
+    suitableFor: ["students", "shift-workers", "office-workers", "vegetarians"]
   },
   {
     id: "buckwheat-pancakes-cinnamon",
@@ -326,9 +314,7 @@ export const WORK_EFFICIENCY_RECIPES: any[] = [
     },
     tags: ["breakfast", "blood-sugar-friendly", "gluten-free-option", "energy-stable", "quick"],
     benefits: ["Prevents blood sugar spikes", "Sustained morning energy", "Rich in minerals", "Heart-healthy"],
-    suitableFor: ["students", "office-workers", "diabetic-friendly", "health-conscious"],
-    equipment: ['hot-plate', 'full-kitchen'],
-    mealTiming: ['breakfast']
+    suitableFor: ["students", "office-workers", "diabetic-friendly", "health-conscious"]
   },
   {
     id: "miso-glazed-halibut",
@@ -373,9 +359,7 @@ export const WORK_EFFICIENCY_RECIPES: any[] = [
     },
     tags: ["high-protein", "omega-3", "gut-health", "fermented", "brain-food"],
     benefits: ["Gut-brain axis support", "Mental clarity", "Anti-inflammatory", "Probiotic benefits"],
-    suitableFor: ["students", "office-workers", "health-conscious", "pescatarians"],
-    equipment: ['hot-plate', 'full-kitchen', 'rice-cooker'],
-    mealTiming: ['lunch', 'dinner', 'post-workout', 'pre-exam']
+    suitableFor: ["students", "office-workers", "health-conscious", "pescatarians"]
   },
   {
     id: "mediterranean-chickpea-salad",
@@ -421,9 +405,7 @@ export const WORK_EFFICIENCY_RECIPES: any[] = [
     },
     tags: ["no-cook", "meal-prep", "light-lunch", "no-drowsiness", "vegetarian"],
     benefits: ["Prevents food coma", "Light but satisfying", "Portable lunch", "Brain-boosting fats"],
-    suitableFor: ["students", "office-workers", "meal-preppers", "desk-lunches"],
-    equipment: ['microwave'],
-    mealTiming: ['lunch', 'dinner', 'snack', 'late-night', 'pre-exam']
+    suitableFor: ["students", "office-workers", "meal-preppers", "desk-lunches"]
   },
   {
     id: "soba-noodle-salad-edamame",
@@ -468,9 +450,7 @@ export const WORK_EFFICIENCY_RECIPES: any[] = [
     },
     tags: ["plant-protein", "blood-sugar-friendly", "meal-prep", "cold-lunch", "vegan"],
     benefits: ["No sugar crash", "Complete plant protein", "Sustained energy", "Portable meal"],
-    suitableFor: ["students", "office-workers", "vegetarians", "meal-preppers"],
-    equipment: ['full-kitchen'],
-    mealTiming: ['lunch', 'dinner']
+    suitableFor: ["students", "office-workers", "vegetarians", "meal-preppers"]
   },
   {
     id: "cauliflower-rice-risotto-shrimp",
@@ -516,9 +496,7 @@ export const WORK_EFFICIENCY_RECIPES: any[] = [
     },
     tags: ["low-carb", "high-protein", "no-food-coma", "keto-friendly", "light-lunch"],
     benefits: ["Prevents afternoon drowsiness", "Low-carb energy", "Quick digestion", "Mental clarity"],
-    suitableFor: ["students", "office-workers", "keto-dieters", "health-conscious"],
-    equipment: ['hot-plate', 'full-kitchen'],
-    mealTiming: ['lunch', 'dinner', 'post-workout']
+    suitableFor: ["students", "office-workers", "keto-dieters", "health-conscious"]
   },
   {
     id: "bean-egg-breakfast-burrito",
@@ -564,9 +542,7 @@ export const WORK_EFFICIENCY_RECIPES: any[] = [
     },
     tags: ["breakfast", "high-protein", "high-fiber", "grab-and-go", "portable"],
     benefits: ["All-morning satiety", "Stable blood sugar", "Portable breakfast", "Complete nutrition"],
-    suitableFor: ["students", "office-workers", "busy-mornings", "commuters"],
-    equipment: ['hot-plate', 'full-kitchen'],
-    mealTiming: ['breakfast', 'post-workout']
+    suitableFor: ["students", "office-workers", "busy-mornings", "commuters"]
   },
   {
     id: "minestrone-soup",
@@ -613,9 +589,7 @@ export const WORK_EFFICIENCY_RECIPES: any[] = [
     },
     tags: ["vegan-option", "high-fiber", "antioxidant-rich", "meal-prep", "budget-friendly"],
     benefits: ["Multiple antioxidant sources", "Gut health", "Immune support", "Low-calorie energy"],
-    suitableFor: ["students", "office-workers", "budget-conscious", "meal-preppers"],
-    equipment: ['hot-plate', 'full-kitchen'],
-    mealTiming: ['lunch', 'dinner']
+    suitableFor: ["students", "office-workers", "budget-conscious", "meal-preppers"]
   },
   {
     id: "pesto-zucchini-noodles-chicken",
@@ -661,9 +635,7 @@ export const WORK_EFFICIENCY_RECIPES: any[] = [
     },
     tags: ["low-carb", "high-protein", "keto-friendly", "light-lunch", "gluten-free"],
     benefits: ["No afternoon heaviness", "High protein keeps you full", "Mental clarity", "Quick energy"],
-    suitableFor: ["students", "office-workers", "keto-dieters", "low-carb"],
-    equipment: ['hot-plate', 'full-kitchen'],
-    mealTiming: ['lunch', 'dinner', 'post-workout']
+    suitableFor: ["students", "office-workers", "keto-dieters", "low-carb"]
   },
   {
     id: "chili-con-carne",
@@ -710,9 +682,7 @@ export const WORK_EFFICIENCY_RECIPES: any[] = [
     },
     tags: ["high-protein", "high-fiber", "meal-prep", "complete-protein", "energy-staple"],
     benefits: ["All-day sustained energy", "Complete amino acid profile", "Muscle recovery", "Iron-rich"],
-    suitableFor: ["students", "office-workers", "athletes", "meal-preppers"],
-    equipment: ['hot-plate', 'full-kitchen', 'rice-cooker'],
-    mealTiming: ['lunch', 'dinner', 'post-workout']
+    suitableFor: ["students", "office-workers", "athletes", "meal-preppers"]
   },
   {
     id: "vietnamese-summer-rolls",
@@ -759,8 +729,6 @@ export const WORK_EFFICIENCY_RECIPES: any[] = [
     },
     tags: ["no-cook", "light-meal", "fresh", "quick-energy", "portable"],
     benefits: ["Instant energy", "Light and refreshing", "Easy digestion", "Hydrating vegetables"],
-    suitableFor: ["students", "office-workers", "hot-weather", "light-eaters"],
-    equipment: ['full-kitchen'],
-    mealTiming: ['lunch', 'dinner', 'snack']
+    suitableFor: ["students", "office-workers", "hot-weather", "light-eaters"]
   }
 ];

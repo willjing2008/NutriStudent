@@ -13,6 +13,8 @@ import { supabase } from '../utils/supabaseClient';
 import { projectId, publicAnonKey } from '../../utils/supabase/info';
 import { Apple, LogOut } from 'lucide-react';
 
+export type EquipmentType = 'microwave' | 'hot-plate' | 'rice-cooker' | 'kettle' | 'toaster' | 'full-kitchen';
+
 export interface UserPreferences {
   location: string;
   selectedStore: {
@@ -34,6 +36,7 @@ export interface UserPreferences {
   maxCookingTime: number;
   cookingMethods: ('one-pot' | 'microwave' | 'meal-prep')[];
   avoidIngredients: string[];
+  availableEquipment: EquipmentType[];
 }
 
 export default function App() {
@@ -66,6 +69,7 @@ export default function App() {
     maxCookingTime: 30,
     cookingMethods: [],
     avoidIngredients: [],
+    availableEquipment: [],
   });
 
   // Shopping list ingredients (derived from meal plan)
@@ -256,6 +260,7 @@ export default function App() {
       maxCookingTime: 30,
       cookingMethods: [],
       avoidIngredients: [],
+      availableEquipment: [],
     });
   };
 

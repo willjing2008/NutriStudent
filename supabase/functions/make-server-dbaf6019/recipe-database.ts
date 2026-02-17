@@ -8,9 +8,6 @@ export interface RecipeIngredient {
   estimatedPrice: number; // in pounds
 }
 
-export type EquipmentType = 'microwave' | 'hot-plate' | 'rice-cooker' | 'kettle' | 'toaster' | 'full-kitchen';
-export type MealTimingType = 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'late-night' | 'pre-exam' | 'post-workout';
-
 export interface Recipe {
   id: string;
   name: string;
@@ -34,9 +31,6 @@ export interface Recipe {
   imageQuery: string; // For Unsplash search
   youtubeUrl?: string; // YouTube cooking video URL
   sourceUrl?: string; // Original recipe source URL
-  equipment: EquipmentType[];
-  mealTiming: MealTimingType[];
-  imageUrl?: string;
 }
 
 export const RECIPE_DATABASE: Recipe[] = [
@@ -85,8 +79,6 @@ export const RECIPE_DATABASE: Recipe[] = [
     suitableFor: ['studying', 'working', 'fitness'],
     imageQuery: 'chicken rice bowl',
     sourceUrl: 'https://www.budgetbytes.com/one-pot-chicken-and-rice/',
-    equipment: ['hot-plate', 'rice-cooker', 'full-kitchen'],
-    mealTiming: ['lunch', 'dinner'],
   },
   {
     id: 'one-pot-pasta-tomato',
@@ -130,8 +122,6 @@ export const RECIPE_DATABASE: Recipe[] = [
     suitableFor: ['studying', 'working'],
     imageQuery: 'tomato pasta spinach',
     sourceUrl: 'https://www.recipetineats.com/one-pot-pasta/',
-    equipment: ['hot-plate', 'full-kitchen'],
-    mealTiming: ['lunch', 'dinner', 'late-night'],
   },
   {
     id: 'one-pot-lentil-curry',
@@ -176,8 +166,6 @@ export const RECIPE_DATABASE: Recipe[] = [
     suitableFor: ['studying', 'working', 'fitness'],
     imageQuery: 'lentil curry coconut',
     sourceUrl: 'https://www.bbcgoodfoodme.com/recipes/lentil-curry/',
-    equipment: ['hot-plate', 'full-kitchen'],
-    mealTiming: ['lunch', 'dinner'],
   },
 
   // MICROWAVE MEALS - BREAKFAST (1-10)
@@ -222,8 +210,6 @@ export const RECIPE_DATABASE: Recipe[] = [
     suitableFor: ['studying', 'working', 'fitness'],
     imageQuery: 'scrambled eggs bowl',
     sourceUrl: 'https://www.biggerbolderbaking.com/microwave-scrambled-eggs/',
-    equipment: ['microwave'],
-    mealTiming: ['breakfast', 'snack', 'late-night'],
   },
   {
     id: 'microwave-banana-oat-mug-cake',
@@ -265,8 +251,6 @@ export const RECIPE_DATABASE: Recipe[] = [
     suitableFor: ['studying', 'working'],
     imageQuery: 'banana bread mug cake in ceramic mug, moist texture, topped with banana slices, microwave dessert, food photography, close-up, warm and inviting',
     sourceUrl: 'https://www.budgetbytes.com/banana-bread-oatmeal/',
-    equipment: ['microwave'],
-    mealTiming: ['breakfast', 'snack'],
   },
   {
     id: 'microwave-breakfast-burrito',
@@ -308,8 +292,6 @@ export const RECIPE_DATABASE: Recipe[] = [
     suitableFor: ['working', 'fitness'],
     imageQuery: 'breakfast burrito cut in half, scrambled eggs and melted cheese filling, flour tortilla wrap, Mexican breakfast, food photography, cross-section view, fresh salsa topping',
     sourceUrl: 'https://www.budgetbytes.com/freezer-breakfast-burritos/',
-    equipment: ['microwave', 'toaster'],
-    mealTiming: ['breakfast', 'post-workout'],
   },
   {
     id: 'microwave-french-toast',
@@ -351,8 +333,6 @@ export const RECIPE_DATABASE: Recipe[] = [
     suitableFor: ['studying'],
     imageQuery: 'french toast cinnamon',
     sourceUrl: 'https://tasty.co/recipe/blueberry-french-toast-in-a-mug',
-    equipment: ['microwave'],
-    mealTiming: ['breakfast', 'snack', 'late-night'],
   },
   {
     id: 'microwave-poached-egg',
@@ -393,8 +373,6 @@ export const RECIPE_DATABASE: Recipe[] = [
     suitableFor: ['studying', 'fitness'],
     imageQuery: 'poached egg runny yolk',
     sourceUrl: 'https://www.recipetineats.com/poached-eggs/',
-    equipment: ['microwave'],
-    mealTiming: ['breakfast', 'snack'],
   },
   {
     id: 'microwave-spinach-feta-quiche',
@@ -436,8 +414,6 @@ export const RECIPE_DATABASE: Recipe[] = [
     suitableFor: ['working', 'fitness'],
     imageQuery: 'spinach feta egg muffin',
     sourceUrl: 'https://www.budgetbytes.com/spinach-mushroom-feta-crustless-quiche/',
-    equipment: ['microwave'],
-    mealTiming: ['breakfast', 'lunch'],
   },
   {
     id: 'microwave-bacon-egg-cheese-sandwich',
@@ -478,8 +454,6 @@ export const RECIPE_DATABASE: Recipe[] = [
     suitableFor: ['working', 'fitness'],
     imageQuery: 'bacon egg cheese sandwich',
     sourceUrl: 'https://tasty.co/recipe/microwaved-egg-breakfast-sandwich',
-    equipment: ['microwave', 'toaster'],
-    mealTiming: ['breakfast', 'post-workout'],
   },
   {
     id: 'microwave-cinnamon-quinoa-bowl',
@@ -521,8 +495,6 @@ export const RECIPE_DATABASE: Recipe[] = [
     suitableFor: ['studying', 'working'],
     imageQuery: 'quinoa breakfast bowl cinnamon',
     sourceUrl: 'https://minimalistbaker.com/the-perfect-bowl-of-oats/',
-    equipment: ['microwave'],
-    mealTiming: ['breakfast', 'pre-exam'],
   },
   {
     id: 'microwave-shakshuka-mug',
@@ -564,8 +536,6 @@ export const RECIPE_DATABASE: Recipe[] = [
     suitableFor: ['studying', 'working', 'fitness'],
     imageQuery: 'shakshuka eggs tomato sauce',
     sourceUrl: 'https://www.budgetbytes.com/shakshuka/',
-    equipment: ['microwave', 'toaster'],
-    mealTiming: ['breakfast', 'lunch', 'late-night'],
   },
   {
     id: 'microwave-yogurt-berry-compote',
@@ -606,8 +576,6 @@ export const RECIPE_DATABASE: Recipe[] = [
     suitableFor: ['studying', 'fitness'],
     imageQuery: 'greek yogurt berries granola',
     sourceUrl: 'https://minimalistbaker.com/simple-berry-compote/',
-    equipment: ['microwave'],
-    mealTiming: ['breakfast', 'snack', 'pre-exam'],
   },
 
   // MICROWAVE MEALS - MAINS (11-20)
@@ -652,8 +620,6 @@ export const RECIPE_DATABASE: Recipe[] = [
     suitableFor: ['studying'],
     imageQuery: 'mac and cheese creamy',
     sourceUrl: 'https://tasty.co/recipe/microwave-5-minute-mac-n-cheese',
-    equipment: ['microwave'],
-    mealTiming: ['lunch', 'dinner', 'late-night'],
   },
   {
     id: 'microwave-loaded-baked-potato',
@@ -696,8 +662,6 @@ export const RECIPE_DATABASE: Recipe[] = [
     suitableFor: ['studying', 'working', 'fitness'],
     imageQuery: 'loaded baked potato sour cream',
     sourceUrl: 'https://tasty.co/recipe/microwave-10-minute-loaded-potato',
-    equipment: ['microwave'],
-    mealTiming: ['lunch', 'dinner'],
   },
   {
     id: 'microwave-lemon-dill-salmon',
@@ -741,8 +705,6 @@ export const RECIPE_DATABASE: Recipe[] = [
     suitableFor: ['working', 'fitness'],
     imageQuery: 'salmon fillet lemon dill',
     sourceUrl: 'https://www.themediterraneandish.com/lemon-dill-salmon/',
-    equipment: ['microwave'],
-    mealTiming: ['lunch', 'dinner', 'post-workout'],
   },
   {
     id: 'microwave-fried-rice',
@@ -784,8 +746,6 @@ export const RECIPE_DATABASE: Recipe[] = [
     suitableFor: ['studying', 'working', 'fitness'],
     imageQuery: 'fried rice vegetables egg',
     sourceUrl: 'https://www.recipetineats.com/egg-fried-rice/',
-    equipment: ['microwave'],
-    mealTiming: ['lunch', 'dinner', 'late-night'],
   },
   {
     id: 'microwave-stuffed-peppers',
@@ -828,8 +788,6 @@ export const RECIPE_DATABASE: Recipe[] = [
     suitableFor: ['working', 'fitness'],
     imageQuery: 'stuffed bell pepper rice beans',
     sourceUrl: 'https://www.budgetbytes.com/stuffed-bell-peppers/',
-    equipment: ['microwave'],
-    mealTiming: ['lunch', 'dinner'],
   },
   {
     id: 'microwave-chicken-fajita-bowl',
@@ -873,8 +831,6 @@ export const RECIPE_DATABASE: Recipe[] = [
     suitableFor: ['working', 'fitness'],
     imageQuery: 'chicken fajitas peppers onions',
     sourceUrl: 'https://www.recipetineats.com/chicken-fajitas/',
-    equipment: ['microwave'],
-    mealTiming: ['lunch', 'dinner', 'post-workout'],
   },
   {
     id: 'microwave-single-serve-lasagna',
@@ -917,8 +873,6 @@ export const RECIPE_DATABASE: Recipe[] = [
     suitableFor: ['studying', 'working'],
     imageQuery: 'lasagna layers cheese',
     sourceUrl: 'https://tasty.co/recipe/6-minute-microwave-lasagna',
-    equipment: ['microwave'],
-    mealTiming: ['lunch', 'dinner', 'late-night'],
   },
   {
     id: 'microwave-enchilada-casserole',
@@ -961,8 +915,6 @@ export const RECIPE_DATABASE: Recipe[] = [
     suitableFor: ['studying', 'working', 'fitness'],
     imageQuery: 'enchilada casserole cheese',
     sourceUrl: 'https://www.budgetbytes.com/vegetable-enchilada-casserole/',
-    equipment: ['microwave'],
-    mealTiming: ['lunch', 'dinner'],
   },
   {
     id: 'microwave-mug-meatloaf',
@@ -1005,8 +957,6 @@ export const RECIPE_DATABASE: Recipe[] = [
     suitableFor: ['working', 'fitness'],
     imageQuery: 'meatloaf ketchup glaze',
     sourceUrl: 'https://www.myplate.gov/recipes/meatloaf-mug',
-    equipment: ['microwave'],
-    mealTiming: ['lunch', 'dinner', 'post-workout'],
   },
   {
     id: 'microwave-spaghetti-squash-pasta',
@@ -1050,8 +1000,6 @@ export const RECIPE_DATABASE: Recipe[] = [
     suitableFor: ['fitness'],
     imageQuery: 'spaghetti squash marinara',
     sourceUrl: 'https://tasty.co/recipe/spaghetti-squash-pasta-meal-prep-2-ways',
-    equipment: ['microwave'],
-    mealTiming: ['lunch', 'dinner'],
   },
 
   // MEAL PREP
@@ -1098,8 +1046,6 @@ export const RECIPE_DATABASE: Recipe[] = [
     suitableFor: ['working', 'fitness'],
     imageQuery: 'meal prep chicken sweet potato',
     sourceUrl: 'https://www.budgetbytes.com/sheet-pan-greek-chicken-and-vegetables/',
-    equipment: ['full-kitchen'],
-    mealTiming: ['lunch', 'dinner', 'post-workout'],
   },
   {
     id: 'meal-prep-overnight-oats',
@@ -1142,8 +1088,6 @@ export const RECIPE_DATABASE: Recipe[] = [
     suitableFor: ['studying', 'working', 'fitness'],
     imageQuery: 'overnight oats berries jar',
     sourceUrl: 'https://www.budgetbytes.com/overnight-oats-base-recipe-plus-variations/',
-    equipment: ['microwave'],
-    mealTiming: ['breakfast', 'snack', 'pre-exam'],
   },
   {
     id: 'meal-prep-burrito-bowls',
@@ -1190,8 +1134,6 @@ export const RECIPE_DATABASE: Recipe[] = [
     suitableFor: ['working', 'fitness'],
     imageQuery: 'burrito bowl meal prep',
     sourceUrl: 'https://www.budgetbytes.com/easiest-burrito-bowl-meal-prep/',
-    equipment: ['hot-plate', 'full-kitchen'],
-    mealTiming: ['lunch', 'dinner'],
   },
   {
     id: 'meal-prep-buddha-bowl',
@@ -1239,8 +1181,6 @@ export const RECIPE_DATABASE: Recipe[] = [
     suitableFor: ['studying', 'working', 'fitness'],
     imageQuery: 'buddha bowl quinoa chickpeas',
     sourceUrl: 'https://minimalistbaker.com/sweet-potato-chickpea-buddha-bowl/',
-    equipment: ['full-kitchen'],
-    mealTiming: ['lunch', 'dinner'],
   },
 ];
 

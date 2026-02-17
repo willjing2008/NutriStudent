@@ -41,9 +41,7 @@ export const BRAIN_RECIPES: any[] = [
     },
     tags: ["brain-food", "omega-3", "high-protein", "breakfast", "quick"],
     benefits: ["Improves memory", "Supports brain structure", "Rich in choline"],
-    suitableFor: ["study"],
-    equipment: ['hot-plate', 'full-kitchen', 'toaster'],
-    mealTiming: ['breakfast', 'pre-exam']
+    suitableFor: ["study"]
   },
   {
     id: "sardines-toast-tomato",
@@ -83,9 +81,7 @@ export const BRAIN_RECIPES: any[] = [
     },
     tags: ["brain-food", "DHA", "omega-3", "quick-lunch", "student-budget"],
     benefits: ["Highest DHA content", "Supports neural processing", "Brain fuel"],
-    suitableFor: ["study"],
-    equipment: ['microwave', 'toaster'],
-    mealTiming: ['lunch', 'snack', 'pre-exam']
+    suitableFor: ["study"]
   },
   {
     id: "sardine-salad-lemon",
@@ -126,9 +122,7 @@ export const BRAIN_RECIPES: any[] = [
     },
     tags: ["brain-food", "omega-3", "meal-prep", "Mediterranean", "fresh"],
     benefits: ["Potent brain fuel", "Rich in Omega-3s", "Anti-inflammatory"],
-    suitableFor: ["study"],
-    equipment: ['microwave'],
-    mealTiming: ['lunch', 'snack', 'pre-exam']
+    suitableFor: ["study"]
   },
   {
     id: "baked-salmon-asparagus",
@@ -168,9 +162,7 @@ export const BRAIN_RECIPES: any[] = [
     },
     tags: ["brain-food", "omega-3", "high-protein", "one-pot", "dinner"],
     benefits: ["Essential fatty acids", "Supports cognitive health", "Brain-boosting"],
-    suitableFor: ["study"],
-    equipment: ['hot-plate', 'full-kitchen'],
-    mealTiming: ['lunch', 'dinner', 'pre-exam']
+    suitableFor: ["study"]
   },
   {
     id: "mackerel-sourdough",
@@ -210,9 +202,7 @@ export const BRAIN_RECIPES: any[] = [
     },
     tags: ["brain-food", "omega-3", "quick-lunch", "oily-fish"],
     benefits: ["Neural processing speed", "Rich in DHA/EPA", "Brain health"],
-    suitableFor: ["study"],
-    equipment: ['microwave', 'toaster'],
-    mealTiming: ['lunch', 'snack', 'pre-exam']
+    suitableFor: ["study"]
   },
   {
     id: "baked-cod-brussels-sprouts",
@@ -252,9 +242,7 @@ export const BRAIN_RECIPES: any[] = [
     },
     tags: ["brain-food", "lean-protein", "antioxidants", "one-pot"],
     benefits: ["Brain-protecting nutrients", "High protein", "Antioxidant-rich"],
-    suitableFor: ["study"],
-    equipment: ['hot-plate', 'full-kitchen'],
-    mealTiming: ['lunch', 'dinner', 'pre-exam']
+    suitableFor: ["study"]
   },
   {
     id: "walnut-blueberry-oats",
@@ -294,9 +282,7 @@ export const BRAIN_RECIPES: any[] = [
     },
     tags: ["brain-food", "breakfast", "meal-prep", "antioxidants", "omega-3"],
     benefits: ["Slower cognitive decline", "Brain antioxidants", "Memory support"],
-    suitableFor: ["study"],
-    equipment: ['full-kitchen'],
-    mealTiming: ['breakfast', 'pre-exam']
+    suitableFor: ["study"]
   },
   {
     id: "turmeric-chicken-curry",
@@ -339,9 +325,7 @@ export const BRAIN_RECIPES: any[] = [
     },
     tags: ["brain-food", "curcumin", "BDNF", "curry", "one-pot"],
     benefits: ["Increases BDNF", "Neuroplasticity", "Anti-inflammatory"],
-    suitableFor: ["study"],
-    equipment: ['hot-plate', 'full-kitchen', 'rice-cooker'],
-    mealTiming: ['lunch', 'dinner', 'pre-exam']
+    suitableFor: ["study"]
   },
   {
     id: "overnight-oats-cacao-cherries",
@@ -381,9 +365,7 @@ export const BRAIN_RECIPES: any[] = [
     },
     tags: ["brain-food", "flavonoids", "no-cook", "meal-prep", "breakfast"],
     benefits: ["Increases brain blood flow", "Cognitive enhancement", "Antioxidants"],
-    suitableFor: ["study"],
-    equipment: ['microwave'],
-    mealTiming: ['breakfast', 'snack', 'late-night', 'pre-exam']
+    suitableFor: ["study"]
   },
   {
     id: "beetroot-goat-cheese-salad",
@@ -423,9 +405,7 @@ export const BRAIN_RECIPES: any[] = [
     },
     tags: ["brain-food", "nitrates", "blood-flow", "salad", "vegetarian"],
     benefits: ["Frontal lobe blood flow", "Cognitive performance", "Nitrate-rich"],
-    suitableFor: ["study"],
-    equipment: ['hot-plate', 'full-kitchen'],
-    mealTiming: ['lunch', 'snack', 'pre-exam']
+    suitableFor: ["study"]
   },
   {
     id: "lamb-chops-rosemary",
@@ -465,9 +445,7 @@ export const BRAIN_RECIPES: any[] = [
     },
     tags: ["brain-food", "memory", "rosemary", "high-protein", "dinner"],
     benefits: ["Memory retention", "Rosemary aromatherapy", "Brain compounds"],
-    suitableFor: ["study"],
-    equipment: ['hot-plate', 'full-kitchen'],
-    mealTiming: ['lunch', 'dinner', 'pre-exam']
+    suitableFor: ["study"]
   },
   {
     id: "eggplant-parmesan",
@@ -508,9 +486,7 @@ export const BRAIN_RECIPES: any[] = [
     },
     tags: ["brain-food", "nasunin", "Italian", "vegetarian", "comfort-food"],
     benefits: ["Protects brain cell membranes", "Antioxidants", "Neuroprotective"],
-    suitableFor: ["study"],
-    equipment: ['hot-plate', 'full-kitchen'],
-    mealTiming: ['lunch', 'dinner', 'pre-exam']
+    suitableFor: ["study"]
   },
   {
     id: "seared-scallops",
@@ -550,9 +526,7 @@ export const BRAIN_RECIPES: any[] = [
     },
     tags: ["brain-food", "vitamin-B12", "seafood", "quick-dinner", "elegant"],
     benefits: ["Nerve health", "B12 for cognition", "Brain support"],
-    suitableFor: ["study"],
-    equipment: ['hot-plate', 'full-kitchen'],
-    mealTiming: ['lunch', 'dinner', 'pre-exam']
+    suitableFor: ["study"]
   },
   {
     id: "chia-seed-pudding",
@@ -592,9 +566,7 @@ export const BRAIN_RECIPES: any[] = [
     },
     tags: ["brain-food", "omega-3", "ALA", "no-cook", "meal-prep"],
     benefits: ["High in ALA Omega-3s", "Brain health", "Anti-inflammatory"],
-    suitableFor: ["study"],
-    equipment: ['microwave'],
-    mealTiming: ['breakfast', 'snack', 'late-night', 'pre-exam']
+    suitableFor: ["study"]
   },
   {
     id: "avocado-hemp-toast",
@@ -634,9 +606,7 @@ export const BRAIN_RECIPES: any[] = [
     },
     tags: ["brain-food", "healthy-fats", "omega-3", "quick-breakfast", "vegan"],
     benefits: ["Sustained brain function", "Healthy fats", "Omega-3s"],
-    suitableFor: ["study"],
-    equipment: ['microwave', 'toaster'],
-    mealTiming: ['breakfast', 'snack', 'late-night', 'pre-exam']
+    suitableFor: ["study"]
   },
   {
     id: "shakshuka",
@@ -679,8 +649,6 @@ export const BRAIN_RECIPES: any[] = [
     },
     tags: ["brain-food", "lycopene", "one-pot", "Mediterranean", "breakfast"],
     benefits: ["Fights oxidative stress", "Brain cell protection", "Antioxidants"],
-    suitableFor: ["study"],
-    equipment: ['hot-plate', 'full-kitchen'],
-    mealTiming: ['breakfast', 'lunch', 'pre-exam']
+    suitableFor: ["study"]
   }
 ];

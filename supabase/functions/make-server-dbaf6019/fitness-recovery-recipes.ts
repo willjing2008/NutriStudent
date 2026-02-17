@@ -44,9 +44,7 @@ export const FITNESS_RECOVERY_RECIPES: any[] = [
     },
     tags: ["high-protein", "muscle-recovery", "casein-protein", "no-cook", "post-workout"],
     benefits: ["Slow-digesting protein for overnight recovery", "High calcium for bone health", "Probiotic gut support", "Convenient grab-and-go"],
-    suitableFor: ["athletes", "gym-goers", "fitness", "students"],
-    equipment: ['microwave'],
-    mealTiming: ['breakfast', 'snack', 'post-workout'],
+    suitableFor: ["athletes", "gym-goers", "fitness", "students"]
   },
   {
     id: "turkey-sausage-sweet-potato-hash",
@@ -91,9 +89,7 @@ export const FITNESS_RECOVERY_RECIPES: any[] = [
     },
     tags: ["high-protein", "recovery-carbs", "post-workout", "lean-protein", "breakfast"],
     benefits: ["Lean turkey protein for muscle repair", "Complex carbs replenish glycogen", "Balanced macros", "High satiety"],
-    suitableFor: ["athletes", "gym-goers", "fitness", "muscle-gain"],
-    equipment: ['hot-plate', 'full-kitchen'],
-    mealTiming: ['breakfast', 'post-workout'],
+    suitableFor: ["athletes", "gym-goers", "fitness", "muscle-gain"]
   },
   {
     id: "grilled-chicken-quinoa-salad",
@@ -140,9 +136,7 @@ export const FITNESS_RECOVERY_RECIPES: any[] = [
     },
     tags: ["high-protein", "meal-prep", "clean-eating", "balanced-macros", "lean-protein"],
     benefits: ["Complete amino acid profile", "Meal prep friendly", "Balanced macros for fitness", "High satiety"],
-    suitableFor: ["athletes", "gym-goers", "fitness", "meal-preppers"],
-    equipment: ['full-kitchen'],
-    mealTiming: ['lunch', 'dinner', 'post-workout'],
+    suitableFor: ["athletes", "gym-goers", "fitness", "meal-preppers"]
   },
   {
     id: "bison-burgers",
@@ -187,9 +181,7 @@ export const FITNESS_RECOVERY_RECIPES: any[] = [
     },
     tags: ["high-protein", "lean-red-meat", "muscle-building", "iron-rich", "zinc-rich"],
     benefits: ["Higher protein than regular beef", "Lower fat content", "Rich in iron and zinc", "Supports testosterone production"],
-    suitableFor: ["athletes", "gym-goers", "fitness", "muscle-gain"],
-    equipment: ['hot-plate', 'full-kitchen'],
-    mealTiming: ['lunch', 'dinner', 'post-workout'],
+    suitableFor: ["athletes", "gym-goers", "fitness", "muscle-gain"]
   },
   {
     id: "turkey-hummus-wrap",
@@ -234,9 +226,7 @@ export const FITNESS_RECOVERY_RECIPES: any[] = [
     },
     tags: ["high-protein", "portable", "meal-prep", "lean-protein", "plant-protein"],
     benefits: ["Dual protein sources (animal + plant)", "High fiber for satiety", "Portable lunch", "Low fat"],
-    suitableFor: ["athletes", "gym-goers", "fitness", "students", "office-workers"],
-    equipment: ['microwave'],
-    mealTiming: ['lunch', 'snack', 'post-workout'],
+    suitableFor: ["athletes", "gym-goers", "fitness", "students", "office-workers"]
   },
   {
     id: "tuna-salad-stuffed-peppers",
@@ -282,9 +272,7 @@ export const FITNESS_RECOVERY_RECIPES: any[] = [
     },
     tags: ["high-protein", "low-calorie", "low-fat", "cutting-diet", "meal-prep"],
     benefits: ["Extremely high protein density", "Very low calories and fat", "Omega-3 for recovery", "Perfect for cutting phases"],
-    suitableFor: ["athletes", "gym-goers", "fitness", "cutting", "weight-loss"],
-    equipment: ['microwave'],
-    mealTiming: ['lunch', 'snack', 'post-workout'],
+    suitableFor: ["athletes", "gym-goers", "fitness", "cutting", "weight-loss"]
   },
   {
     id: "chicken-avocado-caprese",
@@ -330,9 +318,7 @@ export const FITNESS_RECOVERY_RECIPES: any[] = [
     },
     tags: ["high-protein", "healthy-fats", "hormone-support", "keto-friendly", "low-carb"],
     benefits: ["Healthy fats support testosterone", "High protein for muscle", "Antioxidants from avocado", "Hormone optimization"],
-    suitableFor: ["athletes", "gym-goers", "fitness", "muscle-gain", "keto"],
-    equipment: ['full-kitchen'],
-    mealTiming: ['lunch', 'dinner', 'post-workout'],
+    suitableFor: ["athletes", "gym-goers", "fitness", "muscle-gain", "keto"]
   },
   {
     id: "grilled-tempeh-broccoli-bowl",
@@ -378,9 +364,7 @@ export const FITNESS_RECOVERY_RECIPES: any[] = [
     },
     tags: ["vegan", "plant-protein", "complete-protein", "high-fiber", "fermented"],
     benefits: ["Complete plant protein with all amino acids", "Fermented for gut health", "High fiber for satiety", "Vegan muscle building"],
-    suitableFor: ["athletes", "gym-goers", "fitness", "vegans", "vegetarians"],
-    equipment: ['hot-plate', 'full-kitchen', 'rice-cooker'],
-    mealTiming: ['lunch', 'dinner', 'post-workout'],
+    suitableFor: ["athletes", "gym-goers", "fitness", "vegans", "vegetarians"]
   },
   {
     id: "tofu-scramble-kale",
@@ -426,9 +410,7 @@ export const FITNESS_RECOVERY_RECIPES: any[] = [
     },
     tags: ["vegan", "plant-protein", "high-fiber", "breakfast", "dairy-free"],
     benefits: ["High plant protein", "Iron-rich kale prevents fatigue", "Calcium for bones", "Cholesterol-free"],
-    suitableFor: ["athletes", "gym-goers", "fitness", "vegans", "vegetarians"],
-    equipment: ['hot-plate', 'full-kitchen', 'toaster'],
-    mealTiming: ['breakfast', 'post-workout'],
+    suitableFor: ["athletes", "gym-goers", "fitness", "vegans", "vegetarians"]
   },
   {
     id: "spinach-feta-mushroom-omelet",
@@ -475,9 +457,7 @@ export const FITNESS_RECOVERY_RECIPES: any[] = [
     },
     tags: ["high-protein", "bioavailable-protein", "breakfast", "keto-friendly", "quick"],
     benefits: ["Most bioavailable protein source", "Complete amino acid profile", "Choline for brain health", "Quick muscle recovery"],
-    suitableFor: ["athletes", "gym-goers", "fitness", "students", "muscle-gain"],
-    equipment: ['hot-plate', 'full-kitchen', 'toaster'],
-    mealTiming: ['breakfast', 'snack', 'post-workout'],
+    suitableFor: ["athletes", "gym-goers", "fitness", "students", "muscle-gain"]
   },
   {
     id: "leftover-roast-beef-rollups",
@@ -522,9 +502,7 @@ export const FITNESS_RECOVERY_RECIPES: any[] = [
     },
     tags: ["high-protein", "low-carb", "keto", "no-cook", "portable-snack"],
     benefits: ["Almost pure protein", "Very low carb for cutting", "High zinc and iron", "Quick energy"],
-    suitableFor: ["athletes", "gym-goers", "fitness", "cutting", "keto"],
-    equipment: ['microwave'],
-    mealTiming: ['lunch', 'snack', 'post-workout'],
+    suitableFor: ["athletes", "gym-goers", "fitness", "cutting", "keto"]
   },
   {
     id: "shrimp-whole-wheat-pasta",
@@ -571,9 +549,7 @@ export const FITNESS_RECOVERY_RECIPES: any[] = [
     },
     tags: ["high-protein", "lean-protein", "complex-carbs", "low-fat", "post-workout"],
     benefits: ["Very lean protein source", "Complex carbs for recovery", "Low fat, high protein density", "Omega-3 for inflammation"],
-    suitableFor: ["athletes", "gym-goers", "fitness", "students", "muscle-gain"],
-    equipment: ['hot-plate', 'full-kitchen'],
-    mealTiming: ['lunch', 'dinner', 'post-workout'],
+    suitableFor: ["athletes", "gym-goers", "fitness", "students", "muscle-gain"]
   },
   {
     id: "stuffed-acorn-squash-turkey",
@@ -622,9 +598,7 @@ export const FITNESS_RECOVERY_RECIPES: any[] = [
     },
     tags: ["high-protein", "complex-carbs", "high-fiber", "nutrient-dense", "complete-meal"],
     benefits: ["High satiety from fiber and protein", "Slow-digesting carbs", "Nutrient-dense squash", "Balanced macros"],
-    suitableFor: ["athletes", "gym-goers", "fitness", "students", "muscle-gain"],
-    equipment: ['hot-plate', 'full-kitchen'],
-    mealTiming: ['lunch', 'dinner', 'post-workout'],
+    suitableFor: ["athletes", "gym-goers", "fitness", "students", "muscle-gain"]
   },
   {
     id: "lemon-herb-roasted-chicken-thighs",
@@ -669,9 +643,7 @@ export const FITNESS_RECOVERY_RECIPES: any[] = [
     },
     tags: ["high-protein", "zinc-rich", "hormone-support", "one-pan", "meal-prep"],
     benefits: ["High zinc for testosterone production", "More minerals than white meat", "Hormone optimization", "High satiety"],
-    suitableFor: ["athletes", "gym-goers", "fitness", "muscle-gain", "men"],
-    equipment: ['hot-plate', 'full-kitchen'],
-    mealTiming: ['lunch', 'dinner', 'post-workout'],
+    suitableFor: ["athletes", "gym-goers", "fitness", "muscle-gain", "men"]
   },
   {
     id: "cottage-cheese-bowl",
@@ -713,9 +685,7 @@ export const FITNESS_RECOVERY_RECIPES: any[] = [
     },
     tags: ["high-protein", "casein-protein", "bedtime-snack", "recovery", "no-cook"],
     benefits: ["Slow-digesting casein for overnight recovery", "High protein density", "Low fat option", "Calcium for bones"],
-    suitableFor: ["athletes", "gym-goers", "fitness", "students", "muscle-gain"],
-    equipment: ['microwave'],
-    mealTiming: ['breakfast', 'snack', 'post-workout'],
+    suitableFor: ["athletes", "gym-goers", "fitness", "students", "muscle-gain"]
   },
   {
     id: "ricotta-berry-toast",
@@ -757,9 +727,7 @@ export const FITNESS_RECOVERY_RECIPES: any[] = [
     },
     tags: ["breakfast", "protein-blend", "quick", "vegetarian", "balanced"],
     benefits: ["Whey + casein protein for sustained release", "Quick breakfast option", "Balanced macros", "Antioxidants from berries"],
-    suitableFor: ["athletes", "gym-goers", "fitness", "students", "busy-mornings"],
-    equipment: ['toaster'],
-    mealTiming: ['breakfast', 'snack', 'post-workout'],
+    suitableFor: ["athletes", "gym-goers", "fitness", "students", "busy-mornings"]
   },
   {
     id: "protein-buckwheat-pancakes",
@@ -806,8 +774,6 @@ export const FITNESS_RECOVERY_RECIPES: any[] = [
     },
     tags: ["high-protein", "pre-workout", "post-workout", "customizable-macros", "breakfast"],
     benefits: ["Customizable protein content", "Slow-burning buckwheat carbs", "Complete breakfast", "Muscle building"],
-    suitableFor: ["athletes", "gym-goers", "fitness", "muscle-gain", "students"],
-    equipment: ['hot-plate', 'full-kitchen'],
-    mealTiming: ['breakfast', 'post-workout'],
+    suitableFor: ["athletes", "gym-goers", "fitness", "muscle-gain", "students"]
   }
 ];

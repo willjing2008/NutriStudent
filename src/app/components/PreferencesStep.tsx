@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ArrowRight, ArrowLeft, X, Calendar, Users, DollarSign, Target, Clock, ChefHat, Utensils, AlertCircle } from 'lucide-react';
-import { UserPreferences } from '../App';
+import { UserPreferences, EquipmentType } from '../App';
 
 // Common ingredients for autocomplete
 const COMMON_INGREDIENTS = [
@@ -35,8 +35,10 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
   // Dietary restrictions state
   const [dietaryRestrictions, setDietaryRestrictions] = useState<string[]>([]);
   
-  // Kitchen tools state
-  const [kitchenTools, setKitchenTools] = useState<string[]>(['fridge']);
+  // Kitchen equipment state (Dorm Chef Mode)
+  const [availableEquipment, setAvailableEquipment] = useState<EquipmentType[]>(
+    preferences.availableEquipment || []
+  );
 
   const filteredSuggestions = COMMON_INGREDIENTS.filter(
     ingredient => 
@@ -64,11 +66,11 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
     );
   };
 
-  const toggleKitchenTool = (tool: string) => {
-    setKitchenTools(prev => 
-      prev.includes(tool) 
-        ? prev.filter(t => t !== tool)
-        : [...prev, tool]
+  const toggleEquipment = (eq: EquipmentType) => {
+    setAvailableEquipment(prev =>
+      prev.includes(eq)
+        ? prev.filter(e => e !== eq)
+        : [...prev, eq]
     );
   };
 
@@ -89,6 +91,7 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
       maxCookingTime,
       cookingMethods,
       avoidIngredients,
+      availableEquipment,
     });
     onNext();
   };
@@ -109,11 +112,13 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
     { id: 'keto', label: 'Keto' },
   ];
 
-  const tools = [
-    { id: 'microwave', label: 'Microwave', icon: '📱' },
-    { id: 'stove', label: 'Stove', icon: '🔥' },
-    { id: 'fridge', label: 'Fridge', icon: '❄️' },
-    { id: 'blender', label: 'Blender', icon: '🥤' },
+  const equipmentOptions: { id: EquipmentType; label: string; icon: string; desc: string }[] = [
+    { id: 'microwave', label: 'Microwave', icon: '📱', desc: 'Mug meals & quick cooking' },
+    { id: 'hot-plate', label: 'Hot Plate', icon: '🔥', desc: 'One-pot & stir fry' },
+    { id: 'rice-cooker', label: 'Rice Cooker', icon: '🍚', desc: 'Rice & grain bowls' },
+    { id: 'kettle', label: 'Kettle', icon: '☕', desc: 'Noodles & hot drinks' },
+    { id: 'toaster', label: 'Toaster', icon: '🍞', desc: 'Toast & sandwiches' },
+    { id: 'full-kitchen', label: 'Full Kitchen', icon: '🍳', desc: 'Oven, stove & all tools' },
   ];
 
   const cookingTimeOptions = [
@@ -333,30 +338,46 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
             )}
           </div>
 
-          {/* Section 7: Kitchen Tools */}
+          {/* Section 7: Dorm Chef Mode - Kitchen Equipment */}
           <div className="bg-[#142A1D] rounded-2xl p-5 border border-[#2D5A3D]">
-            <SectionHeader icon={Utensils} title="What Tools Do You Have?" optional />
-            <div className="grid grid-cols-4 gap-3">
-              {tools.map((tool) => {
-                const isSelected = kitchenTools.includes(tool.id);
+            <SectionHeader icon={Utensils} title="Your Kitchen Equipment" optional />
+            <p className="text-[#6B7280] text-sm mb-4">Select what you have — we'll only suggest recipes you can actually make.</p>
+            <div className="grid grid-cols-3 gap-3">
+              {equipmentOptions.map((eq) => {
+                const isSelected = availableEquipment.includes(eq.id);
                 return (
                   <button
-                    key={tool.id}
-                    onClick={() => toggleKitchenTool(tool.id)}
-                    className={`py-4 rounded-xl transition-all flex flex-col items-center gap-2 ${
+                    key={eq.id}
+                    onClick={() => toggleEquipment(eq.id)}
+                    className={`p-4 rounded-xl transition-all flex flex-col items-center gap-2 ${
                       isSelected
-                        ? 'bg-[#22C55E] text-[#052E16]'
-                        : 'bg-[#0A1F13] text-white border border-[#2D5A3D] hover:border-[#22C55E]'
+                        ? 'bg-[#22C55E]/20 border-2 border-[#22C55E]'
+                        : 'bg-[#0A1F13] border border-[#2D5A3D] hover:border-[#22C55E]'
                     }`}
                   >
-                    <span className="text-2xl">{tool.icon}</span>
-                    <span className={`text-xs font-medium ${isSelected ? 'text-[#052E16]' : 'text-white'}`}>
-                      {tool.label}
+                    <span className="text-2xl">{eq.icon}</span>
+                    <span className={`text-xs text-center font-medium ${isSelected ? 'text-[#22C55E]' : 'text-white'}`}>
+                      {eq.label}
                     </span>
+                    <span className="text-[10px] text-[#6B7280] text-center">{eq.desc}</span>
                   </button>
                 );
               })}
             </div>
+            {availableEquipment.length === 0 && (
+              <div className="mt-4 p-3 bg-[#0A1F13] rounded-xl border border-[#2D5A3D]">
+                <p className="text-sm text-[#6B7280]">
+                  🔍 No equipment selected — we'll include all recipes
+                </p>
+              </div>
+            )}
+            {availableEquipment.length > 0 && !availableEquipment.includes('full-kitchen') && (
+              <div className="mt-4 p-3 bg-[#22C55E]/10 rounded-xl border border-[#22C55E]/20">
+                <p className="text-sm text-[#22C55E]">
+                  🏠 Dorm Chef Mode active — showing recipes for: {availableEquipment.join(', ')}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Section 8: Dietary Restrictions */}

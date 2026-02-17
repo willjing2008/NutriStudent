@@ -67,8 +67,6 @@ export const CUISINE_RECIPES: CuisineRecipe[] = [
       'Traditional British comfort food perfect for cold days'
     ],
     suitableFor: ['studying', 'working', 'fitness'],
-    equipment: ['hot-plate', 'full-kitchen'],
-    mealTiming: ['lunch', 'dinner', 'post-workout'],
     imageQuery: 'shepherds pie british',
     sourceUrl: 'https://www.recipetineats.com/shepherds-pie/',
   },
@@ -116,8 +114,6 @@ export const CUISINE_RECIPES: CuisineRecipe[] = [
       'Complete British meal without deep frying'
     ],
     suitableFor: ['studying', 'working', 'fitness'],
-    equipment: ['hot-plate', 'full-kitchen'],
-    mealTiming: ['lunch', 'dinner', 'post-workout'],
     imageQuery: 'fish chips british',
     sourceUrl: 'https://www.jamieoliver.com/recipes/fish/fish-chips-and-mushy-peas/',
   },
@@ -167,8 +163,6 @@ export const CUISINE_RECIPES: CuisineRecipe[] = [
       'Creamy without cream - traditional Roman technique'
     ],
     suitableFor: ['studying', 'working', 'fitness'],
-    equipment: ['hot-plate', 'full-kitchen'],
-    mealTiming: ['lunch', 'dinner', 'post-workout'],
     imageQuery: 'spaghetti carbonara italian',
     sourceUrl: 'https://www.recipetineats.com/carbonara/',
   },
@@ -215,8 +209,6 @@ export const CUISINE_RECIPES: CuisineRecipe[] = [
       'Calcium from mozzarella for bone health'
     ],
     suitableFor: ['studying', 'working'],
-    equipment: ['hot-plate', 'full-kitchen'],
-    mealTiming: ['lunch', 'dinner', 'late-night'],
     imageQuery: 'pasta margherita italian',
     sourceUrl: 'https://www.mob.co.uk/recipes/mobs-ultimate-carbonara',
   },
@@ -267,8 +259,6 @@ export const CUISINE_RECIPES: CuisineRecipe[] = [
       'Customizable with any vegetables in your fridge'
     ],
     suitableFor: ['studying', 'working'],
-    equipment: ['hot-plate', 'full-kitchen', 'rice-cooker'],
-    mealTiming: ['lunch', 'dinner', 'late-night'],
     imageQuery: 'egg fried rice chinese',
     sourceUrl: 'https://www.recipetineats.com/egg-fried-rice/',
   },
@@ -317,8 +307,6 @@ export const CUISINE_RECIPES: CuisineRecipe[] = [
       'Vitamin C from peppers and pineapple'
     ],
     suitableFor: ['studying', 'working', 'fitness'],
-    equipment: ['hot-plate', 'full-kitchen'],
-    mealTiming: ['lunch', 'dinner', 'late-night', 'post-workout'],
     imageQuery: 'sweet sour chicken chinese',
     sourceUrl: 'https://www.recipetineats.com/oven-baked-sweet-sour-chicken/',
   },
@@ -370,8 +358,6 @@ export const CUISINE_RECIPES: CuisineRecipe[] = [
       'High protein for muscle recovery and satiety'
     ],
     suitableFor: ['working', 'fitness'],
-    equipment: ['hot-plate', 'full-kitchen'],
-    mealTiming: ['lunch', 'dinner', 'post-workout'],
     imageQuery: 'butter chicken indian curry',
     sourceUrl: 'https://www.recipetineats.com/butter-chicken/',
   },
@@ -419,8 +405,6 @@ export const CUISINE_RECIPES: CuisineRecipe[] = [
       'Anti-inflammatory spices support overall health'
     ],
     suitableFor: ['studying', 'working', 'fitness'],
-    equipment: ['hot-plate', 'full-kitchen'],
-    mealTiming: ['lunch', 'dinner'],
     imageQuery: 'chana masala chickpea curry',
     sourceUrl: 'https://www.recipetineats.com/easy-chickpea-potato-curry-chana-aloo-curry/',
   },
@@ -471,8 +455,6 @@ export const CUISINE_RECIPES: CuisineRecipe[] = [
       'Customizable with your favorite toppings'
     ],
     suitableFor: ['studying', 'working', 'fitness'],
-    equipment: ['hot-plate', 'full-kitchen'],
-    mealTiming: ['lunch', 'dinner', 'post-workout'],
     imageQuery: 'chicken fajitas mexican',
     sourceUrl: 'https://www.recipetineats.com/chicken-fajitas/',
   },
@@ -518,8 +500,6 @@ export const CUISINE_RECIPES: CuisineRecipe[] = [
       'Budget-friendly vegetarian option'
     ],
     suitableFor: ['studying', 'working'],
-    equipment: ['microwave'],
-    mealTiming: ['lunch', 'snack', 'late-night'],
     imageQuery: 'quesadilla black beans mexican',
     sourceUrl: 'https://www.budgetbytes.com/hearty-black-bean-quesadillas/',
   },
@@ -571,8 +551,6 @@ export const CUISINE_RECIPES: CuisineRecipe[] = [
       'Fresh vegetables provide vitamins and antioxidants'
     ],
     suitableFor: ['working', 'fitness'],
-    equipment: ['full-kitchen'],
-    mealTiming: ['lunch', 'snack', 'post-workout'],
     imageQuery: 'greek chicken bowl mediterranean',
     sourceUrl: 'https://www.recipetineats.com/greek-salad/',
   },
@@ -622,8 +600,6 @@ export const CUISINE_RECIPES: CuisineRecipe[] = [
       'Cheaper than takeaway, ready in 25 minutes'
     ],
     suitableFor: ['studying', 'working', 'fitness'],
-    equipment: ['hot-plate', 'full-kitchen', 'rice-cooker'],
-    mealTiming: ['lunch', 'dinner', 'late-night', 'post-workout'],
     imageQuery: 'teriyaki chicken rice bowl',
     sourceUrl: 'https://www.recipetineats.com/teriyaki-chicken/',
   },
@@ -675,8 +651,6 @@ export const CUISINE_RECIPES: CuisineRecipe[] = [
       'Even better the next day - flavors develop'
     ],
     suitableFor: ['studying', 'working', 'fitness'],
-    equipment: ['hot-plate', 'full-kitchen'],
-    mealTiming: ['lunch', 'dinner', 'post-workout'],
     imageQuery: 'chili con carne american',
     sourceUrl: 'https://www.recipetineats.com/chilli-con-carne/',
   },

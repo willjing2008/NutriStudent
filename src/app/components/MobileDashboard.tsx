@@ -376,9 +376,16 @@ export function MobileDashboard({
                   {/* Meal Image */}
                   <div className="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
                     <img
-                      src={getRecipeImage(meal.image, meal.id, meal.tags?.[0] || 'food')}
+                      src={meal.imageUrl || getRecipeImage(meal.id, meal.image)}
                       alt={meal.name}
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        if (!target.dataset.fallback) {
+                          target.dataset.fallback = '1';
+                          target.src = getRecipeImage(meal.id);
+                        }
+                      }}
                     />
                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#22C55E]" />
                   </div>

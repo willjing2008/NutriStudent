@@ -379,7 +379,7 @@ app.post("/make-server-dbaf6019/fetch-store-ingredients", async (c) => {
 // Endpoint to generate optimal meal plan
 app.post("/make-server-dbaf6019/generate-meal-plan", async (c) => {
   try {
-    const { storeName, mealsPerDay, budget, goal, shoppingDate, maxCookingTime, cookingMethods, avoidIngredients } = await c.req.json();
+    const { storeName, mealsPerDay, budget, goal, shoppingDate, maxCookingTime, cookingMethods, avoidIngredients, availableEquipment, mealTiming } = await c.req.json();
     
     if (!mealsPerDay || !budget || !goal) {
       return c.json({ error: "Missing required parameters" }, 400);
@@ -425,8 +425,10 @@ app.post("/make-server-dbaf6019/generate-meal-plan", async (c) => {
       goal,
       maxCookingTime,
       cookingMethods,
-      cookingDays, // NEW: Pass cooking days for daily meal planning
-      avoidIngredients // NEW: Pass avoid ingredients
+      cookingDays,
+      avoidIngredients,
+      availableEquipment,
+      mealTiming
     );
 
     return c.json({ mealPlan });
@@ -444,8 +446,10 @@ function generateMealPlanFromRecipes(
   goal: string,
   maxCookingTime?: number,
   cookingMethods?: string[],
-  cookingDays: number = 7, // NEW: Number of days to cook for
-  avoidIngredients?: string[] // NEW: Ingredients to avoid
+  cookingDays: number = 7,
+  avoidIngredients?: string[],
+  availableEquipment?: string[],
+  mealTiming?: string
 ) {
   const selectedRecipes: Recipe[] = [];
   const dailyBudget = weeklyBudget / 7;
@@ -466,6 +470,28 @@ function generateMealPlanFromRecipes(
       return !hasAvoidedIngredient;
     });
     console.log(`🚫 Filtered recipes by avoided ingredients: ${filteredRecipes.length}/${recipes.length} recipes remaining`);
+  }
+
+  // Filter by available equipment (Dorm Chef Mode)
+  if (availableEquipment && availableEquipment.length > 0) {
+    filteredRecipes = filteredRecipes.filter(recipe => {
+      if (!recipe.equipment || recipe.equipment.length === 0) return true;
+      // Recipe is compatible if the user has at least one piece of equipment it needs
+      return recipe.equipment.some((eq: string) => availableEquipment.includes(eq));
+    });
+    console.log(`🏠 Dorm Chef Mode: ${filteredRecipes.length} recipes match equipment [${availableEquipment.join(', ')}]`);
+  }
+
+  // Filter by meal timing if specified
+  if (mealTiming) {
+    const timingFiltered = filteredRecipes.filter(recipe => {
+      if (!recipe.mealTiming || recipe.mealTiming.length === 0) return true;
+      return recipe.mealTiming.includes(mealTiming);
+    });
+    if (timingFiltered.length > 0) {
+      filteredRecipes = timingFiltered;
+      console.log(`⏰ Filtered by meal timing '${mealTiming}': ${filteredRecipes.length} recipes`);
+    }
   }
 
   // Filter recipes by cooking time if specified
