@@ -110,6 +110,38 @@ export default function App() {
     checkSession();
   }, []);
 
+  useEffect(() => {
+    if (checkingAuth) {
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    });
+  }, [
+    checkingAuth,
+    isAuthenticated,
+    showAdminDashboard,
+    isOnboarding,
+    onboardingStep,
+    activeNavTab,
+  ]);
+
+  useEffect(() => {
+    let safeAreaBg = '#0A1F13';
+
+    if (isAuthenticated && !showAdminDashboard && !isOnboarding) {
+      safeAreaBg =
+        activeNavTab === 'home' || activeNavTab === 'shop' || activeNavTab === 'profile'
+          ? '#0A0A0A'
+          : '#0A1F13';
+    }
+
+    document.documentElement.style.setProperty('--safe-area-bg', safeAreaBg);
+  }, [isAuthenticated, showAdminDashboard, isOnboarding, activeNavTab]);
+
   const loadSavedMealPlan = async (userId: string) => {
     setLoadingSavedPlan(true);
     try {
@@ -229,6 +261,8 @@ export default function App() {
     setIsAuthenticated(true);
     setUser(loggedInUser);
     setAccessToken(token);
+    setActiveNavTab('home');
+    setIsOnboarding(false);
     loadSavedMealPlan(loggedInUser.id);
   };
 

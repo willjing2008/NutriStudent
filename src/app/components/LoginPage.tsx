@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Mail, Lock, Loader2, Eye, EyeOff, User, ArrowRight, Apple } from 'lucide-react';
 import { supabase } from '../../utils/supabaseClient';
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
@@ -17,6 +17,20 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (showAuthForm) return;
+
+    const prevOverflow = document.body.style.overflow;
+    const prevOverscrollY = document.body.style.overscrollBehaviorY;
+    document.body.style.overflow = 'hidden';
+    document.body.style.overscrollBehaviorY = 'none';
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.body.style.overscrollBehaviorY = prevOverscrollY;
+    };
+  }, [showAuthForm]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,20 +100,24 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
   // Landing Page View
   if (!showAuthForm) {
     return (
-      <div className="min-h-screen bg-[#0A1F13] flex flex-col">
+      <div
+        className="bg-[#0A1F13] flex flex-col overflow-hidden overscroll-none"
+        style={{
+          height: 'calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
+          maxHeight: 'calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
+        }}
+      >
         {/* Hero Section */}
-        <div className="flex-1 flex flex-col">
-          {/* Header */}
-          <header className="p-6 flex items-center justify-center">
-            <div className="flex items-center gap-2">
-              <Apple className="w-7 h-7 text-[#22C55E]" />
-              <span className="text-xl font-bold text-white">NutriStudent</span>
-            </div>
-          </header>
-
+        <div className="flex-1 min-h-0 flex flex-col justify-start">
           {/* Hero Image */}
-          <div className="flex-1 flex items-center justify-center px-6 py-8">
-            <div className="relative w-full max-w-sm aspect-square">
+          <div className="min-h-0 flex items-center justify-center px-6 pt-2 pb-0.5">
+            <div
+              className="relative"
+              style={{
+                width: 'min(74vw, 44vh, 22rem)',
+                height: 'min(74vw, 44vh, 22rem)',
+              }}
+            >
               <img
                 src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&h=600&fit=crop&auto=format"
                 alt="Healthy bowl"
@@ -112,25 +130,25 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
           </div>
 
           {/* Content */}
-          <div className="px-6 pb-8 text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
+          <div className="px-6 pt-1 pb-5 text-center shrink-0">
+            <h1 className="text-[clamp(2.25rem,8.4vw,3.35rem)] leading-tight font-bold text-white mb-1">
               Eat Smart.
             </h1>
-            <h1 className="text-4xl md:text-5xl font-bold text-[#22C55E] mb-6">
+            <h1 className="text-[clamp(2.25rem,8.4vw,3.35rem)] leading-tight font-bold text-[#22C55E] mb-4">
               Study Hard.
             </h1>
-            <p className="text-[#9CA3AF] text-lg mb-10 max-w-md mx-auto">
-              Personalized nutrition for the student lifestyle. Save money, save time, stay healthy.
+            <p className="text-[#9CA3AF] text-[clamp(1rem,4.1vw,1.2rem)] mb-6 max-w-md mx-auto">
+              Personalized nutrition for the student lifestyle.
             </p>
 
             {/* CTA Buttons */}
-            <div className="space-y-4 max-w-sm mx-auto">
+            <div className="space-y-3.5 max-w-sm mx-auto">
               <button
                 onClick={() => {
                   setShowAuthForm(true);
                   setIsSignUp(true);
                 }}
-                className="w-full py-4 px-8 bg-[#22C55E] text-[#052E16] font-semibold rounded-full flex items-center justify-center gap-2 hover:bg-[#4ADE80] transition-all hover:scale-[1.02] active:scale-[0.98]"
+                className="w-full py-3.5 px-8 bg-[#22C55E] text-[#052E16] font-semibold rounded-full flex items-center justify-center gap-2 hover:bg-[#4ADE80] transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
                 Build Your Plan
                 <ArrowRight className="w-5 h-5" />
@@ -141,38 +159,12 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
                   setShowAuthForm(true);
                   setIsSignUp(false);
                 }}
-                className="w-full py-4 px-8 bg-transparent border-2 border-[#2D5A3D] text-white font-medium rounded-full hover:bg-[#1A3625] hover:border-[#22C55E] transition-all"
+                className="w-full py-3.5 px-8 bg-transparent border-2 border-[#2D5A3D] text-white font-medium rounded-full hover:bg-[#1A3625] hover:border-[#22C55E] transition-all"
               >
                 I already have an account
               </button>
             </div>
 
-            {/* Social Proof */}
-            <div className="mt-10 flex flex-col items-center gap-3">
-              <div className="flex items-center">
-                <div className="flex -space-x-3">
-                  <img
-                    src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face"
-                    alt="User"
-                    className="w-10 h-10 rounded-full border-2 border-[#0A1F13]"
-                  />
-                  <img
-                    src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face"
-                    alt="User"
-                    className="w-10 h-10 rounded-full border-2 border-[#0A1F13]"
-                  />
-                  <img
-                    src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face"
-                    alt="User"
-                    className="w-10 h-10 rounded-full border-2 border-[#0A1F13]"
-                  />
-                </div>
-                <div className="ml-2 px-3 py-1 bg-[#1A3625] rounded-full">
-                  <span className="text-[#22C55E] font-semibold text-sm">+10k</span>
-                </div>
-              </div>
-              <p className="text-[#6B7280] text-sm">Trusted by students worldwide</p>
-            </div>
           </div>
         </div>
       </div>
@@ -183,7 +175,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
   return (
     <div className="min-h-screen bg-[#0A1F13] flex flex-col">
       {/* Header */}
-      <header className="p-6 flex items-center justify-between">
+      <header className="px-6 pt-4 pb-3 flex items-center justify-between">
         <button
           onClick={() => setShowAuthForm(false)}
           className="text-[#9CA3AF] hover:text-white transition-colors flex items-center gap-2"
@@ -199,7 +191,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
       </header>
 
       {/* Form Container */}
-      <div className="flex-1 flex items-center justify-center p-6">
+      <div className="flex-1 flex items-start justify-center px-6 pt-2 pb-6">
         <div className="w-full max-w-md">
           {/* Title */}
           <div className="text-center mb-8">

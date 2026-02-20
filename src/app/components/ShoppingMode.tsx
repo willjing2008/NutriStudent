@@ -305,7 +305,10 @@ export function ShoppingMode({ ingredients, storeName, totalCost, onBack, missin
       </div>
 
       {/* Bottom Summary */}
-      <div className="fixed bottom-20 left-0 right-0 bg-[#1A1A1A] border-t border-[#2D2D2D]">
+      <div
+        className="fixed left-0 right-0 z-30 bg-[#1A1A1A] border-t border-[#2D2D2D]"
+        style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 3.75rem)' }}
+      >
         <div className="max-w-md mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-2">
             <div>

@@ -19,8 +19,14 @@ export function BottomNavigation({ activeTab, onTabChange }: BottomNavigationPro
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-[#0A1F13] border-t border-[#1E4029] px-6 py-3 z-40">
-      <div className="max-w-md mx-auto flex justify-around">
+    <div
+      className="fixed bottom-0 left-0 right-0 bg-[#0A1F13] border-t border-[#1E4029] px-6 z-40"
+      style={{
+        paddingTop: '0.35rem',
+        paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom, 0px))',
+      }}
+    >
+      <div className="max-w-md mx-auto flex justify-around items-start">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -28,7 +34,7 @@ export function BottomNavigation({ activeTab, onTabChange }: BottomNavigationPro
             <button
               key={item.id}
               onClick={() => onTabChange(item.id)}
-              className={`flex flex-col items-center gap-1 py-2 px-4 transition-colors ${
+              className={`flex flex-col items-center justify-start gap-1 pt-1 pb-0.5 px-4 transition-colors ${
                 isActive ? 'text-[#22C55E]' : 'text-[#6B7280]'
               }`}
             >

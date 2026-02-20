@@ -2,9 +2,8 @@ import { ShoppingCart, ArrowLeft, Loader2, X, Clock, ChefHat, Users, Flame, Refr
 import { UserPreferences } from '../App';
 import { useState, useEffect, useCallback } from 'react';
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
-import { ImageWithFallback } from './figma/ImageWithFallback';
 import { ShoppingMode } from './ShoppingMode';
-import { getRecipeImage, getRecipeImageWithCache } from '../utils/recipeImages';
+import { getRecipeImage, getRecipeImageByName, getRecipeImageWithCache } from '../utils/recipeImages';
 import { MealSwapModal } from './MealSwapModal';
 import { KitchenInventoryWizard } from './KitchenInventoryWizard';
 import { supabase } from '../../utils/supabaseClient';
@@ -85,6 +84,9 @@ const MEAL_TYPE_LABELS: Record<string, string> = {
   'dinner': 'DINNER',
   'snack': 'SNACK',
 };
+
+const LOCAL_IMAGE_FALLBACK =
+  'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjI0MCIgdmlld0JveD0iMCAwIDMyMCAyNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjMyMCIgaGVpZ2h0PSIyNDAiIGZpbGw9IiMxNDJBMUQiLz48Y2lyY2xlIGN4PSIxNjAiIGN5PSIxMDAiIHI9IjQwIiBmaWxsPSIjMUU0MDI5Ii8+PHJlY3QgeD0iNzIiIHk9IjE2MiIgd2lkdGg9IjE3NiIgaGVpZ2h0PSIxMiIgcng9IjYiIGZpbGw9IiMyMkM1NUUiIG9wYWNpdHk9IjAuNzUiLz48L3N2Zz4=';
 
 // Client-side recipe source URL fallback (used when API doesn't include sourceUrl)
 const RECIPE_SOURCE_URLS: Record<string, string> = {
@@ -230,7 +232,81 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
   const [totalCookedEver, setTotalCookedEver] = useState<number>(0);
   const [currentStreak, setCurrentStreak] = useState<number>(0);
 
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    });
+  }, [shoppingMode]);
+
   const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'Student';
+
+  const isRenderableImageUrl = (value?: string | null): value is string =>
+    typeof value === 'string' && /^(https?:\/\/|data:image\/|blob:)/i.test(value);
+
+  const getMealImageCandidates = useCallback(
+    (meal: MealPlanMeal): string[] => {
+      const urls = [
+        mealImages[meal.id],
+        isRenderableImageUrl(meal.imageUrl) ? meal.imageUrl : undefined,
+        isRenderableImageUrl(meal.image) ? meal.image : undefined,
+        getRecipeImage(meal.id, meal.image),
+        getRecipeImage(meal.id),
+        getRecipeImageByName(meal.name),
+        getRecipeImage('default'),
+        LOCAL_IMAGE_FALLBACK,
+      ].filter((url): url is string => isRenderableImageUrl(url));
+
+      return Array.from(new Set(urls));
+    },
+    [mealImages]
+  );
+
+  const handleMealImageError = useCallback((event: any) => {
+    const target = event.currentTarget as HTMLImageElement;
+    const fallbacksRaw = target.dataset.fallbacks;
+    if (!fallbacksRaw) return;
+
+    let fallbacks: string[] = [];
+    try {
+      fallbacks = JSON.parse(fallbacksRaw);
+    } catch {
+      return;
+    }
+
+    const currentIndex = Number(target.dataset.fallbackIndex || '0');
+    const nextIndex = currentIndex + 1;
+
+    if (nextIndex < fallbacks.length) {
+      target.dataset.fallbackIndex = String(nextIndex);
+      target.src = fallbacks[nextIndex];
+      return;
+    }
+
+    target.onerror = null;
+  }, []);
+
+  const fetchImageWithTimeout = useCallback(async (meal: MealPlanMeal, timeoutMs = 5000) => {
+    if (!meal.image) return null;
+
+    const cachePromise = getRecipeImageWithCache(
+      meal.id,
+      meal.image,
+      (meal as any).cuisine || 'base'
+    );
+
+    const timeoutPromise = new Promise<null>((resolve) => {
+      setTimeout(() => resolve(null), timeoutMs);
+    });
+
+    try {
+      const resolved = await Promise.race([cachePromise, timeoutPromise]);
+      return isRenderableImageUrl(resolved) ? resolved : null;
+    } catch {
+      return null;
+    }
+  }, []);
 
   function getGreeting() {
     const hour = new Date().getHours();
@@ -477,15 +553,34 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
   };
 
   const fetchMealImages = async (meals: MealPlanMeal[]) => {
-    const imageMap: Record<string, string> = {};
-    
+    const immediateImageMap: Record<string, string> = {};
     for (const meal of meals) {
-      // 使用 meal.image（即 imageQuery）动态生成图片
-      const aiImage = await getRecipeImageWithCache(meal.id, meal.image, (meal as any).cuisine || 'base');
-      imageMap[meal.id] = aiImage || getRecipeImage(meal.id, meal.image);
+      const fallback = getMealImageCandidates(meal)[0];
+      if (fallback) {
+        immediateImageMap[meal.id] = fallback;
+      }
     }
-    
-    setMealImages(imageMap);
+    if (Object.keys(immediateImageMap).length > 0) {
+      setMealImages(prev => ({ ...prev, ...immediateImageMap }));
+    }
+
+    const settled = await Promise.allSettled(
+      meals.map(async (meal) => ({
+        mealId: meal.id,
+        imageUrl: await fetchImageWithTimeout(meal),
+      }))
+    );
+
+    const resolvedImageMap: Record<string, string> = {};
+    settled.forEach((result) => {
+      if (result.status !== 'fulfilled') return;
+      if (!result.value.imageUrl) return;
+      resolvedImageMap[result.value.mealId] = result.value.imageUrl;
+    });
+
+    if (Object.keys(resolvedImageMap).length > 0) {
+      setMealImages(prev => ({ ...prev, ...resolvedImageMap }));
+    }
   };
 
   const handleShuffleRecipe = async (mealId: string) => {
@@ -533,11 +628,15 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
       }));
 
       const newMeal = data.replacementMeal;
-      const aiImage = getRecipeImage(newMeal.id);
+      const aiImage = getMealImageCandidates(newMeal)[0] || getRecipeImage(newMeal.id, newMeal.image);
       setMealImages(prev => ({
         ...prev,
         [newMeal.id]: aiImage,
       }));
+      void fetchImageWithTimeout(newMeal).then((cachedImage) => {
+        if (!cachedImage) return;
+        setMealImages(prev => ({ ...prev, [newMeal.id]: cachedImage }));
+      });
 
     } catch (err: any) {
       console.error('Error shuffling recipe:', err);
@@ -562,11 +661,15 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
       withinBudget: newTotalCost <= mealPlan.weeklyBudget,
     }));
 
-    const aiImage = getRecipeImage(newMeal.id);
+    const aiImage = getMealImageCandidates(newMeal)[0] || getRecipeImage(newMeal.id, newMeal.image);
     setMealImages(prev => ({
       ...prev,
       [newMeal.id]: aiImage,
     }));
+    void fetchImageWithTimeout(newMeal).then((cachedImage) => {
+      if (!cachedImage) return;
+      setMealImages(prev => ({ ...prev, [newMeal.id]: cachedImage }));
+    });
 
     setShowMealSwapModal(false);
   };
@@ -853,7 +956,7 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
             <button
               key={index}
               onClick={() => setSelectedDay(index)}
-              className={`flex flex-col items-center py-3 px-4 rounded-2xl transition-all ${
+              className={`w-14 h-14 flex flex-col items-center justify-center rounded-2xl transition-all ${
                 day.isSelected
                   ? 'bg-[#22C55E] text-[#052E16]'
                   : 'text-[#6B7280] hover:bg-[#142A1D]'
@@ -1017,6 +1120,7 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
           {currentDayMeals.map((meal) => {
             const isCooked = cookedMeals.has(meal.id);
             const mealType = meal.mealType?.toLowerCase() || 'meal';
+            const mealImageCandidates = getMealImageCandidates(meal);
             
             return (
               <div
@@ -1035,16 +1139,14 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
                   {/* Meal Image */}
                   <div className="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
                     <img
-                      src={mealImages[meal.id] || meal.imageUrl || getRecipeImage(meal.id, meal.image)}
+                      src={mealImageCandidates[0]}
+                      data-fallbacks={JSON.stringify(mealImageCandidates)}
+                      data-fallback-index="0"
                       alt={meal.name}
                       className="w-full h-full object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        if (!target.dataset.fallback) {
-                          target.dataset.fallback = '1';
-                          target.src = getRecipeImage(meal.id);
-                        }
-                      }}
+                      loading="lazy"
+                      decoding="async"
+                      onError={handleMealImageError}
                     />
                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#22C55E]" />
                   </div>
@@ -1059,24 +1161,15 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
                     }`}>
                       {meal.name}
                     </h4>
-                    <div className="flex items-center gap-3 mt-2 text-xs text-[#6B7280]">
-                      <span className="flex items-center gap-1">
+                    <div className="flex flex-nowrap items-center gap-1.5 mt-2 text-[11px] text-[#6B7280] whitespace-nowrap">
+                      <span className="flex items-center gap-1 shrink-0">
                         <Flame className="w-3.5 h-3.5" />
                         {meal.nutrition?.calories} kcal
                       </span>
-                      <span>•</span>
-                      <span className="text-[#22C55E]">{meal.nutrition?.protein}g protein</span>
-                      <span>•</span>
-                      <span>£{meal.totalCost?.toFixed(2)}</span>
-                      {meal.sourceUrl && (
-                        <>
-                          <span>•</span>
-                          <span className="flex items-center gap-1 text-[#22C55E]">
-                            <ExternalLink className="w-3 h-3" />
-                            {(() => { try { return new URL(meal.sourceUrl).hostname.replace('www.', '').split('.')[0]; } catch { return 'Source'; } })()}
-                          </span>
-                        </>
-                      )}
+                      <span className="shrink-0">•</span>
+                      <span className="text-[#22C55E] shrink-0">{meal.nutrition?.protein}g protein</span>
+                      <span className="shrink-0">•</span>
+                      <span className="shrink-0">£{meal.totalCost?.toFixed(2)}</span>
                     </div>
                   </div>
 
@@ -1196,9 +1289,14 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
             {/* Recipe Image */}
             <div className="relative h-48 bg-[#142A1D]">
               <img
-                src={mealImages[selectedMeal.id] || getRecipeImage(selectedMeal.id)}
+                src={getMealImageCandidates(selectedMeal)[0]}
+                data-fallbacks={JSON.stringify(getMealImageCandidates(selectedMeal))}
+                data-fallback-index="0"
                 alt={selectedMeal.name}
                 className="w-full h-full object-cover"
+                loading="eager"
+                decoding="async"
+                onError={handleMealImageError}
               />
               <div className="absolute bottom-4 left-4 flex gap-2">
                 <span className="px-3 py-1 bg-black/60 backdrop-blur-sm rounded-full text-white text-xs flex items-center gap-1">

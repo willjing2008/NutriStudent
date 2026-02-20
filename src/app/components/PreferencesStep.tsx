@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { ArrowRight, ArrowLeft, X, Calendar, Users, DollarSign, Target, Clock, ChefHat, Utensils, AlertCircle } from 'lucide-react';
 import { UserPreferences, EquipmentType } from '../App';
 
@@ -99,9 +99,9 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
   const canProceed = shoppingDate && goal;
 
   const goals = [
-    { id: 'study' as const, name: 'Study Focus', icon: '📚', description: 'Brain-boosting meals' },
-    { id: 'work' as const, name: 'Work Efficiency', icon: '💼', description: 'Energy-sustaining foods' },
-    { id: 'fitness' as const, name: 'Fitness Goals', icon: '💪', description: 'High-protein meals' },
+    { id: 'study' as const, name: 'Study Focus', description: 'Brain-boosting meals' },
+    { id: 'work' as const, name: 'Work Efficiency', description: 'Energy-sustaining foods' },
+    { id: 'fitness' as const, name: 'Fitness Goals', description: 'High-protein meals' },
   ];
 
   const restrictions = [
@@ -112,26 +112,26 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
     { id: 'keto', label: 'Keto' },
   ];
 
-  const equipmentOptions: { id: EquipmentType; label: string; icon: string; desc: string }[] = [
-    { id: 'microwave', label: 'Microwave', icon: '📱', desc: 'Mug meals & quick cooking' },
-    { id: 'hot-plate', label: 'Hot Plate', icon: '🔥', desc: 'One-pot & stir fry' },
-    { id: 'rice-cooker', label: 'Rice Cooker', icon: '🍚', desc: 'Rice & grain bowls' },
-    { id: 'kettle', label: 'Kettle', icon: '☕', desc: 'Noodles & hot drinks' },
-    { id: 'toaster', label: 'Toaster', icon: '🍞', desc: 'Toast & sandwiches' },
-    { id: 'full-kitchen', label: 'Full Kitchen', icon: '🍳', desc: 'Oven, stove & all tools' },
+  const equipmentOptions: { id: EquipmentType; label: string; desc: string }[] = [
+    { id: 'microwave', label: 'Microwave', desc: 'Mug meals & quick cooking' },
+    { id: 'hot-plate', label: 'Hot Plate', desc: 'One-pot & stir fry' },
+    { id: 'rice-cooker', label: 'Rice Cooker', desc: 'Rice & grain bowls' },
+    { id: 'kettle', label: 'Kettle', desc: 'Noodles & hot drinks' },
+    { id: 'toaster', label: 'Toaster', desc: 'Toast & sandwiches' },
+    { id: 'full-kitchen', label: 'Full Kitchen', desc: 'Oven, stove & all tools' },
   ];
 
   const cookingTimeOptions = [
-    { time: 15, label: '15 min', emoji: '⚡', name: 'Super Quick' },
-    { time: 30, label: '30 min', emoji: '🚀', name: 'Quick' },
-    { time: 45, label: '45 min', emoji: '⏰', name: 'Moderate' },
-    { time: 60, label: '60 min', emoji: '🍳', name: 'Take Time' },
+    { time: 15, label: '15 min', name: 'Quicker' },
+    { time: 30, label: '30 min', name: 'Quick' },
+    { time: 45, label: '45 min', name: 'Moderate' },
+    { time: 60, label: '60 min', name: 'Take Time' },
   ];
 
   const cookingMethodOptions = [
-    { method: 'one-pot' as const, label: 'One-Pot Meals', desc: 'Everything in one pot', icon: '🥘' },
-    { method: 'microwave' as const, label: 'Microwave Meals', desc: 'Quick microwave cooking', icon: '📱' },
-    { method: 'meal-prep' as const, label: 'Meal Prep', desc: 'Make ahead & store', icon: '📦' },
+    { method: 'one-pot' as const, label: 'One-Pot Meals', desc: 'Everything in one pot' },
+    { method: 'microwave' as const, label: 'Microwave Meals', desc: 'Quick microwave cooking' },
+    { method: 'meal-prep' as const, label: 'Meal Prep', desc: 'Make ahead & store' },
   ];
 
   // Section header component for consistency
@@ -199,7 +199,7 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
                       : 'bg-[#0A1F13] text-white border border-[#2D5A3D] hover:border-[#22C55E]'
                   }`}
                 >
-                  {num} {num === 1 ? 'meal' : 'meals'}
+                  {num}
                 </button>
               ))}
             </div>
@@ -246,17 +246,12 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
                   <button
                     key={item.id}
                     onClick={() => setGoal(item.id)}
-                    className={`w-full p-4 rounded-xl transition-all flex items-center gap-4 ${
+                    className={`w-full p-4 rounded-xl transition-all flex items-center ${
                       isSelected
                         ? 'bg-[#22C55E]/20 border-2 border-[#22C55E]'
                         : 'bg-[#0A1F13] border border-[#2D5A3D] hover:border-[#22C55E]'
                     }`}
                   >
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                      isSelected ? 'bg-[#22C55E]/30' : 'bg-[#1A3625]'
-                    }`}>
-                      <span className="text-2xl">{item.icon}</span>
-                    </div>
                     <div className="flex-1 text-left">
                       <div className={`font-semibold ${isSelected ? 'text-[#22C55E]' : 'text-white'}`}>
                         {item.name}
@@ -288,7 +283,6 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
                       : 'bg-[#0A1F13] text-white border border-[#2D5A3D] hover:border-[#22C55E]'
                   }`}
                 >
-                  <span className="text-xl">{option.emoji}</span>
                   <span className={`text-xs ${maxCookingTime === option.time ? 'text-[#052E16]' : 'text-[#22C55E]'}`}>
                     {option.name}
                   </span>
@@ -299,7 +293,7 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
             {/* Info hint */}
             <div className="mt-4 p-3 bg-[#22C55E]/10 rounded-xl border border-[#22C55E]/20">
               <p className="text-sm text-[#22C55E]">
-                🍳 We'll only suggest recipes that take <strong>{maxCookingTime} minutes or less</strong> to cook
+                We'll only suggest recipes that take <strong>{maxCookingTime} minutes or less</strong> to cook
               </p>
             </div>
           </div>
@@ -307,32 +301,38 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
           {/* Section 6: Preferred Cooking Methods */}
           <div className="bg-[#142A1D] rounded-2xl p-5 border border-[#2D5A3D]">
             <SectionHeader icon={ChefHat} title="Preferred Cooking Methods" optional />
-            <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-3">
               {cookingMethodOptions.map((option) => {
                 const isSelected = cookingMethods.includes(option.method);
                 return (
                   <button
                     key={option.method}
                     onClick={() => toggleCookingMethod(option.method)}
-                    className={`p-4 rounded-xl transition-all flex flex-col items-center gap-2 ${
+                    className={`w-full p-4 rounded-xl transition-all flex items-center justify-between text-left ${
                       isSelected
                         ? 'bg-[#22C55E]/20 border-2 border-[#22C55E]'
                         : 'bg-[#0A1F13] border border-[#2D5A3D] hover:border-[#22C55E]'
                     }`}
                   >
-                    <span className="text-2xl">{option.icon}</span>
-                    <span className={`text-xs text-center font-medium ${isSelected ? 'text-[#22C55E]' : 'text-white'}`}>
-                      {option.label}
-                    </span>
-                    <span className="text-[10px] text-[#6B7280] text-center">{option.desc}</span>
+                    <div className="flex-1 min-w-0">
+                      <span className={`block text-sm font-semibold leading-tight ${isSelected ? 'text-[#22C55E]' : 'text-white'}`}>
+                        {option.label}
+                      </span>
+                      <span className="block text-[11px] text-[#6B7280] mt-0.5">{option.desc}</span>
+                    </div>
+                    {isSelected && (
+                      <div className="w-6 h-6 rounded-full bg-[#22C55E] flex items-center justify-center ml-3 shrink-0">
+                        <span className="text-[#052E16] text-sm">✓</span>
+                      </div>
+                    )}
                   </button>
                 );
               })}
             </div>
             {cookingMethods.length === 0 && (
-              <div className="mt-4 p-3 bg-[#0A1F13] rounded-xl border border-[#2D5A3D]">
-                <p className="text-sm text-[#6B7280]">
-                  🔍 No preference selected - we'll include all cooking methods
+              <div className="mt-4 px-3 py-2.5 bg-transparent rounded-lg border border-dashed border-[#2D5A3D]/70">
+                <p className="text-xs text-[#7A8A82] leading-relaxed">
+                  No preference selected - we'll include all cooking methods
                 </p>
               </div>
             )}
@@ -342,39 +342,45 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
           <div className="bg-[#142A1D] rounded-2xl p-5 border border-[#2D5A3D]">
             <SectionHeader icon={Utensils} title="Your Kitchen Equipment" optional />
             <p className="text-[#6B7280] text-sm mb-4">Select what you have — we'll only suggest recipes you can actually make.</p>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-3">
               {equipmentOptions.map((eq) => {
                 const isSelected = availableEquipment.includes(eq.id);
                 return (
                   <button
                     key={eq.id}
                     onClick={() => toggleEquipment(eq.id)}
-                    className={`p-4 rounded-xl transition-all flex flex-col items-center gap-2 ${
+                    className={`w-full p-4 rounded-xl transition-all flex items-center justify-between text-left ${
                       isSelected
                         ? 'bg-[#22C55E]/20 border-2 border-[#22C55E]'
                         : 'bg-[#0A1F13] border border-[#2D5A3D] hover:border-[#22C55E]'
                     }`}
                   >
-                    <span className="text-2xl">{eq.icon}</span>
-                    <span className={`text-xs text-center font-medium ${isSelected ? 'text-[#22C55E]' : 'text-white'}`}>
-                      {eq.label}
-                    </span>
-                    <span className="text-[10px] text-[#6B7280] text-center">{eq.desc}</span>
+                    <div className="flex-1 min-w-0">
+                      <span className={`block text-sm font-semibold leading-tight ${isSelected ? 'text-[#22C55E]' : 'text-white'}`}>
+                        {eq.label}
+                      </span>
+                      <span className="block text-[11px] text-[#6B7280] mt-0.5">{eq.desc}</span>
+                    </div>
+                    {isSelected && (
+                      <div className="w-6 h-6 rounded-full bg-[#22C55E] flex items-center justify-center ml-3 shrink-0">
+                        <span className="text-[#052E16] text-sm">✓</span>
+                      </div>
+                    )}
                   </button>
                 );
               })}
             </div>
             {availableEquipment.length === 0 && (
-              <div className="mt-4 p-3 bg-[#0A1F13] rounded-xl border border-[#2D5A3D]">
-                <p className="text-sm text-[#6B7280]">
-                  🔍 No equipment selected — we'll include all recipes
+              <div className="mt-4 px-3 py-2.5 bg-transparent rounded-lg border border-dashed border-[#2D5A3D]/70">
+                <p className="text-xs text-[#7A8A82] leading-relaxed">
+                  No equipment selected — we'll include all recipes
                 </p>
               </div>
             )}
             {availableEquipment.length > 0 && !availableEquipment.includes('full-kitchen') && (
               <div className="mt-4 p-3 bg-[#22C55E]/10 rounded-xl border border-[#22C55E]/20">
                 <p className="text-sm text-[#22C55E]">
-                  🏠 Dorm Chef Mode active — showing recipes for: {availableEquipment.join(', ')}
+                  Dorm Chef Mode active — showing recipes for: {availableEquipment.join(', ')}
                 </p>
               </div>
             )}
