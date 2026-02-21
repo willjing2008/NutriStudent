@@ -207,9 +207,21 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
   const [shoppingMode, setShoppingMode] = useState(false);
   const [mealImages, setMealImages] = useState<Record<string, string>>({});
   const [shufflingMealId, setShufflingMealId] = useState<string | null>(null);
-  // selectedCalendarOffset = number of days since plan start (0 = shopping date)
-  const [selectedCalendarOffset, setSelectedCalendarOffset] = useState<number>(0);
+  // selectedCalendarOffset = number of days since plan start (0 = shopping date).
+  // Lazy-initialised to today's offset so the correct day is selected from the very first render.
+  const [selectedCalendarOffset, setSelectedCalendarOffset] = useState<number>(() => {
+    if (!preferences.shoppingDate) return 0;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const start = new Date(preferences.shoppingDate + 'T00:00:00');
+    if (isNaN(start.getTime())) return 0;
+    start.setHours(0, 0, 0, 0);
+    const diff = Math.round((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    return diff > 0 ? diff : 0;
+  });
   const calendarScrollRef = useRef<HTMLDivElement>(null);
+  // Tracks whether the first instant-scroll has happened so subsequent taps use smooth scroll
+  const hasDoneInitialScrollRef = useRef(false);
   const [showMealSwapModal, setShowMealSwapModal] = useState(false);
   const [selectedMealForSwap, setSelectedMealForSwap] = useState<MealPlanMeal | null>(null);
   const [cookedMeals, setCookedMeals] = useState<Set<string>>(new Set());
@@ -443,33 +455,38 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
     }
   }, [mealPlan, savedMealPlanSnapshot]);
 
-  // When plan loads, jump to today if today falls within the plan range
+  // Instant-centre the calendar the moment the plan (and therefore the calendar DOM) first appears.
+  // Uses 'instant' so there is no visible slide-in animation on page open.
   useEffect(() => {
-    if (!mealPlan || !planStartDate) return;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const start = new Date(planStartDate);
-    start.setHours(0, 0, 0, 0);
-    const diff = Math.round((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    if (diff >= 0 && diff < daysWithMeals.length) {
-      setSelectedCalendarOffset(diff);
-    }
-  }, [mealPlan]);
-
-  // Auto-scroll calendar to keep selected day centred
-  useEffect(() => {
+    if (!mealPlan || !calendarScrollRef.current) return;
     const container = calendarScrollRef.current;
-    if (!container) return;
-    // Defer until after the browser has painted so clientWidth is accurate
+    requestAnimationFrame(() => {
+      const idx = calendarDays.findIndex(d => d.offset === selectedCalendarOffset);
+      if (idx < 0) return;
+      const DAY_W = 64;
+      container.scrollTo({
+        left: Math.max(0, idx * DAY_W - container.clientWidth / 2 + DAY_W / 2),
+        behavior: 'instant' as ScrollBehavior,
+      });
+      hasDoneInitialScrollRef.current = true;
+    });
+  }, [mealPlan]); // fires whenever plan is set/replaced
+
+  // Smooth-scroll when the user taps a different day (but not on the initial load)
+  useEffect(() => {
+    if (!hasDoneInitialScrollRef.current || !calendarScrollRef.current) return;
+    const container = calendarScrollRef.current;
     const raf = requestAnimationFrame(() => {
       const idx = calendarDays.findIndex(d => d.offset === selectedCalendarOffset);
       if (idx < 0) return;
-      const DAY_W = 64; // w-14 (56px) + gap-2 (8px)
-      const scrollTarget = idx * DAY_W - container.clientWidth / 2 + DAY_W / 2;
-      container.scrollTo({ left: Math.max(0, scrollTarget), behavior: 'smooth' });
+      const DAY_W = 64;
+      container.scrollTo({
+        left: Math.max(0, idx * DAY_W - container.clientWidth / 2 + DAY_W / 2),
+        behavior: 'smooth',
+      });
     });
     return () => cancelAnimationFrame(raf);
-  }, [selectedCalendarOffset]); // calendarDays is not in deps — it's an IIFE, recomputed each render
+  }, [selectedCalendarOffset]);
 
   // Check if required preferences are set
   const hasRequiredPreferences = preferences.goal !== null;
