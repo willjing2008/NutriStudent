@@ -8,9 +8,11 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { MealPlansDashboard } from './components/MealPlansDashboard';
 import { ShoppingMode } from './components/ShoppingMode';
 import { ProfilePage } from './components/ProfilePage';
+import { SubscriptionPage } from './components/SubscriptionPage';
 import { NavTab } from './components/BottomNavigation';
 import { supabase } from '../utils/supabaseClient';
 import { projectId, publicAnonKey } from '../../utils/supabase/info';
+import { useSubscription } from './hooks/useSubscription';
 import { Apple, LogOut } from 'lucide-react';
 
 export type EquipmentType = 'microwave' | 'hot-plate' | 'rice-cooker' | 'kettle' | 'toaster' | 'full-kitchen';
@@ -45,12 +47,16 @@ export default function App() {
   const [user, setUser] = useState<any>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
-  
+
   // Navigation state
   const [activeNavTab, setActiveNavTab] = useState<NavTab>('home');
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
+  const [showSubscription, setShowSubscription] = useState(false);
   const [isOnboarding, setIsOnboarding] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(1);
+
+  // RevenueCat subscription
+  const { identify: rcIdentify, reset: rcReset } = useSubscription();
   
   // Meal plan state
   const [savedPlansHistory, setSavedPlansHistory] = useState<any[]>([]);
@@ -100,6 +106,13 @@ export default function App() {
           setUser(session.user);
           setAccessToken(session.access_token);
           loadSavedMealPlan(session.user.id);
+
+          // Identify returning user with RevenueCat
+          try {
+            await rcIdentify(session.user.id);
+          } catch (err) {
+            console.error('RevenueCat identify failed:', err);
+          }
         }
       } catch (err) {
         console.error('Error checking session:', err);
@@ -125,6 +138,7 @@ export default function App() {
     checkingAuth,
     isAuthenticated,
     showAdminDashboard,
+    showSubscription,
     isOnboarding,
     onboardingStep,
     activeNavTab,
@@ -300,21 +314,37 @@ export default function App() {
     }
   };
 
-  const handleLoginSuccess = (loggedInUser: any, token: string) => {
+  const handleLoginSuccess = async (loggedInUser: any, token: string) => {
     setIsAuthenticated(true);
     setUser(loggedInUser);
     setAccessToken(token);
     setActiveNavTab('home');
     setIsOnboarding(false);
     loadSavedMealPlan(loggedInUser.id);
+
+    // Identify user with RevenueCat
+    try {
+      await rcIdentify(loggedInUser.id);
+    } catch (err) {
+      console.error('RevenueCat identify failed:', err);
+    }
   };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
+
+    // Reset RevenueCat identity
+    try {
+      await rcReset();
+    } catch (err) {
+      console.error('RevenueCat reset failed:', err);
+    }
+
     setIsAuthenticated(false);
     setUser(null);
     setAccessToken(null);
     setShowAdminDashboard(false);
+    setShowSubscription(false);
     setSavedMealPlan(null);
     setSavedPlansHistory([]);
     setActivePlanId(null);
@@ -370,6 +400,15 @@ export default function App() {
   // Login Page
   if (!isAuthenticated) {
     return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+  }
+
+  // Subscription Page
+  if (showSubscription) {
+    return (
+      <SubscriptionPage
+        onBack={() => setShowSubscription(false)}
+      />
+    );
   }
 
   // Admin Dashboard
@@ -523,6 +562,7 @@ export default function App() {
           user={user}
           onLogout={handleLogout}
           onOpenAdmin={() => setShowAdminDashboard(true)}
+          onOpenSubscription={() => setShowSubscription(true)}
           activeTab={activeNavTab}
           onTabChange={handleNavTabChange}
         />

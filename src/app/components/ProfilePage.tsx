@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../hooks/useLanguage';
-import { LogOut, Settings, Bell, Shield, HelpCircle, ChevronRight, Moon, Globe } from 'lucide-react';
+import { useSubscription } from '../hooks/useSubscription';
+import { LogOut, Settings, Bell, Shield, HelpCircle, ChevronRight, Moon, Globe, Crown } from 'lucide-react';
 import { BottomNavigation, NavTab } from './BottomNavigation';
 import { ACHIEVEMENTS } from '../constants/achievements';
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
@@ -9,6 +10,7 @@ interface ProfilePageProps {
   user: any;
   onLogout: () => void;
   onOpenAdmin: () => void;
+  onOpenSubscription: () => void;
   activeTab: NavTab;
   onTabChange: (tab: NavTab) => void;
 }
@@ -24,8 +26,9 @@ interface UserStats {
   totalCookingDays: number;
 }
 
-export function ProfilePage({ user, onLogout, onOpenAdmin, activeTab, onTabChange }: ProfilePageProps) {
+export function ProfilePage({ user, onLogout, onOpenAdmin, onOpenSubscription, activeTab, onTabChange }: ProfilePageProps) {
   const { language, setLanguage, t } = useLanguage();
+  const { isPro } = useSubscription();
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
@@ -90,7 +93,15 @@ export function ProfilePage({ user, onLogout, onOpenAdmin, activeTab, onTabChang
               />
             </div>
             <div className="flex-1">
-              <h2 className="text-xl font-bold text-white">{userName}</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl font-bold text-white">{userName}</h2>
+                {isPro && (
+                  <span className="px-2 py-0.5 bg-[#22C55E]/20 border border-[#22C55E]/50 rounded-full text-[10px] font-bold text-[#22C55E] uppercase flex items-center gap-1">
+                    <Crown className="w-3 h-3" />
+                    Pro
+                  </span>
+                )}
+              </div>
               <p className="text-[#6B7280] text-sm">{userEmail}</p>
             </div>
             <button className="p-2 bg-[#2D2D2D] rounded-full hover:bg-[#3D3D3D] transition-colors">
@@ -142,6 +153,29 @@ export function ProfilePage({ user, onLogout, onOpenAdmin, activeTab, onTabChang
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Subscription Card */}
+      <div className="px-5 mb-6">
+        <button
+          onClick={onOpenSubscription}
+          className="w-full bg-gradient-to-r from-[#22C55E]/20 to-[#16A34A]/20 rounded-2xl p-5 border border-[#22C55E]/30 text-left hover:from-[#22C55E]/30 hover:to-[#16A34A]/30 transition-all"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-[#22C55E]/20 flex items-center justify-center">
+              <Crown className="w-6 h-6 text-[#22C55E]" />
+            </div>
+            <div className="flex-1">
+              <div className="text-white font-semibold">
+                {isPro ? 'NutriStudent Pro' : 'Upgrade to Pro'}
+              </div>
+              <p className="text-[#6B7280] text-xs mt-0.5">
+                {isPro ? 'Manage your subscription' : 'Unlock unlimited meal plans & more'}
+              </p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-[#22C55E]" />
+          </div>
+        </button>
       </div>
 
       {/* Achievement Badges */}
