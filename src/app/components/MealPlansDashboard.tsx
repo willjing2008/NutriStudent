@@ -1,6 +1,6 @@
 import { useLanguage } from '../hooks/useLanguage';
-import React, { useState } from 'react';
-import { Edit2, Search, Plus, ChevronRight, Check, Calendar, Bookmark, Sparkles } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Edit2, Search, Plus, ChevronRight, Check, Calendar, Sparkles } from 'lucide-react';
 import { BottomNavigation, NavTab } from './BottomNavigation';
 
 interface MealPlan {
@@ -17,14 +17,6 @@ interface MealPlan {
   tags?: string[];
 }
 
-interface SuggestedPlan {
-  id: string;
-  badge: string;
-  badgeColor: string;
-  name: string;
-  description: string;
-  saved?: boolean;
-}
 
 interface MealPlansDashboardProps {
   user: any;
@@ -35,6 +27,7 @@ interface MealPlansDashboardProps {
   onNavigateProfile: () => void;
   activePlan?: MealPlan | null;
   savedPlans?: MealPlan[];
+  onDeletePlan?: (planId: string) => Promise<void>;
 }
 
 export function MealPlansDashboard({
@@ -46,23 +39,26 @@ export function MealPlansDashboard({
   onNavigateProfile,
   activePlan,
   savedPlans = [],
+  onDeletePlan,
 }: MealPlansDashboardProps) {
   const { t } = useLanguage();
 
-  const [activeTab, setActiveTab] = useState<'active' | 'saved' | 'suggested' | 'history'>('active');
-  const [savedSuggestions, setSavedSuggestions] = useState<Set<string>>(new Set());
+  const [activeTab, setActiveTab] = useState<'active' | 'saved' | 'history'>('active');
 
   const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'Student';
 
   const tabs = [
     { id: 'active' as const, label: 'Active' },
     { id: 'saved' as const, label: 'Saved' },
-    { id: 'suggested' as const, label: 'Suggested' },
     { id: 'history' as const, label: 'History' },
   ];
 
-  // Sample saved plans for demo
-    const [savedPlansState, setSavedPlansState] = useState<any[]>(savedPlans);
+  const [savedPlansState, setSavedPlansState] = useState<any[]>(savedPlans);
+
+  // Sync local state when the prop updates (e.g. after async load on login)
+  useEffect(() => {
+    setSavedPlansState(savedPlans);
+  }, [savedPlans]);
 
   const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
@@ -73,53 +69,19 @@ export function MealPlansDashboard({
     setEditingPlanId(null);
   };
 
-  const handleDelete = (id: string, e: React.MouseEvent) => {
+  const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setSavedPlansState(prev => prev.filter(p => p.id !== id));
     setEditingPlanId(null);
+    if (onDeletePlan) {
+      await onDeletePlan(id);
+    }
   };
 
   const startEditing = (id: string, currentName: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setEditingPlanId(id);
     setRenameValue(currentName);
-  };
-
-  // Suggested plans
-  const suggestedPlans: SuggestedPlan[] = [
-    {
-      id: 's1',
-      badge: 'P+',
-      badgeColor: 'from-pink-500 to-orange-400',
-      name: 'Exam Week Power',
-      description: 'Brain food focus • 20 min prep',
-    },
-    {
-      id: 's2',
-      badge: 'Detox',
-      badgeColor: 'from-green-400 to-cyan-400',
-      name: 'Post-Party Recovery',
-      description: 'Hydration & vitamins • £40/week',
-    },
-    {
-      id: 's3',
-      badge: 'Gym',
-      badgeColor: 'from-red-500 to-pink-500',
-      name: 'Muscle Builder',
-      description: 'High protein • Bulk prep',
-    },
-  ];
-
-  const toggleSaveSuggestion = (id: string) => {
-    setSavedSuggestions(prev => {
-      const updated = new Set(prev);
-      if (updated.has(id)) {
-        updated.delete(id);
-      } else {
-        updated.add(id);
-      }
-      return updated;
-    });
   };
 
   const handleNavTabChange = (tab: NavTab) => {
@@ -139,19 +101,7 @@ export function MealPlansDashboard({
     }
   };
 
-  // Default active plan for demo
-  const currentActivePlan: MealPlan | null = activePlan || {
-    id: 'active-1',
-    name: 'Budget Bulk',
-    description: 'High protein, low cost plan for finals...',
-    image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400',
-    week: 4,
-    calories: 2400,
-    protein: 160,
-    costPerDay: 8.50,
-    isActive: true,
-    onTrack: true,
-  };
+  const currentActivePlan: MealPlan | null = activePlan || null;
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] pb-24">
@@ -204,6 +154,22 @@ export function MealPlansDashboard({
       {/* Content */}
       <div className="px-5 space-y-6">
         {/* Currently Active Section */}
+        {activeTab === 'active' && !currentActivePlan && (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 rounded-full bg-[#1A1A1A] flex items-center justify-center mx-auto mb-4">
+              <Sparkles className="w-8 h-8 text-[#6B7280]" />
+            </div>
+            <h3 className="text-white font-semibold mb-2">No Active Plan</h3>
+            <p className="text-[#6B7280] text-sm mb-6">Create a meal plan to get started</p>
+            <button
+              onClick={onCreateNew}
+              className="px-6 py-3 bg-[#22C55E] text-[#052E16] font-bold rounded-full hover:bg-[#4ADE80] transition-colors"
+            >
+              Create Plan
+            </button>
+          </div>
+        )}
+
         {activeTab === 'active' && currentActivePlan && (
           <>
             <div>

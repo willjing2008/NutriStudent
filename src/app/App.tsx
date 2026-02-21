@@ -55,6 +55,7 @@ export default function App() {
   // Meal plan state
   const [savedPlansHistory, setSavedPlansHistory] = useState<any[]>([]);
   const [savedMealPlan, setSavedMealPlan] = useState<any>(null);
+  const [activePlanId, setActivePlanId] = useState<string | null>(null);
   const [loadingSavedPlan, setLoadingSavedPlan] = useState(false);
   
   // User preferences
@@ -145,8 +146,9 @@ export default function App() {
   const loadSavedMealPlan = async (userId: string) => {
     setLoadingSavedPlan(true);
     try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/load-meal-plan`,
+      // Step 1: get the list to find the most recent plan ID
+      const listResponse = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/get-meal-plans`,
         {
           method: 'POST',
           headers: {
@@ -157,16 +159,54 @@ export default function App() {
         }
       );
 
-      const data = await response.json();
+      const listData = await listResponse.json();
 
-      if (data.hasSavedPlan) {
-        console.log('Found saved meal plan');
-        setSavedMealPlan(data.mealPlan);
-        if (data.preferences) {
-          setPreferences(data.preferences);
+      if (!listData.plans?.length) {
+        console.log('No saved meal plans found');
+        return;
+      }
+
+      // Populate the saved plans history for the home screen
+      const historyItems = listData.plans.map((p: any) => ({
+        id: p.planId,
+        name: p.planName,
+        createdAt: p.savedAt,
+        description: 'Saved meal plan',
+        image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400',
+        calories: 0,
+        protein: 0,
+        costPerDay: p.totalCost ? parseFloat((p.totalCost / 7).toFixed(2)) : 0,
+        weeklyBudget: p.totalCost || 0,
+      }));
+      setSavedPlansHistory(historyItems);
+
+      // Step 2: load the most recent plan by its ID
+      const latestPlanId = listData.plans[0].planId;
+      setActivePlanId(latestPlanId);
+      const planResponse = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/load-meal-plan-by-id`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${publicAnonKey}`,
+          },
+          body: JSON.stringify({ userId, planId: latestPlanId }),
         }
-      } else {
-        console.log('No saved meal plan found');
+      );
+
+      const planData = await planResponse.json();
+
+      if (planData.mealPlan) {
+        console.log('Found saved meal plan');
+        setSavedMealPlan(planData.mealPlan);
+        if (planData.preferences) {
+          setPreferences(planData.preferences);
+          // Enrich plan metadata with goal from preferences
+          setSavedPlansHistory(prev => prev.map((p, i) =>
+            i === 0 ? { ...p, goal: planData.preferences.goal, description: `${planData.preferences.goal || 'Custom'} plan` } : p
+          ));
+        }
       }
     } catch (err) {
       console.error('Error loading saved meal plan:', err);
@@ -201,10 +241,12 @@ export default function App() {
       if (data.success) {
         console.log('Meal plan saved successfully');
         setSavedMealPlan(mealPlan);
-        
+        const newPlanId = data.planId || Date.now().toString();
+        setActivePlanId(newPlanId);
+
         // Add to saved plans history
         const newSavedPlan = {
-          id: data.planId || Date.now().toString(),
+          id: newPlanId,
           name: planName || `Meal Plan - ${new Date().toLocaleDateString('en-GB')}`,
           createdAt: new Date().toISOString(),
           description: `${preferences.goal || 'Custom'} plan`,
@@ -227,33 +269,34 @@ export default function App() {
     }
   };
 
-  const deleteSavedMealPlan = async () => {
+  const deleteSavedMealPlanById = async (planId: string) => {
     if (!user) return;
-    
+
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/delete-meal-plan`,
+        `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/delete-meal-plan-by-id`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${publicAnonKey}`,
           },
-          body: JSON.stringify({ userId: user.id }),
+          body: JSON.stringify({ userId: user.id, planId }),
         }
       );
 
       const data = await response.json();
 
       if (data.success) {
-        console.log('Meal plan deleted successfully');
-        setSavedMealPlan(null);
-        return true;
+        console.log('Meal plan deleted successfully:', planId);
+        setSavedPlansHistory(prev => prev.filter(p => p.id !== planId));
+        if (planId === activePlanId) {
+          setSavedMealPlan(null);
+          setActivePlanId(null);
+        }
       }
-      return false;
     } catch (err) {
       console.error('Error deleting meal plan:', err);
-      return false;
     }
   };
 
@@ -273,6 +316,8 @@ export default function App() {
     setAccessToken(null);
     setShowAdminDashboard(false);
     setSavedMealPlan(null);
+    setSavedPlansHistory([]);
+    setActivePlanId(null);
     setActiveNavTab('home');
     setIsOnboarding(false);
     resetPreferences();
@@ -305,7 +350,7 @@ export default function App() {
 
   const startOnboarding = () => {
     setIsOnboarding(true);
-    setOnboardingStep(1);
+    setOnboardingStep(2);
   };
 
   // Loading State
@@ -374,7 +419,10 @@ export default function App() {
             preferences={preferences}
             updatePreferences={updatePreferences}
             onNext={() => setOnboardingStep(3)}
-            onBack={() => setOnboardingStep(1)}
+            onBack={() => {
+              setIsOnboarding(false);
+              setActiveNavTab('home');
+            }}
           />
         )}
         {onboardingStep === 3 && (
@@ -384,7 +432,7 @@ export default function App() {
             onNext={() => setOnboardingStep(4)}
             onReset={() => {
               resetPreferences();
-              setOnboardingStep(1);
+              setOnboardingStep(2);
             }}
             onSaveMealPlan={async (mealPlan) => {
               const success = await saveMealPlan(mealPlan);
@@ -428,17 +476,16 @@ export default function App() {
           onNavigateHome={() => setActiveNavTab('home')}
           onNavigateGrocery={() => setActiveNavTab('shop')}
           onNavigateProfile={() => setActiveNavTab('profile')}
+          onDeletePlan={deleteSavedMealPlanById}
           activePlan={savedMealPlan ? {
-            id: 'active-plan',
-            name: 'Your Current Plan',
+            id: activePlanId || 'active-plan',
+            name: savedPlansHistory[0]?.name || 'Your Current Plan',
             description: `${preferences.goal === 'study' ? 'Study focus' : preferences.goal === 'work' ? 'Work efficiency' : 'Fitness'} meal plan`,
             image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400',
-            week: 1,
-            calories: savedMealPlan.meals?.reduce((sum: number, m: any) => sum + (m.nutrition?.calories || 0), 0) || 2000,
-            protein: savedMealPlan.meals?.reduce((sum: number, m: any) => sum + (m.nutrition?.protein || 0), 0) || 100,
+            calories: savedMealPlan.meals?.reduce((sum: number, m: any) => sum + (m.nutrition?.calories || 0), 0) || 0,
+            protein: savedMealPlan.meals?.reduce((sum: number, m: any) => sum + (m.nutrition?.protein || 0), 0) || 0,
             costPerDay: savedMealPlan.dailyBudget || preferences.budget / 7,
             isActive: true,
-            onTrack: true,
           } : null}
         />
       )}
@@ -454,6 +501,7 @@ export default function App() {
           onNavigateHome={() => setActiveNavTab('home')}
           activeNavTab={activeNavTab}
           onNavTabChange={handleNavTabChange}
+          savedMealPlan={savedMealPlan}
         />
       )}
 

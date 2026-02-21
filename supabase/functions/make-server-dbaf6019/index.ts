@@ -2297,28 +2297,46 @@ app.post("/make-server-dbaf6019/delete-meal-plan-by-id", async (c) => {
 app.post("/make-server-dbaf6019/load-meal-plan", async (c) => {
   try {
     const { userId } = await c.req.json();
-    
+
     if (!userId) {
       return c.json({ error: "User ID required" }, 400);
     }
 
-    // Retrieve meal plan from KV
-    const key = `meal_plan_${userId}`;
-    const data = await kv.get(key);
+    // Try the new list-based format first (load most recent plan)
+    const listKey = `meal_plan_list_${userId}`;
+    const list = await kv.get(listKey);
 
-    if (!data) {
-      return c.json({ 
-        hasSavedPlan: false
-      });
+    if (list?.plans?.length > 0) {
+      const latestPlanId = list.plans[0].planId;
+      const planKey = `meal_plan_${userId}_${latestPlanId}`;
+      const data = await kv.get(planKey);
+
+      if (data) {
+        console.log(`✅ Loaded latest meal plan for user ${userId} (id: ${latestPlanId})`);
+        return c.json({
+          hasSavedPlan: true,
+          mealPlan: data.mealPlan,
+          preferences: data.preferences,
+          savedAt: data.savedAt
+        });
+      }
     }
 
-    console.log(`✅ Loaded meal plan for user ${userId}`);
+    // Fall back to legacy single-plan key
+    const legacyKey = `meal_plan_${userId}`;
+    const legacyData = await kv.get(legacyKey);
 
-    return c.json({ 
+    if (!legacyData) {
+      return c.json({ hasSavedPlan: false });
+    }
+
+    console.log(`✅ Loaded meal plan for user ${userId} (legacy key)`);
+
+    return c.json({
       hasSavedPlan: true,
-      mealPlan: data.mealPlan,
-      preferences: data.preferences,
-      savedAt: data.savedAt
+      mealPlan: legacyData.mealPlan,
+      preferences: legacyData.preferences,
+      savedAt: legacyData.savedAt
     });
   } catch (error: any) {
     console.log(`Error loading meal plan: ${error.message}`);

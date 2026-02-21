@@ -1,6 +1,6 @@
 import { ShoppingCart, ArrowLeft, Loader2, X, Clock, ChefHat, Users, Flame, RefreshCw, Repeat2, MapPin, ArrowRight, Save, Check, Plus, Bell, ExternalLink, Play } from 'lucide-react';
 import { UserPreferences } from '../App';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
 import { ShoppingMode } from './ShoppingMode';
 import { getRecipeImage, getRecipeImageByName, getRecipeImageWithCache } from '../utils/recipeImages';
@@ -20,6 +20,7 @@ interface RecommendationsStepProps {
   onNavigateHome?: () => void;
   activeNavTab?: NavTab;
   onNavTabChange?: (tab: NavTab) => void;
+  savedMealPlan?: any;
 }
 
 interface Ingredient {
@@ -196,7 +197,7 @@ function enrichMealPlan(plan: MealPlan): MealPlan {
   };
 }
 
-export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSaveMealPlan, onNavigateHome, activeNavTab, onNavTabChange }: RecommendationsStepProps) {
+export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSaveMealPlan, onNavigateHome, activeNavTab, onNavTabChange, savedMealPlan: initialSavedPlan }: RecommendationsStepProps) {
   const [mealPlan, setMealPlan] = useState<MealPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -206,7 +207,9 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
   const [shoppingMode, setShoppingMode] = useState(false);
   const [mealImages, setMealImages] = useState<Record<string, string>>({});
   const [shufflingMealId, setShufflingMealId] = useState<string | null>(null);
-  const [selectedDay, setSelectedDay] = useState<number>(0);
+  // selectedCalendarOffset = number of days since plan start (0 = shopping date)
+  const [selectedCalendarOffset, setSelectedCalendarOffset] = useState<number>(0);
+  const calendarScrollRef = useRef<HTMLDivElement>(null);
   const [showMealSwapModal, setShowMealSwapModal] = useState(false);
   const [selectedMealForSwap, setSelectedMealForSwap] = useState<MealPlanMeal | null>(null);
   const [cookedMeals, setCookedMeals] = useState<Set<string>>(new Set());
@@ -217,6 +220,7 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
   
   const [savingPlan, setSavingPlan] = useState(false);
   const [planSaved, setPlanSaved] = useState(false);
+  const [savedMealPlanSnapshot, setSavedMealPlanSnapshot] = useState<string | null>(null);
   
   const [showSavedPlansModal, setShowSavedPlansModal] = useState(false);
   const [loadingPlan, setLoadingPlan] = useState(false);
@@ -317,15 +321,16 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
   
   const handleSavePlan = async () => {
     if (!mealPlan || !onSaveMealPlan || !user) return;
-    
+
     setSavingPlan(true);
     setPlanSaved(false);
-    
+
     try {
       const success = await onSaveMealPlan(mealPlan);
       if (success) {
         setPlanSaved(true);
-        setTimeout(() => setPlanSaved(false), 3000);
+        // Snapshot the saved plan's meal IDs so we can detect changes
+        setSavedMealPlanSnapshot(JSON.stringify(mealPlan.meals.map(m => m.id).sort()));
       }
     } catch (err) {
       console.error('Error saving plan:', err);
@@ -374,7 +379,18 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
   };
 
   useEffect(() => {
-    checkKitchenInventoryStatus();
+    // If a saved plan was passed in, use it directly instead of generating a new one
+    if (initialSavedPlan?.meals?.length) {
+      const enriched = enrichMealPlan(initialSavedPlan);
+      setMealPlan(enriched);
+      setLoading(false);
+      setCheckingWizardStatus(false);
+      setPlanSaved(true);
+      setSavedMealPlanSnapshot(JSON.stringify(enriched.meals.map(m => m.id).sort()));
+      fetchMealImages(enriched.meals);
+    } else {
+      checkKitchenInventoryStatus();
+    }
   }, []);
   
   useEffect(() => {
@@ -418,6 +434,43 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
       .catch(err => console.error('Failed to load user stats:', err));
   }, [user]);
 
+  // Reset planSaved when the meal plan changes (e.g. after swap/shuffle)
+  useEffect(() => {
+    if (!mealPlan || !savedMealPlanSnapshot) return;
+    const currentSnapshot = JSON.stringify(mealPlan.meals.map(m => m.id).sort());
+    if (currentSnapshot !== savedMealPlanSnapshot) {
+      setPlanSaved(false);
+    }
+  }, [mealPlan, savedMealPlanSnapshot]);
+
+  // When plan loads, jump to today if today falls within the plan range
+  useEffect(() => {
+    if (!mealPlan || !planStartDate) return;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const start = new Date(planStartDate);
+    start.setHours(0, 0, 0, 0);
+    const diff = Math.round((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    if (diff >= 0 && diff < daysWithMeals.length) {
+      setSelectedCalendarOffset(diff);
+    }
+  }, [mealPlan]);
+
+  // Auto-scroll calendar to keep selected day centred
+  useEffect(() => {
+    const container = calendarScrollRef.current;
+    if (!container) return;
+    // Defer until after the browser has painted so clientWidth is accurate
+    const raf = requestAnimationFrame(() => {
+      const idx = calendarDays.findIndex(d => d.offset === selectedCalendarOffset);
+      if (idx < 0) return;
+      const DAY_W = 64; // w-14 (56px) + gap-2 (8px)
+      const scrollTarget = idx * DAY_W - container.clientWidth / 2 + DAY_W / 2;
+      container.scrollTo({ left: Math.max(0, scrollTarget), behavior: 'smooth' });
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [selectedCalendarOffset]); // calendarDays is not in deps — it's an IIFE, recomputed each render
+
   // Check if required preferences are set
   const hasRequiredPreferences = preferences.goal !== null;
 
@@ -430,10 +483,10 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
     }
 
     setCheckingWizardStatus(true);
-    
+
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (!user) {
         setCheckingWizardStatus(false);
         fetchMealPlan();
@@ -461,8 +514,7 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
       } else {
         setCheckingWizardStatus(false);
         setShowKitchenWizard(true);
-        fetchMealPlan();  // 确保 mealPlan 被加载，以便组件可以正确渲染
-
+        // Don't fetch meal plan yet - wait for wizard completion to avoid double fetch
       }
     } catch (err) {
       console.error('Error checking kitchen inventory status:', err);
@@ -771,19 +823,62 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
 
   const dailyMealSchedule = groupMealsByDay();
   const daysWithMeals = Object.keys(dailyMealSchedule).map(Number).sort((a, b) => a - b);
-  const currentDayMeals = dailyMealSchedule[daysWithMeals[selectedDay]] || [];
 
-  // Calculate nutrition for selected day
-  const todayNutrition = currentDayMeals.reduce(
-    (totals, meal) => ({
-      calories: totals.calories + (meal.nutrition?.calories || 0),
-      protein: totals.protein + (meal.nutrition?.protein || 0),
-      carbs: totals.carbs + (meal.nutrition?.carbs || 0),
-      fats: totals.fats + (meal.nutrition?.fats || 0),
-      fiber: totals.fiber + (meal.nutrition?.fiber || 0),
-    }),
-    { calories: 0, protein: 0, carbs: 0, fats: 0, fiber: 0 }
-  );
+  // currentDayMeals derived from calendar offset
+  const currentDayMeals =
+    selectedCalendarOffset >= 0 && selectedCalendarOffset < daysWithMeals.length
+      ? dailyMealSchedule[daysWithMeals[selectedCalendarOffset]] || []
+      : [];
+
+  // Parse the plan start date from preferences (shoppingDate is 'YYYY-MM-DD' from date input)
+  const planStartDate: Date | null = (() => {
+    if (!preferences.shoppingDate) return null;
+    const d = new Date(preferences.shoppingDate + 'T00:00:00');
+    return isNaN(d.getTime()) ? null : d;
+  })();
+
+  // Generate scrollable calendar days: 14 days before plan start → plan end + 14 days
+  const calendarDays = (() => {
+    const start = planStartDate ? new Date(planStartDate) : new Date();
+    start.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const planLen = Math.max(daysWithMeals.length, 1);
+    const days = [];
+    let prevMonth = -1;
+    for (let i = -14; i < planLen + 14; i++) {
+      const date = new Date(start);
+      date.setDate(start.getDate() + i);
+      date.setHours(0, 0, 0, 0);
+      const month = date.getMonth();
+      days.push({
+        offset: i,
+        date,
+        dayLabel: date.toLocaleDateString('en-US', { weekday: 'short' }),
+        dateNum: date.getDate(),
+        monthLabel: date.toLocaleDateString('en-US', { month: 'short' }),
+        showMonthLabel: month !== prevMonth,
+        hasMeals: i >= 0 && i < daysWithMeals.length,
+        isToday: date.getTime() === today.getTime(),
+      });
+      prevMonth = month;
+    }
+    return days;
+  })();
+
+  // Calculate nutrition for selected day — only cooked/eaten meals count toward progress
+  const todayNutrition = currentDayMeals
+    .filter(meal => cookedMeals.has(meal.id))
+    .reduce(
+      (totals, meal) => ({
+        calories: totals.calories + (meal.nutrition?.calories || 0),
+        protein: totals.protein + (meal.nutrition?.protein || 0),
+        carbs: totals.carbs + (meal.nutrition?.carbs || 0),
+        fats: totals.fats + (meal.nutrition?.fats || 0),
+        fiber: totals.fiber + (meal.nutrition?.fiber || 0),
+      }),
+      { calories: 0, protein: 0, carbs: 0, fats: 0, fiber: 0 }
+    );
 
   const dailyBudgetUsed = currentDayMeals.reduce((sum, meal) => sum + (meal.totalCost || 0), 0);
   const dailyBudgetLimit = mealPlan?.dailyBudget || (preferences.budget / 7);
@@ -808,26 +903,6 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
   const caloriePercentage = Math.round((todayNutrition.calories / targetCalories) * 100);
   const cookedCount = currentDayMeals.filter(meal => cookedMeals.has(meal.id)).length;
 
-  // Generate week days for calendar
-  const getWeekDays = () => {
-    const days = [];
-    const today = new Date();
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay() + 1);
-
-    for (let i = 0; i < Math.min(5, daysWithMeals.length); i++) {
-      const date = new Date(startOfWeek);
-      date.setDate(startOfWeek.getDate() + i);
-      days.push({
-        day: date.toLocaleDateString('en-US', { weekday: 'short' }),
-        date: date.getDate(),
-        isSelected: i === selectedDay,
-      });
-    }
-    return days;
-  };
-
-  const weekDays = getWeekDays();
 
   // Prepare shopping list
   const allIngredients = mealPlan?.meals.flatMap(meal => 
@@ -857,8 +932,8 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
     );
   }
 
-  // Needs Setup State - when preferences aren't complete
-  if (!hasRequiredPreferences && !loading && !checkingWizardStatus) {
+  // Needs Setup State - when preferences aren't complete AND no plan is loaded/incoming
+  if (!hasRequiredPreferences && !loading && !checkingWizardStatus && !mealPlan && !initialSavedPlan?.meals?.length) {
     return (
       <div className="min-h-screen bg-[#0A0A0A] flex flex-col pb-24">
         <div className="flex-1 flex items-center justify-center p-6">
@@ -894,8 +969,8 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
     );
   }
 
-  // Loading State
-  if (loading) {
+  // Loading State (don't show if kitchen wizard is active)
+  if (loading && !showKitchenWizard) {
     return (
       <div className="min-h-screen bg-[#0A1F13] flex items-center justify-center">
         <div className="text-center">
@@ -920,6 +995,16 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
           </button>
         </div>
       </div>
+    );
+  }
+
+  // Show kitchen wizard before meal plan is loaded
+  if (showKitchenWizard) {
+    return (
+      <KitchenInventoryWizard
+        onComplete={handleKitchenWizardComplete}
+        onSkip={handleKitchenWizardSkip}
+      />
     );
   }
 
@@ -949,27 +1034,54 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
           </div>
             </div>
 
-      {/* Calendar Week */}
-      <div className="px-5 mb-6">
-        <div className="flex justify-between items-center">
-          {weekDays.map((day, index) => (
-            <button
-              key={index}
-              onClick={() => setSelectedDay(index)}
-              className={`w-14 h-14 flex flex-col items-center justify-center rounded-2xl transition-all ${
-                day.isSelected
-                  ? 'bg-[#22C55E] text-[#052E16]'
-                  : 'text-[#6B7280] hover:bg-[#142A1D]'
-              }`}
-            >
-              <span className="text-xs font-medium mb-1">{day.day}</span>
-              <span className={`text-lg font-bold ${day.isSelected ? 'text-[#052E16]' : 'text-white'}`}>
-                {day.date}
-              </span>
-            </button>
-          ))}
-                </div>
-              </div>
+      {/* Calendar — scrollable, anchored to plan start date */}
+      <div className="mb-4">
+        {/* Month / year label for selected day */}
+        <div className="px-5 mb-2 flex items-center gap-2">
+          <span className="text-white font-semibold text-sm">
+            {calendarDays.find(d => d.offset === selectedCalendarOffset)?.date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) ?? ''}
+          </span>
+        </div>
+
+        {/* Scrollable day strip */}
+        <div
+          ref={calendarScrollRef}
+          className="overflow-x-auto hide-scrollbar pb-2"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
+          <div className="flex gap-2 px-5 w-max">
+            {calendarDays.map((day) => {
+              const isSelected = day.offset === selectedCalendarOffset;
+              return (
+                <button
+                  key={day.offset}
+                  onClick={() => setSelectedCalendarOffset(day.offset)}
+                  className={`flex-shrink-0 w-14 flex flex-col items-center justify-center py-2.5 rounded-2xl transition-all ${
+                    isSelected
+                      ? 'bg-[#22C55E]'
+                      : day.isToday
+                      ? 'bg-[#142A1D] border border-[#22C55E]/50'
+                      : 'hover:bg-[#142A1D]'
+                  }`}
+                >
+                  <span className={`text-[11px] font-medium mb-0.5 ${isSelected ? 'text-[#052E16]' : 'text-[#6B7280]'}`}>
+                    {day.dayLabel}
+                  </span>
+                  <span className={`text-lg font-bold leading-none ${isSelected ? 'text-[#052E16]' : 'text-white'}`}>
+                    {day.dateNum}
+                  </span>
+                  {/* Dot — green for days in plan, dim for today indicator */}
+                  <div className={`w-1.5 h-1.5 rounded-full mt-1 ${
+                    day.hasMeals
+                      ? isSelected ? 'bg-[#052E16]/40' : 'bg-[#22C55E]'
+                      : day.isToday && !isSelected ? 'bg-[#6B7280]/50' : 'bg-transparent'
+                  }`} />
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
 
       {/* Daily Goal Card */}
       <div className="px-5 mb-6">
@@ -1210,25 +1322,18 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
           <ArrowRight className="w-5 h-5" />
         </button>
 
-        {/* Save Plan Button */}
-            {user && (
+        {/* Save Plan Button - hidden once saved */}
+            {user && !planSaved && (
               <button
                 onClick={handleSavePlan}
-                disabled={savingPlan || planSaved}
+                disabled={savingPlan}
             className={`w-full py-4 rounded-2xl font-medium flex items-center justify-center gap-2 transition-all ${
-                  planSaved
-                ? 'bg-[#22C55E] text-[#052E16]'
-                    : savingPlan
+                  savingPlan
                 ? 'bg-[#1E4029] text-[#6B7280]'
                 : 'bg-[#142A1D] border border-[#2D5A3D] text-white hover:border-[#22C55E]'
                 }`}
               >
-                {planSaved ? (
-                  <>
-                <Check className="w-5 h-5" />
-                Plan Saved!
-                  </>
-                ) : savingPlan ? (
+                {savingPlan ? (
                   <>
                 <Loader2 className="w-5 h-5 animate-spin" />
                 Saving...
@@ -1242,23 +1347,7 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
               </button>
             )}
 
-        {/* Find Nearest Shop */}
-            <button
-              onClick={onNext}
-          className="w-full py-4 bg-[#142A1D] border border-[#2D5A3D] text-white rounded-2xl font-medium flex items-center justify-center gap-2 hover:border-[#22C55E] transition-all"
-        >
-          <MapPin className="w-5 h-5" />
-          Find Nearest Shop
-            </button>
       </div>
-
-      {/* Floating Action Button */}
-              <button
-        onClick={() => setShoppingMode(true)}
-        className="fixed bottom-24 right-5 w-14 h-14 bg-[#22C55E] rounded-full flex items-center justify-center shadow-lg shadow-[#22C55E]/30 hover:bg-[#4ADE80] transition-all"
-              >
-        <Plus className="w-6 h-6 text-[#052E16]" />
-              </button>
 
       {/* Shared Bottom Navigation */}
       <BottomNavigation 
@@ -1473,14 +1562,6 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
           publicAnonKey={publicAnonKey}
           onSwap={handleMealSwap}
           onClose={() => setShowMealSwapModal(false)}
-        />
-      )}
-
-      {/* Kitchen Inventory Wizard */}
-      {showKitchenWizard && (
-        <KitchenInventoryWizard
-          onComplete={handleKitchenWizardComplete}
-          onSkip={handleKitchenWizardSkip}
         />
       )}
 
