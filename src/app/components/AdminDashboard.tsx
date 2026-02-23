@@ -3,6 +3,9 @@ import { Search, Plus, Edit2, Trash2, RefreshCw, Database, ChefHat, X, Save, Loa
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
 import { ImageStorageInfo } from './ImageStorageInfo';
 
+const LOCAL_IMAGE_FALLBACK =
+  'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjI0MCIgdmlld0JveD0iMCAwIDMyMCAyNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjMyMCIgaGVpZ2h0PSIyNDAiIGZpbGw9IiMxNDJBMUQiLz48Y2lyY2xlIGN4PSIxNjAiIGN5PSIxMDAiIHI9IjQwIiBmaWxsPSIjMUU0MDI5Ii8+PHJlY3QgeD0iNzIiIHk9IjE2MiIgd2lkdGg9IjE3NiIgaGVpZ2h0PSIxMiIgcng9IjYiIGZpbGw9IiMyMkM1NUUiIG9wYWNpdHk9IjAuNzUiLz48L3N2Zz4=';
+
 interface Recipe {
   id: string;
   name: string;
@@ -1364,25 +1367,17 @@ export function AdminDashboard() {
                             {editedRecipe?.imageQuery && (
                               <div className="mt-3">
                                 <label className="text-sm text-purple-700 mb-2 block">AI Preview:</label>
-                                {!aiImageLoadError ? (
-                                  <img
-                                    src={`https://image.pollinations.ai/prompt/${encodeURIComponent(editedRecipe.imageQuery)}?width=800&height=600&nologo=true`}
-                                    alt={editedRecipe.name}
-                                    className="w-full h-48 object-cover rounded-lg border-2 border-purple-300"
-                                    onError={(e) => {
-                                      console.error('Failed to load AI-generated image');
-                                      setAiImageLoadError(true);
-                                    }}
-                                  />
-                                ) : (
-                                  <div className="w-full h-48 flex flex-col items-center justify-center bg-purple-100 border-2 border-purple-300 border-dashed rounded-lg">
-                                    <ImageIcon className="w-12 h-12 text-purple-400 mb-2" />
-                                    <p className="text-sm text-purple-700 font-medium">AI Preview Unavailable</p>
-                                    <p className="text-xs text-purple-600 mt-1 px-4 text-center">External image service may be blocked by your network</p>
-                                  </div>
-                                )}
+                                <img
+                                  src={editedRecipe.imageUrl || LOCAL_IMAGE_FALLBACK}
+                                  alt={editedRecipe.name}
+                                  className="w-full h-48 object-cover rounded-lg border-2 border-purple-300"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.src = LOCAL_IMAGE_FALLBACK;
+                                  }}
+                                />
                                 <p className="text-xs text-purple-600 mt-2">
-                                  💡 {aiImageLoadError ? 'Use custom upload above instead.' : 'If preview doesn\'t load, the image will still be saved when you save the recipe. Try uploading a custom image if needed.'}
+                                  Image will be fetched from Unsplash when the recipe is saved. Upload a custom image above if needed.
                                 </p>
                               </div>
                             )}
@@ -1394,13 +1389,12 @@ export function AdminDashboard() {
                           {(selectedRecipe.imageUrl || selectedRecipe.imageQuery) && (
                             <div>
                               <img
-                                src={selectedRecipe.imageUrl || `https://image.pollinations.ai/prompt/${encodeURIComponent(selectedRecipe.imageQuery)}?width=800&height=600&nologo=true`}
+                                src={selectedRecipe.imageUrl || LOCAL_IMAGE_FALLBACK}
                                 alt={selectedRecipe.name}
                                 className="w-full h-48 object-cover rounded-lg border-2 border-gray-200"
                                 onError={(e) => {
-                                  console.error('Failed to load recipe image');
                                   const target = e.target as HTMLImageElement;
-                                  target.style.display = 'none';
+                                  target.src = LOCAL_IMAGE_FALLBACK;
                                 }}
                               />
                               {selectedRecipe.imageUrl && (
@@ -1855,25 +1849,13 @@ export function AdminDashboard() {
                     {newRecipe.imageQuery && (
                       <div className="mt-3">
                         <label className="text-sm text-purple-700 mb-2 block">AI Preview:</label>
-                        {!newRecipeAiImageLoadError ? (
-                          <img
-                            src={`https://image.pollinations.ai/prompt/${encodeURIComponent(newRecipe.imageQuery)}?width=800&height=600&nologo=true`}
-                            alt={newRecipe.name || 'Recipe preview'}
-                            className="w-full h-48 object-cover rounded-lg border-2 border-purple-300"
-                            onError={(e) => {
-                              console.error('Failed to load AI-generated image');
-                              setNewRecipeAiImageLoadError(true);
-                            }}
-                          />
-                        ) : (
-                          <div className="w-full h-48 flex flex-col items-center justify-center bg-purple-100 border-2 border-purple-300 border-dashed rounded-lg">
-                            <ImageIcon className="w-12 h-12 text-purple-400 mb-2" />
-                            <p className="text-sm text-purple-700 font-medium">AI Preview Unavailable</p>
-                            <p className="text-xs text-purple-600 mt-1 px-4 text-center">External image service may be blocked by your network</p>
-                          </div>
-                        )}
+                        <img
+                          src={LOCAL_IMAGE_FALLBACK}
+                          alt={newRecipe.name || 'Recipe preview'}
+                          className="w-full h-48 object-cover rounded-lg border-2 border-purple-300"
+                        />
                         <p className="text-xs text-purple-600 mt-2">
-                          💡 {newRecipeAiImageLoadError ? 'Use custom upload above instead.' : 'If preview doesn\'t load, the image will still be saved when you create the recipe. Try uploading a custom image if needed.'}
+                          Image will be fetched from Unsplash when the recipe is created. Upload a custom image above if needed.
                         </p>
                       </div>
                     )}

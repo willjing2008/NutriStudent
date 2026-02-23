@@ -137,7 +137,7 @@ export function ImageStorageInfo() {
           <ul className="space-y-2 text-sm text-gray-600">
             <li className="flex items-start gap-2">
               <span className="text-indigo-600 mt-0.5">•</span>
-              <span><strong>First load:</strong> Images are generated from Pollinations.ai and stored in Supabase Storage</span>
+              <span><strong>First load:</strong> Images are sourced from Unsplash and stored in Supabase Storage</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-indigo-600 mt-0.5">•</span>

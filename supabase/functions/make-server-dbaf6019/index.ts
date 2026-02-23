@@ -70,37 +70,83 @@ async function ensureRecipeImagesBucket(): Promise<void> {
   }
 }
 
-// Helper function to download and store image from Pollinations.ai
+// Helper to trim AI-prompt-style imageQuery values down to 2-6 keywords for stock photo search
+function simplifyImageQuery(query: string): string {
+  // Remove photography/style descriptors and keep food-related keywords
+  const stopPhrases = [
+    'food photography', 'close-up', 'close up', 'warm and inviting',
+    'professional', 'rustic', 'authentic', 'restaurant style', 'homestyle',
+    'comfort food', 'street food', 'minimalist style', 'cross-section view',
+  ];
+  let simplified = query.toLowerCase();
+  for (const phrase of stopPhrases) {
+    simplified = simplified.replace(phrase, '');
+  }
+  // Remove trailing descriptors after commas (style hints)
+  simplified = simplified.split(',').slice(0, 2).join(' ');
+  // Collapse whitespace
+  simplified = simplified.replace(/\s+/g, ' ').trim();
+  // Keep at most 6 words
+  const words = simplified.split(' ').filter(Boolean).slice(0, 6);
+  return words.join(' ') || query;
+}
+
+// Helper function to download and store image from Unsplash
 async function storeRecipeImage(imageQuery: string, recipeId: string, cuisine: string): Promise<string | null> {
   if (!imageQuery) return null;
-  
+
   try {
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
-    
+
+    const unsplashKey = Deno.env.get("UNSPLASH_ACCESS_KEY");
+    if (!unsplashKey) {
+      console.log('UNSPLASH_ACCESS_KEY not set, skipping image generation');
+      return null;
+    }
+
     // Ensure bucket exists
     await ensureRecipeImagesBucket();
-    
-    // Download image from Pollinations.ai
-    const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(imageQuery)}?width=800&height=600&nologo=true`;
-    console.log(`Downloading image from: ${imageUrl}`);
-    
-    const imageResponse = await fetch(imageUrl);
+
+    // Search Unsplash for a relevant photo
+    const searchQuery = simplifyImageQuery(imageQuery);
+    const unsplashUrl = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(searchQuery)}&orientation=landscape&per_page=1`;
+    console.log(`Searching Unsplash for: "${searchQuery}"`);
+
+    const searchResponse = await fetch(unsplashUrl, {
+      headers: { 'Authorization': `Client-ID ${unsplashKey}` },
+    });
+    if (!searchResponse.ok) {
+      console.log(`Unsplash search failed: ${searchResponse.status}`);
+      return null;
+    }
+
+    const searchData = await searchResponse.json();
+    if (!searchData.results || searchData.results.length === 0) {
+      console.log(`No Unsplash results for: "${searchQuery}"`);
+      return null;
+    }
+
+    // Download the regular-size image (1080px wide JPEG)
+    const photoUrl = searchData.results[0].urls.regular;
+    console.log(`Downloading image from Unsplash: ${photoUrl}`);
+
+    const imageResponse = await fetch(photoUrl);
     if (!imageResponse.ok) {
       console.log(`Failed to download image: ${imageResponse.status}`);
       return null;
     }
-    
+
     const imageBlob = await imageResponse.blob();
     const imageBuffer = await imageBlob.arrayBuffer();
-    
+
     // Create a unique filename
     const timestamp = Date.now();
     const filename = `${cuisine}/${recipeId}-${timestamp}.jpg`;
     const bucketName = 'make-dbaf6019-recipe-images';
-    
+
     // Upload to Supabase Storage
     console.log(`Uploading image to bucket: ${bucketName}/${filename}`);
     const { data, error } = await supabase.storage
@@ -109,17 +155,17 @@ async function storeRecipeImage(imageQuery: string, recipeId: string, cuisine: s
         contentType: 'image/jpeg',
         upsert: true
       });
-    
+
     if (error) {
       console.log(`Error uploading image: ${error.message}`);
       return null;
     }
-    
+
     // Get public URL
     const { data: urlData } = supabase.storage
       .from(bucketName)
       .getPublicUrl(filename);
-    
+
     console.log(`Image stored successfully: ${urlData.publicUrl}`);
     return urlData.publicUrl;
   } catch (error: any) {
@@ -678,35 +724,64 @@ app.post("/make-server-dbaf6019/init-base-recipes", async (c) => {
     
     let successCount = 0;
     let errorCount = 0;
+    let imageCount = 0;
     const errors: string[] = [];
-    
-    // Store all base recipes in the KV store
-    for (const recipe of RECIPE_DATABASE) {
-      try {
-        const key = `base-recipe:${recipe.category}:${recipe.id}`;
-        console.log(`Storing recipe: ${key}`);
-        await kv.set(key, JSON.stringify(recipe));
-        successCount++;
-      } catch (error: any) {
-        errorCount++;
-        const errorMsg = `Failed to store ${recipe.id}: ${error.message}`;
-        console.error(errorMsg);
-        errors.push(errorMsg);
+    const BATCH_SIZE = 4;
+
+    // Store all base recipes in the KV store with images
+    for (let i = 0; i < RECIPE_DATABASE.length; i += BATCH_SIZE) {
+      const batch = RECIPE_DATABASE.slice(i, i + BATCH_SIZE);
+      console.log(`Processing batch ${Math.floor(i / BATCH_SIZE) + 1} of ${Math.ceil(RECIPE_DATABASE.length / BATCH_SIZE)}`);
+
+      for (const recipe of batch) {
+        try {
+          const key = `base-recipe:${recipe.category}:${recipe.id}`;
+          console.log(`Processing recipe: ${recipe.name} (${key})`);
+
+          // Generate and store permanent image
+          let recipeWithImage: any = { ...recipe };
+          if (recipe.imageQuery) {
+            const imageUrl = await storeRecipeImage(recipe.imageQuery, recipe.id, 'base');
+            if (imageUrl) {
+              recipeWithImage.imageUrl = imageUrl;
+              // Cache the URL in KV
+              await kv.set(`recipe-image:${recipe.id}`, imageUrl);
+              imageCount++;
+              console.log(`Image stored for ${recipe.name}: ${imageUrl}`);
+            } else {
+              console.log(`Failed to store image for ${recipe.name}, continuing without image`);
+            }
+          }
+
+          await kv.set(key, JSON.stringify(recipeWithImage));
+          successCount++;
+        } catch (error: any) {
+          errorCount++;
+          const errorMsg = `Failed to store ${recipe.id}: ${error.message}`;
+          console.error(errorMsg);
+          errors.push(errorMsg);
+        }
+      }
+
+      // Delay between batches to respect Unsplash rate limits
+      if (i + BATCH_SIZE < RECIPE_DATABASE.length) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
     }
 
     console.log(`=== Initialization Complete ===`);
-    console.log(`Success: ${successCount}, Errors: ${errorCount}`);
-    
+    console.log(`Success: ${successCount}, Errors: ${errorCount}, Images: ${imageCount}`);
+
     if (errors.length > 0) {
       console.error('Errors encountered:', errors);
     }
 
-    return c.json({ 
+    return c.json({
       message: "Base recipe database initialized successfully",
       totalRecipes: RECIPE_DATABASE.length,
       successCount,
       errorCount,
+      imageCount,
       errors: errors.length > 0 ? errors : undefined,
       categories: {
         'one-pot': RECIPE_DATABASE.filter(r => r.category === 'one-pot').length,
@@ -1285,7 +1360,7 @@ app.post("/make-server-dbaf6019/admin/recipe", async (c) => {
     // If recipe has an imageQuery, download and store the image
     let storedImageUrl = recipe.imageUrl; // Keep existing image URL if present
     
-    if (recipe.imageQuery && (!recipe.imageUrl || recipe.imageUrl.includes('pollinations.ai'))) {
+    if (recipe.imageQuery && !recipe.imageUrl) {
       console.log(`Generating and storing permanent image for recipe: ${recipe.name}`);
       const imageUrl = await storeRecipeImage(recipe.imageQuery, recipe.id, recipe.cuisine);
       if (imageUrl) {
@@ -1839,17 +1914,136 @@ app.get("/make-server-dbaf6019/auth/profile", async (c) => {
       return c.json({ error: "Invalid or expired token" }, 401);
     }
 
-    return c.json({ 
+    return c.json({
       user: {
         id: user.id,
         email: user.email,
         name: user.user_metadata?.name,
+        school_id: user.user_metadata?.school_id,
+        school_name: user.user_metadata?.school_name,
         created_at: user.created_at
       }
     });
   } catch (error: any) {
     console.log(`Error in profile endpoint: ${error.message}`);
     return c.json({ error: error.message || "Failed to get profile" }, 500);
+  }
+});
+
+// Search schools
+app.get("/make-server-dbaf6019/schools/search", async (c) => {
+  try {
+    const query = c.req.query('q')?.toLowerCase() || '';
+    const schoolEntries = await getByPrefixWithKeys('school:');
+
+    const schools = schoolEntries
+      .map(entry => {
+        const value = typeof entry.value === 'string' ? JSON.parse(entry.value) : entry.value;
+        return { id: value.id, name: value.name };
+      })
+      .filter(school => !query || school.name.toLowerCase().includes(query));
+
+    return c.json({ schools });
+  } catch (error: any) {
+    console.log(`Error searching schools: ${error.message}`);
+    return c.json({ error: error.message || "Failed to search schools" }, 500);
+  }
+});
+
+// Create a new school
+app.post("/make-server-dbaf6019/schools", async (c) => {
+  try {
+    const { name } = await c.req.json();
+
+    if (!name || !name.trim()) {
+      return c.json({ error: "School name is required" }, 400);
+    }
+
+    const id = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const key = `school:${id}`;
+    const existing = await kv.get(key);
+
+    if (existing) {
+      const parsed = typeof existing === 'string' ? JSON.parse(existing) : existing;
+      return c.json({ school: { id: parsed.id, name: parsed.name } });
+    }
+
+    const school = { id, name: name.trim(), createdAt: new Date().toISOString() };
+    await kv.set(key, school);
+
+    return c.json({ school: { id, name: name.trim() } });
+  } catch (error: any) {
+    console.log(`Error creating school: ${error.message}`);
+    return c.json({ error: error.message || "Failed to create school" }, 500);
+  }
+});
+
+// Associate a school with a user
+app.post("/make-server-dbaf6019/schools/select", async (c) => {
+  try {
+    const { userId, schoolId, schoolName } = await c.req.json();
+
+    if (!userId || !schoolId || !schoolName) {
+      return c.json({ error: "userId, schoolId, and schoolName are required" }, 400);
+    }
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    );
+
+    const { error } = await supabase.auth.admin.updateUserById(userId, {
+      user_metadata: { school_id: schoolId, school_name: schoolName },
+    });
+
+    if (error) {
+      console.log(`Error updating user school: ${error.message}`);
+      return c.json({ error: error.message || "Failed to update user" }, 400);
+    }
+
+    return c.json({ success: true });
+  } catch (error: any) {
+    console.log(`Error selecting school: ${error.message}`);
+    return c.json({ error: error.message || "Failed to select school" }, 500);
+  }
+});
+
+// Update user profile (name, school)
+app.post("/make-server-dbaf6019/auth/update-profile", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { userId, name, school_id, school_name } = body;
+
+    if (!userId) {
+      return c.json({ error: "userId is required" }, 400);
+    }
+
+    const metadata: Record<string, any> = {};
+    if (name !== undefined) metadata.name = name;
+    if (school_id !== undefined) metadata.school_id = school_id;
+    if (school_name !== undefined) metadata.school_name = school_name;
+
+    if (Object.keys(metadata).length === 0) {
+      return c.json({ error: "No fields to update" }, 400);
+    }
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    );
+
+    const { error } = await supabase.auth.admin.updateUserById(userId, {
+      user_metadata: metadata,
+    });
+
+    if (error) {
+      return c.json({ error: error.message || "Failed to update profile" }, 400);
+    }
+
+    return c.json({ success: true });
+  } catch (error: any) {
+    console.log(`Error updating profile: ${error.message}`);
+    return c.json({ error: error.message || "Failed to update profile" }, 500);
   }
 });
 
@@ -1993,8 +2187,8 @@ app.post("/make-server-dbaf6019/generate-all-recipe-images", async (c) => {
     let errorCount = 0;
     let skippedCount = 0;
     
-    // Process in small batches to avoid timeouts
-    const BATCH_SIZE = 3;
+    // Process in small batches to stay within Unsplash rate limits (50 req/hour for demo keys)
+    const BATCH_SIZE = 2;
     
     for (let i = 0; i < allRecipes.length; i += BATCH_SIZE) {
       const batch = allRecipes.slice(i, i + BATCH_SIZE);
@@ -2034,8 +2228,8 @@ app.post("/make-server-dbaf6019/generate-all-recipe-images", async (c) => {
         }
       }
       
-      // Small delay between batches
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Delay between batches to respect Unsplash rate limits
+      await new Promise(resolve => setTimeout(resolve, 2000));
     }
     
     console.log('=== Batch Image Generation Complete ===');

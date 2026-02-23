@@ -1,7 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Mail, Lock, Loader2, Eye, EyeOff, User, ArrowRight, Apple } from 'lucide-react';
 import { supabase } from '../../utils/supabaseClient';
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
+import { SchoolSelectionStep } from './SchoolSelectionStep';
+import { SubscriptionPage } from './SubscriptionPage';
+import { useSubscription } from '../hooks/useSubscription';
 
 interface LoginPageProps {
   onLoginSuccess: (user: any, accessToken: string) => void;
@@ -17,6 +20,11 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [signedUpUserId, setSignedUpUserId] = useState<string | null>(null);
+  const [showSignupPaywall, setShowSignupPaywall] = useState(false);
+
+  const { isPro, identify: rcIdentify } = useSubscription();
+  const autoLoginTriggeredRef = useRef(false);
 
   useEffect(() => {
     if (showAuthForm) return;
@@ -31,6 +39,38 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
       document.body.style.overscrollBehaviorY = prevOverscrollY;
     };
   }, [showAuthForm]);
+
+  // Auto-login when isPro flips to true during signup paywall
+  useEffect(() => {
+    if (!showSignupPaywall || !signedUpUserId || !isPro || autoLoginTriggeredRef.current) return;
+    autoLoginTriggeredRef.current = true;
+
+    (async () => {
+      try {
+        const { data, error: loginError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (loginError || !data.session) {
+          console.error('Auto-login failed:', loginError);
+          setError('Subscription successful! Please sign in manually.');
+          setShowSignupPaywall(false);
+          setSignedUpUserId(null);
+          setIsSignUp(false);
+          return;
+        }
+
+        onLoginSuccess(data.user, data.session.access_token);
+      } catch (err) {
+        console.error('Auto-login error:', err);
+        setError('Subscription successful! Please sign in manually.');
+        setShowSignupPaywall(false);
+        setSignedUpUserId(null);
+        setIsSignUp(false);
+      }
+    })();
+  }, [isPro, showSignupPaywall, signedUpUserId, email, password, onLoginSuccess]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,9 +97,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
         throw new Error(data.error || 'Failed to create account');
       }
 
-      setSuccess('Account created! Please sign in.');
-      setIsSignUp(false);
-      setPassword('');
+      setSignedUpUserId(data.user.id);
     } catch (err: any) {
       console.error('Sign up error:', err);
       setError(err.message || 'Failed to create account. Please try again.');
@@ -96,6 +134,31 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
       setLoading(false);
     }
   };
+
+  // Signup Paywall (after school selection)
+  if (showSignupPaywall && signedUpUserId) {
+    return (
+      <SubscriptionPage mandatory />
+    );
+  }
+
+  // School Selection (after signup)
+  if (signedUpUserId) {
+    return (
+      <SchoolSelectionStep
+        userId={signedUpUserId}
+        onComplete={async () => {
+          // Identify the new user with RevenueCat before showing paywall
+          try {
+            await rcIdentify(signedUpUserId);
+          } catch (err) {
+            console.error('RevenueCat identify failed:', err);
+          }
+          setShowSignupPaywall(true);
+        }}
+      />
+    );
+  }
 
   // Landing Page View
   if (!showAuthForm) {

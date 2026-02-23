@@ -1,4 +1,4 @@
-// Helper functions to generate accurate image queries for Pollinations.ai
+// Helper functions to generate accurate image search queries
 // Ensures images match the recipe name and cuisine style
 
 /**
@@ -7,7 +7,7 @@
  * @param cuisine - The cuisine type (e.g., 'italian', 'british', 'base')
  * @param category - The cooking category (e.g., 'one-pot', 'microwave', 'meal-prep')
  * @param additionalKeywords - Optional specific descriptors
- * @returns A well-formatted prompt for Pollinations.ai
+ * @returns A well-formatted image search query
  */
 export function generateImageQuery(
   recipeName: string,
@@ -83,7 +83,7 @@ export function generateFocusedImageQuery(
 ): string {
   const positive = [mainSubject, ...includeKeywords, 'food photography', 'professional lighting', 'macro shot'].join(', ');
   
-  // Pollinations.ai supports negative prompts with --no flag
+  // Negative prompts with --no flag
   if (excludeKeywords && excludeKeywords.length > 0) {
     const negative = excludeKeywords.join(', ');
     return `${positive} --no ${negative}`;

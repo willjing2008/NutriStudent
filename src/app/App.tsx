@@ -51,12 +51,11 @@ export default function App() {
   // Navigation state
   const [activeNavTab, setActiveNavTab] = useState<NavTab>('home');
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
-  const [showSubscription, setShowSubscription] = useState(false);
   const [isOnboarding, setIsOnboarding] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(1);
 
   // RevenueCat subscription
-  const { identify: rcIdentify, reset: rcReset } = useSubscription();
+  const { identify: rcIdentify, reset: rcReset, isPro, isReady } = useSubscription();
   
   // Meal plan state
   const [savedPlansHistory, setSavedPlansHistory] = useState<any[]>([]);
@@ -138,7 +137,6 @@ export default function App() {
     checkingAuth,
     isAuthenticated,
     showAdminDashboard,
-    showSubscription,
     isOnboarding,
     onboardingStep,
     activeNavTab,
@@ -147,7 +145,10 @@ export default function App() {
   useEffect(() => {
     let safeAreaBg = '#0A1F13';
 
-    if (isAuthenticated && !showAdminDashboard && !isOnboarding) {
+    if (isAuthenticated && isReady && !isPro) {
+      // Mandatory paywall screen
+      safeAreaBg = '#0A0A0A';
+    } else if (isAuthenticated && !showAdminDashboard && !isOnboarding) {
       safeAreaBg =
         activeNavTab === 'home' || activeNavTab === 'shop' || activeNavTab === 'profile'
           ? '#0A0A0A'
@@ -155,7 +156,7 @@ export default function App() {
     }
 
     document.documentElement.style.setProperty('--safe-area-bg', safeAreaBg);
-  }, [isAuthenticated, showAdminDashboard, isOnboarding, activeNavTab]);
+  }, [isAuthenticated, showAdminDashboard, isOnboarding, activeNavTab, isPro, isReady]);
 
   const loadSavedMealPlan = async (userId: string) => {
     setLoadingSavedPlan(true);
@@ -344,7 +345,6 @@ export default function App() {
     setUser(null);
     setAccessToken(null);
     setShowAdminDashboard(false);
-    setShowSubscription(false);
     setSavedMealPlan(null);
     setSavedPlansHistory([]);
     setActivePlanId(null);
@@ -402,13 +402,9 @@ export default function App() {
     return <LoginPage onLoginSuccess={handleLoginSuccess} />;
   }
 
-  // Subscription Page
-  if (showSubscription) {
-    return (
-      <SubscriptionPage
-        onBack={() => setShowSubscription(false)}
-      />
-    );
+  // Mandatory Paywall — non-Pro authenticated users
+  if (isAuthenticated && isReady && !isPro) {
+    return <SubscriptionPage mandatory onLogout={handleLogout} />;
   }
 
   // Admin Dashboard
@@ -562,7 +558,7 @@ export default function App() {
           user={user}
           onLogout={handleLogout}
           onOpenAdmin={() => setShowAdminDashboard(true)}
-          onOpenSubscription={() => setShowSubscription(true)}
+          onUserUpdate={setUser}
           activeTab={activeNavTab}
           onTabChange={handleNavTabChange}
         />

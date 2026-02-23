@@ -1,7 +1,9 @@
 import { X, Loader2, ArrowRight, TrendingUp, TrendingDown, Minus, Clock, Users, Flame } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-import { getRecipeImage } from '../utils/recipeImages';
+
+const LOCAL_IMAGE_FALLBACK =
+  'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjI0MCIgdmlld0JveD0iMCAwIDMyMCAyNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjMyMCIgaGVpZ2h0PSIyNDAiIGZpbGw9IiMxNDJBMUQiLz48Y2lyY2xlIGN4PSIxNjAiIGN5PSIxMDAiIHI9IjQwIiBmaWxsPSIjMUU0MDI5Ii8+PHJlY3QgeD0iNzIiIHk9IjE2MiIgd2lkdGg9IjE3NiIgaGVpZ2h0PSIxMiIgcng9IjYiIGZpbGw9IiMyMkM1NUUiIG9wYWNpdHk9IjAuNzUiLz48L3N2Zz4=';
 
 interface MealSwapModalProps {
   currentMeal: {
@@ -132,8 +134,7 @@ export function MealSwapModal({
       // Load images for all options
       const imageMap: Record<string, string> = {};
       for (const option of data.swapOptions) {
-        const aiImage = getRecipeImage(option.id);
-        imageMap[option.id] = aiImage;
+        imageMap[option.id] = option.imageUrl || LOCAL_IMAGE_FALLBACK;
       }
       setOptionImages(imageMap);
     } catch (err: any) {

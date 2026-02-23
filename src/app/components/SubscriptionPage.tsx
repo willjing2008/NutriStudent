@@ -5,7 +5,6 @@ import {
   Sparkles,
   ArrowLeft,
   RefreshCw,
-  Zap,
   ChefHat,
   BarChart3,
   ShieldCheck,
@@ -16,7 +15,9 @@ import { useSubscription } from '../hooks/useSubscription';
 import type { PurchasesPackage } from '../services/revenuecat';
 
 interface SubscriptionPageProps {
-  onBack: () => void;
+  onBack?: () => void;
+  mandatory?: boolean;
+  onLogout?: () => void;
 }
 
 // ── Feature list shown on the page ─────────────────────────────────────────────
@@ -25,7 +26,6 @@ const PRO_FEATURES = [
   { icon: ChefHat, label: 'Unlimited meal plans' },
   { icon: Sparkles, label: 'AI-powered recipe customisation' },
   { icon: BarChart3, label: 'Advanced nutrition analytics' },
-  { icon: Zap, label: 'Priority plan generation' },
   { icon: ShieldCheck, label: 'Exclusive recipes & cuisines' },
 ];
 
@@ -46,24 +46,24 @@ const PLAN_OPTIONS: PlanOption[] = [
     id: 'yearly',
     label: 'Yearly',
     badge: 'Best Value',
-    getPrice: (pkg) => pkg?.product.priceString ?? '$29.99/yr',
+    getPrice: (pkg) => pkg?.product.priceString ?? '£49.99/yr',
     getDetail: (pkg) => {
-      if (!pkg) return '~$2.50/mo';
-      const price = pkg.product.price ?? 29.99;
-      return `~${(price / 12).toFixed(2)}/mo`;
+      if (!pkg) return '~£4.17/mo';
+      const price = pkg.product.price ?? 49.99;
+      return `~£${(price / 12).toFixed(2)}/mo`;
     },
   },
   {
     id: 'monthly',
     label: 'Monthly',
-    getPrice: (pkg) => pkg?.product.priceString ?? '$4.99/mo',
+    getPrice: (pkg) => pkg?.product.priceString ?? '£4.99/mo',
     getDetail: () => 'Cancel any time',
   },
 ];
 
 // ── Component ──────────────────────────────────────────────────────────────────
 
-export function SubscriptionPage({ onBack }: SubscriptionPageProps) {
+export function SubscriptionPage({ onBack, mandatory = false, onLogout }: SubscriptionPageProps) {
   const {
     isPro,
     isLoading,
@@ -87,43 +87,51 @@ export function SubscriptionPage({ onBack }: SubscriptionPageProps) {
       : null;
 
     return (
-      <div className="min-h-screen bg-[#0A0A0A] pb-24">
+      <div
+        className="bg-[#0A0A0A] flex flex-col overflow-hidden"
+        style={{
+          height: '100dvh',
+          maxHeight: '100dvh',
+        }}
+      >
         {/* Header */}
-        <div className="px-5 pt-8 pb-6">
-          <button
-            onClick={onBack}
-            className="flex items-center gap-2 text-[#9CA3AF] mb-6"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            Back
-          </button>
+        <div className="px-5 pt-6 pb-2 shrink-0">
+          {!mandatory && onBack && (
+            <button
+              onClick={onBack}
+              className="flex items-center gap-2 text-[#9CA3AF] mb-4"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              Back
+            </button>
+          )}
 
           <div className="text-center">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#22C55E] to-[#16A34A] flex items-center justify-center mx-auto mb-4">
-              <Crown className="w-10 h-10 text-white" />
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#22C55E] to-[#16A34A] flex items-center justify-center mx-auto mb-3">
+              <Crown className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-2xl font-bold text-white mb-1">NutriStudent Pro</h1>
             <p className="text-[#22C55E] font-medium">Active</p>
           </div>
         </div>
 
-        {/* Subscription details */}
-        <div className="px-5 space-y-4">
+        {/* Content */}
+        <div className="flex-1 min-h-0 flex flex-col justify-center px-5 py-3 gap-4">
           {expirationDate && (
-            <div className="bg-[#1A1A1A] rounded-2xl p-5 border border-[#2D2D2D]">
+            <div className="bg-[#1A1A1A] rounded-2xl p-4 border border-[#2D2D2D]">
               <div className="text-[#6B7280] text-sm">Next renewal</div>
               <div className="text-white font-semibold text-lg">{expirationDate}</div>
             </div>
           )}
 
           {/* Features unlocked */}
-          <div className="bg-[#1A1A1A] rounded-2xl p-5 border border-[#2D2D2D]">
-            <h3 className="text-white font-semibold mb-4">Your Pro Features</h3>
-            <div className="space-y-3">
+          <div className="bg-[#1A1A1A] rounded-2xl p-4 border border-[#2D2D2D]">
+            <h3 className="text-white font-semibold mb-3">Your Pro Features</h3>
+            <div className="space-y-2.5">
               {PRO_FEATURES.map((f) => (
                 <div key={f.label} className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-[#22C55E]/20 flex items-center justify-center">
-                    <f.icon className="w-4 h-4 text-[#22C55E]" />
+                  <div className="w-7 h-7 rounded-lg bg-[#22C55E]/20 flex items-center justify-center shrink-0">
+                    <f.icon className="w-3.5 h-3.5 text-[#22C55E]" />
                   </div>
                   <span className="text-white text-sm">{f.label}</span>
                   <Check className="w-4 h-4 text-[#22C55E] ml-auto" />
@@ -131,8 +139,10 @@ export function SubscriptionPage({ onBack }: SubscriptionPageProps) {
               ))}
             </div>
           </div>
+        </div>
 
-          {/* Manage subscription */}
+        {/* Bottom action — pinned */}
+        <div className="px-5 pb-6 pt-2 shrink-0">
           <button
             onClick={showCustomerCenter}
             className="w-full flex items-center justify-center gap-3 p-4 bg-[#1A1A1A] border border-[#2D2D2D] rounded-2xl text-white font-medium hover:bg-[#222222] transition-colors"
@@ -173,103 +183,102 @@ export function SubscriptionPage({ onBack }: SubscriptionPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] pb-24">
+    <div
+      className="bg-[#0A0A0A] flex flex-col overflow-hidden"
+      style={{
+        height: 'calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
+        maxHeight: 'calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
+      }}
+    >
       {/* Header */}
-      <div className="px-5 pt-8 pb-4">
-        <button
-          onClick={onBack}
-          className="flex items-center gap-2 text-[#9CA3AF] mb-6"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          Back
-        </button>
+      <div className="px-5 pt-6 pb-2 shrink-0">
+        {!mandatory && onBack && (
+          <button
+            onClick={onBack}
+            className="flex items-center gap-2 text-[#9CA3AF] mb-4"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            Back
+          </button>
+        )}
 
-        <div className="text-center mb-6">
-          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#22C55E] to-[#16A34A] flex items-center justify-center mx-auto mb-4">
-            <Sparkles className="w-10 h-10 text-white" />
+        <div className="text-center">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#22C55E] to-[#16A34A] flex items-center justify-center mx-auto mb-3">
+            <Sparkles className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">Upgrade to Pro</h1>
+          <h1 className="text-2xl font-bold text-white mb-1">Upgrade to Pro</h1>
           <p className="text-[#9CA3AF] text-sm max-w-xs mx-auto">
-            Unlock the full NutriStudent experience with advanced features
+            Unlock the full NutriStudent experience
           </p>
         </div>
       </div>
 
-      {/* Features */}
-      <div className="px-5 mb-6">
-        <div className="bg-[#1A1A1A] rounded-2xl p-5 border border-[#2D2D2D]">
-          <div className="space-y-3">
+      {/* Scrollable middle content */}
+      <div className="flex-1 min-h-0 flex flex-col justify-center px-5 py-3 gap-3">
+        {/* Features */}
+        <div className="bg-[#1A1A1A] rounded-2xl p-4 border border-[#2D2D2D]">
+          <div className="space-y-2.5">
             {PRO_FEATURES.map((f) => (
               <div key={f.label} className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-[#22C55E]/20 flex items-center justify-center">
-                  <f.icon className="w-4 h-4 text-[#22C55E]" />
+                <div className="w-7 h-7 rounded-lg bg-[#22C55E]/20 flex items-center justify-center shrink-0">
+                  <f.icon className="w-3.5 h-3.5 text-[#22C55E]" />
                 </div>
                 <span className="text-white text-sm">{f.label}</span>
               </div>
             ))}
           </div>
         </div>
-      </div>
 
-      {/* Plan selection */}
-      <div className="px-5 mb-6 space-y-3">
-        {PLAN_OPTIONS.map((plan) => {
-          const pkg = packages[plan.id];
-          const isSelected = selectedPlan === plan.id;
+        {/* Plan selection */}
+        <div className="space-y-2.5">
+          {PLAN_OPTIONS.map((plan) => {
+            const pkg = packages[plan.id];
+            const isSelected = selectedPlan === plan.id;
 
-          return (
-            <button
-              key={plan.id}
-              onClick={() => setSelectedPlan(plan.id)}
-              className={`w-full p-4 rounded-2xl border-2 transition-all text-left relative ${
-                isSelected
-                  ? 'border-[#22C55E] bg-[#22C55E]/10'
-                  : 'border-[#2D2D2D] bg-[#1A1A1A]'
-              }`}
-            >
-              {plan.badge && (
-                <span className="absolute -top-2.5 right-4 px-2.5 py-0.5 bg-[#22C55E] text-[#052E16] text-[10px] font-bold uppercase rounded-full">
-                  {plan.badge}
-                </span>
-              )}
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-white font-semibold">{plan.label}</div>
-                  <div className="text-[#6B7280] text-xs mt-0.5">
-                    {plan.getDetail(pkg)}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-white font-bold text-lg">
-                    {plan.getPrice(pkg)}
-                  </div>
-                </div>
-              </div>
-              {/* Radio indicator */}
-              <div
-                className={`absolute top-1/2 -translate-y-1/2 left-4 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                  isSelected ? 'border-[#22C55E]' : 'border-[#4B4B4B]'
+            return (
+              <button
+                key={plan.id}
+                onClick={() => setSelectedPlan(plan.id)}
+                className={`w-full p-3.5 rounded-2xl border-2 transition-all text-left relative ${
+                  isSelected
+                    ? 'border-[#22C55E] bg-[#22C55E]/10'
+                    : 'border-[#2D2D2D] bg-[#1A1A1A]'
                 }`}
-                style={{ left: '-0.25rem', display: 'none' }}
               >
-                {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-[#22C55E]" />}
-              </div>
-            </button>
-          );
-        })}
-      </div>
+                {plan.badge && (
+                  <span className="absolute -top-2.5 right-4 px-2.5 py-0.5 bg-[#22C55E] text-[#052E16] text-[10px] font-bold uppercase rounded-full">
+                    {plan.badge}
+                  </span>
+                )}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-white font-semibold">{plan.label}</div>
+                    <div className="text-[#6B7280] text-xs mt-0.5">
+                      {plan.getDetail(pkg)}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-white font-bold text-lg">
+                      {plan.getPrice(pkg)}
+                    </div>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
 
-      {/* Error message */}
-      {error && (
-        <div className="px-5 mb-4">
+        {/* Error message */}
+        {error && (
           <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 text-red-400 text-sm text-center">
             {error}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* Subscribe button */}
-      <div className="px-5 mb-4">
+      {/* Bottom actions — pinned */}
+      <div className="px-5 pb-6 pt-2 shrink-0 space-y-3">
+        {/* Subscribe button */}
         <button
           onClick={handlePurchase}
           disabled={isLoading}
@@ -284,28 +293,30 @@ export function SubscriptionPage({ onBack }: SubscriptionPageProps) {
             </>
           )}
         </button>
-      </div>
 
-      {/* Restore link */}
-      <div className="px-5 text-center">
-        <button
-          onClick={handleRestore}
-          disabled={isLoading}
-          className="text-[#6B7280] text-sm flex items-center gap-1.5 mx-auto hover:text-white transition-colors"
-        >
-          <RefreshCw className="w-3.5 h-3.5" />
-          Restore Purchases
-        </button>
-      </div>
+        {/* Restore purchases */}
+        <div className="text-center">
+          <button
+            onClick={handleRestore}
+            disabled={isLoading}
+            className="text-[#6B7280] text-sm flex items-center gap-1.5 mx-auto hover:text-white transition-colors"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            Restore Purchases
+          </button>
+        </div>
 
-      {/* RevenueCat paywall fallback */}
-      <div className="px-5 mt-4 text-center">
-        <button
-          onClick={showPaywall}
-          className="text-[#22C55E] text-sm hover:underline"
-        >
-          View all plans
-        </button>
+        {/* Sign out link for mandatory paywall */}
+        {onLogout && (
+          <div className="text-center">
+            <button
+              onClick={onLogout}
+              className="text-[#6B7280] text-sm hover:text-white transition-colors"
+            >
+              Sign out
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

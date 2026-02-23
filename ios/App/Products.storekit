@@ -73,7 +73,7 @@
           "codeOffers" : [
 
           ],
-          "displayPrice" : "30",
+          "displayPrice" : "50",
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "84BF82AE",
@@ -83,6 +83,11 @@
               "description" : "",
               "displayName" : "",
               "locale" : "en_US"
+            },
+            {
+              "description" : "",
+              "displayName" : "UK Currency",
+              "locale" : "en_GB"
             }
           ],
           "productID" : "nutristudent_pro_yearly",

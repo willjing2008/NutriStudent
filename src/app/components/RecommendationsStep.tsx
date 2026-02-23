@@ -3,7 +3,7 @@ import { UserPreferences } from '../App';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
 import { ShoppingMode } from './ShoppingMode';
-import { getRecipeImage, getRecipeImageByName, getRecipeImageWithCache } from '../utils/recipeImages';
+import { getRecipeImageWithCache } from '../utils/recipeImages';
 import { MealSwapModal } from './MealSwapModal';
 import { KitchenInventoryWizard } from './KitchenInventoryWizard';
 import { supabase } from '../../utils/supabaseClient';
@@ -267,10 +267,6 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
         mealImages[meal.id],
         isRenderableImageUrl(meal.imageUrl) ? meal.imageUrl : undefined,
         isRenderableImageUrl(meal.image) ? meal.image : undefined,
-        getRecipeImage(meal.id, meal.image),
-        getRecipeImage(meal.id),
-        getRecipeImageByName(meal.name),
-        getRecipeImage('default'),
         LOCAL_IMAGE_FALLBACK,
       ].filter((url): url is string => isRenderableImageUrl(url));
 
@@ -697,7 +693,7 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
       }));
 
       const newMeal = data.replacementMeal;
-      const aiImage = getMealImageCandidates(newMeal)[0] || getRecipeImage(newMeal.id, newMeal.image);
+      const aiImage = getMealImageCandidates(newMeal)[0] || LOCAL_IMAGE_FALLBACK;
       setMealImages(prev => ({
         ...prev,
         [newMeal.id]: aiImage,
@@ -730,7 +726,7 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
       withinBudget: newTotalCost <= mealPlan.weeklyBudget,
     }));
 
-    const aiImage = getMealImageCandidates(newMeal)[0] || getRecipeImage(newMeal.id, newMeal.image);
+    const aiImage = getMealImageCandidates(newMeal)[0] || LOCAL_IMAGE_FALLBACK;
     setMealImages(prev => ({
       ...prev,
       [newMeal.id]: aiImage,

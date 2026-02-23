@@ -38,9 +38,6 @@ export function useRecipeImage({
   const [isStored, setIsStored] = useState<boolean>(false);
   const hasAttemptedLoad = useRef(false);
 
-  // Fallback to temporary Pollinations.ai URL
-  const temporaryImageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(imageQuery)}?width=800&height=600&nologo=true`;
-
   const generateAndStore = async () => {
     setIsLoading(true);
     setError(null);
@@ -78,8 +75,7 @@ export function useRecipeImage({
     } catch (err: any) {
       console.error(`Error generating image for ${recipeId}:`, err);
       setError(err.message || 'Failed to generate image');
-      // Fallback to temporary URL
-      setImageUrl(temporaryImageUrl);
+      setImageUrl('');
       setIsStored(false);
     } finally {
       setIsLoading(false);
@@ -95,8 +91,7 @@ export function useRecipeImage({
     hasAttemptedLoad.current = true;
 
     const loadStoredImage = async () => {
-      // Start with temporary URL immediately
-      setImageUrl(temporaryImageUrl);
+      setImageUrl('');
 
       try {
         const response = await fetch(
@@ -128,9 +123,8 @@ export function useRecipeImage({
           setIsStored(false);
         }
       } catch (err: any) {
-        // Silently fail and use temporary URL
-        console.log(`Using temporary image for ${recipeId} (stored image not available)`);
-        setImageUrl(temporaryImageUrl);
+        console.log(`No stored image available for ${recipeId}`);
+        setImageUrl('');
         setIsStored(false);
       }
     };
@@ -139,7 +133,7 @@ export function useRecipeImage({
   }, []); // Empty dependency array - only run once on mount
 
   return {
-    imageUrl: imageUrl || temporaryImageUrl,
+    imageUrl,
     isLoading,
     error,
     isStored,

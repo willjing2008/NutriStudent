@@ -249,7 +249,7 @@ export const RECIPE_DATABASE: Recipe[] = [
       'Potassium from banana supports brain function'
     ],
     suitableFor: ['studying', 'working'],
-    imageQuery: 'banana bread mug cake in ceramic mug, moist texture, topped with banana slices, microwave dessert, food photography, close-up, warm and inviting',
+    imageQuery: 'banana bread mug cake',
     sourceUrl: 'https://www.budgetbytes.com/banana-bread-oatmeal/',
   },
   {
@@ -290,7 +290,7 @@ export const RECIPE_DATABASE: Recipe[] = [
       'Cheese provides calcium for strong bones'
     ],
     suitableFor: ['working', 'fitness'],
-    imageQuery: 'breakfast burrito cut in half, scrambled eggs and melted cheese filling, flour tortilla wrap, Mexican breakfast, food photography, cross-section view, fresh salsa topping',
+    imageQuery: 'breakfast burrito eggs cheese',
     sourceUrl: 'https://www.budgetbytes.com/freezer-breakfast-burritos/',
   },
   {

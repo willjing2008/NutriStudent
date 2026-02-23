@@ -70,7 +70,7 @@ async function ensureRecipeImagesBucket(): Promise<void> {
   }
 }
 
-// Helper function to download and store image from Pollinations.ai
+// Helper function to download and store image from external source
 async function storeRecipeImage(imageQuery: string, recipeId: string, cuisine: string): Promise<string | null> {
   if (!imageQuery) return null;
   
@@ -83,8 +83,21 @@ async function storeRecipeImage(imageQuery: string, recipeId: string, cuisine: s
     // Ensure bucket exists
     await ensureRecipeImagesBucket();
     
-    // Download image from Pollinations.ai
-    const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(imageQuery)}?width=800&height=600&nologo=true`;
+    // Download image from Unsplash
+    const unsplashKey = Deno.env.get("UNSPLASH_ACCESS_KEY");
+    if (!unsplashKey) {
+      console.log('UNSPLASH_ACCESS_KEY not set, skipping image generation');
+      return null;
+    }
+    const searchQuery = imageQuery.split(',').slice(0, 2).join(' ').trim();
+    const searchUrl = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(searchQuery)}&orientation=landscape&per_page=1`;
+    const searchResponse = await fetch(searchUrl, {
+      headers: { 'Authorization': `Client-ID ${unsplashKey}` },
+    });
+    if (!searchResponse.ok) return null;
+    const searchData = await searchResponse.json();
+    if (!searchData.results?.length) return null;
+    const imageUrl = searchData.results[0].urls.regular;
     console.log(`Downloading image from: ${imageUrl}`);
     
     const imageResponse = await fetch(imageUrl);
@@ -1311,7 +1324,7 @@ app.post("/make-server-dbaf6019/admin/recipe", async (c) => {
     // If recipe has an imageQuery, download and store the image
     let storedImageUrl = recipe.imageUrl; // Keep existing image URL if present
     
-    if (recipe.imageQuery && (!recipe.imageUrl || recipe.imageUrl.includes('pollinations.ai'))) {
+    if (recipe.imageQuery && !recipe.imageUrl) {
       console.log(`Generating and storing permanent image for recipe: ${recipe.name}`);
       const imageUrl = await storeRecipeImage(recipe.imageQuery, recipe.id, recipe.cuisine);
       if (imageUrl) {
