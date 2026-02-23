@@ -1144,17 +1144,6 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
                 </div>
               </div>
 
-          {/* Budget */}
-          <div className="bg-[#142A1D] rounded-2xl p-4 border border-[#1E4029]">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-[#22C55E] text-lg">£</span>
-              <span className="text-[#6B7280] text-sm">Left</span>
-                          </div>
-            <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-bold text-white">£{Math.max(0, dailyBudgetLimit - dailyBudgetUsed).toFixed(2)}</span>
-              <span className="text-[#6B7280] text-sm">/£{dailyBudgetLimit.toFixed(2)}</span>
-            </div>
-                          </div>
                         </div>
                       </div>
 
@@ -1293,8 +1282,6 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
                       </span>
                       <span className="shrink-0">•</span>
                       <span className="text-[#22C55E] shrink-0">{meal.nutrition?.protein}g protein</span>
-                      <span className="shrink-0">•</span>
-                      <span className="shrink-0">£{meal.totalCost?.toFixed(2)}</span>
                     </div>
                   </div>
 
@@ -1511,9 +1498,8 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
                         <div className="w-2 h-2 rounded-full bg-[#22C55E]" />
                         <span className="text-white">{ingredient.name}</span>
                       </div>
-                      <div className="text-sm text-[#6B7280] flex items-center gap-3">
+                      <div className="text-sm text-[#6B7280]">
                         <span>{ingredient.amount}</span>
-                        <span className="text-[#22C55E]">£{ingredient.estimatedPrice.toFixed(2)}</span>
                       </div>
                     </div>
                   ))}

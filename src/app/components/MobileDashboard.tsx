@@ -282,17 +282,6 @@ export function MobileDashboard({
             </div>
           </div>
           
-          {/* Budget */}
-          <div className="bg-[#142A1D] rounded-2xl p-4 border border-[#1E4029]">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-[#22C55E]">£</span>
-              <span className="text-[#6B7280] text-sm">Left</span>
-            </div>
-            <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-bold text-white">£{(dailyBudgetLimit - dailyBudgetUsed).toFixed(2)}</span>
-              <span className="text-[#6B7280] text-sm">/£{dailyBudgetLimit.toFixed(2)}</span>
-            </div>
-          </div>
         </div>
       </div>
 

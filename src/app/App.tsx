@@ -190,8 +190,6 @@ export default function App() {
         image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400',
         calories: 0,
         protein: 0,
-        costPerDay: p.totalCost ? parseFloat((p.totalCost / 7).toFixed(2)) : 0,
-        weeklyBudget: p.totalCost || 0,
       }));
       setSavedPlansHistory(historyItems);
 
@@ -268,10 +266,8 @@ export default function App() {
           image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400',
           calories: mealPlan.meals?.reduce((sum: number, m: any) => sum + (m.nutrition?.calories || 0), 0) || 2000,
           protein: mealPlan.meals?.reduce((sum: number, m: any) => sum + (m.nutrition?.protein || 0), 0) || 100,
-          costPerDay: mealPlan.dailyBudget || preferences.budget / 7,
           goal: preferences.goal || 'Custom',
           mealsPerDay: preferences.mealsPerDay || 3,
-          weeklyBudget: preferences.budget || 50,
         };
         setSavedPlansHistory(prev => [newSavedPlan, ...prev]);
         
@@ -519,7 +515,6 @@ export default function App() {
             image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400',
             calories: savedMealPlan.meals?.reduce((sum: number, m: any) => sum + (m.nutrition?.calories || 0), 0) || 0,
             protein: savedMealPlan.meals?.reduce((sum: number, m: any) => sum + (m.nutrition?.protein || 0), 0) || 0,
-            costPerDay: savedMealPlan.dailyBudget || preferences.budget / 7,
             isActive: true,
           } : null}
         />
@@ -545,7 +540,6 @@ export default function App() {
         <ShoppingMode
           ingredients={uniqueIngredients}
           storeName={preferences.selectedStores[0]?.name || 'Supermarket'}
-          totalCost={savedMealPlan?.totalCost || 0}
           onBack={() => setActiveNavTab('home')}
           activeNavTab={activeNavTab}
           onNavTabChange={handleNavTabChange}

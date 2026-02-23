@@ -229,11 +229,7 @@ export function MealSwapModal({
                 <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                   Current Meal Summary
                 </h3>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                  <div className="text-center">
-                    <div className="text-xs text-gray-600 mb-1">Cost</div>
-                    <div className="font-bold text-gray-900">£{currentMeal.totalCost.toFixed(2)}</div>
-                  </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   <div className="text-center">
                     <div className="text-xs text-gray-600 mb-1">Calories</div>
                     <div className="font-bold text-gray-900">{currentMeal.nutrition.calories}</div>
@@ -321,22 +317,6 @@ export function MealSwapModal({
 
                         {/* Comparison Stats */}
                         <div className="space-y-2 mb-3">
-                          {/* Cost */}
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-gray-600">Cost</span>
-                            <div className="flex items-center gap-1.5">
-                              {getDifferenceIcon(currentMeal.totalCost, option.totalCost)}
-                              <span className={`font-bold ${getDifferenceColor(currentMeal.totalCost, option.totalCost)}`}>
-                                £{option.totalCost.toFixed(2)}
-                                {priceDiff !== 0 && (
-                                  <span className="ml-1 text-[10px]">
-                                    ({priceDiff > 0 ? '+' : ''}£{priceDiff.toFixed(2)})
-                                  </span>
-                                )}
-                              </span>
-                            </div>
-                          </div>
-
                           {/* Calories */}
                           <div className="flex items-center justify-between text-xs">
                             <span className="text-gray-600">Calories</span>

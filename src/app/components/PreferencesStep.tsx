@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowRight, ArrowLeft, X, Calendar, Users, DollarSign, Target, Clock, ChefHat, Utensils, AlertCircle } from 'lucide-react';
+import { ArrowRight, ArrowLeft, X, Calendar, Users, Target, Clock, ChefHat, Utensils, AlertCircle } from 'lucide-react';
 import { UserPreferences, EquipmentType } from '../App';
 
 // Common ingredients for autocomplete
@@ -20,7 +20,6 @@ interface PreferencesStepProps {
 export function PreferencesStep({ preferences, updatePreferences, onNext, onBack }: PreferencesStepProps) {
   const [shoppingDate, setShoppingDate] = useState(preferences.shoppingDate);
   const [mealsPerDay, setMealsPerDay] = useState(preferences.mealsPerDay);
-  const [budget, setBudget] = useState(preferences.budget);
   const [goal, setGoal] = useState(preferences.goal);
   const [maxCookingTime, setMaxCookingTime] = useState(preferences.maxCookingTime);
   const [cookingMethods, setCookingMethods] = useState<('one-pot' | 'microwave' | 'meal-prep')[]>(
@@ -86,7 +85,6 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
     updatePreferences({
       shoppingDate,
       mealsPerDay,
-      budget,
       goal,
       maxCookingTime,
       cookingMethods,
@@ -156,7 +154,7 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
             Set Your Preferences
           </h1>
           <p className="text-[#9CA3AF]">
-            Help us tailor a meal plan that fits your lifestyle, budget, and kitchen setup.
+            Help us tailor a meal plan that fits your lifestyle and kitchen setup.
           </p>
         </div>
       </div>
@@ -205,38 +203,7 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
             </div>
           </div>
 
-          {/* Section 3: Weekly Budget */}
-          <div className="bg-[#142A1D] rounded-2xl p-5 border border-[#2D5A3D]">
-            <SectionHeader icon={DollarSign} title="Weekly Budget (£)" />
-            <div className="relative mb-2">
-              <div className="h-2 bg-[#2D5A3D] rounded-full">
-                <div 
-                  className="h-full bg-[#22C55E] rounded-full transition-all"
-                  style={{ width: `${((budget - 30) / 170) * 100}%` }}
-                />
-              </div>
-              <input
-                type="range"
-                min="30"
-                max="200"
-                step="5"
-                value={budget}
-                onChange={(e) => setBudget(Number(e.target.value))}
-                className="absolute inset-0 w-full opacity-0 cursor-pointer"
-              />
-              <div 
-                className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-[#22C55E] rounded-full shadow-lg pointer-events-none transition-all"
-                style={{ left: `calc(${((budget - 30) / 170) * 100}% - 10px)` }}
-              />
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-[#6B7280]">£30</span>
-              <span className="px-3 py-1 bg-[#22C55E]/20 text-[#22C55E] font-bold rounded-full">£{budget}</span>
-              <span className="text-sm text-[#6B7280]">£200</span>
-            </div>
-          </div>
-
-          {/* Section 4: Choose Your Goal */}
+          {/* Section 3: Choose Your Goal */}
           <div className="bg-[#142A1D] rounded-2xl p-5 border border-[#2D5A3D]">
             <SectionHeader icon={Target} title="Choose Your Goal" />
             <div className="space-y-3">

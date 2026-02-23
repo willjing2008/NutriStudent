@@ -11,7 +11,6 @@ interface MealPlan {
   week?: number;
   calories: number;
   protein: number;
-  costPerDay: number;
   isActive?: boolean;
   onTrack?: boolean;
   tags?: string[];
@@ -200,10 +199,6 @@ export function MealPlansDashboard({
                         <div className="text-[10px] text-[#6B7280] uppercase tracking-wider">{t("protein")}</div>
                         <div className="text-[#22C55E] font-bold">{currentActivePlan.protein}g</div>
                       </div>
-                      <div className="bg-[#1A1A1A] rounded-xl px-3 py-2">
-                        <div className="text-[10px] text-[#6B7280] uppercase tracking-wider">{t("costPerDay")}</div>
-                        <div className="text-white font-bold">£{currentActivePlan.costPerDay.toFixed(2)}</div>
-                      </div>
                     </div>
 
                     {/* Status & Action */}
@@ -281,7 +276,6 @@ export function MealPlansDashboard({
                      
                      <div className="flex flex-wrap gap-1 mb-2">
                        {plan.goal && <span className="text-[10px] px-2 py-0.5 bg-[#1A1A1A] text-[#9CA3AF] rounded-full border border-[#2D2D2D]">{plan.goal}</span>}
-                       {plan.weeklyBudget && <span className="text-[10px] px-2 py-0.5 bg-[#1A1A1A] text-[#22C55E] rounded-full border border-[#2D2D2D]">£{plan.weeklyBudget}</span>}
                      </div>
                    </button>
                    

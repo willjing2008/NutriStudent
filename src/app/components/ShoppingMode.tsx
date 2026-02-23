@@ -23,7 +23,6 @@ interface KitchenEssential {
 interface ShoppingModeProps {
   ingredients: ShoppingIngredient[];
   storeName: string;
-  totalCost: number;
   onBack: () => void;
   missingEssentials?: KitchenEssential[];
   activeNavTab?: NavTab;
@@ -69,7 +68,7 @@ const CATEGORY_CONFIG = {
   },
 };
 
-export function ShoppingMode({ ingredients, storeName, totalCost, onBack, missingEssentials = [], activeNavTab, onNavTabChange }: ShoppingModeProps) {
+export function ShoppingMode({ ingredients, storeName, onBack, missingEssentials = [], activeNavTab, onNavTabChange }: ShoppingModeProps) {
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
 
   const toggleItem = (ingredientName: string) => {
@@ -95,10 +94,6 @@ export function ShoppingMode({ ingredients, storeName, totalCost, onBack, missin
   const totalItems = ingredients.length + missingEssentials.length;
   const checkedCount = checkedItems.size;
   const progress = totalItems > 0 ? (checkedCount / totalItems) * 100 : 0;
-
-  // Calculate total cost including essentials
-  const essentialsCost = missingEssentials.reduce((sum, item) => sum + item.price, 0);
-  const finalTotalCost = totalCost + essentialsCost;
 
   // Category order for display
   const categoryOrder = ['produce', 'dairy', 'meat', 'pantry', 'frozen', 'bakery'];
@@ -204,10 +199,6 @@ export function ShoppingMode({ ingredients, storeName, totalCost, onBack, missin
                         <span className={isChecked ? 'text-[#4B4B4B]' : 'text-[#6B7280]'}>
                           {essential.amount}
                         </span>
-                        <span className={isChecked ? 'text-[#4B4B4B]' : 'text-[#6B7280]'}>•</span>
-                        <span className={`font-medium ${isChecked ? 'text-[#4B4B4B]' : 'text-[#22C55E]'}`}>
-                          £{essential.price.toFixed(2)}
-                        </span>
                         <span className="ml-1 text-[10px] px-2 py-0.5 rounded bg-[#2D2D2D] text-[#9CA3AF] font-semibold uppercase tracking-wider">
                           One-time
                         </span>
@@ -278,10 +269,6 @@ export function ShoppingMode({ ingredients, storeName, totalCost, onBack, missin
                           <span className={isChecked ? 'text-[#4B4B4B]' : 'text-[#6B7280]'}>
                             {ingredient.amount}
                           </span>
-                          <span className={isChecked ? 'text-[#4B4B4B]' : 'text-[#6B7280]'}>•</span>
-                          <span className={`font-medium ${isChecked ? 'text-[#4B4B4B]' : 'text-[#22C55E]'}`}>
-                            £{ingredient.estimatedPrice.toFixed(2)}
-                          </span>
                         </div>
                       </div>
                     </div>
@@ -310,24 +297,17 @@ export function ShoppingMode({ ingredients, storeName, totalCost, onBack, missin
         style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 3.75rem)' }}
       >
         <div className="max-w-md mx-auto px-4 py-4">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-[#6B7280] uppercase tracking-wider font-semibold">Estimated Total</p>
+              <p className="text-xs text-[#6B7280] uppercase tracking-wider font-semibold">Shopping List</p>
               <p className="text-xs text-[#6B7280]">
                 {totalItems - checkedCount} items remaining
               </p>
             </div>
-            <span className="text-3xl font-bold text-[#22C55E]">
-              £{finalTotalCost.toFixed(2)}
+            <span className="text-lg font-bold text-[#22C55E]">
+              {checkedCount}/{totalItems} done
             </span>
           </div>
-          
-          {missingEssentials.length > 0 && (
-            <div className="flex items-center gap-2 text-xs text-[#6B7280] bg-[#141414] rounded-lg px-3 py-2 border border-[#2D2D2D]">
-              <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
-              <span>Includes £{essentialsCost.toFixed(2)} for kitchen essentials (one-time purchase)</span>
-            </div>
-          )}
         </div>
       </div>
 

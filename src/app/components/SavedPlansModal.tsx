@@ -179,11 +179,7 @@ export function SavedPlansModal({ userId, onClose, onLoadPlan }: SavedPlansModal
 
                   {/* Plan Stats */}
                   <div className="p-4">
-                    <div className="grid grid-cols-2 gap-3 mb-4">
-                      <div className="bg-green-50 rounded-lg p-3 border border-green-200">
-                        <div className="text-xs text-green-700 mb-1">Total Cost</div>
-                        <div className="font-bold text-green-900 text-xl">£{plan.totalCost.toFixed(2)}</div>
-                      </div>
+                    <div className="mb-4">
                       <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
                         <div className="text-xs text-blue-700 mb-1">Meals</div>
                         <div className="font-bold text-blue-900 text-xl">{plan.mealCount}</div>
