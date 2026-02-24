@@ -84,11 +84,20 @@ export function useRecipeImage({
 
   // Try to load stored image on mount (only once)
   useEffect(() => {
-    if (hasAttemptedLoad.current || !recipeId || !imageQuery) {
+    if (hasAttemptedLoad.current || !recipeId) {
       return;
     }
 
     hasAttemptedLoad.current = true;
+
+    // Short-circuit: if imageQuery looks like a direct URL (from allrecipes), use it directly
+    if (imageQuery && (imageQuery.startsWith('http://') || imageQuery.startsWith('https://'))) {
+      setImageUrl(imageQuery);
+      setIsStored(true);
+      return;
+    }
+
+    if (!imageQuery) return;
 
     const loadStoredImage = async () => {
       setImageUrl('');
@@ -109,21 +118,17 @@ export function useRecipeImage({
           if (data.success && data.imageUrl) {
             setImageUrl(data.imageUrl);
             setIsStored(true);
-            console.log(`✓ Using stored image for ${recipeId}`);
             return;
           }
         }
 
         // If no stored image exists and autoGenerate is true, generate it
         if (autoGenerate) {
-          console.log(`No stored image found for ${recipeId}, generating...`);
           await generateAndStore();
         } else {
-          // Otherwise keep using temporary URL
           setIsStored(false);
         }
       } catch (err: any) {
-        console.log(`No stored image available for ${recipeId}`);
         setImageUrl('');
         setIsStored(false);
       }

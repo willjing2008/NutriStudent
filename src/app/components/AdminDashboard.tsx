@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Edit2, Trash2, RefreshCw, Database, ChefHat, X, Save, Loader2, ImageIcon, Upload, Trash, ExternalLink, Play, Calculator } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, RefreshCw, Database, ChefHat, X, Save, Loader2, ImageIcon, Upload, Trash, ExternalLink, Calculator } from 'lucide-react';
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
 import { ImageStorageInfo } from './ImageStorageInfo';
 
@@ -15,18 +15,18 @@ interface Recipe {
   cookingTime: number;
   servings: number;
   difficulty: string;
-  spiceLevel: string;
-  authentic: boolean;
   ingredients: any[];
   instructions: string[];
   nutrition: any;
   tags: string[];
   benefits: string[];
-  suitableFor: string[];
-  imageQuery: string;
+  meal_type: string;
+  recipe_category: string;
   imageUrl?: string;
-  youtubeUrl?: string;
   sourceUrl?: string;
+  image?: { url: string; alt: string };
+  rating?: number;
+  review_count?: number;
 }
 
 export function AdminDashboard() {
@@ -43,21 +43,18 @@ export function AdminDashboard() {
     id: '',
     name: '',
     description: '',
-    cuisine: 'british',
-    category: 'one-pot',
+    cuisine: 'american',
+    category: 'dinner',
     cookingTime: 30,
     servings: 2,
     difficulty: 'easy',
-    spiceLevel: 'mild',
-    authentic: false,
     ingredients: [],
     instructions: [],
     nutrition: { calories: 0, protein: 0, carbs: 0, fats: 0, fiber: 0 },
     tags: [],
     benefits: [],
-    suitableFor: [],
-    imageQuery: '',
-    youtubeUrl: '',
+    meal_type: 'work',
+    recipe_category: 'Dinner',
     sourceUrl: ''
   });
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -104,195 +101,37 @@ export function AdminDashboard() {
     }
   };
 
-  const initializeDatabase = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch(`${baseUrl}/init-cuisine-database`, {
-        method: 'POST',
-        headers,
-      });
-      const data = await response.json();
-      showMessage('success', `Database initialized! ${data.totalRecipes} recipes added`);
-      await fetchAllRecipes();
-    } catch (error) {
-      console.error('Error initializing database:', error);
-      showMessage('error', 'Failed to initialize database');
-    } finally {
-      setLoading(false);
+  const initializeRecipes = async () => {
+    if (!confirm('This will clear all existing recipes and initialize 250 new AllRecipes recipes. Continue?')) {
+      return;
     }
-  };
 
-  const initializeBrainRecipes = async () => {
     setLoading(true);
     try {
-      console.log('Initializing brain recipes...');
-      console.log('Request URL:', `${baseUrl}/init-brain-recipes`);
-      
-      const response = await fetch(`${baseUrl}/init-brain-recipes`, {
+      const response = await fetch(`${baseUrl}/init-recipes`, {
         method: 'POST',
         headers,
       });
-      
-      console.log('Response status:', response.status);
-      console.log('Response ok:', response.ok);
-      
+
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Error response:', errorText);
         showMessage('error', `Server error: ${response.status} - ${errorText}`);
         return;
       }
-      
-      const data = await response.json();
-      console.log('Response data:', data);
-      
-      if (data.error) {
-        showMessage('error', `Failed to add brain recipes: ${data.error}`);
-        return;
-      }
-      
-      showMessage('success', `Brain recipes added! ${data.successCount} of ${data.totalRecipes} recipes initialized successfully`);
-      await fetchAllRecipes();
-    } catch (error: any) {
-      console.error('Error initializing brain recipes:', error);
-      console.error('Error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
-      showMessage('error', `Failed to initialize brain recipes: ${error.message || 'Network error'}`);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const initializeWorkRecipes = async () => {
-    setLoading(true);
-    try {
-      console.log('Initializing work efficiency recipes...');
-      console.log('Request URL:', `${baseUrl}/init-work-efficiency-recipes`);
-      
-      const response = await fetch(`${baseUrl}/init-work-efficiency-recipes`, {
-        method: 'POST',
-        headers,
-      });
-      
-      console.log('Response status:', response.status);
-      console.log('Response ok:', response.ok);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
-        showMessage('error', `Server error: ${response.status} - ${errorText}`);
-        return;
-      }
-      
       const data = await response.json();
-      console.log('Response data:', data);
-      
-      if (data.error) {
-        showMessage('error', `Failed to add work efficiency recipes: ${data.error}`);
-        return;
-      }
-      
-      showMessage('success', `Work efficiency recipes added! ${data.successCount} of ${data.totalRecipes} recipes initialized successfully`);
-      await fetchAllRecipes();
-    } catch (error: any) {
-      console.error('Error initializing work efficiency recipes:', error);
-      console.error('Error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
-      showMessage('error', `Failed to initialize work efficiency recipes: ${error.message || 'Network error'}`);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const initializeFitnessRecipes = async () => {
-    setLoading(true);
-    try {
-      console.log('Initializing fitness recovery recipes...');
-      console.log('Request URL:', `${baseUrl}/init-fitness-recovery-recipes`);
-      
-      const response = await fetch(`${baseUrl}/init-fitness-recovery-recipes`, {
-        method: 'POST',
-        headers,
-      });
-      
-      console.log('Response status:', response.status);
-      console.log('Response ok:', response.ok);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
-        showMessage('error', `Server error: ${response.status} - ${errorText}`);
-        return;
-      }
-      
-      const data = await response.json();
-      console.log('Response data:', data);
-      
       if (data.error) {
-        showMessage('error', `Failed to add fitness recovery recipes: ${data.error}`);
+        showMessage('error', `Failed to initialize recipes: ${data.error}`);
         return;
       }
-      
-      showMessage('success', `Fitness recovery recipes added! ${data.successCount} of ${data.totalRecipes} recipes initialized successfully`);
-      await fetchAllRecipes();
-    } catch (error: any) {
-      console.error('Error initializing fitness recovery recipes:', error);
-      console.error('Error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
-      showMessage('error', `Failed to initialize fitness recovery recipes: ${error.message || 'Network error'}`);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const initializeBaseRecipes = async () => {
-    setLoading(true);
-    try {
-      console.log('Initializing base recipes (one-pot, microwave, meal-prep)...');
-      console.log('Request URL:', `${baseUrl}/init-base-recipes`);
-      
-      const response = await fetch(`${baseUrl}/init-base-recipes`, {
-        method: 'POST',
-        headers,
-      });
-      
-      console.log('Response status:', response.status);
-      console.log('Response ok:', response.ok);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
-        showMessage('error', `Server error: ${response.status} - ${errorText}`);
-        return;
-      }
-      
-      const data = await response.json();
-      console.log('Response data:', data);
-      
-      if (data.error) {
-        showMessage('error', `Failed to add base recipes: ${data.error}`);
-        return;
-      }
-      
-      showMessage('success', `Base recipes added! ${data.successCount} of ${data.totalRecipes} recipes initialized (One-Pot: ${data.categories['one-pot']}, Microwave: ${data.categories.microwave}, Meal-Prep: ${data.categories['meal-prep']})`);
+      const byType = data.byMealType || {};
+      showMessage('success', `Recipes initialized! ${data.total} recipes added (Work: ${byType.work || 0}, Fitness: ${byType.fitness || 0}, Study: ${byType.study || 0})`);
       await fetchAllRecipes();
     } catch (error: any) {
-      console.error('Error initializing base recipes:', error);
-      console.error('Error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
-      showMessage('error', `Failed to initialize base recipes: ${error.message || 'Network error'}`);
+      console.error('Error initializing recipes:', error);
+      showMessage('error', `Failed to initialize recipes: ${error.message || 'Network error'}`);
     } finally {
       setLoading(false);
     }
@@ -300,33 +139,20 @@ export function AdminDashboard() {
 
   const viewRecipe = async (recipeKey: string) => {
     try {
-      // Handle both cuisine and base recipe key formats
-      // cuisine format: "cuisine:italian:recipe-id"
-      // base format: "base-recipe:microwave:recipe-id"
+      // Key format: "recipe:{mealType}:{id}"
       const parts = recipeKey.split(':');
-      
-      let cuisine: string;
-      let recipeId: string;
-      
-      if (parts[0] === 'base-recipe') {
-        // Base recipe format: base-recipe:category:recipe-id
-        cuisine = 'base';
-        recipeId = parts[2];
-      } else {
-        // Cuisine recipe format: cuisine:cuisine-name:recipe-id
-        cuisine = parts[1];
-        recipeId = parts[2];
-      }
-      
-      const response = await fetch(`${baseUrl}/admin/recipe/${cuisine}/${recipeId}`, { headers });
+      const mealType = parts[1];
+      const recipeId = parts[2];
+
+      const response = await fetch(`${baseUrl}/admin/recipe/${mealType}/${recipeId}`, { headers });
       const data = await response.json();
       setSelectedRecipe(data.recipe);
-      setSelectedRecipeKey(recipeKey); // Store the original key
+      setSelectedRecipeKey(recipeKey);
       setEditedRecipe(data.recipe);
       setEditMode(false);
       setImageFile(null);
       setImagePreview(null);
-      setAiImageLoadError(false); // Reset AI image error when viewing a new recipe
+      setAiImageLoadError(false);
     } catch (error) {
       console.error('Error fetching recipe details:', error);
       showMessage('error', 'Failed to fetch recipe details');
@@ -363,23 +189,12 @@ export function AdminDashboard() {
 
     setLoading(true);
     try {
-      // Handle both cuisine and base recipe key formats
+      // Key format: "recipe:{mealType}:{id}"
       const parts = recipeKey.split(':');
-      
-      let cuisine: string;
-      let recipeId: string;
-      
-      if (parts[0] === 'base-recipe') {
-        // Base recipe format: base-recipe:category:recipe-id
-        cuisine = 'base';
-        recipeId = parts[2];
-      } else {
-        // Cuisine recipe format: cuisine:cuisine-name:recipe-id
-        cuisine = parts[1];
-        recipeId = parts[2];
-      }
-      
-      const response = await fetch(`${baseUrl}/admin/recipe/${cuisine}/${recipeId}`, {
+      const mealType = parts[1];
+      const recipeId = parts[2];
+
+      const response = await fetch(`${baseUrl}/admin/recipe/${mealType}/${recipeId}`, {
         method: 'DELETE',
         headers,
       });
@@ -427,14 +242,15 @@ export function AdminDashboard() {
       }
       
       // Transform search results to match recipe list format
-      const transformedRecipes = data.recipes.map((recipe: Recipe) => ({
-        key: `cuisine:${recipe.cuisine}:${recipe.id}`,
+      const transformedRecipes = data.recipes.map((recipe: any) => ({
+        key: `recipe:${recipe.meal_type || 'work'}:${recipe.id}`,
         id: recipe.id,
         name: recipe.name,
-        cuisine: recipe.cuisine,
+        meal_type: recipe.meal_type,
+        recipe_category: recipe.recipe_category,
         category: recipe.category,
-        cookingTime: recipe.cookingTime,
-        totalCost: recipe.ingredients?.reduce((sum, ing) => sum + ing.estimatedPrice, 0).toFixed(2) || 0,
+        cookingTime: recipe.cookingTime || recipe.total_time_minutes || 0,
+        rating: recipe.rating,
       }));
       
       setRecipes(transformedRecipes);
@@ -559,33 +375,27 @@ export function AdminDashboard() {
     setNewRecipeImagePreview(null);
   };
 
-  const getCuisineEmoji = (cuisine: string) => {
+  const getMealTypeEmoji = (mealType: string) => {
     const emojiMap: Record<string, string> = {
-      british: '🇬🇧',
-      italian: '🇮🇹',
-      chinese: '🇨🇳',
-      indian: '🇮🇳',
-      mexican: '🇲🇽',
-      mediterranean: '🌊',
-      japanese: '🇯🇵',
-      american: '🇺🇸',
-      base: '🍳', // Base recipes (one-pot, microwave, meal-prep)
+      work: '💼',
+      fitness: '💪',
+      study: '🧠',
     };
-    return emojiMap[cuisine] || '🍽️';
+    return emojiMap[mealType] || '🍽️';
   };
 
-  const getCategoryColor = (category: string) => {
+  const getMealTypeColor = (mealType: string) => {
     const colorMap: Record<string, string> = {
-      'one-pot': 'bg-orange-100 text-orange-700 border-orange-300',
-      'microwave': 'bg-blue-100 text-blue-700 border-blue-300',
-      'meal-prep': 'bg-purple-100 text-purple-700 border-purple-300',
+      'work': 'bg-blue-100 text-blue-700 border-blue-300',
+      'fitness': 'bg-green-100 text-green-700 border-green-300',
+      'study': 'bg-amber-100 text-amber-700 border-amber-300',
     };
-    return colorMap[category] || 'bg-gray-100 text-gray-700 border-gray-300';
+    return colorMap[mealType] || 'bg-gray-100 text-gray-700 border-gray-300';
   };
 
   const createNewRecipe = async () => {
-    if (!newRecipe.id || !newRecipe.name || !newRecipe.cuisine) {
-      showMessage('error', 'Please fill in all required fields (ID, Name, Cuisine)');
+    if (!newRecipe.id || !newRecipe.name || !newRecipe.meal_type) {
+      showMessage('error', 'Please fill in all required fields (ID, Name, Meal Type)');
       return;
     }
 
@@ -635,20 +445,19 @@ export function AdminDashboard() {
         id: '',
         name: '',
         description: '',
-        cuisine: 'british',
-        category: 'one-pot',
+        cuisine: 'american',
+        category: 'dinner',
         cookingTime: 30,
         servings: 2,
         difficulty: 'easy',
-        spiceLevel: 'mild',
-        authentic: false,
         ingredients: [],
         instructions: [],
         nutrition: { calories: 0, protein: 0, carbs: 0, fats: 0, fiber: 0 },
         tags: [],
         benefits: [],
-        suitableFor: [],
-        imageQuery: ''
+        meal_type: 'work',
+        recipe_category: 'Dinner',
+        sourceUrl: ''
       });
       setNewRecipeImageFile(null);
       setNewRecipeImagePreview(null);
@@ -950,50 +759,14 @@ export function AdminDashboard() {
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-4 mb-6">
           <button
-            onClick={initializeDatabase}
+            onClick={initializeRecipes}
             disabled={loading}
             className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-xl hover:from-green-600 hover:to-blue-600 transition-all shadow-md disabled:opacity-50"
           >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
-            Initialize Database (16 Recipes)
-          </button>
-          
-          <button
-            onClick={initializeBrainRecipes}
-            disabled={loading}
-            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-md disabled:opacity-50"
-          >
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Database className="w-5 h-5" />}
-            🧠 Add Brain Recipes (16)
+            Initialize All Recipes (250)
           </button>
-          
-          <button
-            onClick={initializeWorkRecipes}
-            disabled={loading}
-            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:from-blue-600 hover:to-indigo-600 transition-all shadow-md disabled:opacity-50"
-          >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Database className="w-5 h-5" />}
-            💼 Add Work Efficiency Recipes (16)
-          </button>
-          
-          <button
-            onClick={initializeFitnessRecipes}
-            disabled={loading}
-            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-xl hover:from-green-600 hover:to-teal-600 transition-all shadow-md disabled:opacity-50"
-          >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Database className="w-5 h-5" />}
-            💪 Add Fitness Recovery Recipes (16)
-          </button>
-          
-          <button
-            onClick={initializeBaseRecipes}
-            disabled={loading}
-            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl hover:from-pink-600 hover:to-rose-600 transition-all shadow-md disabled:opacity-50"
-          >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Database className="w-5 h-5" />}
-            🍳 Add Base Recipes (27 - includes 20 Microwave!)
-          </button>
-          
+
           <button
             onClick={() => {
               setShowAddRecipe(true);
@@ -1094,19 +867,19 @@ export function AdminDashboard() {
                     >
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <span className="text-2xl">{getCuisineEmoji(recipe.cuisine)}</span>
+                          <span className="text-2xl">{getMealTypeEmoji(recipe.meal_type)}</span>
                           <div>
                             <div className="font-semibold text-gray-900">{recipe.name}</div>
-                            <div className="text-xs text-gray-500 capitalize">{recipe.cuisine}</div>
+                            <div className="text-xs text-gray-500 capitalize">{recipe.recipe_category || recipe.category}</div>
                           </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 text-xs">
-                        <span className={`px-2 py-1 rounded-full border ${getCategoryColor(recipe.category)}`}>
-                          {recipe.category}
+                        <span className={`px-2 py-1 rounded-full border ${getMealTypeColor(recipe.meal_type)}`}>
+                          {recipe.meal_type}
                         </span>
                         <span className="text-gray-600">{recipe.cookingTime}min</span>
-                        <span className="text-green-600 font-semibold">£{recipe.totalCost}</span>
+                        {recipe.rating && <span className="text-amber-600 font-semibold">★ {recipe.rating}</span>}
                       </div>
                     </button>
                   ))
@@ -1122,10 +895,10 @@ export function AdminDashboard() {
                 <div className="p-6 bg-gradient-to-r from-green-500 to-blue-500 text-white">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <span className="text-4xl">{getCuisineEmoji(selectedRecipe.cuisine)}</span>
+                      <span className="text-4xl">{getMealTypeEmoji(selectedRecipe.meal_type)}</span>
                       <div>
                         <h2 className="text-2xl font-bold">{selectedRecipe.name}</h2>
-                        <p className="text-sm text-white/90 capitalize">{selectedRecipe.cuisine} Cuisine</p>
+                        <p className="text-sm text-white/90 capitalize">{selectedRecipe.meal_type} - {selectedRecipe.recipe_category}</p>
                       </div>
                     </div>
                     <button
@@ -1222,8 +995,12 @@ export function AdminDashboard() {
                           <div className="text-gray-900 font-medium capitalize">{selectedRecipe.difficulty}</div>
                         </div>
                         <div>
-                          <label className="text-sm text-gray-600">Spice Level</label>
-                          <div className="text-gray-900 font-medium capitalize">{selectedRecipe.spiceLevel}</div>
+                          <label className="text-sm text-gray-600">Meal Type</label>
+                          <div className="text-gray-900 font-medium capitalize">{selectedRecipe.meal_type}</div>
+                        </div>
+                        <div>
+                          <label className="text-sm text-gray-600">Rating</label>
+                          <div className="text-gray-900 font-medium">{selectedRecipe.rating ? `★ ${selectedRecipe.rating}` : 'N/A'}</div>
                         </div>
                       </div>
                     </div>
@@ -1344,31 +1121,29 @@ export function AdminDashboard() {
                             </div>
                           </div>
 
-                          {/* AI-Generated Image Section */}
+                          {/* Image URL Section */}
                           <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-4">
                             <h4 className="font-semibold text-purple-900 mb-2 flex items-center gap-2">
                               <ImageIcon className="w-4 h-4" />
-                              AI-Generated Image
+                              Image URL
                             </h4>
                             <div>
-                              <label className="text-sm text-purple-700">Image Search Query</label>
+                              <label className="text-sm text-purple-700">Direct Image URL</label>
                               <input
                                 type="text"
-                                value={editedRecipe?.imageQuery || ''}
+                                value={editedRecipe?.imageUrl || editedRecipe?.image?.url || ''}
                                 onChange={(e) => {
-                                  setEditedRecipe({ ...editedRecipe!, imageQuery: e.target.value });
-                                  setAiImageLoadError(false); // Reset error when query changes
+                                  setEditedRecipe({ ...editedRecipe!, imageUrl: e.target.value });
                                 }}
-                                placeholder="e.g., Shepherd's Pie British food"
+                                placeholder="https://example.com/image.jpg"
                                 className="w-full mt-1 px-3 py-2 border border-purple-300 rounded-lg focus:outline-none focus:border-purple-500"
                               />
-                              <p className="text-xs text-purple-600 mt-1">This query generates an AI image. It will be permanently stored when you save.</p>
                             </div>
-                            {editedRecipe?.imageQuery && (
+                            {(editedRecipe?.imageUrl || editedRecipe?.image?.url) && (
                               <div className="mt-3">
-                                <label className="text-sm text-purple-700 mb-2 block">AI Preview:</label>
+                                <label className="text-sm text-purple-700 mb-2 block">Preview:</label>
                                 <img
-                                  src={editedRecipe.imageUrl || LOCAL_IMAGE_FALLBACK}
+                                  src={editedRecipe.imageUrl || editedRecipe.image?.url || LOCAL_IMAGE_FALLBACK}
                                   alt={editedRecipe.name}
                                   className="w-full h-48 object-cover rounded-lg border-2 border-purple-300"
                                   onError={(e) => {
@@ -1376,20 +1151,16 @@ export function AdminDashboard() {
                                     target.src = LOCAL_IMAGE_FALLBACK;
                                   }}
                                 />
-                                <p className="text-xs text-purple-600 mt-2">
-                                  Image will be fetched from Unsplash when the recipe is saved. Upload a custom image above if needed.
-                                </p>
                               </div>
                             )}
                           </div>
                         </div>
                       ) : (
                         <div className="space-y-2">
-                          <div className="text-sm text-gray-600">Query: <span className="font-mono text-gray-900">{selectedRecipe.imageQuery || 'Not set'}</span></div>
-                          {(selectedRecipe.imageUrl || selectedRecipe.imageQuery) && (
+                          {(selectedRecipe.imageUrl || selectedRecipe.image?.url) ? (
                             <div>
                               <img
-                                src={selectedRecipe.imageUrl || LOCAL_IMAGE_FALLBACK}
+                                src={selectedRecipe.imageUrl || selectedRecipe.image?.url || LOCAL_IMAGE_FALLBACK}
                                 alt={selectedRecipe.name}
                                 className="w-full h-48 object-cover rounded-lg border-2 border-gray-200"
                                 onError={(e) => {
@@ -1397,13 +1168,12 @@ export function AdminDashboard() {
                                   target.src = LOCAL_IMAGE_FALLBACK;
                                 }}
                               />
-                              {selectedRecipe.imageUrl && (
-                                <p className="text-xs text-green-600 mt-1">✓ Permanent image stored in database</p>
-                              )}
-                              {!selectedRecipe.imageUrl && selectedRecipe.imageQuery && (
-                                <p className="text-xs text-amber-600 mt-1">⚠ Using temporary image - save recipe to store permanently</p>
+                              {selectedRecipe.sourceUrl && (
+                                <a href={selectedRecipe.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 mt-1 hover:underline block">View original recipe</a>
                               )}
                             </div>
+                          ) : (
+                            <p className="text-sm text-gray-500">No image available</p>
                           )}
                         </div>
                       )}
@@ -1418,35 +1188,18 @@ export function AdminDashboard() {
                       {editMode ? (
                         <div className="space-y-3">
                           <div>
-                            <label className="text-sm text-gray-600">YouTube Video URL</label>
-                            <input
-                              type="url"
-                              value={editedRecipe?.youtubeUrl || ''}
-                              onChange={(e) => setEditedRecipe({ ...editedRecipe!, youtubeUrl: e.target.value })}
-                              placeholder="https://www.youtube.com/watch?v=..."
-                              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                            />
-                          </div>
-                          <div>
                             <label className="text-sm text-gray-600">Recipe Source URL</label>
                             <input
                               type="url"
                               value={editedRecipe?.sourceUrl || ''}
                               onChange={(e) => setEditedRecipe({ ...editedRecipe!, sourceUrl: e.target.value })}
-                              placeholder="https://www.bbcgoodfood.com/recipes/..."
+                              placeholder="https://www.allrecipes.com/recipe/..."
                               className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
                             />
                           </div>
                         </div>
                       ) : (
                         <div className="space-y-2">
-                          {selectedRecipe.youtubeUrl ? (
-                            <a href={selectedRecipe.youtubeUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-red-600 hover:underline">
-                              <Play className="w-4 h-4" /> YouTube Video
-                            </a>
-                          ) : (
-                            <p className="text-sm text-gray-400">No YouTube link</p>
-                          )}
                           {selectedRecipe.sourceUrl ? (
                             <a href={selectedRecipe.sourceUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-blue-600 hover:underline">
                               <ExternalLink className="w-4 h-4" /> {(() => { try { return new URL(selectedRecipe.sourceUrl).hostname.replace('www.', ''); } catch { return 'Source'; } })()}
@@ -1678,32 +1431,30 @@ export function AdminDashboard() {
                       />
                     </div>
                     <div>
-                      <label className="text-sm text-gray-600 block mb-1">Cuisine *</label>
+                      <label className="text-sm text-gray-600 block mb-1">Meal Type *</label>
                       <select
-                        value={newRecipe.cuisine}
-                        onChange={(e) => setNewRecipe({ ...newRecipe, cuisine: e.target.value })}
+                        value={newRecipe.meal_type}
+                        onChange={(e) => setNewRecipe({ ...newRecipe, meal_type: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-400"
                       >
-                        <option value="british">British</option>
-                        <option value="italian">Italian</option>
-                        <option value="chinese">Chinese</option>
-                        <option value="indian">Indian</option>
-                        <option value="mexican">Mexican</option>
-                        <option value="mediterranean">Mediterranean</option>
-                        <option value="japanese">Japanese</option>
-                        <option value="american">American</option>
+                        <option value="work">Work</option>
+                        <option value="fitness">Fitness</option>
+                        <option value="study">Study</option>
                       </select>
                     </div>
                     <div>
-                      <label className="text-sm text-gray-600 block mb-1">Category</label>
+                      <label className="text-sm text-gray-600 block mb-1">Recipe Category</label>
                       <select
-                        value={newRecipe.category}
-                        onChange={(e) => setNewRecipe({ ...newRecipe, category: e.target.value })}
+                        value={newRecipe.recipe_category}
+                        onChange={(e) => setNewRecipe({ ...newRecipe, recipe_category: e.target.value, category: e.target.value.toLowerCase() })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-400"
                       >
-                        <option value="one-pot">One-Pot</option>
-                        <option value="microwave">Microwave</option>
-                        <option value="meal-prep">Meal Prep</option>
+                        <option value="Breakfast">Breakfast</option>
+                        <option value="Lunch">Lunch</option>
+                        <option value="Dinner">Dinner</option>
+                        <option value="Appetizer">Appetizer</option>
+                        <option value="Snack">Snack</option>
+                        <option value="Dessert">Dessert</option>
                       </select>
                     </div>
                     <div>
@@ -1737,17 +1488,14 @@ export function AdminDashboard() {
                       </select>
                     </div>
                     <div>
-                      <label className="text-sm text-gray-600 block mb-1">Spice Level</label>
-                      <select
-                        value={newRecipe.spiceLevel}
-                        onChange={(e) => setNewRecipe({ ...newRecipe, spiceLevel: e.target.value })}
+                      <label className="text-sm text-gray-600 block mb-1">Cuisine</label>
+                      <input
+                        type="text"
+                        value={newRecipe.cuisine}
+                        onChange={(e) => setNewRecipe({ ...newRecipe, cuisine: e.target.value })}
+                        placeholder="e.g., American, Italian"
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-400"
-                      >
-                        <option value="mild">Mild</option>
-                        <option value="medium">Medium</option>
-                        <option value="spicy">Spicy</option>
-                        <option value="very-spicy">Very Spicy</option>
-                      </select>
+                      />
                     </div>
                   </div>
                 </div>
@@ -1828,35 +1576,34 @@ export function AdminDashboard() {
                     </div>
                   </div>
 
-                  {/* AI-Generated Image */}
+                  {/* Image URL */}
                   <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-4">
                     <h4 className="font-semibold text-purple-900 mb-2 flex items-center gap-2">
                       <ImageIcon className="w-4 h-4" />
-                      AI-Generated Image
+                      Image URL
                     </h4>
-                    <label className="text-sm text-purple-700 block mb-1">Image Search Query</label>
+                    <label className="text-sm text-purple-700 block mb-1">Direct Image URL</label>
                     <input
                       type="text"
-                      value={newRecipe.imageQuery}
+                      value={newRecipe.imageUrl || ''}
                       onChange={(e) => {
-                        setNewRecipe({ ...newRecipe, imageQuery: e.target.value });
-                        setNewRecipeAiImageLoadError(false); // Reset error when query changes
+                        setNewRecipe({ ...newRecipe, imageUrl: e.target.value });
                       }}
-                      placeholder="e.g., Cottage Pie British comfort food"
+                      placeholder="https://example.com/image.jpg"
                       className="w-full px-3 py-2 border border-purple-300 rounded-lg focus:outline-none focus:border-purple-500"
                     />
-                    <p className="text-xs text-purple-600 mt-1">AI will generate an image based on this description</p>
-                    {newRecipe.imageQuery && (
+                    {newRecipe.imageUrl && (
                       <div className="mt-3">
-                        <label className="text-sm text-purple-700 mb-2 block">AI Preview:</label>
+                        <label className="text-sm text-purple-700 mb-2 block">Preview:</label>
                         <img
-                          src={LOCAL_IMAGE_FALLBACK}
+                          src={newRecipe.imageUrl || LOCAL_IMAGE_FALLBACK}
                           alt={newRecipe.name || 'Recipe preview'}
                           className="w-full h-48 object-cover rounded-lg border-2 border-purple-300"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = LOCAL_IMAGE_FALLBACK;
+                          }}
                         />
-                        <p className="text-xs text-purple-600 mt-2">
-                          Image will be fetched from Unsplash when the recipe is created. Upload a custom image above if needed.
-                        </p>
                       </div>
                     )}
                   </div>
@@ -1870,22 +1617,12 @@ export function AdminDashboard() {
                   </h3>
                   <div className="space-y-3">
                     <div>
-                      <label className="text-sm text-gray-600">YouTube Video URL</label>
-                      <input
-                        type="url"
-                        value={newRecipe.youtubeUrl || ''}
-                        onChange={(e) => setNewRecipe({ ...newRecipe, youtubeUrl: e.target.value })}
-                        placeholder="https://www.youtube.com/watch?v=..."
-                        className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                      />
-                    </div>
-                    <div>
                       <label className="text-sm text-gray-600">Recipe Source URL</label>
                       <input
                         type="url"
                         value={newRecipe.sourceUrl || ''}
                         onChange={(e) => setNewRecipe({ ...newRecipe, sourceUrl: e.target.value })}
-                        placeholder="https://www.bbcgoodfood.com/recipes/..."
+                        placeholder="https://www.allrecipes.com/recipe/..."
                         className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
                       />
                     </div>

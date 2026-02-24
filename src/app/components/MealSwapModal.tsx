@@ -52,28 +52,38 @@ interface SwapOption {
     fiber?: number;
   };
   similarity: {
-    priceMatch: string;
+    priceMatch?: string;
     calorieMatch: string;
     proteinMatch: string;
     matchScore: string;
   };
+  imageUrl?: string;
   youtubeUrl?: string;
   sourceUrl?: string;
 }
 
-const CATEGORY_ICONS = {
+const CATEGORY_ICONS: Record<string, string> = {
+  'breakfast': '🌅',
+  'lunch': '🥗',
+  'dinner': '🍽️',
   'one-pot': '🥘',
   'microwave': '📱',
   'meal-prep': '📦',
 };
 
-const CATEGORY_LABELS = {
+const CATEGORY_LABELS: Record<string, string> = {
+  'breakfast': 'Breakfast',
+  'lunch': 'Lunch',
+  'dinner': 'Dinner',
   'one-pot': 'One Pot',
   'microwave': 'Microwave',
   'meal-prep': 'Meal Prep',
 };
 
-const CATEGORY_COLORS = {
+const CATEGORY_COLORS: Record<string, string> = {
+  'breakfast': 'bg-yellow-100 text-yellow-700 border-yellow-300',
+  'lunch': 'bg-green-100 text-green-700 border-green-300',
+  'dinner': 'bg-indigo-100 text-indigo-700 border-indigo-300',
   'one-pot': 'bg-orange-100 text-orange-700 border-orange-300',
   'microwave': 'bg-blue-100 text-blue-700 border-blue-300',
   'meal-prep': 'bg-purple-100 text-purple-700 border-purple-300',
@@ -131,10 +141,10 @@ export function MealSwapModal({
 
       setSwapOptions(data.swapOptions);
 
-      // Load images for all options
+      // Load images for all options (new recipes have direct image URLs)
       const imageMap: Record<string, string> = {};
       for (const option of data.swapOptions) {
-        imageMap[option.id] = option.imageUrl || LOCAL_IMAGE_FALLBACK;
+        imageMap[option.id] = option.imageUrl || option.image || LOCAL_IMAGE_FALLBACK;
       }
       setOptionImages(imageMap);
     } catch (err: any) {

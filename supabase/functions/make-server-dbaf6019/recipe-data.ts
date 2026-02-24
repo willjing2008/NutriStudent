@@ -1,4 +1,40 @@
-[
+// Auto-generated from allrecipes_clean.json
+// This file is ONLY used for DB initialization via the /init-recipes endpoint
+
+export interface NewRecipe {
+  url: string;
+  category: string;
+  id: number;
+  name: string;
+  description: string;
+  author: string;
+  image: { url: string; alt: string };
+  prep_time_minutes: number | null;
+  cook_time_minutes: number | null;
+  total_time_minutes: number | null;
+  servings: string;
+  ingredients: string[];
+  instructions: string[];
+  nutrition_per_serving: {
+    calories: number;
+    total_fat_g: number;
+    carbohydrates_g: number;
+    fiber_g: number;
+    sugar_g: number;
+    protein_g: number;
+    sodium_mg: number;
+    cholesterol_mg: number;
+    saturated_fat_g: number;
+    unsaturated_fat_g: number;
+  };
+  rating: number;
+  review_count: number;
+  recipe_category: string;
+  cuisine: string;
+  meal_type: "work" | "fitness" | "study";
+}
+
+export const ALL_RECIPES: NewRecipe[] = [
   {
     "url": "https://www.allrecipes.com/recipe/37095/yogurt-parfait/",
     "category": "granola",
@@ -176,7 +212,7 @@
     "category": "corned-beef",
     "id": 241673,
     "name": "Corned Beef Special Sandwiches",
-    "description": "You\u2019ll love this corned beef sandwich recipe if you're a fan of Reuben. Served on untoasted rye bread, this sandwich uses coleslaw instead of sauerkraut.",
+    "description": "You’ll love this corned beef sandwich recipe if you're a fan of Reuben. Served on untoasted rye bread, this sandwich uses coleslaw instead of sauerkraut.",
     "author": "SHORECOOK",
     "image": {
       "url": "https://www.allrecipes.com/thmb/UFONMJwB0tWwba_kjQWmrCBUmfY=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/2158467-5140b6268bf0493facb079b2d2624659.jpg",
@@ -260,7 +296,7 @@
     "category": "buffalo-chicken-dips",
     "id": 240342,
     "name": "Buffalo Dip",
-    "description": "An easy Buffalo chicken dip recipe with a spicy, cheesy flavor \u2014 made with just five ingredients. This dish is always hit at parties and gatherings.",
+    "description": "An easy Buffalo chicken dip recipe with a spicy, cheesy flavor — made with just five ingredients. This dish is always hit at parties and gatherings.",
     "author": "MothertoMonsters",
     "image": {
       "url": "https://www.allrecipes.com/thmb/Y9Cw5cNfSyigOW_iFU-9EkiGn0I=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/1981539-buffalo-dip-CoOkInGnUt-4x3-1-9a1bd9da495f42939f4a686f355c8c53.jpg",
@@ -273,7 +309,7 @@
     "ingredients": [
       "1 (8 ounce) package cream cheese, softened",
       "0.5 cup ranch salad dressing, or to taste",
-      "0.5 cup Buffalo wing sauce (such as Sweet Baby Ray's\u00ae)",
+      "0.5 cup Buffalo wing sauce (such as Sweet Baby Ray's®)",
       "0.5 cup shredded mozzarella cheese, or to taste",
       "2 (12.5 fl oz) cans chicken chunks, drained"
     ],
@@ -316,7 +352,7 @@
     "ingredients": [
       "1 pound 80% lean ground beef",
       "2 tablespoons melted butter",
-      "1 tablespoon beef base (such as Better than Bouillon\u00ae)",
+      "1 tablespoon beef base (such as Better than Bouillon®)",
       "freshly ground black pepper to taste"
     ],
     "instructions": [
@@ -356,7 +392,7 @@
     "total_time_minutes": 30,
     "servings": "4",
     "ingredients": [
-      "0.5 cup Hellmann's\u00ae or Best Foods\u00ae Real Mayonnaise",
+      "0.5 cup Hellmann's® or Best Foods® Real Mayonnaise",
       "0.25 cup grated Parmesan cheese",
       "4 (5 ounce) boneless, skinless chicken breast halves",
       "4 teaspoons Italian seasoned dry bread crumbs"
@@ -797,7 +833,7 @@
     "total_time_minutes": 30,
     "servings": "4",
     "ingredients": [
-      "0.5 cup Hellmann's\u00ae Real Mayonnaise",
+      "0.5 cup Hellmann's® Real Mayonnaise",
       "0.25 cup grated Parmesan cheese",
       "4 (5 ounce) boneless, skinless chicken breast halves",
       "4 teaspoons Italian-seasoned dry bread crumbs"
@@ -831,12 +867,12 @@
     "url": "https://www.allrecipes.com/recipe/12827/sauteed-scallops/",
     "category": "cooking-for-one",
     "id": 12827,
-    "name": "Saut\u00e9ed Scallops",
-    "description": "Saut\u00e9ed scallops in butter with crushed garlic and fresh rosemary; a very simple yet incredibly delicious shellfish main dish for two!",
+    "name": "Sautéed Scallops",
+    "description": "Sautéed scallops in butter with crushed garlic and fresh rosemary; a very simple yet incredibly delicious shellfish main dish for two!",
     "author": "Pati",
     "image": {
       "url": "https://www.allrecipes.com/thmb/4ravpCwGGXi8no3FX345OJtDafk=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/7101154-5c3c5739d55b400fa6e63a0b5b75d7d3.jpg",
-      "alt": "Saut\u00e9ed Scallops"
+      "alt": "Sautéed Scallops"
     },
     "prep_time_minutes": 5,
     "cook_time_minutes": 5,
@@ -874,7 +910,7 @@
     "category": "cooking-for-one",
     "id": 9011,
     "name": "Simple Lemon Herb Chicken",
-    "description": "This lemon herb chicken is a quick and easy main dish of juicy chicken breasts flavored with lemon, oregano, and parsley\u2014ready in just 15 minutes.",
+    "description": "This lemon herb chicken is a quick and easy main dish of juicy chicken breasts flavored with lemon, oregano, and parsley—ready in just 15 minutes.",
     "author": "Carolyn Stilwell",
     "image": {
       "url": "https://www.allrecipes.com/thmb/-UKM4NTWBZnLnkeOCh7ESmeTOcI=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/Simple-Lemon-Herb-Chicken-2000-610e2f2a1e9a4ba292d775e72f3dc888.jpg",
@@ -2329,9 +2365,9 @@
     "total_time_minutes": 35,
     "servings": "6",
     "ingredients": [
-      "1 tablespoon I Can't Believe It's Not Butter!\u00ae Spread",
+      "1 tablespoon I Can't Believe It's Not Butter!® Spread",
       "1.5 pounds boneless, skinless chicken breasts, cut into strips",
-      "1 (16 ounce) jar Ragu\u00ae Classic Alfredo Sauce",
+      "1 (16 ounce) jar Ragu® Classic Alfredo Sauce",
       "1 (12 ounce) package frozen broccoli florets, thawed",
       "1 (12 ounce) package fettuccine, cooked"
     ],
@@ -2467,7 +2503,7 @@
     "servings": "6",
     "ingredients": [
       "3 cups water",
-      "3 cups instant white rice (such as Minute\u00ae)",
+      "3 cups instant white rice (such as Minute®)",
       "2 teaspoons vegetable oil",
       "3 skinless, boneless chicken breasts, cut into chunks",
       "12 slices bacon",
@@ -2739,7 +2775,7 @@
     "category": "keto",
     "id": 276831,
     "name": "Air Fryer Ranch Pork Chops",
-    "description": "This keto-friendly air fryer pork chop recipe couldn't be easier\u2014 just a bit of ranch seasoning mix turns plain pork into a flavorful feast in 10 minutes!",
+    "description": "This keto-friendly air fryer pork chop recipe couldn't be easier— just a bit of ranch seasoning mix turns plain pork into a flavorful feast in 10 minutes!",
     "author": "France Cevallos",
     "image": {
       "url": "https://www.allrecipes.com/thmb/7WgSRYAUnWGwbZIBsbJDPjFa9yo=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/276831-Air-Fryer-Pork-Chops-ddmfs-4x3-170-1-1fa27f00f474428f85f7f7b6aa267709.jpg",
@@ -2752,7 +2788,7 @@
     "ingredients": [
       "4 boneless, center-cut pork chops, 1-inch thick",
       "cooking spray",
-      "2 teaspoons dry ranch salad dressing mix (such as Hidden Valley Ranch\u00ae)"
+      "2 teaspoons dry ranch salad dressing mix (such as Hidden Valley Ranch®)"
     ],
     "instructions": [
       "Gather all ingredients.",
@@ -3008,12 +3044,12 @@
     "url": "https://www.allrecipes.com/recipe/270409/quick-instant-pot-baked-beans/",
     "category": "baked-beans",
     "id": 270409,
-    "name": "Quick Instant Pot\u00ae Baked Beans",
-    "description": "This baked bean recipe uses canned baked beans with pork, bacon and seasonings. Cooking it in the Instant Pot\u00ae cuts the cooking time in half.",
+    "name": "Quick Instant Pot® Baked Beans",
+    "description": "This baked bean recipe uses canned baked beans with pork, bacon and seasonings. Cooking it in the Instant Pot® cuts the cooking time in half.",
     "author": "thedailygourmet",
     "image": {
       "url": "https://www.allrecipes.com/thmb/INp4rOXAep2mzcubmgduJ8PozT0=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/6316765-quick-instant-pot-baked-beans-thedailygourmet-4x3-1-474896f7d32d4bac8727a0723908e8cb.jpg",
-      "alt": "Quick Instant Pot\u00ae Baked Beans"
+      "alt": "Quick Instant Pot® Baked Beans"
     },
     "prep_time_minutes": 5,
     "cook_time_minutes": 20,
@@ -3027,8 +3063,8 @@
       "0.5 teaspoon dry mustard powder"
     ],
     "instructions": [
-      "Turn on a multi-functional pressure cooker (such as Instant Pot\u00ae) and select Saute function. Add bacon and cook until browned and crispy but not burned, about 6 minutes. Transfer bacon to a baking sheet lined with paper towels. Allow grease to drain.",
-      "Pour off some liquid from the beans, clearing at least 1 inch from the top of the can, but leaving some liquid. Add beans and remaining liquid, ketchup, brown sugar, and mustard to the Instant Pot\u00ae. Mix in bacon. Close and lock the lid. Select high pressure according to manufacturer's instructions; set timer for 3 minutes. Allow 10 to 15 minutes for pressure to build.",
+      "Turn on a multi-functional pressure cooker (such as Instant Pot®) and select Saute function. Add bacon and cook until browned and crispy but not burned, about 6 minutes. Transfer bacon to a baking sheet lined with paper towels. Allow grease to drain.",
+      "Pour off some liquid from the beans, clearing at least 1 inch from the top of the can, but leaving some liquid. Add beans and remaining liquid, ketchup, brown sugar, and mustard to the Instant Pot®. Mix in bacon. Close and lock the lid. Select high pressure according to manufacturer's instructions; set timer for 3 minutes. Allow 10 to 15 minutes for pressure to build.",
       "Release pressure carefully using the quick-release method according to manufacturer's instructions, about 5 minutes. Unlock and remove the lid."
     ],
     "nutrition_per_serving": {
@@ -3112,7 +3148,7 @@
       "3 (5 ounce) cans chicken chunks, drained",
       "1.5 (8 ounce) packages cream cheese, softened",
       "1 (8 ounce) package shredded Cheddar cheese",
-      "0.75 (12 fluid ounce) bottle Buffalo wing sauce (such as Frank's RedHot\u00ae), or to taste",
+      "0.75 (12 fluid ounce) bottle Buffalo wing sauce (such as Frank's RedHot®), or to taste",
       "0.75 (8 ounce) bottle ranch dressing"
     ],
     "instructions": [
@@ -3564,7 +3600,7 @@
       "1 shallot",
       "1.25 pounds ground turkey",
       "2 tablespoons mayonnaise",
-      "2 tablespoons steak sauce (such as A1\u00ae)",
+      "2 tablespoons steak sauce (such as A1®)",
       "2 tablespoons dried parsley",
       "0.25 teaspoon garlic salt, divided, or to taste",
       "ground black pepper to taste",
@@ -3615,7 +3651,7 @@
       "0.25 teaspoon ground black pepper",
       "1 clove garlic, halved",
       "1 (12 fluid ounce) can or bottle beer",
-      "1 dash hot pepper sauce (such as Tabasco\u00ae)"
+      "1 dash hot pepper sauce (such as Tabasco®)"
     ],
     "instructions": [
       "Combine Cheddar cheese, Swiss cheese, flour, salt, and black pepper in a bowl.",
@@ -3705,7 +3741,7 @@
       "1 egg",
       "0.5 cup seasoned bread crumbs",
       "2 tablespoons butter",
-      "1.75 cups pasta sauce (such as Barilla Napoletana\u00ae)",
+      "1.75 cups pasta sauce (such as Barilla Napoletana®)",
       "0.5 cup shredded mozzarella cheese",
       "1 tablespoon grated Parmesan cheese",
       "0.25 cup chopped fresh parsley"
@@ -4172,11 +4208,11 @@
       "1 pound boneless skinless chicken breasts",
       "1 egg",
       "1 cup panko crumbs",
-      "0.5 teaspoon Spice Islands\u00ae Garlic Powder",
-      "0.5 teaspoon Spice Islands\u00ae Onion Powder",
-      "0.5 teaspoon Spice Islands\u00ae Fine Grind Sea Salt",
-      "0.25 teaspoon Spice Islands\u00ae Fine Grind Black Pepper",
-      "0.25 cup Mazola\u00ae Corn Oil"
+      "0.5 teaspoon Spice Islands® Garlic Powder",
+      "0.5 teaspoon Spice Islands® Onion Powder",
+      "0.5 teaspoon Spice Islands® Fine Grind Sea Salt",
+      "0.25 teaspoon Spice Islands® Fine Grind Black Pepper",
+      "0.25 cup Mazola® Corn Oil"
     ],
     "instructions": [
       "Pound chicken breasts, one at a time, in a resealable plastic bag until about 1/2-inch thick.",
@@ -4218,7 +4254,7 @@
     "total_time_minutes": 20,
     "servings": "4",
     "ingredients": [
-      "2 cups bite-size corn square cereal (such as Corn Chex\u00ae)",
+      "2 cups bite-size corn square cereal (such as Corn Chex®)",
       "2 eggs",
       "0.33333334326744 cup rice flour",
       "4 skinless, boneless chicken breast halves, cut into bite-size pieces",
@@ -4301,7 +4337,7 @@
     "category": "gnocchi",
     "id": 275856,
     "name": "Gnocchi with Pesto and Shrimp",
-    "description": "Shrimp and asparagus are saut\u00e9ed in olive oil and garlic with gnocchi in pesto and a splash of lemon juice for a quick and easy recipe you'll enjoy.",
+    "description": "Shrimp and asparagus are sautéed in olive oil and garlic with gnocchi in pesto and a splash of lemon juice for a quick and easy recipe you'll enjoy.",
     "author": "Erica Monjeau",
     "image": {
       "url": "https://www.allrecipes.com/thmb/9NbbvIYOqUXH6t3eYs5rBQVjXuI=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/8289160-e20212a393a7419ba073a8c778da0a98.jpg",
@@ -4322,8 +4358,8 @@
     ],
     "instructions": [
       "Bring a large pot of lightly salted water to a boil. Cook gnocchi in the boiling water until they float to the top, 2 to 4 minutes. Transfer to a bowl using a slotted spoon; set aside.",
-      "Meanwhile, heat 1 tablespoon olive oil in a large skillet over medium-high heat. Add asparagus and garlic; saut\u00e9 until asparagus is tender, about 5 minutes. Transfer to a plate.",
-      "Heat remaining 1 tablespoon olive oil in the same skillet over medium-high heat. Add shrimp, 2 tablespoons pesto, and 1 tablespoon lemon juice; saut\u00e9 until shrimp are fully cooked and opaque, about 5 minutes. Add cooked gnocchi, asparagus, remaining pesto, and remaining 1 tablespoon lemon juice; stir to combine."
+      "Meanwhile, heat 1 tablespoon olive oil in a large skillet over medium-high heat. Add asparagus and garlic; sauté until asparagus is tender, about 5 minutes. Transfer to a plate.",
+      "Heat remaining 1 tablespoon olive oil in the same skillet over medium-high heat. Add shrimp, 2 tablespoons pesto, and 1 tablespoon lemon juice; sauté until shrimp are fully cooked and opaque, about 5 minutes. Add cooked gnocchi, asparagus, remaining pesto, and remaining 1 tablespoon lemon juice; stir to combine."
     ],
     "nutrition_per_serving": {
       "calories": 522,
@@ -4599,7 +4635,7 @@
       "8 andouille sausages, sliced",
       "4 onions, quartered",
       "2 ears fresh corn, cut into halves",
-      "0.5 cup seafood seasoning (such as Old Bay\u00ae), or to taste",
+      "0.5 cup seafood seasoning (such as Old Bay®), or to taste",
       "4 whole Dungeness crabs"
     ],
     "instructions": [
@@ -4646,11 +4682,11 @@
       "38 ounces andouille sausage, sliced",
       "1 medium onion, chopped",
       "2.5 cups water",
-      "2 (8 ounce) packages jambalaya mix (such as Zatarain's\u00ae)",
-      "1 (10 ounce) can diced tomatoes with green chile peppers (such as RO*TEL\u00ae), drained"
+      "2 (8 ounce) packages jambalaya mix (such as Zatarain's®)",
+      "1 (10 ounce) can diced tomatoes with green chile peppers (such as RO*TEL®), drained"
     ],
     "instructions": [
-      "Heat oil in a large pot over medium-high heat. Add sausage and onion; saut\u00e9 until sausage is browned and onion is translucent, 7 to 10 minutes.",
+      "Heat oil in a large pot over medium-high heat. Add sausage and onion; sauté until sausage is browned and onion is translucent, 7 to 10 minutes.",
       "Pour in water, then add jambalaya mix and diced tomatoes with chile peppers; bring to a boil. Reduce the heat to low, cover, and simmer until water is mostly absorbed and rice is tender, about 25 minutes."
     ],
     "nutrition_per_serving": {
@@ -4792,7 +4828,7 @@
     "instructions": [
       "Fill a large pot with lightly salted water and bring to a rolling boil. Stir in spaghetti and return to a boil. Cook pasta uncovered, stirring occasionally, until tender yet firm to the bite, about 12 minutes. Reserve a little pasta water, then drain.",
       "Meanwhile, heat a skillet over medium heat; add guanciale, cook and stir until crisp, 5 to 10 minutes.",
-      "Whisk egg yolks and whole egg together in a bowl; whisk in \u00be\u00a0cup Pecorino-Romano cheese, salt, and pepper until combined.",
+      "Whisk egg yolks and whole egg together in a bowl; whisk in ¾ cup Pecorino-Romano cheese, salt, and pepper until combined.",
       "Stir in guanciale. Add spaghetti; toss until evenly coated. Season to taste with extra cheese, salt, and pepper; serve."
     ],
     "nutrition_per_serving": {
@@ -4833,7 +4869,7 @@
       "3 stalks celery, diced",
       "2 green onions, chopped",
       "0.5 cup ranch dressing",
-      "0.25 cup hot buffalo wing sauce (such as Frank's\u00ae REDHOT Buffalo Wing Sauce), or to taste",
+      "0.25 cup hot buffalo wing sauce (such as Frank's® REDHOT Buffalo Wing Sauce), or to taste",
       "salt and freshly ground black pepper to taste"
     ],
     "instructions": [
@@ -5006,7 +5042,7 @@
     "ingredients": [
       "1 (11 ounce) can mandarin oranges, drained",
       "1 (8 ounce) can crushed pineapple, drained",
-      "1 (6 ounce) package orange flavored Jell-O\u00ae mix",
+      "1 (6 ounce) package orange flavored Jell-O® mix",
       "16 ounces cottage cheese",
       "8 ounces frozen whipped topping, thawed"
     ],
@@ -5053,7 +5089,7 @@
       "8 mini bagels, split",
       "0.25 cup pizza sauce",
       "0.33333334326744 cup shredded pizza cheese blend",
-      "16 slices turkey pepperoni (such as Hormel\u00ae)"
+      "16 slices turkey pepperoni (such as Hormel®)"
     ],
     "instructions": [
       "Preheat the oven to 425 degrees F (220 degrees C). Line a baking sheet with aluminum foil.",
@@ -5222,12 +5258,12 @@
     "url": "https://www.allrecipes.com/recipe/275656/instant-pot-chicken-marsala/",
     "category": "chicken-marsala",
     "id": 275656,
-    "name": "Instant Pot\u00ae Chicken Marsala",
-    "description": "This chicken Marsala recipe is cooked in the Instant Pot\u00ae using the Saute function and produces moist chicken breasts in a rich Marsala wine and mushroom sauce.",
+    "name": "Instant Pot® Chicken Marsala",
+    "description": "This chicken Marsala recipe is cooked in the Instant Pot® using the Saute function and produces moist chicken breasts in a rich Marsala wine and mushroom sauce.",
     "author": "thedailygourmet",
     "image": {
       "url": "https://www.allrecipes.com/thmb/dbV63Kc7TNqkf689yHxfZ2KTDso=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/6984520-1be057471d0345e7a346bc3757a42590.jpg",
-      "alt": "Instant Pot\u00ae Chicken Marsala"
+      "alt": "Instant Pot® Chicken Marsala"
     },
     "prep_time_minutes": 10,
     "cook_time_minutes": 15,
@@ -5245,7 +5281,7 @@
     ],
     "instructions": [
       "Combine flour, salt, and pepper in a shallow dish. Dredge chicken breasts through flour mixture.",
-      "Turn on a multi-functional pressure cooker (such as Instant Pot\u00ae), select Saute function, and allow pot to heat up. Add oil. Add chicken and cook until lightly browned, 3 about minutes. Turn chicken over and add mushrooms. Cook, stirring mushrooms occasionally, until other side of the chicken is lightly browned, about 3 more minutes. Pour Marsala wine around chicken. Close and lock the lid, and simmer until chicken is no longer pink in the center and the juices run clear, about 5 minutes.",
+      "Turn on a multi-functional pressure cooker (such as Instant Pot®), select Saute function, and allow pot to heat up. Add oil. Add chicken and cook until lightly browned, 3 about minutes. Turn chicken over and add mushrooms. Cook, stirring mushrooms occasionally, until other side of the chicken is lightly browned, about 3 more minutes. Pour Marsala wine around chicken. Close and lock the lid, and simmer until chicken is no longer pink in the center and the juices run clear, about 5 minutes.",
       "Remove chicken from the pot and place on a serving platter. Add butter to the pot. Turn off heat and stir butter into sauce until fully blended. Pour sauce over chicken breasts and serve immediately."
     ],
     "nutrition_per_serving": {
@@ -5665,7 +5701,7 @@
       "2 stalks celery, chopped",
       "1 bay leaf",
       "salt and ground black pepper to taste",
-      "2.25 cups baking mix (such as Bisquick \u00ae)",
+      "2.25 cups baking mix (such as Bisquick ®)",
       "0.66666668653488 cup milk"
     ],
     "instructions": [
@@ -5804,9 +5840,9 @@
     "total_time_minutes": 50,
     "servings": "6",
     "ingredients": [
-      "1 (10.75 ounce) can Campbell's\u00ae Condensed Cream of Chicken Soup (Regular, 98% Fat Free or Healthy Request\u00ae)",
+      "1 (10.75 ounce) can Campbell's® Condensed Cream of Chicken Soup (Regular, 98% Fat Free or Healthy Request®)",
       "0.5 cup sour cream",
-      "1 cup Pace\u00ae Picante Sauce",
+      "1 cup Pace® Picante Sauce",
       "2 teaspoons chili powder",
       "2 cups chopped cooked chicken",
       "0.5 cup shredded Monterey Jack cheese",
@@ -5965,7 +6001,7 @@
     "instructions": [
       "Fill a large pot with lightly salted water and bring to a rolling boil. Cook fettuccine at a boil until tender yet firm to the bite, about 8 minutes. Drain.",
       "Meanwhile, heat large nonstick skillet sprayed with cooking spray on medium-high heat. Add chicken; cook, stirring occasionally, until chicken is done, 5 to 7 minutes. Remove from the skillet.",
-      "Mix broth and flour into the same skillet. Stir in Neufch\u00e2tel cheese, 2 tablespoons Parmesan, garlic powder, and pepper; cook, whisking constantly, until mixture boils and thickens, about 2 minutes. Stir in chicken.",
+      "Mix broth and flour into the same skillet. Stir in Neufchâtel cheese, 2 tablespoons Parmesan, garlic powder, and pepper; cook, whisking constantly, until mixture boils and thickens, about 2 minutes. Stir in chicken.",
       "Place cooked fettuccine in a large serving bowl. Add chicken mixture; toss to coat. Sprinkle with remaining 1 tablespoon Parmesan."
     ],
     "nutrition_per_serving": {
@@ -6387,12 +6423,12 @@
       "0.5 onion, chopped",
       "2 cloves garlic, or to taste, minced",
       "1.5 pounds ground chicken",
-      "1.5 (10 ounce) cans diced tomatoes with green chile peppers (such as RO*TEL\u00ae)"
+      "1.5 (10 ounce) cans diced tomatoes with green chile peppers (such as RO*TEL®)"
     ],
     "instructions": [
       "Gather all ingredients.",
       "Bring chicken broth and quinoa to a boil in a saucepan. Reduce heat to medium-low, cover, and simmer until quinoa is tender and water has been absorbed, 15 to 20 minutes.",
-      "Meanwhile, heat vegetable oil in a large skillet over medium-high heat. Saut\u00e9 onion and garlic in hot oil until onion is translucent, about 5 minutes. Add ground chicken; cook and stir until browned and crumbly, 5 to 7 minutes.",
+      "Meanwhile, heat vegetable oil in a large skillet over medium-high heat. Sauté onion and garlic in hot oil until onion is translucent, about 5 minutes. Add ground chicken; cook and stir until browned and crumbly, 5 to 7 minutes.",
       "Stir cooked quinoa and diced tomatoes into chicken mixture; bring to a simmer and cook long enough for flavors to meld, about 10 minutes more."
     ],
     "nutrition_per_serving": {
@@ -6442,7 +6478,7 @@
       "Preheat an air fryer to 350 degrees F (175 degrees C).",
       "Combine beef, pork, Parmesan cheese, bread crumbs, egg, garlic, Italian seasoning, and salt in a large bowl; mix until evenly combined.",
       "Form mixture into 16 equal meatballs (a small ice cream scoop is helpful); place on a baking sheet.",
-      "Place \u00bd meatballs in the air fryer basket; cook 8 minutes. Shake the basket; cook 2 minutes more. Transfer to a serving plate; rest for 5 minutes. Repeat with remaining \u00bd meatballs.",
+      "Place ½ meatballs in the air fryer basket; cook 8 minutes. Shake the basket; cook 2 minutes more. Transfer to a serving plate; rest for 5 minutes. Repeat with remaining ½ meatballs.",
       "Serve warm and enjoy!"
     ],
     "nutrition_per_serving": {
@@ -6611,7 +6647,7 @@
     "category": "ground-lamb",
     "id": 44445,
     "name": "Keema (Indian-Style Ground Meat)",
-    "description": "This Indian recipe for ground lamb is saut\u00e9ed with onions and lots of masala, then served over rice or noodles for a quick, flavorful meal.",
+    "description": "This Indian recipe for ground lamb is sautéed with onions and lots of masala, then served over rice or noodles for a quick, flavorful meal.",
     "author": "ajr",
     "image": {
       "url": "https://www.allrecipes.com/thmb/sAngZKq2lDtNcb1IDUxhsev6T-Y=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/4470256-50fb804e315845429ea2989174352d30.jpg",
@@ -6632,7 +6668,7 @@
     ],
     "instructions": [
       "Cook lamb in a large, heavy skillet over medium heat until browned and crumbly, 5 to 7 minutes. Use a slotted spoon to transfer lamb to a bowl; drain off all but 1 tablespoon fat from the skillet.",
-      "Add onion to the skillet and saut\u00e9 until soft and translucent, about 5 minutes. Stir in garlic and cook until fragrant, about 1 minute. Stir in garam masala and salt; cook for 1 minute. Return browned lamb to the pan with broth and tomato paste. Reduce the heat and simmer until lamb is fully cooked through and liquid has evaporated, 10 to 15 minutes."
+      "Add onion to the skillet and sauté until soft and translucent, about 5 minutes. Stir in garlic and cook until fragrant, about 1 minute. Stir in garam masala and salt; cook for 1 minute. Return browned lamb to the pan with broth and tomato paste. Reduce the heat and simmer until lamb is fully cooked through and liquid has evaporated, 10 to 15 minutes."
     ],
     "nutrition_per_serving": {
       "calories": 513,
@@ -7054,7 +7090,7 @@
       "0.25 cup prepared mustard"
     ],
     "instructions": [
-      "Place bacon in a large, deep skillet. Cook over medium high heat until evenly brown. Add the onion and saut\u00e9 until tender. Drain excess oil, if desired.",
+      "Place bacon in a large, deep skillet. Cook over medium high heat until evenly brown. Add the onion and sauté until tender. Drain excess oil, if desired.",
       "Stir in baked beans, brown sugar, ketchup, and mustard. Cook, stirring occasionally, until hot and bubbly."
     ],
     "nutrition_per_serving": {
@@ -7408,14 +7444,14 @@
     "total_time_minutes": 23,
     "servings": "8",
     "ingredients": [
-      "1 (16 ounce) package large egg roll wrappers (such as Nasoya\u00ae)",
-      "2 (7 ounce) cans whole fire-roasted mild green chiles (such as La Victoria\u00ae), or more to taste",
+      "1 (16 ounce) package large egg roll wrappers (such as Nasoya®)",
+      "2 (7 ounce) cans whole fire-roasted mild green chiles (such as La Victoria®), or more to taste",
       "1 pound shredded pepper Jack cheese",
       "1.5 cups canola oil for frying"
     ],
     "instructions": [
       "Place eggroll wraps on a work surface. Place 1 whole green chile diagonally on the wrap. Add about 2 tablespoons pepper Jack cheese, or enough to cover chile. Fold bottom corner over filling. Roll snugly halfway to cover filling. Fold in both sides snugly against filling to look like an envelope; moisten edges of last flap with a moistened finger. Roll wrap up and seal top corner using water again to moisten edges to make them stick. Lay flap-side down until ready to cook. Repeat with remaining ingredients.",
-      "Heat canola oil in a deep saucepan over medium heat to 350\u00b0F. Lower eggrolls with the flap side down carefully into the hot oil in batches. Fry until golden, turning occasionally, 2 to 3 minutes. Transfer to a plate lined with paper towels to drain. Repeat with remaining eggrolls."
+      "Heat canola oil in a deep saucepan over medium heat to 350°F. Lower eggrolls with the flap side down carefully into the hot oil in batches. Fry until golden, turning occasionally, 2 to 3 minutes. Transfer to a plate lined with paper towels to drain. Repeat with remaining eggrolls."
     ],
     "nutrition_per_serving": {
       "calories": 433,
@@ -7456,11 +7492,11 @@
       "1 (15 ounce) can no-bean chili",
       "1 (14.5 ounce) can cut green beans, drained",
       "1 (14.5 ounce) can diced potatoes, drained",
-      "1 (10.75 ounce) can condensed nacho cheese soup (such as Campbell's\u00ae Fiesta Nacho Cheese)",
-      "1 (10 ounce) can diced tomatoes and green chiles (such as RO*TEL\u00ae)"
+      "1 (10.75 ounce) can condensed nacho cheese soup (such as Campbell's® Fiesta Nacho Cheese)",
+      "1 (10 ounce) can diced tomatoes and green chiles (such as RO*TEL®)"
     ],
     "instructions": [
-      "Combine corn, ranch-style beans, chili, green beans, potatatoes, cheese soup, and diced tomatoes and green chilies in a multi-functional pressure cooker (such as Instant Pot\u00ae). Stir to combine.",
+      "Combine corn, ranch-style beans, chili, green beans, potatatoes, cheese soup, and diced tomatoes and green chilies in a multi-functional pressure cooker (such as Instant Pot®). Stir to combine.",
       "Close and lock the lid. Select highpressure according to manufacturer's instructions; set timer for 15 minutes. Allow 25 minutes for pressure to build.",
       "Release pressure carefully using the quick-release method according to manufacturer's instructions, about 5 minutes. Unlock and remove the lid. Serve and enjoy."
     ],
@@ -7497,7 +7533,7 @@
     "ingredients": [
       "4 pork chops",
       "3 tablespoons butter, cut into small chunks",
-      "1 (1 ounce) package dry onion soup mix (such as Lipton\u00ae)",
+      "1 (1 ounce) package dry onion soup mix (such as Lipton®)",
       "1 cup apple juice"
     ],
     "instructions": [
@@ -7541,7 +7577,7 @@
     "servings": "6",
     "ingredients": [
       "3 cups low-fat cottage cheese",
-      "2 (0.3 ounce) packages sugar-free lemon flavored Jell-O\u00ae mix",
+      "2 (0.3 ounce) packages sugar-free lemon flavored Jell-O® mix",
       "1 (8 ounce) container lite frozen whipped topping, thawed"
     ],
     "instructions": [
@@ -7973,7 +8009,7 @@
     ],
     "instructions": [
       "Preheat an outdoor grill for medium-high heat and lightly oil the grate.",
-      "Heat olive oil in a skillet over medium heat. Add onion and garlic; saut\u00e9 until tender, about 2 minutes. Stir in ketchup, honey, brown sugar, apple cider vinegar, Worcestershire sauce, salt, and pepper; simmer until sauce has thickened slightly, about 1 or 2 minutes. Remove from heat; set aside to cool slightly.",
+      "Heat olive oil in a skillet over medium heat. Add onion and garlic; sauté until tender, about 2 minutes. Stir in ketchup, honey, brown sugar, apple cider vinegar, Worcestershire sauce, salt, and pepper; simmer until sauce has thickened slightly, about 1 or 2 minutes. Remove from heat; set aside to cool slightly.",
       "Dip chicken in sauce to coat on both sides; reserve remaining sauce in the skillet. Transfer chicken onto the preheated grill and cook, turning once, until nicely browned on all sides, about 10 to 15 minutes.",
       "Return chicken to the skillet with sauce; simmer over medium heat until sticky, about 5 minutes on each side. An instant-read thermometer inserted into the center should read at least 165 degrees F (74 degrees C)."
     ],
@@ -8060,7 +8096,7 @@
     "ingredients": [
       "0.75 cup sauerkraut, drained and squeezed dry",
       "0.33333334326744 cup thousand island salad dressing",
-      "1 (8 ounce) tube refrigerated crescent rolls (such as Pillsbury\u00ae)",
+      "1 (8 ounce) tube refrigerated crescent rolls (such as Pillsbury®)",
       "0.75 pound thin-sliced cooked corned beef",
       "8 slices Swiss cheese",
       "1 beaten egg white"
@@ -8329,7 +8365,7 @@
     "category": "fettuccini",
     "id": 17702,
     "name": "Fettuccine with Sweet Pepper-Cayenne Sauce",
-    "description": "In this fettuccine dish, red bell peppers, garlic, and cayenne are saut\u00e9ed then simmered with sour cream and chicken broth to make a delicious dinner.",
+    "description": "In this fettuccine dish, red bell peppers, garlic, and cayenne are sautéed then simmered with sour cream and chicken broth to make a delicious dinner.",
     "author": "Julieliz",
     "image": {
       "url": "https://www.allrecipes.com/thmb/p5wpn3b3kvyPSz_9sqZDNuhxe3M=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/805186-94a6a12a485247a4a4672badc3855e85.jpg",
@@ -8351,7 +8387,7 @@
     ],
     "instructions": [
       "Bring a large pot of lightly salted water to a boil. Add pasta and cook for 8 to 10 minutes or until al dente; drain.",
-      "Meanwhile, spray cooking oil in a large skillet and saut\u00e9 red bell peppers, garlic, and cayenne pepper over medium heat for 3 to 5 minutes.",
+      "Meanwhile, spray cooking oil in a large skillet and sauté red bell peppers, garlic, and cayenne pepper over medium heat for 3 to 5 minutes.",
       "Stir in sour cream and broth; simmer uncovered for 5 minutes. Remove from heat and stir in cheese.",
       "Toss hot pasta with sauce and season with salt and pepper to taste; serve."
     ],
@@ -8537,7 +8573,7 @@
       "2 cups low-fat milk",
       "1 tablespoon margarine",
       "8 slices American cheese, cut into pieces",
-      "1 (15 ounce) can chili without beans (such as Hormel\u00ae)"
+      "1 (15 ounce) can chili without beans (such as Hormel®)"
     ],
     "instructions": [
       "Prepare french fries as directed on the package.",
@@ -8864,7 +8900,7 @@
       "1 (15 ounce) can whole kernel corn, drained",
       "1 (15 ounce) can black beans, rinsed and drained",
       "2 (5 ounce) cans chicken breast chunks, drained",
-      "1 (10 ounce) can diced tomatoes with green chile peppers (such as RO*TEL\u00ae)",
+      "1 (10 ounce) can diced tomatoes with green chile peppers (such as RO*TEL®)",
       "0.5 teaspoon chili powder",
       "0.5 teaspoon seasoning salt",
       "0.5 teaspoon garlic powder",
@@ -8872,7 +8908,7 @@
       "2 tablespoons shredded Mexican cheese blend, or to taste"
     ],
     "instructions": [
-      "Pour chicken broth, corn, black beans, chunk chicken, tomatoes with green chilies (with their juices), chili powder, seasoning salt, and garlic powder together in a multi-functional pressure cooker (such as Instant Pot\u00ae); stir to combine.",
+      "Pour chicken broth, corn, black beans, chunk chicken, tomatoes with green chilies (with their juices), chili powder, seasoning salt, and garlic powder together in a multi-functional pressure cooker (such as Instant Pot®); stir to combine.",
       "Close and lock the lid. Select high pressure according to manufacturer's instructions; set timer for 5 minutes. Allow 10 to 15 minutes for pressure to build.",
       "Release pressure carefully using the quick-release method according to manufacturer's instructions, about 5 minutes. Unlock and carefully open the lid.",
       "Ladle the soup into serving bowls and top with tortilla strips, and shredded cheese, to taste."
@@ -9149,16 +9185,16 @@
       "1 tablespoon minced garlic",
       "1 pound ground turkey",
       "1 cup canned pureed tomatoes",
-      "0.25 cup barbeque sauce (such as KC Masterpiece\u00ae)",
+      "0.25 cup barbeque sauce (such as KC Masterpiece®)",
       "2 tablespoons ketchup",
       "2 tablespoons white vinegar",
       "2 tablespoons Worcestershire sauce",
       "1 tablespoon brown mustard",
-      "1 tablespoon chile-garlic sauce (such as Sriracha\u00ae)"
+      "1 tablespoon chile-garlic sauce (such as Sriracha®)"
     ],
     "instructions": [
       "Heat olive oil in a skillet over medium heat. Add onion and bell pepper; cook until beginning to soften, about 5 minutes. Add garlic and ground turkey; cook and stir until turkey is completely crumbled and browned, another 5 to 7 minutes.",
-      "Stir in pur\u00e9ed tomatoes, barbecue sauce, ketchup, vinegar, Worcestershire sauce, mustard, and chile-garlic sauce. Simmer until completely heated, 7 to 10 minutes more."
+      "Stir in puréed tomatoes, barbecue sauce, ketchup, vinegar, Worcestershire sauce, mustard, and chile-garlic sauce. Simmer until completely heated, 7 to 10 minutes more."
     ],
     "nutrition_per_serving": {
       "calories": 287,
@@ -9378,7 +9414,7 @@
     "total_time_minutes": 29,
     "servings": "4",
     "ingredients": [
-      "1 (15 ounce) can HORMEL\u00ae Mary Kitchen\u00ae Corned Beef Hash",
+      "1 (15 ounce) can HORMEL® Mary Kitchen® Corned Beef Hash",
       "0.25 cup finely diced onion",
       "0.25 cup finely diced green bell pepper",
       "4 large eggs",
@@ -9483,7 +9519,7 @@
       "2 large eggs"
     ],
     "instructions": [
-      "Coat a large pan with cooking spray. Add onion and saut\u00e9 over medium heat until translucent, about 5 minutes. Add frozen vegetables and butter; cook and stir, allowing butter to melt and veggies to thaw, 3 to 5 minutes.",
+      "Coat a large pan with cooking spray. Add onion and sauté over medium heat until translucent, about 5 minutes. Add frozen vegetables and butter; cook and stir, allowing butter to melt and veggies to thaw, 3 to 5 minutes.",
       "Increase heat to medium-high and stir in rice and turkey. Add soy sauce, 2 tablespoons at a time, and stir until rice takes on color. Push everything to the sides of the pan. Add sesame oil to the center of the pan and stir rice mixture until coated. Push everything to the sides of the pan again. Break eggs in the center of the pan. Scramble in the center until set, 2 to 3 minutes; then stir into rice mixture until well combined."
     ],
     "nutrition_per_serving": {
@@ -9525,7 +9561,7 @@
       "1 (16 ounce) package frozen stir-fry vegetables, thawed",
       "1 (14.5 ounce) can chicken broth",
       "2 tablespoons soy sauce",
-      "2 cups Minute\u00ae White Rice, uncooked"
+      "2 cups Minute® White Rice, uncooked"
     ],
     "instructions": [
       "Heat oil in a large skillet over medium heat. Cook beaten eggs in hot oil until set, stirring occasionally. Remove scrambled eggs to a plate; set aside.",
@@ -9650,7 +9686,7 @@
     "category": "grits",
     "id": 277285,
     "name": "Cheesy Grits",
-    "description": "These buttery cheese grits are a quick and easy side dish for any meal \u2014 you'll love the cheesy combination of Cheddar and Parmesan in every bite.",
+    "description": "These buttery cheese grits are a quick and easy side dish for any meal — you'll love the cheesy combination of Cheddar and Parmesan in every bite.",
     "author": "elljoymit",
     "image": {
       "url": "https://www.allrecipes.com/thmb/1fWtyLfotSJQ7UBJbuAspCH8Nlg=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/277285-Cheesy-Grits-DDMFS-Beauty-4x3-3c7f5240c7554ee2a32582f4f3988092.jpg",
@@ -9880,7 +9916,7 @@
     "category": "artichoke-dips",
     "id": 268013,
     "name": "Instant Pot Spinach and Artichoke Dip",
-    "description": "This Instant Pot spinach artichoke dip with garlic, red chile flakes, and cheese has all of the creamy goodness you'd expect \u2014 without the hassle.",
+    "description": "This Instant Pot spinach artichoke dip with garlic, red chile flakes, and cheese has all of the creamy goodness you'd expect — without the hassle.",
     "author": "Soup Loving Nicole",
     "image": {
       "url": "https://www.allrecipes.com/thmb/TPdiUcLSBe5zEab20VMnsA6s4a0=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/5728671-1cbabcf8877b440e893200e3da20f838.jpg",
@@ -9993,7 +10029,7 @@
       "2 (1 ounce) packets taco seasoning mix",
       "2 (1 ounce) packets ranch dressing mix",
       "2 (16 ounce) cans shoepeg corn",
-      "2 (10 ounce) cans diced tomatoes with green chile peppers (such as RO*TEL\u00ae)",
+      "2 (10 ounce) cans diced tomatoes with green chile peppers (such as RO*TEL®)",
       "1 (15 ounce) can red kidney beans",
       "1 (15 ounce) can black beans",
       "1 (15 ounce) can pinto beans",
@@ -10230,10 +10266,10 @@
     "total_time_minutes": 15,
     "servings": "4",
     "ingredients": [
-      "1 (8.8 ounce) pouch UNCLE BEN'S\u00ae Ready Rice\u00ae Whole Grain Brown",
+      "1 (8.8 ounce) pouch UNCLE BEN'S® Ready Rice® Whole Grain Brown",
       "2 tablespoons water, or as needed",
       "1 cup shredded cooked chicken breast",
-      "0.25 cup Buffalo-style hot pepper sauce (such as Frank's\u00ae Red Hot\u00ae)",
+      "0.25 cup Buffalo-style hot pepper sauce (such as Frank's® Red Hot®)",
       "4 (8 inch) whole-wheat tortillas",
       "0.5 cup shredded Cheddar cheese",
       "0.5 cup shredded lettuce",
@@ -10288,10 +10324,10 @@
       "1 cucumber, peeled, seeded, thinly sliced",
       "0.5 bunch cilantro, finely chopped",
       "2 limes, juiced",
-      "0.5 cup Clamato\u00ae Tomato Cocktail"
+      "0.5 cup Clamato® Tomato Cocktail"
     ],
     "instructions": [
-      "In a bowl, combine shrimp, onion, jalape\u00f1o, cucumber, and cilantro.",
+      "In a bowl, combine shrimp, onion, jalapeño, cucumber, and cilantro.",
       "Add lime juice and Clamato; toss to mix well.",
       "Chill in the refrigerator for 30 minutes.",
       "Serve cold with tostadas (hard tortillas) or soda crackers."
@@ -10427,7 +10463,7 @@
     "ingredients": [
       "1 (8 ounce) package spaghetti",
       "0.5 tablespoon salt",
-      "2 fully cooked breaded chicken fillets (such as Kirkwood\u00ae)",
+      "2 fully cooked breaded chicken fillets (such as Kirkwood®)",
       "0.5 (8 ounce) can marinara sauce",
       "1 (8 ounce) package fresh mozzarella cheese, sliced",
       "1 tablespoon fresh basil, cut in very thin strips"
@@ -11196,7 +11232,7 @@
       "Make batter: Combine flour, baking powder, and salt in a large bowl. Drizzle in sesame oil. Gradually add water, whisking constantly until smooth; batter should be the consistency of cream. Let sit for at least 30 minutes.",
       "Fill a deep pan or wok with oil and slowly heat to 375 degrees F (190 degrees C).",
       "Prepare chicken: Mix together cornstarch and white pepper in a large shallow dish. Dust chicken in cornstarch mixture, then dip into batter, evenly coating each piece.",
-      "Working in batches, fry coated chicken in hot oil until golden and no longer pink in the center, 4 to 5 minutes. An instant-read thermometer inserted into the center should read at least 165 degrees F (74 degrees C).\u00a0Use a slotted spoon to remove fried chicken to a clean kitchen towel to drain."
+      "Working in batches, fry coated chicken in hot oil until golden and no longer pink in the center, 4 to 5 minutes. An instant-read thermometer inserted into the center should read at least 165 degrees F (74 degrees C). Use a slotted spoon to remove fried chicken to a clean kitchen towel to drain."
     ],
     "nutrition_per_serving": {
       "calories": 338,
@@ -11476,7 +11512,7 @@
       "0.25 cup chopped onion",
       "1 clove garlic",
       "1 pound ground chicken breast",
-      "2 teaspoons chicken soup base (such as Better than Bouillon\u00ae Roasted Chicken Base)",
+      "2 teaspoons chicken soup base (such as Better than Bouillon® Roasted Chicken Base)",
       "salt and ground black pepper to taste",
       "5 sandwich buns"
     ],
@@ -11604,4 +11640,4 @@
     "cuisine": "American",
     "meal_type": "fitness"
   }
-]
+];

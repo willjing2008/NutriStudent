@@ -45,7 +45,7 @@ interface MealPlanMeal {
   rationale: string;
   benefits: string[];
   mealType: string;
-  category: 'one-pot' | 'microwave' | 'meal-prep';
+  category: string;
   cookingTime: number;
   servings: number;
   difficulty: 'easy' | 'medium' | 'hard';
@@ -89,113 +89,6 @@ const MEAL_TYPE_LABELS: Record<string, string> = {
 const LOCAL_IMAGE_FALLBACK =
   'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjI0MCIgdmlld0JveD0iMCAwIDMyMCAyNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjMyMCIgaGVpZ2h0PSIyNDAiIGZpbGw9IiMxNDJBMUQiLz48Y2lyY2xlIGN4PSIxNjAiIGN5PSIxMDAiIHI9IjQwIiBmaWxsPSIjMUU0MDI5Ii8+PHJlY3QgeD0iNzIiIHk9IjE2MiIgd2lkdGg9IjE3NiIgaGVpZ2h0PSIxMiIgcng9IjYiIGZpbGw9IiMyMkM1NUUiIG9wYWNpdHk9IjAuNzUiLz48L3N2Zz4=';
 
-// Client-side recipe source URL fallback (used when API doesn't include sourceUrl)
-const RECIPE_SOURCE_URLS: Record<string, string> = {
-  'one-pot-chicken-rice': 'https://www.budgetbytes.com/one-pot-chicken-and-rice/',
-  'one-pot-pasta-tomato': 'https://www.recipetineats.com/one-pot-pasta/',
-  'one-pot-lentil-curry': 'https://www.bbcgoodfoodme.com/recipes/lentil-curry/',
-  'microwave-perfect-scramble': 'https://www.biggerbolderbaking.com/microwave-scrambled-eggs/',
-  'microwave-banana-oat-mug-cake': 'https://www.budgetbytes.com/banana-bread-oatmeal/',
-  'microwave-breakfast-burrito': 'https://www.budgetbytes.com/freezer-breakfast-burritos/',
-  'microwave-french-toast': 'https://tasty.co/recipe/blueberry-french-toast-in-a-mug',
-  'microwave-poached-egg': 'https://www.recipetineats.com/poached-eggs/',
-  'microwave-spinach-feta-quiche': 'https://www.budgetbytes.com/spinach-mushroom-feta-crustless-quiche/',
-  'microwave-bacon-egg-cheese-sandwich': 'https://tasty.co/recipe/microwaved-egg-breakfast-sandwich',
-  'microwave-cinnamon-quinoa-bowl': 'https://minimalistbaker.com/the-perfect-bowl-of-oats/',
-  'microwave-shakshuka-mug': 'https://www.budgetbytes.com/shakshuka/',
-  'microwave-yogurt-berry-compote': 'https://minimalistbaker.com/simple-berry-compote/',
-  'microwave-mac-cheese': 'https://tasty.co/recipe/microwave-5-minute-mac-n-cheese',
-  'microwave-loaded-baked-potato': 'https://tasty.co/recipe/microwave-10-minute-loaded-potato',
-  'microwave-lemon-dill-salmon': 'https://www.themediterraneandish.com/lemon-dill-salmon/',
-  'microwave-fried-rice': 'https://www.recipetineats.com/egg-fried-rice/',
-  'microwave-stuffed-peppers': 'https://www.budgetbytes.com/stuffed-bell-peppers/',
-  'microwave-chicken-fajita-bowl': 'https://www.recipetineats.com/chicken-fajitas/',
-  'microwave-single-serve-lasagna': 'https://tasty.co/recipe/6-minute-microwave-lasagna',
-  'microwave-enchilada-casserole': 'https://www.budgetbytes.com/vegetable-enchilada-casserole/',
-  'microwave-mug-meatloaf': 'https://www.myplate.gov/recipes/meatloaf-mug',
-  'microwave-spaghetti-squash-pasta': 'https://tasty.co/recipe/spaghetti-squash-pasta-meal-prep-2-ways',
-  'meal-prep-chicken-veg': 'https://www.budgetbytes.com/sheet-pan-greek-chicken-and-vegetables/',
-  'meal-prep-overnight-oats': 'https://www.budgetbytes.com/overnight-oats-base-recipe-plus-variations/',
-  'meal-prep-burrito-bowls': 'https://www.budgetbytes.com/easiest-burrito-bowl-meal-prep/',
-  'meal-prep-buddha-bowl': 'https://minimalistbaker.com/sweet-potato-chickpea-buddha-bowl/',
-  'british-shepherds-pie': 'https://www.recipetineats.com/shepherds-pie/',
-  'british-fish-chips': 'https://www.jamieoliver.com/recipes/fish/fish-chips-and-mushy-peas/',
-  'italian-carbonara': 'https://www.recipetineats.com/carbonara/',
-  'italian-margherita-pasta': 'https://www.mob.co.uk/recipes/mobs-ultimate-carbonara',
-  'chinese-fried-rice': 'https://www.recipetineats.com/egg-fried-rice/',
-  'chinese-sweet-sour-chicken': 'https://www.recipetineats.com/oven-baked-sweet-sour-chicken/',
-  'indian-butter-chicken': 'https://www.recipetineats.com/butter-chicken/',
-  'indian-chana-masala': 'https://www.recipetineats.com/easy-chickpea-potato-curry-chana-aloo-curry/',
-  'mexican-chicken-fajitas': 'https://www.recipetineats.com/chicken-fajitas/',
-  'mexican-bean-quesadilla': 'https://www.budgetbytes.com/hearty-black-bean-quesadillas/',
-  'mediterranean-greek-salad-bowl': 'https://www.recipetineats.com/greek-salad/',
-  'japanese-teriyaki-chicken': 'https://www.recipetineats.com/teriyaki-chicken/',
-  'american-chili-con-carne': 'https://www.recipetineats.com/chilli-con-carne/',
-  'smoked-salmon-poached-eggs': 'https://www.jamieoliver.com/recipes/eggs/blanched-asparagus-poached-egg-fresh-smoked-salmon/',
-  'sardines-toast-tomato': 'https://www.jamieoliver.com/recipes/fish/sardines-on-toast-tomato-salad/',
-  'sardine-salad-lemon': 'https://www.jamieoliver.com/recipes/fish/harissa-sardines-with-couscous-salad/',
-  'baked-salmon-asparagus': 'https://www.recipetineats.com/lemon-garlic-salmon-tray-bake-easy-healthy/',
-  'mackerel-sourdough': 'https://www.jamieoliver.com/recipes/fish/smoked-mackerel-pate-with-griddled-toast-and-cress-salad/',
-  'baked-cod-brussels-sprouts': 'https://www.foodnetwork.com/recipes/food-network-kitchen/roasted-cod-with-carrots-and-brussels-sprouts-3568165',
-  'walnut-blueberry-oats': 'https://minimalistbaker.com/the-perfect-bowl-of-oats/',
-  'turmeric-chicken-curry': 'https://www.recipetineats.com/golden-coconut-chicken-curry/',
-  'overnight-oats-cacao-cherries': 'https://minimalistbaker.com/chocolate-overnight-oats/',
-  'beetroot-goat-cheese-salad': 'https://www.recipetineats.com/rocket-aragula-beetroot-walnuts-feta-wbalsamic-dressing/',
-  'lamb-chops-rosemary': 'https://www.recipetineats.com/lamb-chops-with-rosemary-gravy/',
-  'eggplant-parmesan': 'https://www.recipetineats.com/eggplant-parmigiana/',
-  'seared-scallops': 'https://downshiftology.com/recipes/pan-seared-scallops-lemon-garlic-butter/',
-  'chia-seed-pudding': 'https://minimalistbaker.com/how-to-make-chia-pudding/',
-  'avocado-hemp-toast': 'https://minimalistbaker.com/my-go-to-avocado-toast/',
-  'shakshuka': 'https://www.recipetineats.com/shakshuka-baked-eggs/',
-  'quinoa-breakfast-bowl': 'https://minimalistbaker.com/dark-chocolate-quinoa-breakfast-bowl/',
-  'lentil-soup-spinach': 'https://www.budgetbytes.com/creamy-coconut-curry-lentils-with-spinach/',
-  'beef-broccoli-stir-fry': 'https://www.recipetineats.com/chinese-beef-and-broccoli-extra-saucy-take-out-style/',
-  'liver-onions': 'https://www.bbcgoodfoodme.com/recipes/liver-and-bacon-with-onion-gravy/',
-  'black-bean-sweet-potato-bowl': 'https://www.budgetbytes.com/sweet-potato-black-bean-skillet/',
-  'sweet-potato-lentil-curry': 'https://www.recipetineats.com/lentil-curry-mega-flavour-lentil-recipe/',
-  'buckwheat-pancakes-cinnamon': 'https://minimalistbaker.com/5-ingredient-buckwheat-crepes/',
-  'miso-glazed-halibut': 'https://www.recipetineats.com/miso-marinated-side-of-salmon/',
-  'mediterranean-chickpea-salad': 'https://www.budgetbytes.com/spinach-chickpea-and-quinoa-salad/',
-  'soba-noodle-salad-edamame': 'https://www.budgetbytes.com/peanut-soba-stir-fry/',
-  'cauliflower-rice-risotto-shrimp': 'https://www.recipetineats.com/prawn-risotto-shrimp/',
-  'bean-egg-breakfast-burrito': 'https://www.budgetbytes.com/freezer-breakfast-burritos/',
-  'minestrone-soup': 'https://www.recipetineats.com/minestrone-soup/',
-  'pesto-zucchini-noodles-chicken': 'https://www.budgetbytes.com/easy-pesto-chicken-and-vegetables/',
-  'chili-con-carne': 'https://www.recipetineats.com/chilli-con-carne/',
-  'vietnamese-summer-rolls': 'https://www.recipetineats.com/vietnamese-rice-paper-rolls-spring-rolls/',
-  'greek-yogurt-parfait-seeds': 'https://www.budgetbytes.com/tropical-yogurt-parfaits/',
-  'turkey-sausage-sweet-potato-hash': 'https://www.budgetbytes.com/sweet-potato-hash/',
-  'grilled-chicken-quinoa-salad': 'https://www.recipetineats.com/my-favourite-quinoa-salad/',
-  'bison-burgers': 'https://www.recipetineats.com/hamburger-recipe/',
-  'turkey-hummus-wrap': 'https://www.budgetbytes.com/roasted-red-pepper-hummus-wraps/',
-  'tuna-salad-stuffed-peppers': 'https://www.budgetbytes.com/sweet-and-spicy-tuna-salad/',
-  'chicken-avocado-caprese': 'https://www.recipetineats.com/caprese-salad/',
-  'grilled-tempeh-broccoli-bowl': 'https://minimalistbaker.com/simple-vegetable-tempeh-stir-fry/',
-  'tofu-scramble-kale': 'https://minimalistbaker.com/southwest-tofu-scramble/',
-  'spinach-feta-mushroom-omelet': 'https://www.budgetbytes.com/scrambled-eggs-with-spinach-and-feta/',
-  'leftover-roast-beef-rollups': 'https://bowl-me-over.com/roast-beef-rollups-recipe/',
-  'shrimp-whole-wheat-pasta': 'https://www.recipetineats.com/creamy-garlic-prawn-pasta/',
-  'stuffed-acorn-squash-turkey': 'https://www.budgetbytes.com/wild-rice-stuffed-acorn-squash/',
-  'lemon-herb-roasted-chicken-thighs': 'https://www.budgetbytes.com/garlic-butter-baked-chicken-thighs/',
-  'cottage-cheese-bowl': 'https://www.budgetbytes.com/cottage-cheese-breakfast-bowls-6-ways/',
-  'ricotta-berry-toast': 'https://www.budgetbytes.com/ricotta-toast-4-ways/',
-  'protein-buckwheat-pancakes': 'https://minimalistbaker.com/1-bowl-peanut-butter-protein-pancakes/',
-};
-
-// Enrich meals with source URLs from client-side lookup if not provided by API
-function enrichMealsWithSourceUrls(meals: MealPlanMeal[]): MealPlanMeal[] {
-  return meals.map(meal => ({
-    ...meal,
-    sourceUrl: meal.sourceUrl || RECIPE_SOURCE_URLS[meal.id] || undefined,
-  }));
-}
-
-function enrichMealPlan(plan: MealPlan): MealPlan {
-  return {
-    ...plan,
-    meals: enrichMealsWithSourceUrls(plan.meals),
-  };
-}
 
 export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSaveMealPlan, onNavigateHome, activeNavTab, onNavTabChange, savedMealPlan: initialSavedPlan }: RecommendationsStepProps) {
   const [mealPlan, setMealPlan] = useState<MealPlan | null>(null);
@@ -372,7 +265,7 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
         throw new Error(data.error || 'Failed to load plan');
       }
 
-      setMealPlan(enrichMealPlan(data.mealPlan));
+      setMealPlan((data.mealPlan));
 
       if (data.mealPlan?.meals) {
         fetchMealImages(data.mealPlan.meals);
@@ -389,7 +282,7 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
   useEffect(() => {
     // If a saved plan was passed in, use it directly instead of generating a new one
     if (initialSavedPlan?.meals?.length) {
-      const enriched = enrichMealPlan(initialSavedPlan);
+      const enriched = (initialSavedPlan);
       setMealPlan(enriched);
       setLoading(false);
       setCheckingWizardStatus(false);
@@ -604,7 +497,7 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
         throw new Error(data.error || 'Failed to generate meal plan');
       }
 
-      setMealPlan(enrichMealPlan(data.mealPlan));
+      setMealPlan((data.mealPlan));
 
       if (data.mealPlan?.meals) {
         fetchMealImages(data.mealPlan.meals);
@@ -685,7 +578,7 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
 
       const newTotalCost = updatedMeals.reduce((sum, meal) => sum + meal.totalCost, 0);
 
-      setMealPlan(enrichMealPlan({
+      setMealPlan(({
         ...mealPlan,
         meals: updatedMeals,
         totalCost: parseFloat(newTotalCost.toFixed(2)),
@@ -719,7 +612,7 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
 
     const newTotalCost = updatedMeals.reduce((sum, meal) => sum + meal.totalCost, 0);
 
-    setMealPlan(enrichMealPlan({
+    setMealPlan(({
       ...mealPlan,
       meals: updatedMeals,
       totalCost: parseFloat(newTotalCost.toFixed(2)),

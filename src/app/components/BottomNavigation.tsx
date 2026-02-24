@@ -21,7 +21,7 @@ export function BottomNavigation({ activeTab, onTabChange }: BottomNavigationPro
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 bg-[#0A1F13] border-t border-[#1E4029] px-6 z-40"
+      className="fixed bottom-0 left-0 right-0 bg-[#0A1F13] border-t border-[#1E4029] px-6 z-[60]"
       style={{
         paddingTop: '0.35rem',
         paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom, 0px))',

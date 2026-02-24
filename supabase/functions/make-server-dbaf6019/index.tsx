@@ -3,27 +3,8 @@ import { cors } from "npm:hono/cors";
 import { logger } from "npm:hono/logger";
 import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
 import * as kv from "./kv_store.tsx";
-import { 
-  RECIPE_DATABASE, 
-  Recipe, 
-  RecipeIngredient,
-  getRecipesByCategory, 
-  getRecipesByNeed, 
-  getRecipeTotalCost,
-  organizeIngredientsBySection 
-} from "./recipe-database.ts";
-import {
-  CUISINE_RECIPES,
-  CuisineRecipe,
-  CuisineType,
-  getRecipesByCuisine,
-  getRecipesBySpiceLevel,
-  getAllCuisines,
-  getCuisineStats
-} from "./cuisine-database.ts";
-import { BRAIN_RECIPES } from "./brain-recipes.ts";
-import { WORK_EFFICIENCY_RECIPES } from "./work-efficiency-recipes.ts";
-import { FITNESS_RECOVERY_RECIPES } from "./fitness-recovery-recipes.ts";
+import { ALL_RECIPES, NewRecipe } from "./recipe-data.ts";
+import { toMealPlanMeal, toSwapOption, getRecipesByMealType, getAllRecipesFromDB } from "./recipe-adapter.ts";
 import { generateImageQuery, enhanceImageQuery } from "./image-query-helper.ts";
 import { calculateRecipeNutrition } from "./calorie-ninjas.ts";
 import { ACHIEVEMENTS } from "./achievements.ts";
@@ -392,8 +373,8 @@ app.post("/make-server-dbaf6019/fetch-store-ingredients", async (c) => {
 // Endpoint to generate optimal meal plan
 app.post("/make-server-dbaf6019/generate-meal-plan", async (c) => {
   try {
-    const { storeName, mealsPerDay, budget, goal, shoppingDate, maxCookingTime, cookingMethods, avoidIngredients } = await c.req.json();
-    
+    const { storeName, mealsPerDay, budget, goal, shoppingDate, maxCookingTime, avoidIngredients } = await c.req.json();
+
     if (!mealsPerDay || !budget || !goal) {
       return c.json({ error: "Missing required parameters" }, 400);
     }
@@ -402,44 +383,37 @@ app.post("/make-server-dbaf6019/generate-meal-plan", async (c) => {
     let cookingDays = 7; // Default to 7 days
     if (shoppingDate) {
       const today = new Date();
-      today.setHours(0, 0, 0, 0); // Reset to start of day
+      today.setHours(0, 0, 0, 0);
       const targetDate = new Date(shoppingDate);
-      targetDate.setHours(0, 0, 0, 0); // Reset to start of day
-      
+      targetDate.setHours(0, 0, 0, 0);
+
       const diffTime = targetDate.getTime() - today.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
-      // Ensure at least 1 day, and cap at 14 days
       cookingDays = Math.max(1, Math.min(diffDays, 14));
-      
-      console.log(`📅 Cooking days calculation: Today=${today.toISOString().split('T')[0]}, Target=${targetDate.toISOString().split('T')[0]}, Days=${cookingDays}`);
     }
 
-    // Calculate total meals needed
     const totalMealsNeeded = cookingDays * mealsPerDay;
-    console.log(`🍽️ Total meals needed: ${cookingDays} days × ${mealsPerDay} meals/day = ${totalMealsNeeded} meals`);
-
-    // Calculate weekly budget
     const weeklyBudget = budget;
 
-    // Get recipes suitable for the user's goal
-    const suitableRecipes = getRecipesByNeed(goal === 'study' ? 'studying' : goal === 'work' ? 'working' : 'fitness');
+    // Fetch recipes from database by meal_type
+    const mealTypeMap: Record<string, string> = { study: 'study', work: 'work', fitness: 'fitness' };
+    const mealType = mealTypeMap[goal] || 'fitness';
+    const suitableRecipes = await getRecipesByMealType(mealType);
 
-    // Log avoid ingredients
-    if (avoidIngredients && avoidIngredients.length > 0) {
-      console.log(`🚫 Avoiding ingredients: ${avoidIngredients.join(', ')}`);
+    if (suitableRecipes.length === 0) {
+      return c.json({ error: "No recipes found for this goal. Please run /init-recipes first." }, 400);
     }
 
-    // Generate meal plan that fits within budget with daily variety
+    console.log(`🍽️ Generating meal plan: ${cookingDays} days × ${mealsPerDay} meals/day = ${totalMealsNeeded} meals from ${suitableRecipes.length} ${mealType} recipes`);
+
     const mealPlan = generateMealPlanFromRecipes(
       suitableRecipes,
       mealsPerDay,
       weeklyBudget,
       goal,
       maxCookingTime,
-      cookingMethods,
-      cookingDays, // NEW: Pass cooking days for daily meal planning
-      avoidIngredients // NEW: Pass avoid ingredients
+      cookingDays,
+      avoidIngredients
     );
 
     return c.json({ mealPlan });
@@ -449,723 +423,175 @@ app.post("/make-server-dbaf6019/generate-meal-plan", async (c) => {
   }
 });
 
-// New helper function to generate meal plan from recipe database
+// Helper to generate meal plan from NewRecipe[] fetched from kv_store
 function generateMealPlanFromRecipes(
-  recipes: Recipe[],
+  recipes: NewRecipe[],
   mealsPerDay: number,
   weeklyBudget: number,
   goal: string,
   maxCookingTime?: number,
-  cookingMethods?: string[],
-  cookingDays: number = 7, // NEW: Number of days to cook for
-  avoidIngredients?: string[] // NEW: Ingredients to avoid
+  cookingDays: number = 7,
+  avoidIngredients?: string[]
 ) {
-  const selectedRecipes: Recipe[] = [];
   const dailyBudget = weeklyBudget / 7;
   const totalMealsNeeded = cookingDays * mealsPerDay;
-  
-  console.log(`🎯 Generating meal plan for ${cookingDays} days with ${mealsPerDay} meals/day = ${totalMealsNeeded} total meals`);
-  
-  // Filter recipes by avoided ingredients if specified
+
+  // Filter by avoided ingredients
   let filteredRecipes = recipes;
   if (avoidIngredients && avoidIngredients.length > 0) {
     const avoidLowercase = avoidIngredients.map(i => i.toLowerCase());
     filteredRecipes = recipes.filter(recipe => {
-      // Check if any ingredient in the recipe matches avoided ingredients
-      const recipeIngredients = recipe.ingredients.map(ing => ing.name.toLowerCase());
-      const hasAvoidedIngredient = avoidLowercase.some(avoid => 
-        recipeIngredients.some(ing => ing.includes(avoid) || avoid.includes(ing))
+      const hasAvoided = avoidLowercase.some(avoid =>
+        recipe.ingredients.some(ing => ing.toLowerCase().includes(avoid))
       );
-      return !hasAvoidedIngredient;
+      return !hasAvoided;
     });
-    console.log(`🚫 Filtered recipes by avoided ingredients: ${filteredRecipes.length}/${recipes.length} recipes remaining`);
+    console.log(`🚫 Filtered by avoided ingredients: ${filteredRecipes.length}/${recipes.length} remaining`);
   }
 
-  // Filter recipes by cooking time if specified
+  // Filter by max cooking time
   if (maxCookingTime && maxCookingTime > 0) {
-    filteredRecipes = filteredRecipes.filter(r => r.cookingTime <= maxCookingTime);
-    console.log(`Filtered recipes by max cooking time ${maxCookingTime} min: ${filteredRecipes.length} recipes available`);
+    filteredRecipes = filteredRecipes.filter(r => (r.total_time_minutes ?? r.cook_time_minutes ?? 0) <= maxCookingTime);
   }
 
-  // If no recipes match the filters, use all recipes (fallback)
+  // Fallback if filters removed everything
   if (filteredRecipes.length === 0) {
-    console.log('No recipes match filters, using all recipes');
     filteredRecipes = recipes;
   }
-  
-  // Filter by preferred cooking methods if specified
-  let methodFilteredRecipes = filteredRecipes;
-  if (cookingMethods && cookingMethods.length > 0) {
-    methodFilteredRecipes = filteredRecipes.filter(r => cookingMethods.includes(r.category));
-    console.log(`Filtered recipes by cooking methods [${cookingMethods.join(', ')}]: ${methodFilteredRecipes.length} recipes available`);
-    
-    // If no recipes match the preferred methods, use all recipes (fallback)
-    if (methodFilteredRecipes.length === 0) {
-      console.log('No recipes match preferred cooking methods, using all filtered recipes');
-      methodFilteredRecipes = filteredRecipes;
-    }
-  }
-  
-  // Use methodFilteredRecipes for the rest of the function
-  filteredRecipes = methodFilteredRecipes;
-  
-  // Shuffle recipes for variety
-  const shuffleArray = <T,>(array: T[]): T[] => {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-  };
-  
-  const shuffledRecipes = shuffleArray(filteredRecipes);
-  
-  // Prioritize variety: categorize recipes
-  const onePotRecipes = shuffledRecipes.filter(r => r.category === 'one-pot');
-  const microwaveRecipes = shuffledRecipes.filter(r => r.category === 'microwave');
-  const mealPrepRecipes = shuffledRecipes.filter(r => r.category === 'meal-prep');
 
-  // Generate meals for each day with variety
-  const dailyMeals: Recipe[][] = [];
-  const usedRecipeIds = new Set<string>(); // Track used recipe IDs to prevent exact duplicates
-  
+  // Shuffle for variety
+  const shuffled = [...filteredRecipes];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  // Categorize by recipe_category for variety
+  const breakfastRecipes = shuffled.filter(r => ["Breakfast", "Brunch"].includes(r.recipe_category || ""));
+  const lunchRecipes = shuffled.filter(r => ["Lunch", "Salad", "Sandwich", "Soup"].includes(r.recipe_category || ""));
+  const dinnerRecipes = shuffled.filter(r => !["Breakfast", "Brunch", "Lunch", "Salad", "Sandwich", "Soup"].includes(r.recipe_category || ""));
+
+  // Select meals with variety per day
+  const selectedRecipes: NewRecipe[] = [];
+  const usedIds = new Set<number>();
+
   for (let day = 0; day < cookingDays; day++) {
-    const dayMeals: Recipe[] = [];
-    
-    // For each meal on this day
     for (let mealNum = 0; mealNum < mealsPerDay; mealNum++) {
-      let selectedRecipe: Recipe | null = null;
-      
-      // If user has cooking method preferences, use them
-      if (cookingMethods && cookingMethods.length > 0) {
-        const preferredMethod = cookingMethods[mealNum % cookingMethods.length];
-        
-        let candidates: Recipe[] = [];
-        if (preferredMethod === 'one-pot') candidates = onePotRecipes;
-        else if (preferredMethod === 'microwave') candidates = microwaveRecipes;
-        else if (preferredMethod === 'meal-prep') candidates = mealPrepRecipes;
-        
-        // Find a recipe that hasn't been used yet
-        selectedRecipe = candidates.find(r => !usedRecipeIds.has(r.id)) || null;
+      let candidates: NewRecipe[];
+
+      // Assign meal slots based on mealsPerDay
+      if (mealsPerDay >= 3) {
+        if (mealNum === 0) candidates = breakfastRecipes;
+        else if (mealNum === 1) candidates = lunchRecipes;
+        else candidates = dinnerRecipes;
+      } else if (mealsPerDay === 2) {
+        candidates = mealNum === 0 ? breakfastRecipes : dinnerRecipes;
       } else {
-        // No preference - cycle through categories for variety
-        let candidates: Recipe[] = [];
-        if (mealNum % 3 === 0) candidates = onePotRecipes;
-        else if (mealNum % 3 === 1) candidates = microwaveRecipes;
-        else candidates = mealPrepRecipes;
-        
-        selectedRecipe = candidates.find(r => !usedRecipeIds.has(r.id)) || null;
+        candidates = dinnerRecipes;
       }
-      
-      // If no recipe from preferred category, get any available recipe
-      if (!selectedRecipe) {
-        selectedRecipe = shuffledRecipes.find(r => !usedRecipeIds.has(r.id)) || null;
+
+      let selected = candidates.find(r => !usedIds.has(r.id)) || null;
+
+      // Fallback to any unused recipe
+      if (!selected) {
+        selected = shuffled.find(r => !usedIds.has(r.id)) || null;
       }
-      
-      // FALLBACK: If we've run out of unique recipes, start from the pool again
-      // but still try to pick different ones than current day
-      if (!selectedRecipe && shuffledRecipes.length > 0) {
-        console.log(`⚠️ Running out of unique recipes, selecting from pool for Day ${day + 1}, Meal ${mealNum + 1}`);
-        
-        // Try to find recipes not used in the current day at least
-        const currentDayRecipeIds = new Set(dayMeals.map(m => m.id));
-        selectedRecipe = shuffledRecipes.find(r => !currentDayRecipeIds.has(r.id)) || shuffledRecipes[0];
+
+      // Last resort: allow repeat but avoid same-day duplicates
+      if (!selected && shuffled.length > 0) {
+        const dayIds = new Set(selectedRecipes.slice(day * mealsPerDay).map(r => r.id));
+        selected = shuffled.find(r => !dayIds.has(r.id)) || shuffled[0];
       }
-      
-      // Add recipe if found
-      if (selectedRecipe) {
-        dayMeals.push(selectedRecipe);
-        selectedRecipes.push(selectedRecipe);
-        usedRecipeIds.add(selectedRecipe.id);
-      } else {
-        console.log(`❌ ERROR: Could not find recipe for Day ${day + 1}, Meal ${mealNum + 1}`);
+
+      if (selected) {
+        selectedRecipes.push(selected);
+        usedIds.add(selected.id);
       }
     }
-    
-    dailyMeals.push(dayMeals);
-    console.log(`📆 Day ${day + 1}: ${dayMeals.length} meals selected - ${dayMeals.map(m => m.name).join(', ')}`);
   }
-  
-  console.log(`✅ Total recipes selected: ${selectedRecipes.length} for ${totalMealsNeeded} meals needed across ${cookingDays} days`);
 
-  // Convert recipes to meal plan format with day assignment
+  // Convert to frontend format using adapter
   const meals = selectedRecipes.map((recipe, index) => {
-    const totalCost = getRecipeTotalCost(recipe);
-    const costPerServing = totalCost / recipe.servings;
-    
-    // Calculate which day this meal belongs to
     const dayNumber = Math.floor(index / mealsPerDay) + 1;
     const mealNumber = (index % mealsPerDay) + 1;
-
-    // Transform recipe ingredients to match expected format
-    const ingredients = recipe.ingredients.map(ing => ({
-      name: ing.name,
-      category: ing.category,
-      price: ing.estimatedPrice,
-      unit: ing.amount,
-      calories: 0,
-      protein: 0,
-      carbs: 0,
-      fats: 0,
-      available: true,
-      amount: ing.amount,
-      estimatedPrice: ing.estimatedPrice,
-    }));
-
-    return {
-      id: recipe.id,
-      name: recipe.name,
-      description: recipe.description,
-      image: recipe.imageQuery,
-      imageUrl: recipe.imageUrl || null,
-      rationale: recipe.benefits.join('. '),
-      benefits: recipe.benefits,
-      mealType: recipe.category.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
-      category: recipe.category,
-      cookingTime: recipe.cookingTime,
-      servings: recipe.servings,
-      difficulty: recipe.difficulty,
-      tags: recipe.tags,
-      ingredients,
-      ingredientNames: recipe.ingredients.map(ing => ing.name),
-      instructions: recipe.instructions,
-      cost: parseFloat(costPerServing.toFixed(2)),
-      totalCost: parseFloat(totalCost.toFixed(2)),
-      nutrition: recipe.nutrition,
-      youtubeUrl: recipe.youtubeUrl,
-      sourceUrl: recipe.sourceUrl,
-      // NEW: Add day and meal information
-      dayNumber,
-      mealNumber,
-    };
+    return toMealPlanMeal(recipe, dayNumber, mealNumber);
   });
-
-  const totalCost = meals.reduce((sum, meal) => sum + meal.totalCost, 0);
 
   return {
     meals,
-    totalCost: parseFloat(totalCost.toFixed(2)),
+    totalCost: 0,
     dailyBudget,
     weeklyBudget,
-    withinBudget: totalCost <= weeklyBudget,
-    // NEW: Add metadata about the meal plan
+    withinBudget: true,
     cookingDays,
     totalMealsNeeded,
     mealsPerDay,
   };
 }
 
-// ========== CUISINE-SPECIFIC ENDPOINTS ==========
+// ========== RECIPE INITIALIZATION ==========
 
-// Initialize cuisine database in KV store
-app.post("/make-server-dbaf6019/init-cuisine-database", async (c) => {
+// Initialize all recipes from recipe-data.ts into kv_store
+app.post("/make-server-dbaf6019/init-recipes", async (c) => {
   try {
-    // Store all cuisine recipes in the KV store
-    for (const recipe of CUISINE_RECIPES) {
-      const key = `cuisine:${recipe.cuisine}:${recipe.id}`;
-      await kv.set(key, JSON.stringify(recipe));
+    console.log('=== Recipe Database Initialization Started ===');
+    console.log(`Total recipes to process: ${ALL_RECIPES.length}`);
+
+    // Clear existing recipe keys
+    const existingRecipes = await getByPrefixWithKeys('recipe:');
+    if (existingRecipes.length > 0) {
+      await kv.mdel(existingRecipes.map(e => e.key));
+      console.log(`Cleared ${existingRecipes.length} existing recipe keys`);
+    }
+    // Also clear old-format keys
+    const oldCuisine = await getByPrefixWithKeys('cuisine:');
+    if (oldCuisine.length > 0) {
+      await kv.mdel(oldCuisine.map(e => e.key));
+      console.log(`Cleared ${oldCuisine.length} old cuisine keys`);
+    }
+    const oldBase = await getByPrefixWithKeys('base-recipe:');
+    if (oldBase.length > 0) {
+      await kv.mdel(oldBase.map(e => e.key));
+      console.log(`Cleared ${oldBase.length} old base-recipe keys`);
     }
 
-    // Store cuisine metadata
-    const cuisineStats = getCuisineStats();
-    await kv.set('cuisine:stats', JSON.stringify(cuisineStats));
+    let successCount = 0;
+    let errorCount = 0;
+    const byMealType: Record<string, number> = {};
 
-    return c.json({ 
-      message: "Cuisine database initialized successfully",
-      totalRecipes: CUISINE_RECIPES.length,
-      cuisines: getAllCuisines(),
-      stats: cuisineStats
+    for (const recipe of ALL_RECIPES) {
+      try {
+        const key = `recipe:${recipe.meal_type}:${recipe.id}`;
+        await kv.set(key, JSON.stringify(recipe));
+        successCount++;
+        byMealType[recipe.meal_type] = (byMealType[recipe.meal_type] || 0) + 1;
+      } catch (error: any) {
+        errorCount++;
+        console.error(`Failed to store recipe ${recipe.id}: ${error.message}`);
+      }
+    }
+
+    // Store metadata
+    await kv.set('recipes:meta', JSON.stringify({
+      total: ALL_RECIPES.length,
+      byMealType,
+      initialized: new Date().toISOString()
+    }));
+
+    console.log(`=== Initialization Complete: ${successCount} success, ${errorCount} errors ===`);
+
+    return c.json({
+      message: "Recipe database initialized successfully",
+      totalRecipes: ALL_RECIPES.length,
+      successCount,
+      errorCount,
+      byMealType
     });
   } catch (error: any) {
     console.log(`Error initializing cuisine database: ${error.message}`);
-    return c.json({ error: error.message || "Failed to initialize cuisine database" }, 500);
+    return c.json({ error: error.message || "Failed to initialize recipes" }, 500);
   }
 });
-
-// Initialize base recipe database (one-pot, microwave, meal-prep)
-app.post("/make-server-dbaf6019/init-base-recipes", async (c) => {
-  try {
-    console.log('=== Base Recipe Database Initialization Started ===');
-    console.log(`Total base recipes to process: ${RECIPE_DATABASE.length}`);
-    
-    let successCount = 0;
-    let errorCount = 0;
-    const errors: string[] = [];
-    
-    // Store all base recipes in the KV store
-    for (const recipe of RECIPE_DATABASE) {
-      try {
-        const key = `base-recipe:${recipe.category}:${recipe.id}`;
-        console.log(`Storing recipe: ${key}`);
-        await kv.set(key, JSON.stringify(recipe));
-        successCount++;
-      } catch (error: any) {
-        errorCount++;
-        const errorMsg = `Failed to store ${recipe.id}: ${error.message}`;
-        console.error(errorMsg);
-        errors.push(errorMsg);
-      }
-    }
-
-    console.log(`=== Initialization Complete ===`);
-    console.log(`Success: ${successCount}, Errors: ${errorCount}`);
-    
-    if (errors.length > 0) {
-      console.error('Errors encountered:', errors);
-    }
-
-    return c.json({ 
-      message: "Base recipe database initialized successfully",
-      totalRecipes: RECIPE_DATABASE.length,
-      successCount,
-      errorCount,
-      errors: errors.length > 0 ? errors : undefined,
-      categories: {
-        'one-pot': RECIPE_DATABASE.filter(r => r.category === 'one-pot').length,
-        'microwave': RECIPE_DATABASE.filter(r => r.category === 'microwave').length,
-        'meal-prep': RECIPE_DATABASE.filter(r => r.category === 'meal-prep').length,
-      }
-    });
-  } catch (error: any) {
-    console.log(`Error initializing base recipe database: ${error.message}`);
-    return c.json({ error: error.message || "Failed to initialize base recipe database" }, 500);
-  }
-});
-
-// Initialize brain-focused study recipes
-app.post("/make-server-dbaf6019/init-brain-recipes", async (c) => {
-  try {
-    console.log('=== Brain Recipes Initialization Started ===');
-    console.log(`Total brain recipes to process: ${BRAIN_RECIPES.length}`);
-    
-    let successCount = 0;
-    let errorCount = 0;
-
-    // Store all brain-focused recipes with permanent images
-    for (const recipe of BRAIN_RECIPES) {
-      try {
-        const key = `cuisine:${recipe.cuisine}:${recipe.id}`;
-        console.log(`Processing recipe: ${recipe.name} (${key})`);
-        
-        // Generate and store permanent image
-        let recipeWithImage = { ...recipe };
-        if (recipe.imageQuery) {
-          console.log(`Generating image for: ${recipe.name}`);
-          const imageUrl = await storeRecipeImage(recipe.imageQuery, recipe.id, recipe.cuisine);
-          if (imageUrl) {
-            recipeWithImage.imageUrl = imageUrl;
-            console.log(`Image stored for ${recipe.name}: ${imageUrl}`);
-          } else {
-            console.log(`Failed to store image for ${recipe.name}, continuing without image`);
-          }
-        }
-        
-        await kv.set(key, JSON.stringify(recipeWithImage));
-        successCount++;
-        console.log(`✓ Successfully stored: ${recipe.name}`);
-      } catch (error: any) {
-        console.log(`✗ Error storing recipe ${recipe.name}: ${error.message}`);
-        console.error(error);
-        errorCount++;
-      }
-    }
-
-    console.log(`=== Initialization Complete: ${successCount} success, ${errorCount} errors ===`);
-    
-    return c.json({ 
-      message: "Brain-focused study recipes initialized successfully",
-      totalRecipes: BRAIN_RECIPES.length,
-      successCount,
-      errorCount,
-      recipes: BRAIN_RECIPES.map(r => ({ name: r.name, cuisine: r.cuisine, cookingTime: r.cookingTime }))
-    });
-  } catch (error: any) {
-    console.log(`Error initializing brain recipes: ${error.message}`);
-    console.error(error);
-    return c.json({ error: error.message || "Failed to initialize brain recipes" }, 500);
-  }
-});
-
-// Initialize work efficiency recipes for sustained energy
-app.post("/make-server-dbaf6019/init-work-efficiency-recipes", async (c) => {
-  try {
-    console.log('=== Work Efficiency Recipes Initialization Started ===');
-    console.log(`Total work efficiency recipes to process: ${WORK_EFFICIENCY_RECIPES.length}`);
-    
-    let successCount = 0;
-    let errorCount = 0;
-    const BATCH_SIZE = 4; // Process 4 recipes at a time
-    
-    // Process in batches to avoid compute resource limits
-    for (let i = 0; i < WORK_EFFICIENCY_RECIPES.length; i += BATCH_SIZE) {
-      const batch = WORK_EFFICIENCY_RECIPES.slice(i, i + BATCH_SIZE);
-      console.log(`Processing batch ${Math.floor(i / BATCH_SIZE) + 1} of ${Math.ceil(WORK_EFFICIENCY_RECIPES.length / BATCH_SIZE)}`);
-      
-      for (const recipe of batch) {
-        try {
-          const key = `cuisine:${recipe.cuisine}:${recipe.id}`;
-          console.log(`Processing recipe: ${recipe.name} (${key})`);
-          
-          // Store recipe without image first for faster processing
-          // Images will be generated on-demand when recipes are viewed
-          const recipeWithImage = { ...recipe };
-          
-          await kv.set(key, JSON.stringify(recipeWithImage));
-          successCount++;
-          console.log(`✓ Successfully stored: ${recipe.name}`);
-        } catch (error: any) {
-          console.log(`✗ Error storing recipe ${recipe.name}: ${error.message}`);
-          console.error(error);
-          errorCount++;
-        }
-      }
-      
-      // Small delay between batches to prevent resource exhaustion
-      if (i + BATCH_SIZE < WORK_EFFICIENCY_RECIPES.length) {
-        await new Promise(resolve => setTimeout(resolve, 200));
-      }
-    }
-
-    console.log(`=== Initialization Complete: ${successCount} success, ${errorCount} errors ===`);
-    
-    return c.json({ 
-      message: "Work efficiency recipes initialized successfully",
-      totalRecipes: WORK_EFFICIENCY_RECIPES.length,
-      successCount,
-      errorCount,
-      note: "Images will be generated on-demand when recipes are viewed",
-      analysis: {
-        maxCookingTime: Math.max(...WORK_EFFICIENCY_RECIPES.map(r => r.cookingTime)),
-        avgCookingTime: Math.round(WORK_EFFICIENCY_RECIPES.reduce((sum, r) => sum + r.cookingTime, 0) / WORK_EFFICIENCY_RECIPES.length),
-        cookingMethods: {
-          "one-pot": WORK_EFFICIENCY_RECIPES.filter(r => r.category === "one-pot").length,
-          "microwave": WORK_EFFICIENCY_RECIPES.filter(r => r.category === "microwave").length,
-          "meal-prep": WORK_EFFICIENCY_RECIPES.filter(r => r.category === "meal-prep").length
-        },
-        cuisines: [...new Set(WORK_EFFICIENCY_RECIPES.map(r => r.cuisine))]
-      },
-      recipes: WORK_EFFICIENCY_RECIPES.map(r => ({ 
-        name: r.name, 
-        cuisine: r.cuisine, 
-        cookingTime: r.cookingTime,
-        category: r.category 
-      }))
-    });
-  } catch (error: any) {
-    console.log(`Error initializing work efficiency recipes: ${error.message}`);
-    console.error(error);
-    return c.json({ error: error.message || "Failed to initialize work efficiency recipes" }, 500);
-  }
-});
-
-// Initialize fitness recovery recipes for post-workout
-app.post("/make-server-dbaf6019/init-fitness-recovery-recipes", async (c) => {
-  try {
-    console.log('=== Fitness Recovery Recipes Initialization Started ===');
-    console.log(`Total fitness recovery recipes to process: ${FITNESS_RECOVERY_RECIPES.length}`);
-    
-    let successCount = 0;
-    let errorCount = 0;
-    const BATCH_SIZE = 4; // Process 4 recipes at a time
-    
-    // Process in batches to avoid compute resource limits
-    for (let i = 0; i < FITNESS_RECOVERY_RECIPES.length; i += BATCH_SIZE) {
-      const batch = FITNESS_RECOVERY_RECIPES.slice(i, i + BATCH_SIZE);
-      console.log(`Processing batch ${Math.floor(i / BATCH_SIZE) + 1} of ${Math.ceil(FITNESS_RECOVERY_RECIPES.length / BATCH_SIZE)}`);
-      
-      for (const recipe of batch) {
-        try {
-          const key = `cuisine:${recipe.cuisine}:${recipe.id}`;
-          console.log(`Processing recipe: ${recipe.name} (${key})`);
-          
-          // Store recipe without image first for faster processing
-          // Images will be generated on-demand when recipes are viewed
-          const recipeWithImage = { ...recipe };
-          
-          await kv.set(key, JSON.stringify(recipeWithImage));
-          successCount++;
-          console.log(`✓ Successfully stored: ${recipe.name}`);
-        } catch (error: any) {
-          console.log(`✗ Error storing recipe ${recipe.name}: ${error.message}`);
-          console.error(error);
-          errorCount++;
-        }
-      }
-      
-      // Small delay between batches to prevent resource exhaustion
-      if (i + BATCH_SIZE < FITNESS_RECOVERY_RECIPES.length) {
-        await new Promise(resolve => setTimeout(resolve, 200));
-      }
-    }
-
-    console.log(`=== Initialization Complete: ${successCount} success, ${errorCount} errors ===`);
-    
-    return c.json({ 
-      message: "Fitness recovery recipes initialized successfully",
-      totalRecipes: FITNESS_RECOVERY_RECIPES.length,
-      successCount,
-      errorCount,
-      note: "Images will be generated on-demand when recipes are viewed",
-      analysis: {
-        maxCookingTime: Math.max(...FITNESS_RECOVERY_RECIPES.map(r => r.cookingTime)),
-        avgCookingTime: Math.round(FITNESS_RECOVERY_RECIPES.reduce((sum, r) => sum + r.cookingTime, 0) / FITNESS_RECOVERY_RECIPES.length),
-        cookingMethods: {
-          "one-pot": FITNESS_RECOVERY_RECIPES.filter(r => r.category === "one-pot").length,
-          "microwave": FITNESS_RECOVERY_RECIPES.filter(r => r.category === "microwave").length,
-          "meal-prep": FITNESS_RECOVERY_RECIPES.filter(r => r.category === "meal-prep").length
-        },
-        cuisines: [...new Set(FITNESS_RECOVERY_RECIPES.map(r => r.cuisine))]
-      },
-      recipes: FITNESS_RECOVERY_RECIPES.map(r => ({ 
-        name: r.name, 
-        cuisine: r.cuisine, 
-        cookingTime: r.cookingTime,
-        category: r.category 
-      }))
-    });
-  } catch (error: any) {
-    console.log(`Error initializing fitness recovery recipes: ${error.message}`);
-    console.error(error);
-    return c.json({ error: error.message || "Failed to initialize fitness recovery recipes" }, 500);
-  }
-});
-
-// Get all available cuisines
-app.get("/make-server-dbaf6019/cuisines", async (c) => {
-  try {
-    const cuisines = getAllCuisines();
-    const stats = getCuisineStats();
-    
-    return c.json({ 
-      cuisines,
-      stats,
-      total: CUISINE_RECIPES.length
-    });
-  } catch (error: any) {
-    console.log(`Error fetching cuisines: ${error.message}`);
-    return c.json({ error: error.message || "Failed to fetch cuisines" }, 500);
-  }
-});
-
-// Get recipes by cuisine
-app.get("/make-server-dbaf6019/cuisines/:cuisine", async (c) => {
-  try {
-    const cuisine = c.req.param('cuisine') as CuisineType;
-    
-    if (!getAllCuisines().includes(cuisine)) {
-      return c.json({ error: "Invalid cuisine type" }, 400);
-    }
-
-    const recipes = getRecipesByCuisine(cuisine);
-    
-    return c.json({ 
-      cuisine,
-      recipes,
-      count: recipes.length
-    });
-  } catch (error: any) {
-    console.log(`Error fetching recipes by cuisine: ${error.message}`);
-    return c.json({ error: error.message || "Failed to fetch recipes" }, 500);
-  }
-});
-
-// Get recipes from KV store by cuisine
-app.get("/make-server-dbaf6019/kv-cuisines/:cuisine", async (c) => {
-  try {
-    const cuisine = c.req.param('cuisine') as CuisineType;
-    
-    if (!getAllCuisines().includes(cuisine)) {
-      return c.json({ error: "Invalid cuisine type" }, 400);
-    }
-
-    // Fetch all recipes for this cuisine from KV store
-    const prefix = `cuisine:${cuisine}:`;
-    const recipeData = await getByPrefixWithKeys(prefix);
-    
-    const recipes = recipeData.map(item => {
-      // item.value is already the object from JSONB, no need to parse
-      return typeof item.value === 'string' ? JSON.parse(item.value) : item.value;
-    });
-    
-    return c.json({ 
-      cuisine,
-      recipes,
-      count: recipes.length,
-      source: 'kv-store'
-    });
-  } catch (error: any) {
-    console.log(`Error fetching recipes from KV store: ${error.message}`);
-    return c.json({ error: error.message || "Failed to fetch recipes from KV store" }, 500);
-  }
-});
-
-// Get recipes by spice level
-app.get("/make-server-dbaf6019/spice-level/:level", async (c) => {
-  try {
-    const level = c.req.param('level') as 'mild' | 'medium' | 'hot';
-    
-    if (!['mild', 'medium', 'hot'].includes(level)) {
-      return c.json({ error: "Invalid spice level. Use: mild, medium, or hot" }, 400);
-    }
-
-    const recipes = getRecipesBySpiceLevel(level);
-    
-    return c.json({ 
-      spiceLevel: level,
-      recipes,
-      count: recipes.length
-    });
-  } catch (error: any) {
-    console.log(`Error fetching recipes by spice level: ${error.message}`);
-    return c.json({ error: error.message || "Failed to fetch recipes" }, 500);
-  }
-});
-
-// Generate meal plan with cuisine preference
-app.post("/make-server-dbaf6019/generate-meal-plan-cuisine", async (c) => {
-  try {
-    const { mealsPerDay, budget, goal, cuisinePreference, spiceLevel } = await c.req.json();
-    
-    if (!mealsPerDay || !budget || !goal) {
-      return c.json({ error: "Missing required parameters" }, 400);
-    }
-
-    const weeklyBudget = budget;
-
-    // Filter recipes by cuisine and/or spice level
-    let filteredRecipes = CUISINE_RECIPES;
-    
-    if (cuisinePreference && getAllCuisines().includes(cuisinePreference)) {
-      filteredRecipes = filteredRecipes.filter(r => r.cuisine === cuisinePreference);
-    }
-    
-    if (spiceLevel && ['mild', 'medium', 'hot'].includes(spiceLevel)) {
-      filteredRecipes = filteredRecipes.filter(r => r.spiceLevel === spiceLevel);
-    }
-
-    // Filter by goal (studying/working/fitness)
-    const goalMap: { [key: string]: 'studying' | 'working' | 'fitness' } = {
-      study: 'studying',
-      work: 'working',
-      fitness: 'fitness'
-    };
-    const suitableRecipes = filteredRecipes.filter(r => 
-      r.suitableFor.includes(goalMap[goal] || 'studying')
-    );
-
-    if (suitableRecipes.length === 0) {
-      return c.json({ 
-        error: "No recipes found matching your preferences. Try different filters." 
-      }, 400);
-    }
-
-    // Generate meal plan
-    const mealPlan = generateCuisineMealPlan(
-      suitableRecipes,
-      mealsPerDay,
-      weeklyBudget,
-      goal
-    );
-
-    return c.json({ mealPlan });
-  } catch (error: any) {
-    console.log(`Error generating cuisine meal plan: ${error.message}`);
-    return c.json({ error: error.message || "Failed to generate meal plan" }, 500);
-  }
-});
-
-// Helper function to generate cuisine-based meal plan
-function generateCuisineMealPlan(
-  recipes: CuisineRecipe[],
-  mealsPerDay: number,
-  weeklyBudget: number,
-  goal: string
-) {
-  const selectedRecipes: CuisineRecipe[] = [];
-  const dailyBudget = weeklyBudget / 7;
-  
-  // Try to get variety across different categories and cuisines
-  const onePotRecipes = recipes.filter(r => r.category === 'one-pot');
-  const microwaveRecipes = recipes.filter(r => r.category === 'microwave');
-  const mealPrepRecipes = recipes.filter(r => r.category === 'meal-prep');
-
-  // Shuffle and select to get variety
-  const shuffleArray = (arr: any[]) => arr.sort(() => Math.random() - 0.5);
-  
-  if (mealsPerDay >= 1 && onePotRecipes.length > 0) {
-    selectedRecipes.push(shuffleArray([...onePotRecipes])[0]);
-  }
-  if (mealsPerDay >= 2 && microwaveRecipes.length > 0) {
-    selectedRecipes.push(shuffleArray([...microwaveRecipes])[0]);
-  }
-  if (mealsPerDay >= 3 && mealPrepRecipes.length > 0) {
-    selectedRecipes.push(shuffleArray([...mealPrepRecipes])[0]);
-  }
-  if (mealsPerDay >= 4 && onePotRecipes.length > 1) {
-    const remaining = onePotRecipes.filter(r => !selectedRecipes.includes(r));
-    if (remaining.length > 0) {
-      selectedRecipes.push(shuffleArray([...remaining])[0]);
-    }
-  }
-
-  // Convert recipes to meal plan format
-  const meals = selectedRecipes.map((recipe) => {
-    const totalCost = recipe.ingredients.reduce((sum, ing) => sum + ing.estimatedPrice, 0);
-    const costPerServing = totalCost / recipe.servings;
-
-    const ingredients = recipe.ingredients.map(ing => ({
-      name: ing.name,
-      category: ing.category,
-      price: ing.estimatedPrice,
-      unit: ing.amount,
-      calories: 0,
-      protein: 0,
-      carbs: 0,
-      fats: 0,
-      available: true,
-      amount: ing.amount,
-      estimatedPrice: ing.estimatedPrice,
-    }));
-
-    return {
-      id: recipe.id,
-      name: recipe.name,
-      description: recipe.description,
-      cuisine: recipe.cuisine,
-      spiceLevel: recipe.spiceLevel,
-      authentic: recipe.authentic,
-      image: recipe.imageQuery,
-      imageUrl: recipe.imageUrl || null,
-      rationale: recipe.benefits.join('. '),
-      benefits: recipe.benefits,
-      mealType: recipe.category.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
-      category: recipe.category,
-      cookingTime: recipe.cookingTime,
-      servings: recipe.servings,
-      difficulty: recipe.difficulty,
-      tags: recipe.tags,
-      ingredients,
-      ingredientNames: recipe.ingredients.map(ing => ing.name),
-      instructions: recipe.instructions,
-      cost: parseFloat(costPerServing.toFixed(2)),
-      totalCost: parseFloat(totalCost.toFixed(2)),
-      nutrition: recipe.nutrition,
-      youtubeUrl: recipe.youtubeUrl,
-      sourceUrl: recipe.sourceUrl,
-    };
-  });
-
-  const totalCost = meals.reduce((sum, meal) => sum + meal.totalCost, 0);
-
-  return {
-    meals,
-    totalCost: parseFloat(totalCost.toFixed(2)),
-    dailyBudget,
-    weeklyBudget,
-    withinBudget: totalCost <= weeklyBudget,
-  };
-}
 
 // ========== DATABASE ADMIN ENDPOINTS ==========
 
@@ -1191,51 +617,30 @@ app.get("/make-server-dbaf6019/admin/keys/:prefix", async (c) => {
   }
 });
 
-// Get all recipe keys
+// Get all recipes from database
 app.get("/make-server-dbaf6019/admin/all-recipes", async (c) => {
   try {
-    // Get cuisine-based recipes
-    const cuisineData = await getByPrefixWithKeys('cuisine:');
-    
-    // Filter out stats, only get recipe data
-    const cuisineRecipes = cuisineData
-      .filter(item => item.key !== 'cuisine:stats')
+    const data = await getByPrefixWithKeys('recipe:');
+
+    const recipes = data
+      .filter(item => item.key !== 'recipes:meta')
       .map(item => {
-        // item.value is already the object from JSONB, no need to parse if it's an object
         const recipe = typeof item.value === 'string' ? JSON.parse(item.value) : item.value;
         return {
           key: item.key,
           id: recipe.id,
           name: recipe.name,
+          meal_type: recipe.meal_type,
+          recipe_category: recipe.recipe_category,
           cuisine: recipe.cuisine,
-          category: recipe.category,
-          cookingTime: recipe.cookingTime,
-          totalCost: recipe.ingredients?.reduce((sum: number, ing: any) => sum + ing.estimatedPrice, 0).toFixed(2) || 0,
+          total_time_minutes: recipe.total_time_minutes,
+          rating: recipe.rating,
         };
       });
-    
-    // Get base recipes (one-pot, microwave, meal-prep)
-    const baseData = await getByPrefixWithKeys('base-recipe:');
-    
-    const baseRecipes = baseData.map(item => {
-      const recipe = typeof item.value === 'string' ? JSON.parse(item.value) : item.value;
-      return {
-        key: item.key,
-        id: recipe.id,
-        name: recipe.name,
-        cuisine: 'base', // Mark as base recipe
-        category: recipe.category,
-        cookingTime: recipe.cookingTime,
-        totalCost: recipe.ingredients?.reduce((sum: number, ing: any) => sum + ing.estimatedPrice, 0).toFixed(2) || 0,
-      };
-    });
-    
-    // Combine both types of recipes
-    const allRecipes = [...cuisineRecipes, ...baseRecipes];
-    
-    return c.json({ 
-      count: allRecipes.length,
-      recipes: allRecipes
+
+    return c.json({
+      count: recipes.length,
+      recipes
     });
   } catch (error: any) {
     console.log(`Error fetching all recipes: ${error.message}`);
@@ -1243,43 +648,20 @@ app.get("/make-server-dbaf6019/admin/all-recipes", async (c) => {
   }
 });
 
-// Get a specific recipe by key
-app.get("/make-server-dbaf6019/admin/recipe/:cuisine/:recipeId", async (c) => {
+// Get a specific recipe by meal_type and id
+app.get("/make-server-dbaf6019/admin/recipe/:mealType/:recipeId", async (c) => {
   try {
-    const cuisine = c.req.param('cuisine');
+    const mealType = c.req.param('mealType');
     const recipeId = c.req.param('recipeId');
-    
-    // Handle base recipes differently
-    let key: string;
-    if (cuisine === 'base') {
-      // Try to find the recipe in any base category
-      const categories = ['one-pot', 'microwave', 'meal-prep'];
-      for (const category of categories) {
-        const testKey = `base-recipe:${category}:${recipeId}`;
-        const testValue = await kv.get(testKey);
-        if (testValue) {
-          key = testKey;
-          const recipe = JSON.parse(testValue);
-          return c.json({ key, recipe });
-        }
-      }
-      return c.json({ error: "Base recipe not found" }, 404);
-    } else {
-      key = `cuisine:${cuisine}:${recipeId}`;
-    }
-    
+    const key = `recipe:${mealType}:${recipeId}`;
+
     const value = await kv.get(key);
-    
     if (!value) {
       return c.json({ error: "Recipe not found" }, 404);
     }
-    
-    const recipe = JSON.parse(value);
-    
-    return c.json({ 
-      key,
-      recipe
-    });
+
+    const recipe = typeof value === 'string' ? JSON.parse(value) : value;
+    return c.json({ key, recipe });
   } catch (error: any) {
     console.log(`Error fetching recipe: ${error.message}`);
     return c.json({ error: error.message || "Failed to fetch recipe" }, 500);
@@ -1290,38 +672,18 @@ app.get("/make-server-dbaf6019/admin/recipe/:cuisine/:recipeId", async (c) => {
 app.post("/make-server-dbaf6019/admin/recipe", async (c) => {
   try {
     const recipe = await c.req.json();
-    
-    if (!recipe.id || !recipe.cuisine) {
-      return c.json({ error: "Recipe must have 'id' and 'cuisine' fields" }, 400);
+
+    if (!recipe.id || !recipe.meal_type) {
+      return c.json({ error: "Recipe must have 'id' and 'meal_type' fields" }, 400);
     }
-    
-    // If recipe has an imageQuery, download and store the image
-    let storedImageUrl = recipe.imageUrl; // Keep existing image URL if present
-    
-    if (recipe.imageQuery && !recipe.imageUrl) {
-      console.log(`Generating and storing permanent image for recipe: ${recipe.name}`);
-      const imageUrl = await storeRecipeImage(recipe.imageQuery, recipe.id, recipe.cuisine);
-      if (imageUrl) {
-        storedImageUrl = imageUrl;
-        console.log(`Image stored successfully: ${imageUrl}`);
-      } else {
-        console.log(`Failed to store image, will use dynamic URL`);
-      }
-    }
-    
-    // Save recipe with stored image URL
-    const recipeToSave = {
-      ...recipe,
-      imageUrl: storedImageUrl // Add the permanent image URL
-    };
-    
-    const key = `cuisine:${recipe.cuisine}:${recipe.id}`;
-    await kv.set(key, JSON.stringify(recipeToSave));
-    
-    return c.json({ 
+
+    const key = `recipe:${recipe.meal_type}:${recipe.id}`;
+    await kv.set(key, JSON.stringify(recipe));
+
+    return c.json({
       message: "Recipe saved successfully",
       key,
-      recipe: recipeToSave
+      recipe
     });
   } catch (error: any) {
     console.log(`Error saving recipe: ${error.message}`);
@@ -1330,25 +692,23 @@ app.post("/make-server-dbaf6019/admin/recipe", async (c) => {
 });
 
 // Update a specific recipe field
-app.patch("/make-server-dbaf6019/admin/recipe/:cuisine/:recipeId", async (c) => {
+app.patch("/make-server-dbaf6019/admin/recipe/:mealType/:recipeId", async (c) => {
   try {
-    const cuisine = c.req.param('cuisine');
+    const mealType = c.req.param('mealType');
     const recipeId = c.req.param('recipeId');
-    const key = `cuisine:${cuisine}:${recipeId}`;
+    const key = `recipe:${mealType}:${recipeId}`;
     const updates = await c.req.json();
-    
+
     const value = await kv.get(key);
-    
     if (!value) {
       return c.json({ error: "Recipe not found" }, 404);
     }
-    
-    const recipe = JSON.parse(value);
+
+    const recipe = typeof value === 'string' ? JSON.parse(value) : value;
     const updatedRecipe = { ...recipe, ...updates };
-    
     await kv.set(key, JSON.stringify(updatedRecipe));
-    
-    return c.json({ 
+
+    return c.json({
       message: "Recipe updated successfully",
       key,
       recipe: updatedRecipe
@@ -1360,15 +720,15 @@ app.patch("/make-server-dbaf6019/admin/recipe/:cuisine/:recipeId", async (c) => 
 });
 
 // Delete a recipe
-app.delete("/make-server-dbaf6019/admin/recipe/:cuisine/:recipeId", async (c) => {
+app.delete("/make-server-dbaf6019/admin/recipe/:mealType/:recipeId", async (c) => {
   try {
-    const cuisine = c.req.param('cuisine');
+    const mealType = c.req.param('mealType');
     const recipeId = c.req.param('recipeId');
-    const key = `cuisine:${cuisine}:${recipeId}`;
-    
+    const key = `recipe:${mealType}:${recipeId}`;
+
     await kv.del(key);
-    
-    return c.json({ 
+
+    return c.json({
       message: "Recipe deleted successfully",
       key
     });
@@ -1378,22 +738,22 @@ app.delete("/make-server-dbaf6019/admin/recipe/:cuisine/:recipeId", async (c) =>
   }
 });
 
-// Clear all cuisine data (use with caution!)
-app.delete("/make-server-dbaf6019/admin/clear-all-cuisines", async (c) => {
+// Clear all recipe data (use with caution!)
+app.delete("/make-server-dbaf6019/admin/clear-all-recipes", async (c) => {
   try {
-    const data = await getByPrefixWithKeys('cuisine:');
+    const data = await getByPrefixWithKeys('recipe:');
     const keys = data.map(item => item.key);
-    
+
     if (keys.length > 0) {
       await kv.mdel(keys);
     }
-    
-    return c.json({ 
-      message: "All cuisine data cleared",
+
+    return c.json({
+      message: "All recipe data cleared",
       deletedCount: keys.length
     });
   } catch (error: any) {
-    console.log(`Error clearing cuisine data: ${error.message}`);
+    console.log(`Error clearing recipe data: ${error.message}`);
     return c.json({ error: error.message || "Failed to clear data" }, 500);
   }
 });
@@ -1402,31 +762,25 @@ app.delete("/make-server-dbaf6019/admin/clear-all-cuisines", async (c) => {
 app.post("/make-server-dbaf6019/admin/search-recipes", async (c) => {
   try {
     const { query } = await c.req.json();
-    
+
     if (!query || query.length < 2) {
       return c.json({ recipes: [] });
     }
-    
-    const data = await getByPrefixWithKeys('cuisine:');
-    const recipes = data
-      .filter(item => item.key !== 'cuisine:stats')
-      .map(item => {
-        // item.value is already the object from JSONB, no need to parse if it's an object
-        return typeof item.value === 'string' ? JSON.parse(item.value) : item.value;
-      })
-      .filter(recipe => {
-        const searchStr = query.toLowerCase();
-        const nameMatch = recipe.name?.toLowerCase().includes(searchStr);
-        const ingredientMatch = recipe.ingredients?.some((ing: any) => 
-          ing.name?.toLowerCase().includes(searchStr)
-        );
-        return nameMatch || ingredientMatch;
-      });
-    
-    return c.json({ 
+
+    const allRecipes = await getAllRecipesFromDB();
+    const searchStr = query.toLowerCase();
+    const matched = allRecipes.filter(recipe => {
+      const nameMatch = recipe.name?.toLowerCase().includes(searchStr);
+      const ingredientMatch = recipe.ingredients?.some((ing: string) =>
+        ing.toLowerCase().includes(searchStr)
+      );
+      return nameMatch || ingredientMatch;
+    });
+
+    return c.json({
       query,
-      count: recipes.length,
-      recipes
+      count: matched.length,
+      recipes: matched
     });
   } catch (error: any) {
     console.log(`Error searching recipes: ${error.message}`);
@@ -1436,174 +790,69 @@ app.post("/make-server-dbaf6019/admin/search-recipes", async (c) => {
 
 // ========== SHUFFLE/REPLACE RECIPE ENDPOINT ==========
 
-// Smart recipe replacement - find similar recipe by price, nutrition, and category
+// Smart recipe replacement - find similar recipe by nutrition
 app.post("/make-server-dbaf6019/shuffle-recipe", async (c) => {
   try {
-    const { currentRecipeId, goal, currentMealIds, preferCuisine, maxCookingTime } = await c.req.json();
-    
+    const { currentRecipeId, goal, currentMealIds, maxCookingTime } = await c.req.json();
+
     if (!currentRecipeId || !goal) {
       return c.json({ error: "Missing required parameters" }, 400);
     }
 
-    // Get all recipes from both databases
-    const standardRecipes = getRecipesByNeed(goal === 'study' ? 'studying' : goal === 'work' ? 'working' : 'fitness');
-    
-    // Also check cuisine database
-    const goalMap: { [key: string]: 'studying' | 'working' | 'fitness' } = {
-      study: 'studying',
-      work: 'working',
-      fitness: 'fitness'
-    };
-    const cuisineRecipes = CUISINE_RECIPES.filter(r => 
-      r.suitableFor.includes(goalMap[goal] || 'studying')
-    );
+    // Fetch recipes from DB by meal_type
+    const mealType = goal === 'study' ? 'study' : goal === 'work' ? 'work' : 'fitness';
+    let allRecipes = await getRecipesByMealType(mealType);
 
-    // Combine both recipe sources
-    let allRecipes = [...standardRecipes, ...cuisineRecipes];
-
-    // Filter by max cooking time if specified
+    // Filter by max cooking time
     if (maxCookingTime && maxCookingTime > 0) {
-      allRecipes = allRecipes.filter(r => r.cookingTime <= maxCookingTime);
-      console.log(`Filtered recipes by max cooking time ${maxCookingTime} min for shuffle`);
+      allRecipes = allRecipes.filter(r => (r.total_time_minutes ?? r.cook_time_minutes ?? 0) <= maxCookingTime);
     }
 
-    // Find the current recipe to get its properties
-    const currentRecipe = allRecipes.find(r => r.id === currentRecipeId);
-    
+    // Find the current recipe
+    const currentRecipe = allRecipes.find(r => String(r.id) === String(currentRecipeId));
     if (!currentRecipe) {
       return c.json({ error: "Current recipe not found" }, 404);
     }
 
-    // Calculate current recipe's total cost
-    const currentCost = currentRecipe.ingredients.reduce((sum, ing) => sum + ing.estimatedPrice, 0);
+    // Exclude currently selected meals
+    const excludedIds = (currentMealIds || [currentRecipeId]).map(String);
+    let candidates = allRecipes.filter(r => !excludedIds.includes(String(r.id)));
 
-    // Filter out recipes that are already selected (including current one)
-    const excludedIds = currentMealIds || [currentRecipeId];
-    
-    // First try: Same category, not already selected
-    let candidateRecipes = allRecipes.filter(recipe => 
-      !excludedIds.includes(recipe.id) &&
-      recipe.category === currentRecipe.category // Same category (one-pot, microwave, meal-prep)
-    );
-
-    // If no candidates found with same category, relax constraint and allow any category
-    if (candidateRecipes.length === 0) {
-      console.log(`No recipes found in same category. Expanding search to all categories...`);
-      candidateRecipes = allRecipes.filter(recipe => 
-        !excludedIds.includes(recipe.id)
-      );
+    if (candidates.length === 0) {
+      candidates = allRecipes.filter(r => String(r.id) !== String(currentRecipeId));
     }
 
-    // If still no candidates (very rare), allow re-using recipes from different meal slots
-    if (candidateRecipes.length === 0) {
-      console.log(`No unique recipes available. Allowing recipe reuse...`);
-      candidateRecipes = allRecipes.filter(recipe => 
-        recipe.id !== currentRecipeId // Just exclude the exact same recipe
-      );
+    if (candidates.length === 0) {
+      return c.json({ error: "No alternative recipes available." }, 400);
     }
 
-    // If absolutely no alternatives exist, return friendly error
-    if (candidateRecipes.length === 0) {
-      return c.json({ 
-        error: "No alternative recipes available. The recipe database may need more recipes for your preferences." 
-      }, 400);
-    }
+    // Score by nutrition similarity
+    const currentN = currentRecipe.nutrition_per_serving;
+    const scored = candidates.map(recipe => {
+      const n = recipe.nutrition_per_serving;
+      const calorieDiff = Math.abs(n.calories - currentN.calories);
+      const calorieScore = Math.max(0, 1 - (calorieDiff / 500));
+      const proteinDiff = Math.abs(n.protein_g - currentN.protein_g);
+      const proteinScore = Math.max(0, 1 - (proteinDiff / 30));
+      const categoryBonus = recipe.recipe_category === currentRecipe.recipe_category ? 0.2 : 0;
+      const score = (calorieScore * 0.4) + (proteinScore * 0.3) + categoryBonus + (Math.random() * 0.1);
 
-    // Smart scoring algorithm to find best replacement
-    const scoredRecipes = candidateRecipes.map(recipe => {
-      const recipeCost = recipe.ingredients.reduce((sum, ing) => sum + ing.estimatedPrice, 0);
-      
-      // Calculate similarity scores (0-1, higher is better)
-      const priceDiff = Math.abs(recipeCost - currentCost);
-      const priceScore = Math.max(0, 1 - (priceDiff / currentCost)); // Closer price = higher score
-      
-      const calorieDiff = Math.abs(recipe.nutrition.calories - currentRecipe.nutrition.calories);
-      const calorieScore = Math.max(0, 1 - (calorieDiff / 500)); // Within 500 cal = good
-      
-      const proteinDiff = Math.abs(recipe.nutrition.protein - currentRecipe.nutrition.protein);
-      const proteinScore = Math.max(0, 1 - (proteinDiff / 30)); // Within 30g = good
-
-      // Cuisine preference bonus
-      let cuisineBonus = 0;
-      if (preferCuisine && 'cuisine' in recipe && recipe.cuisine === preferCuisine) {
-        cuisineBonus = 0.3;
-      }
-
-      // Weighted total score
-      const totalScore = 
-        (priceScore * 0.35) +      // 35% weight on price similarity
-        (calorieScore * 0.25) +    // 25% weight on calorie similarity
-        (proteinScore * 0.25) +    // 25% weight on protein similarity
-        cuisineBonus +             // Bonus for preferred cuisine
-        (Math.random() * 0.15);    // 15% randomness for variety
-
-      return {
-        recipe,
-        score: totalScore,
-        recipeCost,
-        priceDiff,
-        calorieDiff,
-        proteinDiff
-      };
+      return { recipe, score, calorieDiff, proteinDiff };
     });
 
-    // Sort by score and pick the best match
-    scoredRecipes.sort((a, b) => b.score - a.score);
-    const bestMatch = scoredRecipes[0];
+    scored.sort((a, b) => b.score - a.score);
+    const best = scored[0];
 
-    // Convert to meal plan format
-    const totalCost = bestMatch.recipeCost;
-    const costPerServing = totalCost / bestMatch.recipe.servings;
-
-    const ingredients = bestMatch.recipe.ingredients.map(ing => ({
-      name: ing.name,
-      category: ing.category,
-      price: ing.estimatedPrice,
-      unit: ing.amount,
-      calories: 0,
-      protein: 0,
-      carbs: 0,
-      fats: 0,
-      available: true,
-      amount: ing.amount,
-      estimatedPrice: ing.estimatedPrice,
-    }));
-
-    const replacementMeal = {
-      id: bestMatch.recipe.id,
-      name: bestMatch.recipe.name,
-      description: bestMatch.recipe.description,
-      cuisine: 'cuisine' in bestMatch.recipe ? bestMatch.recipe.cuisine : 'standard',
-      spiceLevel: 'spiceLevel' in bestMatch.recipe ? bestMatch.recipe.spiceLevel : 'mild',
-      authentic: 'authentic' in bestMatch.recipe ? bestMatch.recipe.authentic : false,
-      image: bestMatch.recipe.imageQuery,
-      rationale: bestMatch.recipe.benefits.join('. '),
-      benefits: bestMatch.recipe.benefits,
-      mealType: bestMatch.recipe.category.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
-      category: bestMatch.recipe.category,
-      cookingTime: bestMatch.recipe.cookingTime,
-      servings: bestMatch.recipe.servings,
-      difficulty: bestMatch.recipe.difficulty,
-      tags: bestMatch.recipe.tags,
-      ingredients,
-      ingredientNames: bestMatch.recipe.ingredients.map(ing => ing.name),
-      instructions: bestMatch.recipe.instructions,
-      cost: parseFloat(costPerServing.toFixed(2)),
-      totalCost: parseFloat(totalCost.toFixed(2)),
-      nutrition: bestMatch.recipe.nutrition,
-      youtubeUrl: bestMatch.recipe.youtubeUrl,
-      sourceUrl: bestMatch.recipe.sourceUrl,
-    };
+    const replacementMeal = toSwapOption(best.recipe);
 
     return c.json({
       replacementMeal,
       similarity: {
-        priceMatch: `${(bestMatch.priceDiff).toFixed(2)} difference`,
-        calorieMatch: `${Math.abs(bestMatch.calorieDiff).toFixed(0)} cal difference`,
-        proteinMatch: `${Math.abs(bestMatch.proteinDiff).toFixed(0)}g difference`,
-        overallScore: (bestMatch.score * 100).toFixed(1) + '%'
+        calorieMatch: `${best.calorieDiff.toFixed(0)} cal difference`,
+        proteinMatch: `${best.proteinDiff.toFixed(0)}g difference`,
+        overallScore: (best.score * 100).toFixed(1) + '%'
       },
-      message: `Found great alternative! Similar price and nutrition.`
+      message: `Found great alternative! Similar nutrition profile.`
     });
   } catch (error: any) {
     console.log(`Error shuffling recipe: ${error.message}`);
@@ -1611,176 +860,69 @@ app.post("/make-server-dbaf6019/shuffle-recipe", async (c) => {
   }
 });
 
-// NEW: Get multiple meal swap options for user to choose from
+// Get multiple meal swap options for user to choose from
 app.post("/make-server-dbaf6019/get-swap-options", async (c) => {
   try {
     const { currentRecipeId, goal, currentMealIds, maxCookingTime, limit = 6 } = await c.req.json();
-    
+
     if (!currentRecipeId || !goal) {
       return c.json({ error: "Missing required parameters" }, 400);
     }
 
-    // Get all recipes from both databases
-    const standardRecipes = getRecipesByNeed(goal === 'study' ? 'studying' : goal === 'work' ? 'working' : 'fitness');
-    
-    // Also check cuisine database
-    const goalMap: { [key: string]: 'studying' | 'working' | 'fitness' } = {
-      study: 'studying',
-      work: 'working',
-      fitness: 'fitness'
-    };
-    const cuisineRecipes = CUISINE_RECIPES.filter(r => 
-      r.suitableFor.includes(goalMap[goal] || 'studying')
-    );
+    const mealType = goal === 'study' ? 'study' : goal === 'work' ? 'work' : 'fitness';
+    let allRecipes = await getRecipesByMealType(mealType);
 
-    // Combine both recipe sources
-    let allRecipes = [...standardRecipes, ...cuisineRecipes];
-
-    // Filter by max cooking time if specified
     if (maxCookingTime && maxCookingTime > 0) {
-      allRecipes = allRecipes.filter(r => r.cookingTime <= maxCookingTime);
-      console.log(`Filtered recipes by max cooking time ${maxCookingTime} min for swap options`);
+      allRecipes = allRecipes.filter(r => (r.total_time_minutes ?? r.cook_time_minutes ?? 0) <= maxCookingTime);
     }
 
-    // Find the current recipe to get its properties
-    const currentRecipe = allRecipes.find(r => r.id === currentRecipeId);
-    
+    const currentRecipe = allRecipes.find(r => String(r.id) === String(currentRecipeId));
     if (!currentRecipe) {
       return c.json({ error: "Current recipe not found" }, 404);
     }
 
-    // Calculate current recipe's total cost
-    const currentCost = currentRecipe.ingredients.reduce((sum, ing) => sum + ing.estimatedPrice, 0);
+    const excludedIds = (currentMealIds || [currentRecipeId]).map(String);
+    let candidates = allRecipes.filter(r => !excludedIds.includes(String(r.id)));
 
-    // Filter out recipes that are already selected (including current one)
-    const excludedIds = currentMealIds || [currentRecipeId];
-    
-    // Get candidate recipes (prefer same category, but allow any category if needed)
-    let candidateRecipes = allRecipes.filter(recipe => 
-      !excludedIds.includes(recipe.id) &&
-      recipe.category === currentRecipe.category
-    );
-
-    // If not enough candidates with same category, include other categories
-    if (candidateRecipes.length < limit) {
-      const otherCategoryRecipes = allRecipes.filter(recipe => 
-        !excludedIds.includes(recipe.id) &&
-        recipe.category !== currentRecipe.category
-      );
-      candidateRecipes = [...candidateRecipes, ...otherCategoryRecipes];
+    if (candidates.length < limit) {
+      const extras = allRecipes.filter(r => String(r.id) !== String(currentRecipeId) && !excludedIds.includes(String(r.id)));
+      candidates = [...new Set([...candidates, ...extras])];
     }
 
-    // If still not enough, allow recipe reuse
-    if (candidateRecipes.length < limit) {
-      const reusableRecipes = allRecipes.filter(recipe => 
-        recipe.id !== currentRecipeId
-      );
-      candidateRecipes = [...new Set([...candidateRecipes, ...reusableRecipes])];
+    if (candidates.length === 0) {
+      return c.json({ error: "No alternative recipes available." }, 400);
     }
 
-    if (candidateRecipes.length === 0) {
-      return c.json({ 
-        error: "No alternative recipes available." 
-      }, 400);
-    }
-
-    // Smart scoring algorithm to find best replacements
-    const scoredRecipes = candidateRecipes.map(recipe => {
-      const recipeCost = recipe.ingredients.reduce((sum, ing) => sum + ing.estimatedPrice, 0);
-      
-      // Calculate similarity scores (0-1, higher is better)
-      const priceDiff = Math.abs(recipeCost - currentCost);
-      const priceScore = Math.max(0, 1 - (priceDiff / currentCost));
-      
-      const calorieDiff = Math.abs(recipe.nutrition.calories - currentRecipe.nutrition.calories);
+    const currentN = currentRecipe.nutrition_per_serving;
+    const scored = candidates.map(recipe => {
+      const n = recipe.nutrition_per_serving;
+      const calorieDiff = Math.abs(n.calories - currentN.calories);
       const calorieScore = Math.max(0, 1 - (calorieDiff / 500));
-      
-      const proteinDiff = Math.abs(recipe.nutrition.protein - currentRecipe.nutrition.protein);
+      const proteinDiff = Math.abs(n.protein_g - currentN.protein_g);
       const proteinScore = Math.max(0, 1 - (proteinDiff / 30));
+      const categoryBonus = recipe.recipe_category === currentRecipe.recipe_category ? 0.2 : 0;
+      const score = (calorieScore * 0.4) + (proteinScore * 0.3) + categoryBonus + (Math.random() * 0.1);
 
-      // Category match bonus
-      const categoryBonus = recipe.category === currentRecipe.category ? 0.2 : 0;
-
-      // Weighted total score
-      const totalScore = 
-        (priceScore * 0.35) +
-        (calorieScore * 0.25) +
-        (proteinScore * 0.25) +
-        categoryBonus +
-        (Math.random() * 0.15);
-
-      return {
-        recipe,
-        score: totalScore,
-        recipeCost,
-        priceDiff: Math.abs(priceDiff),
-        calorieDiff: Math.abs(calorieDiff),
-        proteinDiff: Math.abs(proteinDiff)
-      };
+      return { recipe, score, calorieDiff, proteinDiff };
     });
 
-    // Sort by score and get top options
-    scoredRecipes.sort((a, b) => b.score - a.score);
-    const topOptions = scoredRecipes.slice(0, limit);
+    scored.sort((a, b) => b.score - a.score);
+    const topOptions = scored.slice(0, limit);
 
-    // Convert to meal plan format
-    const swapOptions = topOptions.map(option => {
-      const totalCost = option.recipeCost;
-      const costPerServing = totalCost / option.recipe.servings;
+    const swapOptions = topOptions.map(option => ({
+      ...toSwapOption(option.recipe),
+      similarity: {
+        calorieMatch: option.calorieDiff.toFixed(0),
+        proteinMatch: option.proteinDiff.toFixed(0),
+        matchScore: (option.score * 100).toFixed(0)
+      }
+    }));
 
-      const ingredients = option.recipe.ingredients.map(ing => ({
-        name: ing.name,
-        category: ing.category,
-        price: ing.estimatedPrice,
-        unit: ing.amount,
-        calories: 0,
-        protein: 0,
-        carbs: 0,
-        fats: 0,
-        available: true,
-        amount: ing.amount,
-        estimatedPrice: ing.estimatedPrice,
-      }));
-
-      return {
-        id: option.recipe.id,
-        name: option.recipe.name,
-        description: option.recipe.description,
-        cuisine: 'cuisine' in option.recipe ? option.recipe.cuisine : 'standard',
-        spiceLevel: 'spiceLevel' in option.recipe ? option.recipe.spiceLevel : 'mild',
-        authentic: 'authentic' in option.recipe ? option.recipe.authentic : false,
-        image: option.recipe.imageQuery,
-        rationale: option.recipe.benefits.join('. '),
-        benefits: option.recipe.benefits,
-        mealType: option.recipe.category.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
-        category: option.recipe.category,
-        cookingTime: option.recipe.cookingTime,
-        servings: option.recipe.servings,
-        difficulty: option.recipe.difficulty,
-        tags: option.recipe.tags,
-        ingredients,
-        ingredientNames: option.recipe.ingredients.map(ing => ing.name),
-        instructions: option.recipe.instructions,
-        cost: parseFloat(costPerServing.toFixed(2)),
-        totalCost: parseFloat(totalCost.toFixed(2)),
-        nutrition: option.recipe.nutrition,
-        youtubeUrl: option.recipe.youtubeUrl,
-        sourceUrl: option.recipe.sourceUrl,
-        similarity: {
-          priceMatch: option.priceDiff.toFixed(2),
-          calorieMatch: option.calorieDiff.toFixed(0),
-          proteinMatch: option.proteinDiff.toFixed(0),
-          matchScore: (option.score * 100).toFixed(0)
-        }
-      };
-    });
-
-    return c.json({ 
+    return c.json({
       swapOptions,
       currentRecipe: {
-        cost: currentCost,
-        calories: currentRecipe.nutrition.calories,
-        protein: currentRecipe.nutrition.protein
+        calories: currentN.calories,
+        protein: currentN.protein_g
       }
     });
   } catch (error: any) {
@@ -1986,84 +1128,40 @@ app.post("/make-server-dbaf6019/upload-recipe-image", async (c) => {
   }
 });
 
-// Batch generate and store images for all recipes
+// Batch generate and store images for all recipes (new recipes already have image URLs)
 app.post("/make-server-dbaf6019/generate-all-recipe-images", async (c) => {
   try {
-    console.log('=== Batch Image Generation Started ===');
-    
-    // Get all recipes from all databases
-    const allRecipes = [
-      ...RECIPE_DATABASE.map(r => ({ ...r, cuisine: 'base' })),
-      ...CUISINE_RECIPES,
-      ...BRAIN_RECIPES.map(r => ({ ...r, cuisine: 'brain' })),
-      ...WORK_EFFICIENCY_RECIPES,
-      ...FITNESS_RECOVERY_RECIPES
-    ];
-    
-    console.log(`Total recipes to process: ${allRecipes.length}`);
-    
-    let successCount = 0;
-    let errorCount = 0;
+    console.log('=== Caching Recipe Image URLs ===');
+
+    const allRecipes = await getAllRecipesFromDB();
+    let cachedCount = 0;
     let skippedCount = 0;
-    
-    // Process in small batches to avoid timeouts
-    const BATCH_SIZE = 3;
-    
-    for (let i = 0; i < allRecipes.length; i += BATCH_SIZE) {
-      const batch = allRecipes.slice(i, i + BATCH_SIZE);
-      console.log(`Processing batch ${Math.floor(i / BATCH_SIZE) + 1} of ${Math.ceil(allRecipes.length / BATCH_SIZE)}`);
-      
-      for (const recipe of batch) {
-        try {
-          // Check if image already exists
-          const existingImageKey = `recipe-image:${recipe.id}`;
-          const existingImage = await kv.get(existingImageKey);
-          
-          if (existingImage) {
-            console.log(`✓ Skipped (already exists): ${recipe.name}`);
-            skippedCount++;
-            continue;
-          }
-          
-          // Generate and store image
-          const imageUrl = await storeRecipeImage(
-            recipe.imageQuery, 
-            recipe.id, 
-            recipe.cuisine || 'base'
-          );
-          
-          if (imageUrl) {
-            // Cache the URL
-            await kv.set(existingImageKey, imageUrl);
-            successCount++;
-            console.log(`✓ Generated image for: ${recipe.name}`);
-          } else {
-            errorCount++;
-            console.log(`✗ Failed to generate image for: ${recipe.name}`);
-          }
-        } catch (error: any) {
-          errorCount++;
-          console.log(`✗ Error processing ${recipe.name}: ${error.message}`);
-        }
+
+    for (const recipe of allRecipes) {
+      const imageKey = `recipe-image:${recipe.id}`;
+      const existing = await kv.get(imageKey);
+
+      if (existing) {
+        skippedCount++;
+        continue;
       }
-      
-      // Small delay between batches
-      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // New recipes have image URLs directly
+      if (recipe.image?.url) {
+        await kv.set(imageKey, recipe.image.url);
+        cachedCount++;
+      }
     }
-    
-    console.log('=== Batch Image Generation Complete ===');
-    console.log(`Success: ${successCount}, Errors: ${errorCount}, Skipped: ${skippedCount}`);
-    
+
     return c.json({
       success: true,
       totalRecipes: allRecipes.length,
-      successCount,
-      errorCount,
+      cachedCount,
       skippedCount
     });
   } catch (error: any) {
-    console.log(`Error in batch image generation: ${error.message}`);
-    return c.json({ error: error.message || "Failed to generate images" }, 500);
+    console.log(`Error caching recipe images: ${error.message}`);
+    return c.json({ error: error.message || "Failed to cache images" }, 500);
   }
 });
 
@@ -2459,9 +1557,8 @@ app.post("/make-server-dbaf6019/admin/validate-nutrition", async (c) => {
     }
 
     // Fetch all recipes from KV store
-    const cuisineRecipes = await getByPrefixWithKeys("cuisine:");
-    const baseRecipes = await getByPrefixWithKeys("base-recipe:");
-    const allRecipes = [...cuisineRecipes, ...baseRecipes];
+    const allRecipeData = await getByPrefixWithKeys("recipe:");
+    const allRecipes = allRecipeData.filter(e => e.key !== 'recipes:meta');
 
     const report: Array<{
       key: string;

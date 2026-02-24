@@ -49,12 +49,12 @@ export function CelebrationOverlay({
     >
       {/* Backdrop */}
       {showConfetti && (
-        <div className="absolute inset-0 bg-black/40" />
+        <div className="absolute inset-0 bg-black/40 pointer-events-none" />
       )}
 
       {/* Confetti particles */}
       {showConfetti && (
-        <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {Array.from({ length: 30 }).map((_, i) => (
             <div
               key={i}
