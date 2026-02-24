@@ -17,6 +17,8 @@ interface RecommendationsStepProps {
   onNext: () => void;
   onReset: () => void;
   onSaveMealPlan?: (mealPlan: any) => Promise<boolean | undefined>;
+  onDeletePlan?: (planId: string) => Promise<void>;
+  activePlanId?: string | null;
   onNavigateHome?: () => void;
   activeNavTab?: NavTab;
   onNavTabChange?: (tab: NavTab) => void;
@@ -91,7 +93,7 @@ const LOCAL_IMAGE_FALLBACK =
   'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjI0MCIgdmlld0JveD0iMCAwIDMyMCAyNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjMyMCIgaGVpZ2h0PSIyNDAiIGZpbGw9IiMxNDJBMUQiLz48Y2lyY2xlIGN4PSIxNjAiIGN5PSIxMDAiIHI9IjQwIiBmaWxsPSIjMUU0MDI5Ii8+PHJlY3QgeD0iNzIiIHk9IjE2MiIgd2lkdGg9IjE3NiIgaGVpZ2h0PSIxMiIgcng9IjYiIGZpbGw9IiMyMkM1NUUiIG9wYWNpdHk9IjAuNzUiLz48L3N2Zz4=';
 
 
-export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSaveMealPlan, onNavigateHome, activeNavTab, onNavTabChange, savedMealPlan: initialSavedPlan }: RecommendationsStepProps) {
+export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSaveMealPlan, onDeletePlan, activePlanId, onNavigateHome, activeNavTab, onNavTabChange, savedMealPlan: initialSavedPlan }: RecommendationsStepProps) {
   const [mealPlan, setMealPlan] = useState<MealPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -604,21 +606,23 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
     }
   };
 
-  const handleMealSwap = (newMeal: MealPlanMeal) => {
+  const handleMealSwap = async (newMeal: MealPlanMeal) => {
     if (!mealPlan || !selectedMealForSwap) return;
 
-    const updatedMeals = mealPlan.meals.map(meal => 
+    const updatedMeals = mealPlan.meals.map(meal =>
       meal.id === selectedMealForSwap.id ? newMeal : meal
     );
 
     const newTotalCost = updatedMeals.reduce((sum, meal) => sum + meal.totalCost, 0);
 
-    setMealPlan(({
+    const updatedPlan = {
       ...mealPlan,
       meals: updatedMeals,
       totalCost: parseFloat(newTotalCost.toFixed(2)),
       withinBudget: newTotalCost <= mealPlan.weeklyBudget,
-    }));
+    };
+
+    setMealPlan(updatedPlan);
 
     const aiImage = getMealImageCandidates(newMeal)[0] || LOCAL_IMAGE_FALLBACK;
     setMealImages(prev => ({
@@ -631,6 +635,24 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
     });
 
     setShowMealSwapModal(false);
+
+    // Auto-save the updated plan and delete the old one
+    if (onSaveMealPlan && user) {
+      const oldPlanId = activePlanId;
+      try {
+        const success = await onSaveMealPlan(updatedPlan);
+        if (success) {
+          setPlanSaved(true);
+          setSavedMealPlanSnapshot(JSON.stringify(updatedPlan.meals.map((m: MealPlanMeal) => m.id).sort()));
+          // Delete the old plan now that the new one is saved
+          if (oldPlanId && onDeletePlan) {
+            await onDeletePlan(oldPlanId);
+          }
+        }
+      } catch (err) {
+        console.error('Error auto-saving swapped plan:', err);
+      }
+    }
   };
 
   const COOK_MESSAGES = [

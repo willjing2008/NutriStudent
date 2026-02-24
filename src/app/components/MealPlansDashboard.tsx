@@ -1,7 +1,22 @@
 import { useLanguage } from '../hooks/useLanguage';
-import React, { useState, useEffect } from 'react';
-import { Edit2, Search, Plus, ChevronRight, Check, Calendar, Sparkles } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Edit2, Search, Plus, ChevronRight, Check, Calendar, Sparkles, ChefHat, Flame } from 'lucide-react';
 import { BottomNavigation, NavTab } from './BottomNavigation';
+import { projectId, publicAnonKey } from '../../../utils/supabase/info';
+
+const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019`;
+const API_HEADERS = {
+  'Content-Type': 'application/json',
+  'Authorization': `Bearer ${publicAnonKey}`,
+};
+
+interface MyRecipe {
+  recipeId: string;
+  name: string;
+  category: string;
+  timesCooked: number;
+  lastCooked: string;
+}
 
 interface MealPlan {
   id: string;
@@ -60,6 +75,40 @@ export function MealPlansDashboard({
   useEffect(() => {
     setSavedPlansState(savedPlans);
   }, [savedPlans]);
+
+  const [myRecipes, setMyRecipes] = useState<MyRecipe[]>([]);
+  const [myRecipesLoading, setMyRecipesLoading] = useState(false);
+
+  const fetchMyRecipes = useCallback(async () => {
+    if (!user?.id) return;
+    setMyRecipesLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/my-recipes`, {
+        method: 'POST',
+        headers: API_HEADERS,
+        body: JSON.stringify({ userId: user.id }),
+      });
+      const data = await res.json();
+      if (data.recipes) setMyRecipes(data.recipes);
+    } catch (err) {
+      console.error('Failed to fetch my recipes:', err);
+    } finally {
+      setMyRecipesLoading(false);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    fetchMyRecipes();
+  }, [fetchMyRecipes]);
+
+  const getCategoryEmoji = (category: string) => {
+    const lower = (category || '').toLowerCase();
+    if (lower.includes('breakfast')) return '🥣';
+    if (lower.includes('lunch')) return '🥗';
+    if (lower.includes('dinner')) return '🍽️';
+    if (lower.includes('snack')) return '🍎';
+    return '🍳';
+  };
 
   const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
@@ -310,6 +359,58 @@ export function MealPlansDashboard({
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* My Recipes Section */}
+        {activeTab === 'active' && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-white font-semibold flex items-center gap-2">
+                <ChefHat className="w-4.5 h-4.5 text-[#22C55E]" />
+                My Recipes
+              </h2>
+              {myRecipes.length > 0 && (
+                <span className="text-[#6B7280] text-xs">{myRecipes.length} recipe{myRecipes.length !== 1 ? 's' : ''}</span>
+              )}
+            </div>
+
+            {myRecipesLoading ? (
+              <div className="space-y-2.5">
+                {Array.from({ length: 2 }).map((_, i) => (
+                  <div key={i} className="h-16 rounded-2xl bg-[#1A1A1A] animate-pulse" />
+                ))}
+              </div>
+            ) : myRecipes.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-[#2D2D2D] bg-[#111111] py-8 px-4 text-center">
+                <ChefHat className="w-8 h-8 text-[#3D3D3D] mx-auto mb-2.5" />
+                <p className="text-[#6B7280] text-sm font-medium mb-1">No custom recipes yet</p>
+                <p className="text-[#4B5563] text-xs">Swap a meal in your plan and choose "Create Your Own" to add one</p>
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {myRecipes.map((recipe) => (
+                  <div
+                    key={recipe.recipeId}
+                    className="flex items-center gap-3.5 px-4 py-3.5 rounded-2xl bg-[#111111] border border-[#1E1E1E]"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-[#1A2A1F] flex items-center justify-center text-xl flex-shrink-0">
+                      {getCategoryEmoji(recipe.category)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[15px] font-medium truncate text-white">{recipe.name}</p>
+                      <p className="text-xs text-[#6B7280] mt-0.5">
+                        {recipe.timesCooked} {recipe.timesCooked === 1 ? 'time' : 'times'} cooked
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <Flame className="w-4 h-4 text-orange-400" />
+                      <span className="text-sm font-semibold text-orange-400">{recipe.timesCooked}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

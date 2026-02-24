@@ -474,6 +474,8 @@ export default function App() {
               }
               return success;
             }}
+            onDeletePlan={deleteSavedMealPlanById}
+            activePlanId={activePlanId}
             onNavigateHome={() => {
               setIsOnboarding(false);
               setActiveNavTab('home');
@@ -530,6 +532,8 @@ export default function App() {
           onNext={() => setActiveNavTab('shop')}
           onReset={startOnboarding}
           onSaveMealPlan={saveMealPlan}
+          onDeletePlan={deleteSavedMealPlanById}
+          activePlanId={activePlanId}
           onNavigateHome={() => setActiveNavTab('home')}
           activeNavTab={activeNavTab}
           onNavTabChange={handleNavTabChange}

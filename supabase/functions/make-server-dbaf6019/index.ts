@@ -8,6 +8,7 @@ import { toMealPlanMeal, toSwapOption, getRecipesByMealType, getAllRecipesFromDB
 import { generateImageQuery, enhanceImageQuery } from "./image-query-helper.ts";
 import { calculateRecipeNutrition } from "./calorie-ninjas.ts";
 import { ACHIEVEMENTS } from "./achievements.ts";
+import { computeIngredientKeywords, selectAllCoreRecipes, buildRotationSchedule, ScoredRecipe } from "./ingredient-overlap.ts";
 
 const app = new Hono();
 
@@ -379,18 +380,8 @@ app.post("/make-server-dbaf6019/generate-meal-plan", async (c) => {
       return c.json({ error: "Missing required parameters" }, 400);
     }
 
-    // Calculate number of cooking days from today to shopping date
-    let cookingDays = 7; // Default to 7 days
-    if (shoppingDate) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const targetDate = new Date(shoppingDate);
-      targetDate.setHours(0, 0, 0, 0);
-
-      const diffTime = targetDate.getTime() - today.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      cookingDays = Math.max(1, Math.min(diffDays, 14));
-    }
+    // Always a full week starting from the shopping date
+    const cookingDays = 7;
 
     const totalMealsNeeded = cookingDays * mealsPerDay;
     const weeklyBudget = budget;
@@ -436,7 +427,7 @@ function generateMealPlanFromRecipes(
   const dailyBudget = weeklyBudget / 7;
   const totalMealsNeeded = cookingDays * mealsPerDay;
 
-  // Filter by avoided ingredients
+  // ── 1. Filter ────────────────────────────────────────────────────
   let filteredRecipes = recipes;
   if (avoidIngredients && avoidIngredients.length > 0) {
     const avoidLowercase = avoidIngredients.map(i => i.toLowerCase());
@@ -449,7 +440,6 @@ function generateMealPlanFromRecipes(
     console.log(`🚫 Filtered by avoided ingredients: ${filteredRecipes.length}/${recipes.length} remaining`);
   }
 
-  // Filter by max cooking time
   if (maxCookingTime && maxCookingTime > 0) {
     filteredRecipes = filteredRecipes.filter(r => (r.total_time_minutes ?? r.cook_time_minutes ?? 0) <= maxCookingTime);
   }
@@ -459,63 +449,41 @@ function generateMealPlanFromRecipes(
     filteredRecipes = recipes;
   }
 
-  // Shuffle for variety
-  const shuffled = [...filteredRecipes];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
+  // ── 2. Categorize into pools with ingredient keywords ────────────
+  const toScored = (r: NewRecipe): ScoredRecipe => ({ recipe: r, keywords: computeIngredientKeywords(r) });
 
-  // Categorize by recipe_category for variety
-  const breakfastRecipes = shuffled.filter(r => ["Breakfast", "Brunch"].includes(r.recipe_category || ""));
-  const lunchRecipes = shuffled.filter(r => ["Lunch", "Salad", "Sandwich", "Soup"].includes(r.recipe_category || ""));
-  const dinnerRecipes = shuffled.filter(r => !["Breakfast", "Brunch", "Lunch", "Salad", "Sandwich", "Soup"].includes(r.recipe_category || ""));
+  const breakfastPool = filteredRecipes
+    .filter(r => ["Breakfast", "Brunch"].includes(r.recipe_category || ""))
+    .map(toScored);
+  const lunchPool = filteredRecipes
+    .filter(r => ["Lunch", "Salad", "Sandwich", "Soup"].includes(r.recipe_category || ""))
+    .map(toScored);
+  const dinnerPool = filteredRecipes
+    .filter(r => !["Breakfast", "Brunch", "Lunch", "Salad", "Sandwich", "Soup"].includes(r.recipe_category || ""))
+    .map(toScored);
 
-  // Select meals with variety per day
-  const selectedRecipes: NewRecipe[] = [];
-  const usedIds = new Set<number>();
+  // Cross-category fallback: if a category has 0 recipes, borrow from others
+  const allScored = filteredRecipes.map(toScored);
+  const ensurePool = (pool: ScoredRecipe[]) => pool.length > 0 ? pool : allScored;
 
-  for (let day = 0; day < cookingDays; day++) {
-    for (let mealNum = 0; mealNum < mealsPerDay; mealNum++) {
-      let candidates: NewRecipe[];
+  console.log(`📊 Pools: breakfast=${breakfastPool.length}, lunch=${lunchPool.length}, dinner=${dinnerPool.length}`);
 
-      // Assign meal slots based on mealsPerDay
-      if (mealsPerDay >= 3) {
-        if (mealNum === 0) candidates = breakfastRecipes;
-        else if (mealNum === 1) candidates = lunchRecipes;
-        else candidates = dinnerRecipes;
-      } else if (mealsPerDay === 2) {
-        candidates = mealNum === 0 ? breakfastRecipes : dinnerRecipes;
-      } else {
-        candidates = dinnerRecipes;
-      }
+  // ── 3. Select core clusters with maximum ingredient overlap ──────
+  const coreRecipes = selectAllCoreRecipes(
+    ensurePool(breakfastPool),
+    ensurePool(lunchPool),
+    ensurePool(dinnerPool)
+  );
 
-      let selected = candidates.find(r => !usedIds.has(r.id)) || null;
+  console.log(`🔗 Core: breakfast=${coreRecipes.breakfast.length}, lunch=${coreRecipes.lunch.length}, dinner=${coreRecipes.dinner.length}`);
 
-      // Fallback to any unused recipe
-      if (!selected) {
-        selected = shuffled.find(r => !usedIds.has(r.id)) || null;
-      }
+  // ── 4. Build 7-day rotation schedule ─────────────────────────────
+  const schedule = buildRotationSchedule(coreRecipes, mealsPerDay, cookingDays);
 
-      // Last resort: allow repeat but avoid same-day duplicates
-      if (!selected && shuffled.length > 0) {
-        const dayIds = new Set(selectedRecipes.slice(day * mealsPerDay).map(r => r.id));
-        selected = shuffled.find(r => !dayIds.has(r.id)) || shuffled[0];
-      }
-
-      if (selected) {
-        selectedRecipes.push(selected);
-        usedIds.add(selected.id);
-      }
-    }
-  }
-
-  // Convert to frontend format using adapter
-  const meals = selectedRecipes.map((recipe, index) => {
-    const dayNumber = Math.floor(index / mealsPerDay) + 1;
-    const mealNumber = (index % mealsPerDay) + 1;
-    return toMealPlanMeal(recipe, dayNumber, mealNumber);
-  });
+  // ── 5. Convert to frontend format ────────────────────────────────
+  const meals = schedule.flatMap(day =>
+    day.meals.map(m => toMealPlanMeal(m.recipe, day.dayNumber, m.mealNumber))
+  );
 
   return {
     meals,
@@ -558,6 +526,7 @@ app.post("/make-server-dbaf6019/init-recipes", async (c) => {
     let successCount = 0;
     let errorCount = 0;
     const byMealType: Record<string, number> = {};
+    const byCategory: Record<string, number> = {};
 
     for (const recipe of ALL_RECIPES) {
       try {
@@ -565,6 +534,8 @@ app.post("/make-server-dbaf6019/init-recipes", async (c) => {
         await kv.set(key, JSON.stringify(recipe));
         successCount++;
         byMealType[recipe.meal_type] = (byMealType[recipe.meal_type] || 0) + 1;
+        const cat = recipe.recipe_category || 'Other';
+        byCategory[cat] = (byCategory[cat] || 0) + 1;
       } catch (error: any) {
         errorCount++;
         console.error(`Failed to store recipe ${recipe.id}: ${error.message}`);
@@ -575,17 +546,20 @@ app.post("/make-server-dbaf6019/init-recipes", async (c) => {
     await kv.set('recipes:meta', JSON.stringify({
       total: ALL_RECIPES.length,
       byMealType,
+      byCategory,
       initialized: new Date().toISOString()
     }));
 
     console.log(`=== Initialization Complete: ${successCount} success, ${errorCount} errors ===`);
+    console.log(`By category: ${JSON.stringify(byCategory)}`);
 
     return c.json({
       message: "Recipe database initialized successfully",
       totalRecipes: ALL_RECIPES.length,
       successCount,
       errorCount,
-      byMealType
+      byMealType,
+      byCategory
     });
   } catch (error: any) {
     console.log(`Error initializing cuisine database: ${error.message}`);
@@ -1688,6 +1662,14 @@ app.post("/make-server-dbaf6019/track-meal-cooked", async (c) => {
       cookedAt: new Date().toISOString(),
     });
 
+    // Increment timesCooked on community recipe if it exists
+    const communityKey = `community_recipe_${recipeId || mealId}`;
+    const communityRecipe = await kv.get(communityKey);
+    if (communityRecipe) {
+      communityRecipe.timesCooked = (communityRecipe.timesCooked || 0) + 1;
+      await kv.set(communityKey, communityRecipe);
+    }
+
     return c.json({ success: true, action: 'added' });
   } catch (error: any) {
     console.log(`Error in /track-meal-cooked: ${error.message}`);
@@ -1943,7 +1925,7 @@ app.post("/make-server-dbaf6019/leaderboard", async (c) => {
 // Get recipe leaderboard ranked by times cooked (school-scoped, paginated)
 app.post("/make-server-dbaf6019/recipe-leaderboard", async (c) => {
   try {
-    const { schoolId, limit = 10, offset = 0 } = await c.req.json();
+    const { schoolId, userId, limit = 10, offset = 0 } = await c.req.json();
 
     if (!schoolId) {
       return c.json({ error: "schoolId is required" }, 400);
@@ -1979,12 +1961,12 @@ app.post("/make-server-dbaf6019/recipe-leaderboard", async (c) => {
     for (const entry of allCooked) {
       // Key format: cooked_${userId}_${date}_${mealId}
       const parts = entry.key.split('_');
-      const userId = parts[1];
-      if (!schoolUserIds.has(userId)) continue;
+      const entryUserId = parts[1];
+      if (!schoolUserIds.has(entryUserId)) continue;
 
       const val = entry.value;
       const recipeId = val?.recipeId || val?.mealId;
-      if (!recipeId) continue;
+      if (!recipeId || !recipeId.startsWith('custom-')) continue;
 
       const existing = recipeMap.get(recipeId);
       if (existing) {
@@ -2008,18 +1990,198 @@ app.post("/make-server-dbaf6019/recipe-leaderboard", async (c) => {
     const total = sorted.length;
     const page = sorted.slice(offset, offset + limit);
 
-    const recipes = page.map(([recipeId, data], i) => ({
-      rank: offset + i + 1,
-      recipeId,
-      name: data.name,
-      category: data.category,
-      timesCooked: data.count,
-    }));
+    // Enrich with community data (likes, creator, image, nutrition)
+    const likedSet = new Set<string>();
+    if (userId) {
+      const likeEntries = await getByPrefixWithKeys(`community_like_${userId}_`);
+      for (const e of likeEntries) {
+        likedSet.add(e.value.recipeId);
+      }
+    }
+
+    const recipes = await Promise.all(
+      page.map(async ([recipeId, data], i) => {
+        const communityRecipe = await kv.get(`community_recipe_${recipeId}`);
+        return {
+          rank: offset + i + 1,
+          recipeId,
+          name: communityRecipe?.name || data.name,
+          category: communityRecipe?.category || data.category,
+          timesCooked: data.count,
+          // Community social fields
+          creatorName: communityRecipe?.creatorName || null,
+          likesCount: communityRecipe?.likesCount || 0,
+          likedByMe: likedSet.has(recipeId),
+          image: communityRecipe?.imageUrl || communityRecipe?.image || null,
+          nutrition: communityRecipe?.nutrition || null,
+          cookingTime: communityRecipe?.cookingTime || null,
+          servings: communityRecipe?.servings || null,
+          difficulty: communityRecipe?.difficulty || null,
+          description: communityRecipe?.description || null,
+          ingredients: communityRecipe?.ingredientNames || communityRecipe?.ingredients || null,
+          instructions: communityRecipe?.instructions || null,
+        };
+      })
+    );
 
     return c.json({ recipes, total, hasMore: offset + limit < total });
   } catch (error: any) {
     console.log(`Error in /recipe-leaderboard: ${error.message}`);
     return c.json({ error: error.message || "Failed to fetch recipe leaderboard" }, 500);
+  }
+});
+
+// Get current user's custom (user-created) recipes
+app.post("/make-server-dbaf6019/my-recipes", async (c) => {
+  try {
+    const { userId } = await c.req.json();
+
+    if (!userId) {
+      return c.json({ error: "userId is required" }, 400);
+    }
+
+    const allCooked = await getByPrefixWithKeys(`cooked_${userId}_`);
+
+    // Aggregate custom recipes by recipeId
+    const recipeMap = new Map<string, { name: string; category: string; count: number; lastCooked: string }>();
+
+    for (const entry of allCooked) {
+      const val = entry.value;
+      const recipeId = val?.recipeId || val?.mealId;
+      if (!recipeId || !recipeId.startsWith('custom-')) continue;
+
+      const existing = recipeMap.get(recipeId);
+      const cookedAt = val.cookedAt || val.date || '';
+      if (existing) {
+        existing.count++;
+        if (cookedAt > existing.lastCooked) existing.lastCooked = cookedAt;
+      } else {
+        recipeMap.set(recipeId, {
+          name: val.recipeName || 'Custom Recipe',
+          category: val.category || '',
+          count: 1,
+          lastCooked: cookedAt,
+        });
+      }
+    }
+
+    // Sort by most recently cooked, then by count
+    const recipes = Array.from(recipeMap.entries())
+      .sort((a, b) => {
+        if (b[1].lastCooked !== a[1].lastCooked) return b[1].lastCooked.localeCompare(a[1].lastCooked);
+        return b[1].count - a[1].count;
+      })
+      .map(([recipeId, data]) => ({
+        recipeId,
+        name: data.name,
+        category: data.category,
+        timesCooked: data.count,
+        lastCooked: data.lastCooked,
+      }));
+
+    return c.json({ recipes });
+  } catch (error: any) {
+    console.log(`Error in /my-recipes: ${error.message}`);
+    return c.json({ error: error.message || "Failed to fetch recipes" }, 500);
+  }
+});
+
+// ===== Community Recipes Endpoints =====
+
+// Save a recipe to the community
+app.post("/make-server-dbaf6019/save-community-recipe", async (c) => {
+  try {
+    const { userId, creatorName, recipe } = await c.req.json();
+
+    if (!userId || !recipe || !recipe.id) {
+      return c.json({ error: "userId and recipe are required" }, 400);
+    }
+
+    const communityRecipe = {
+      ...recipe,
+      creatorId: userId,
+      creatorName: creatorName || 'Anonymous',
+      createdAt: new Date().toISOString(),
+      timesCooked: 0,
+      likesCount: 0,
+      tags: [...(recipe.tags || []), 'community'],
+    };
+
+    await kv.set(`community_recipe_${recipe.id}`, communityRecipe);
+
+    return c.json({ success: true });
+  } catch (error: any) {
+    console.log(`Error in /save-community-recipe: ${error.message}`);
+    return c.json({ error: error.message || "Failed to save community recipe" }, 500);
+  }
+});
+
+// List community recipes
+app.post("/make-server-dbaf6019/list-community-recipes", async (c) => {
+  try {
+    const { userId } = await c.req.json();
+
+    if (!userId) {
+      return c.json({ error: "userId is required" }, 400);
+    }
+
+    const recipeEntries = await getByPrefixWithKeys("community_recipe_");
+    const likeEntries = await getByPrefixWithKeys(`community_like_${userId}_`);
+
+    const likedRecipeIds = new Set(likeEntries.map(e => e.value.recipeId));
+
+    const recipes = recipeEntries
+      .map(e => ({
+        ...e.value,
+        likedByMe: likedRecipeIds.has(e.value.id),
+      }))
+      .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 20);
+
+    return c.json({ recipes });
+  } catch (error: any) {
+    console.log(`Error in /list-community-recipes: ${error.message}`);
+    return c.json({ error: error.message || "Failed to list community recipes" }, 500);
+  }
+});
+
+// Toggle like on a community recipe
+app.post("/make-server-dbaf6019/toggle-community-like", async (c) => {
+  try {
+    const { userId, recipeId } = await c.req.json();
+
+    if (!userId || !recipeId) {
+      return c.json({ error: "userId and recipeId are required" }, 400);
+    }
+
+    const likeKey = `community_like_${userId}_${recipeId}`;
+    const communityKey = `community_recipe_${recipeId}`;
+
+    const existingLike = await kv.get(likeKey);
+    const communityRecipe = await kv.get(communityKey);
+
+    if (!communityRecipe) {
+      return c.json({ error: "Community recipe not found" }, 404);
+    }
+
+    let liked: boolean;
+
+    if (existingLike) {
+      await kv.del(likeKey);
+      communityRecipe.likesCount = Math.max(0, (communityRecipe.likesCount || 0) - 1);
+      liked = false;
+    } else {
+      await kv.set(likeKey, { userId, recipeId, likedAt: new Date().toISOString() });
+      communityRecipe.likesCount = (communityRecipe.likesCount || 0) + 1;
+      liked = true;
+    }
+
+    await kv.set(communityKey, communityRecipe);
+
+    return c.json({ success: true, liked, likesCount: communityRecipe.likesCount });
+  } catch (error: any) {
+    console.log(`Error in /toggle-community-like: ${error.message}`);
+    return c.json({ error: error.message || "Failed to toggle like" }, 500);
   }
 });
 

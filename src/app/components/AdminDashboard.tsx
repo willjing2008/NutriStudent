@@ -102,7 +102,7 @@ export function AdminDashboard() {
   };
 
   const initializeRecipes = async () => {
-    if (!confirm('This will clear all existing recipes and initialize 250 new AllRecipes recipes. Continue?')) {
+    if (!confirm('This will clear all existing recipes and re-initialize the full recipe database (breakfast, lunch & dinner). Continue?')) {
       return;
     }
 
@@ -127,7 +127,8 @@ export function AdminDashboard() {
       }
 
       const byType = data.byMealType || {};
-      showMessage('success', `Recipes initialized! ${data.total} recipes added (Work: ${byType.work || 0}, Fitness: ${byType.fitness || 0}, Study: ${byType.study || 0})`);
+      const byCat = data.byCategory || {};
+      showMessage('success', `Recipes initialized! ${data.totalRecipes} recipes (Work: ${byType.work || 0}, Fitness: ${byType.fitness || 0}, Study: ${byType.study || 0}) — Breakfast: ${byCat.Breakfast || 0}, Lunch: ${byCat.Lunch || 0}, Dinner: ${byCat.Dinner || 0}. Errors: ${data.errorCount || 0}`);
       await fetchAllRecipes();
     } catch (error: any) {
       console.error('Error initializing recipes:', error);
@@ -764,7 +765,7 @@ export function AdminDashboard() {
             className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-xl hover:from-green-600 hover:to-blue-600 transition-all shadow-md disabled:opacity-50"
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Database className="w-5 h-5" />}
-            Initialize All Recipes (250)
+            Initialize All Recipes
           </button>
 
           <button
