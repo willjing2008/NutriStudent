@@ -66,6 +66,7 @@ interface MealPlanMeal {
   mealNumber?: number;
   youtubeUrl?: string;
   sourceUrl?: string;
+  timesCooked?: number;
 }
 
 interface MealPlan {
@@ -676,6 +677,18 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
     const meal = currentDayMeals.find(m => m.id === mealId);
     const today = new Date().toISOString().split('T')[0];
 
+    // Increment/decrement timesCooked for user-created recipes
+    if (meal && meal.timesCooked !== undefined && mealPlan) {
+      setMealPlan({
+        ...mealPlan,
+        meals: mealPlan.meals.map(m =>
+          m.id === mealId
+            ? { ...m, timesCooked: Math.max(0, (m.timesCooked || 0) + (wasCooked ? -1 : 1)) }
+            : m
+        ),
+      });
+    }
+
     // Persist to backend
     fetch(`https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/track-meal-cooked`, {
       method: 'POST',
@@ -1175,6 +1188,15 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
                       </span>
                       <span className="shrink-0">•</span>
                       <span className="text-[#22C55E] shrink-0">{meal.nutrition?.protein}g protein</span>
+                      {meal.timesCooked !== undefined && (
+                        <>
+                          <span className="shrink-0">•</span>
+                          <span className="flex items-center gap-1 shrink-0 text-[#22C55E]">
+                            <ChefHat className="w-3 h-3" />
+                            {meal.timesCooked}x cooked
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
 
@@ -1242,17 +1264,19 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
 
       </div>
 
-      {/* Shared Bottom Navigation */}
-      <BottomNavigation 
-        activeTab={activeNavTab || 'plan'} 
-        onTabChange={(tab) => {
-          if (onNavTabChange) {
-            onNavTabChange(tab);
-          } else if (tab === 'home' && onNavigateHome) {
-            onNavigateHome();
-          }
-        }} 
-      />
+      {/* Shared Bottom Navigation — hidden when recipe details or swap modal are open */}
+      {!showRecipeModal && !showMealSwapModal && (
+        <BottomNavigation
+          activeTab={activeNavTab || 'plan'}
+          onTabChange={(tab) => {
+            if (onNavTabChange) {
+              onNavTabChange(tab);
+            } else if (tab === 'home' && onNavigateHome) {
+              onNavigateHome();
+            }
+          }}
+        />
+      )}
 
       {/* Recipe Modal */}
       {showRecipeModal && selectedMeal && (
@@ -1289,10 +1313,16 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
                   <Users className="w-3 h-3" />
                   {selectedMeal.servings} servings
                 </span>
+                {selectedMeal.timesCooked !== undefined && (
+                  <span className="px-3 py-1 bg-[#22C55E]/80 backdrop-blur-sm rounded-full text-white text-xs flex items-center gap-1 font-medium">
+                    <ChefHat className="w-3 h-3" />
+                    {selectedMeal.timesCooked}x cooked
+                  </span>
+                )}
               </div>
             </div>
 
-            <div className="p-5 space-y-6">
+            <div className="p-5 pb-24 space-y-6">
               {/* Nutrition Grid */}
               <div className="grid grid-cols-5 gap-2">
                 <div className="bg-[#142A1D] rounded-xl p-3 text-center border border-[#1E4029]">
@@ -1386,14 +1416,9 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
                 <h4 className="text-white font-semibold mb-3">Ingredients</h4>
                 <div className="space-y-2">
                   {selectedMeal.ingredients.map((ingredient, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-[#142A1D] rounded-xl border border-[#1E4029]">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-[#22C55E]" />
-                        <span className="text-white">{ingredient.name}</span>
-                      </div>
-                      <div className="text-sm text-[#6B7280]">
-                        <span>{ingredient.amount}</span>
-                      </div>
+                    <div key={index} className="flex items-start gap-3 px-3 py-2.5 bg-[#142A1D] rounded-xl border border-[#1E4029]">
+                      <div className="w-2 h-2 rounded-full bg-[#22C55E] mt-1.5 flex-shrink-0" />
+                      <span className="text-white text-sm leading-relaxed">{ingredient.name}</span>
                     </div>
                   ))}
                 </div>
@@ -1430,7 +1455,10 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
                   Swap Meal
                 </button>
                 <button
-                  onClick={() => handleShuffleRecipe(selectedMeal.id)}
+                  onClick={() => {
+                    setShowRecipeModal(false);
+                    handleShuffleRecipe(selectedMeal.id);
+                  }}
                   disabled={shufflingMealId === selectedMeal.id}
                   className="flex-1 py-3 bg-[#22C55E] text-[#052E16] rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-[#4ADE80] transition-all disabled:opacity-50"
                 >

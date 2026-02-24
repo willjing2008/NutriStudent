@@ -1940,4 +1940,87 @@ app.post("/make-server-dbaf6019/leaderboard", async (c) => {
   }
 });
 
+// Get recipe leaderboard ranked by times cooked (school-scoped, paginated)
+app.post("/make-server-dbaf6019/recipe-leaderboard", async (c) => {
+  try {
+    const { schoolId, limit = 10, offset = 0 } = await c.req.json();
+
+    if (!schoolId) {
+      return c.json({ error: "schoolId is required" }, 400);
+    }
+
+    // Get all auth users and filter by school
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    );
+
+    const { data: { users }, error } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+    if (error) {
+      return c.json({ error: error.message || "Failed to list users" }, 500);
+    }
+
+    const schoolUserIds = new Set(
+      (users || [])
+        .filter((u: any) => u.user_metadata?.school_id === schoolId)
+        .map((u: any) => u.id)
+    );
+
+    if (schoolUserIds.size === 0) {
+      return c.json({ recipes: [], total: 0, hasMore: false });
+    }
+
+    // Fetch all cooked entries globally and filter to school users
+    const allCooked = await getByPrefixWithKeys("cooked_");
+
+    // Aggregate by recipeId
+    const recipeMap = new Map<string, { name: string; category: string; count: number }>();
+
+    for (const entry of allCooked) {
+      // Key format: cooked_${userId}_${date}_${mealId}
+      const parts = entry.key.split('_');
+      const userId = parts[1];
+      if (!schoolUserIds.has(userId)) continue;
+
+      const val = entry.value;
+      const recipeId = val?.recipeId || val?.mealId;
+      if (!recipeId) continue;
+
+      const existing = recipeMap.get(recipeId);
+      if (existing) {
+        existing.count++;
+      } else {
+        recipeMap.set(recipeId, {
+          name: val.recipeName || 'Unknown Recipe',
+          category: val.category || '',
+          count: 1,
+        });
+      }
+    }
+
+    // Sort by count descending, then name ascending
+    const sorted = Array.from(recipeMap.entries())
+      .sort((a, b) => {
+        if (b[1].count !== a[1].count) return b[1].count - a[1].count;
+        return a[1].name.localeCompare(b[1].name);
+      });
+
+    const total = sorted.length;
+    const page = sorted.slice(offset, offset + limit);
+
+    const recipes = page.map(([recipeId, data], i) => ({
+      rank: offset + i + 1,
+      recipeId,
+      name: data.name,
+      category: data.category,
+      timesCooked: data.count,
+    }));
+
+    return c.json({ recipes, total, hasMore: offset + limit < total });
+  } catch (error: any) {
+    console.log(`Error in /recipe-leaderboard: ${error.message}`);
+    return c.json({ error: error.message || "Failed to fetch recipe leaderboard" }, 500);
+  }
+});
+
 Deno.serve(app.fetch);

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronRight, Check, RefreshCw, Plus, Home, Calendar, ShoppingCart, User, Bell, ChevronLeft, Flame, Zap } from 'lucide-react';
+import { ChevronRight, Check, RefreshCw, Plus, Home, Calendar, ShoppingCart, User, Bell, ChevronLeft, Flame, Zap, ChefHat } from 'lucide-react';
 import { UserPreferences } from '../App';
 import { getRecipeImage } from '../utils/recipeImages';
 
@@ -46,6 +46,7 @@ interface MealPlanMeal {
   mealNumber?: number;
   youtubeUrl?: string;
   sourceUrl?: string;
+  timesCooked?: number;
 }
 
 interface MealPlan {
@@ -396,6 +397,15 @@ export function MobileDashboard({
                       </span>
                       <span>•</span>
                       <span className="text-[#22C55E]">{meal.nutrition?.protein}g Prot</span>
+                      {meal.timesCooked !== undefined && (
+                        <>
+                          <span>•</span>
+                          <span className="flex items-center gap-1 text-[#22C55E]">
+                            <ChefHat className="w-3 h-3" />
+                            {meal.timesCooked}x cooked
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
 
