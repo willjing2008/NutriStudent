@@ -9,4 +9,5 @@ ios/App/Pods/
 .cursor/
 .claude/
 .agents/
-
+gitlab
+gitlab.pub
