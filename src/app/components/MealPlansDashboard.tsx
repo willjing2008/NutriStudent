@@ -24,6 +24,7 @@ interface MealPlansDashboardProps {
   onNavigateHome: () => void;
   onNavigateGrocery: () => void;
   onNavigateProfile: () => void;
+  onNavTabChange?: (tab: NavTab) => void;
   activePlan?: MealPlan | null;
   savedPlans?: MealPlan[];
   onDeletePlan?: (planId: string) => Promise<void>;
@@ -39,6 +40,7 @@ export function MealPlansDashboard({
   activePlan,
   savedPlans = [],
   onDeletePlan,
+  onNavTabChange,
 }: MealPlansDashboardProps) {
   const { t } = useLanguage();
 
@@ -96,6 +98,9 @@ export function MealPlansDashboard({
         break;
       case 'plan':
         onViewPlan('active-plan');
+        break;
+      default:
+        onNavTabChange?.(tab);
         break;
     }
   };

@@ -2972,4 +2972,74 @@ app.post("/make-server-dbaf6019/user-stats", async (c) => {
   }
 });
 
+// Get school leaderboard ranked by current cooking day streak
+app.post("/make-server-dbaf6019/leaderboard", async (c) => {
+  try {
+    const { schoolId } = await c.req.json();
+
+    if (!schoolId) {
+      return c.json({ error: "schoolId is required" }, 400);
+    }
+
+    // Get all auth users and filter by school
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    );
+
+    const { data: { users }, error } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+    if (error) {
+      return c.json({ error: error.message || "Failed to list users" }, 500);
+    }
+
+    const schoolUsers = (users || []).filter(
+      (u: any) => u.user_metadata?.school_id === schoolId
+    );
+
+    // Compute current streak for each school user
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const formatDate = (d: Date) => d.toISOString().split('T')[0];
+
+    const leaderboard = await Promise.all(
+      schoolUsers.map(async (u: any) => {
+        const entries = await getByPrefixWithKeys(`cooked_${u.id}_`);
+        const cookingDates = new Set(entries.map((e: any) => e.value?.date).filter(Boolean));
+
+        let currentStreak = 0;
+        let checkDate = new Date(today);
+        if (!cookingDates.has(formatDate(checkDate))) {
+          checkDate = new Date(yesterday);
+        }
+        while (cookingDates.has(formatDate(checkDate))) {
+          currentStreak++;
+          checkDate.setDate(checkDate.getDate() - 1);
+        }
+
+        return {
+          userId: u.id,
+          name: u.user_metadata?.name || 'Anonymous',
+          currentStreak,
+        };
+      })
+    );
+
+    // Sort by streak descending, then name ascending for ties
+    leaderboard.sort((a, b) => {
+      if (b.currentStreak !== a.currentStreak) return b.currentStreak - a.currentStreak;
+      return a.name.localeCompare(b.name);
+    });
+
+    // Add rank
+    const ranked = leaderboard.map((entry, i) => ({ ...entry, rank: i + 1 }));
+
+    return c.json({ leaderboard: ranked });
+  } catch (error: any) {
+    console.log(`Error in /leaderboard: ${error.message}`);
+    return c.json({ error: error.message || "Failed to fetch leaderboard" }, 500);
+  }
+});
+
 Deno.serve(app.fetch);

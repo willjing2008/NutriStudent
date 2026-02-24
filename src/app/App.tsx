@@ -8,6 +8,7 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { MealPlansDashboard } from './components/MealPlansDashboard';
 import { ShoppingMode } from './components/ShoppingMode';
 import { ProfilePage } from './components/ProfilePage';
+import { LeaderboardPage } from './components/LeaderboardPage';
 import { SubscriptionPage } from './components/SubscriptionPage';
 import { NavTab } from './components/BottomNavigation';
 import { supabase } from '../utils/supabaseClient';
@@ -150,7 +151,7 @@ export default function App() {
       safeAreaBg = '#0A0A0A';
     } else if (isAuthenticated && !showAdminDashboard && !isOnboarding) {
       safeAreaBg =
-        activeNavTab === 'home' || activeNavTab === 'shop' || activeNavTab === 'profile'
+        activeNavTab === 'home' || activeNavTab === 'shop' || activeNavTab === 'leaderboard' || activeNavTab === 'profile'
           ? '#0A0A0A'
           : '#0A1F13';
     }
@@ -507,6 +508,7 @@ export default function App() {
           onNavigateHome={() => setActiveNavTab('home')}
           onNavigateGrocery={() => setActiveNavTab('shop')}
           onNavigateProfile={() => setActiveNavTab('profile')}
+          onNavTabChange={handleNavTabChange}
           onDeletePlan={deleteSavedMealPlanById}
           activePlan={savedMealPlan ? {
             id: activePlanId || 'active-plan',
@@ -543,6 +545,15 @@ export default function App() {
           onBack={() => setActiveNavTab('home')}
           activeNavTab={activeNavTab}
           onNavTabChange={handleNavTabChange}
+        />
+      )}
+
+      {/* Leaderboard Tab */}
+      {activeNavTab === 'leaderboard' && (
+        <LeaderboardPage
+          user={user}
+          activeTab={activeNavTab}
+          onTabChange={handleNavTabChange}
         />
       )}
 

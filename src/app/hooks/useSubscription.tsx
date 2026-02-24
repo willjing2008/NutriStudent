@@ -14,6 +14,7 @@ import {
   presentPaywallIfNeeded as rcPresentPaywallIfNeeded,
   presentCustomerCenter as rcPresentCustomerCenter,
   getPackagesByType,
+  isNativePlatform,
   ENTITLEMENT_ID,
   type CustomerInfo,
   type PurchasesOffering,
@@ -83,9 +84,10 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
   const initializedRef = useRef(false);
 
   // Update derived state whenever customerInfo changes
+  // On non-native platforms (web), bypass the paywall entirely
   const processCustomerInfo = useCallback((info: CustomerInfo) => {
     setCustomerInfo(info);
-    setIsPro(hasProEntitlement(info));
+    setIsPro(isNativePlatform ? hasProEntitlement(info) : true);
   }, []);
 
   // Fetch offerings and extract packages

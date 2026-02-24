@@ -8,6 +8,7 @@ export const translations = {
     home: 'Home',
     plan: 'Plan',
     shop: 'Shop',
+    leaderboard: 'Ranks',
     profile: 'Profile',
     
     // Dashboard
@@ -57,6 +58,7 @@ export const translations = {
     home: '首页',
     plan: '计划',
     shop: '购物',
+    leaderboard: '排行',
     profile: '我的',
     
     // Dashboard

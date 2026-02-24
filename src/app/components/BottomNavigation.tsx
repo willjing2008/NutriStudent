@@ -1,7 +1,7 @@
 import { useLanguage } from '../hooks/useLanguage';
-import { Home, Calendar, ShoppingCart, User } from 'lucide-react';
+import { Home, Calendar, ShoppingCart, Trophy, User } from 'lucide-react';
 
-export type NavTab = 'home' | 'plan' | 'shop' | 'profile';
+export type NavTab = 'home' | 'plan' | 'shop' | 'leaderboard' | 'profile';
 
 interface BottomNavigationProps {
   activeTab: NavTab;
@@ -15,6 +15,7 @@ export function BottomNavigation({ activeTab, onTabChange }: BottomNavigationPro
     { id: 'home', icon: Home, label: t('home') },
     { id: 'plan', icon: Calendar, label: t('plan') },
     { id: 'shop', icon: ShoppingCart, label: t('shop') },
+    { id: 'leaderboard', icon: Trophy, label: t('leaderboard') },
     { id: 'profile', icon: User, label: t('profile') },
   ];
 
