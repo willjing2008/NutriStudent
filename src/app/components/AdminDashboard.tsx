@@ -1453,9 +1453,6 @@ export function AdminDashboard() {
                         <option value="Breakfast">Breakfast</option>
                         <option value="Lunch">Lunch</option>
                         <option value="Dinner">Dinner</option>
-                        <option value="Appetizer">Appetizer</option>
-                        <option value="Snack">Snack</option>
-                        <option value="Dessert">Dessert</option>
                       </select>
                     </div>
                     <div>

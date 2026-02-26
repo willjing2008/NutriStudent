@@ -245,7 +245,7 @@ export const ALL_RECIPES: NewRecipe[] = [
     },
     "rating": 4.8,
     "review_count": 12,
-    "recipe_category": "Sandwich",
+    "recipe_category": "Lunch",
     "cuisine": "American",
     "meal_type": "work"
   },
@@ -291,49 +291,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "recipe_category": "Breakfast",
     "meal_type": "work",
     "cuisine": "American"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/240342/buffalo-dip/",
-    "category": "buffalo-chicken-dips",
-    "id": 240342,
-    "name": "Buffalo Dip",
-    "description": "An easy Buffalo chicken dip recipe with a spicy, cheesy flavor \u2014 made with just five ingredients. This dish is always hit at parties and gatherings.",
-    "author": "MothertoMonsters",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/Y9Cw5cNfSyigOW_iFU-9EkiGn0I=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/1981539-buffalo-dip-CoOkInGnUt-4x3-1-9a1bd9da495f42939f4a686f355c8c53.jpg",
-      "alt": "Buffalo Dip"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 20,
-    "total_time_minutes": 30,
-    "servings": "8",
-    "ingredients": [
-      "1 (8 ounce) package cream cheese, softened",
-      "0.5 cup ranch salad dressing, or to taste",
-      "0.5 cup Buffalo wing sauce (such as Sweet Baby Ray's\u00ae)",
-      "0.5 cup shredded mozzarella cheese, or to taste",
-      "2 (12.5 fl oz) cans chicken chunks, drained"
-    ],
-    "instructions": [
-      "Preheat the oven to 350 degrees F (175 degrees C).",
-      "Beat cream cheese in a deep baking dish until smooth. Add ranch dressing, Buffalo wing sauce, and mozzarella cheese to cream cheese and stir until smooth. Stir in chicken.",
-      "Bake in the preheated oven until heated through and bubbling, about 20 minutes."
-    ],
-    "nutrition_per_serving": {
-      "calories": 349,
-      "total_fat_g": 26.0,
-      "carbohydrates_g": 4.0,
-      "sugar_g": 1.0,
-      "protein_g": 24.0,
-      "sodium_mg": 1125,
-      "cholesterol_mg": 94,
-      "saturated_fat_g": 10.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.8,
-    "review_count": 22,
-    "recipe_category": "Appetizer",
-    "meal_type": "work"
   },
   {
     "url": "https://www.allrecipes.com/recipe/286357/air-fryer-hamburger-patties/",
@@ -733,51 +690,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "fitness"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/257284/grilled-leg-of-lamb-steaks/",
-    "category": "lamb",
-    "id": 257284,
-    "name": "Grilled Leg of Lamb Steaks",
-    "description": "This quick and easy recipe for leg of lamb steaks starts with a quick marinade in garlic and rosemary and ends with ten minutes on a hot outdoor grill.",
-    "author": "nichole",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/8S1iIctMyB08L2w6hhQS2hfUpJg=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/4517661-f688bf76312c4e3a97f2766fa97462cf.jpg",
-      "alt": "Grilled Leg of Lamb Steaks"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 10,
-    "total_time_minutes": 50,
-    "servings": "4",
-    "ingredients": [
-      "4 bone-in lamb steaks",
-      "0.25 cup olive oil",
-      "4 large cloves garlic, minced",
-      "1 tablespoon chopped fresh rosemary",
-      "salt and ground black pepper to taste"
-    ],
-    "instructions": [
-      "Place lamb steaks in a single layer in a shallow dish. Cover with olive oil, garlic, rosemary, salt, and pepper. Flip steaks to coat both sides. Cover and marinate for 30 minutes.",
-      "Preheat an outdoor grill for high heat and lightly oil the grate.",
-      "Cook steaks on the preheated grill until nicely browned on the outside and slightly pink in the center, about 5 minutes per side for medium. An instant-read thermometer inserted into the center should read at least 140 degrees F (60 degrees C)."
-    ],
-    "nutrition_per_serving": {
-      "calories": 327,
-      "total_fat_g": 22.0,
-      "carbohydrates_g": 2.0,
-      "fiber_g": 0.0,
-      "sugar_g": 0.0,
-      "protein_g": 30.0,
-      "sodium_mg": 112,
-      "cholesterol_mg": 93,
-      "saturated_fat_g": 5.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.8,
-    "review_count": 13,
-    "recipe_category": "Dinner",
-    "cuisine": "American",
-    "meal_type": "fitness"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/263512/instant-pot-steel-cut-oats/",
     "category": "instant-pot",
     "id": 263512,
@@ -862,48 +774,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "review_count": 314,
     "recipe_category": "Dinner",
     "cuisine": "American",
-    "meal_type": "fitness"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/12827/sauteed-scallops/",
-    "category": "cooking-for-one",
-    "id": 12827,
-    "name": "Saut\u00e9ed Scallops",
-    "description": "Saut\u00e9ed scallops in butter with crushed garlic and fresh rosemary; a very simple yet incredibly delicious shellfish main dish for two!",
-    "author": "Pati",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/4ravpCwGGXi8no3FX345OJtDafk=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/7101154-5c3c5739d55b400fa6e63a0b5b75d7d3.jpg",
-      "alt": "Saut\u00e9ed Scallops"
-    },
-    "prep_time_minutes": 5,
-    "cook_time_minutes": 5,
-    "total_time_minutes": 10,
-    "servings": "2",
-    "ingredients": [
-      "0.25 cup butter",
-      "2 cloves crushed garlic",
-      "2 sprigs fresh rosemary",
-      "1 pound scallops"
-    ],
-    "instructions": [
-      "Melt butter in a medium saucepan over medium-high heat; add crushed garlic and whole sprigs of rosemary.",
-      "Place scallops in skillet and cook until golden brown on one side, about 2 to 3 minutes. Turn scallops over and continue to cook until firm and opaque, about 1 or 2 minutes more.",
-      "Remove crushed garlic and rosemary sprigs from the pan before serving."
-    ],
-    "nutrition_per_serving": {
-      "calories": 409,
-      "total_fat_g": 25.0,
-      "carbohydrates_g": 7.0,
-      "fiber_g": 0.0,
-      "protein_g": 39.0,
-      "sodium_mg": 530,
-      "cholesterol_mg": 136,
-      "saturated_fat_g": 15.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.5,
-    "review_count": 162,
-    "recipe_category": "Dinner",
     "meal_type": "fitness"
   },
   {
@@ -1132,52 +1002,9 @@ export const ALL_RECIPES: NewRecipe[] = [
     },
     "rating": 4.5,
     "review_count": 715,
-    "recipe_category": "Entree",
+    "recipe_category": "Dinner",
     "cuisine": "American",
     "meal_type": "fitness"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/89707/slow-cooker-reuben-dip/",
-    "category": "jewish",
-    "id": 89707,
-    "name": "Slow Cooker Reuben Dip",
-    "description": "This Reuben dip combines corned beef, sauerkraut, and loads of cheese in a slow cooker until deliciously creamy and warm. Perfect for potlucks.",
-    "author": "C Ella Church",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/slRGBdzBF9IMI9xuhiqbk4itgw0=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/7533295-slow-cooker-reuben-dip-Chef-Mo-4x3-1-b6045ad78e7a47508ab246d35f9f702a.jpg",
-      "alt": "Slow Cooker Reuben Dip"
-    },
-    "prep_time_minutes": 5,
-    "cook_time_minutes": 45,
-    "total_time_minutes": 50,
-    "servings": "12",
-    "ingredients": [
-      "1 (16 ounce) jar sauerkraut, drained",
-      "1 (8 ounce) package cream cheese, softened",
-      "2 cups shredded Swiss cheese",
-      "2 cups shredded cooked corned beef",
-      "0.25 cup thousand island dressing"
-    ],
-    "instructions": [
-      "Combine sauerkraut, cream cheese, Swiss cheese, corned beef, and Thousand Island dressing in a slow cooker; cover, and cook on high until hot, stirring occasionally while cooking, about 45 minutes."
-    ],
-    "nutrition_per_serving": {
-      "calories": 298,
-      "total_fat_g": 23.0,
-      "carbohydrates_g": 6.0,
-      "fiber_g": 1.0,
-      "sugar_g": 2.0,
-      "protein_g": 18.0,
-      "sodium_mg": 636,
-      "cholesterol_mg": 76,
-      "saturated_fat_g": 13.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.6,
-    "review_count": 509,
-    "recipe_category": "Appetizer",
-    "cuisine": "Jewish",
-    "meal_type": "work"
   },
   {
     "url": "https://www.allrecipes.com/recipe/24156/potato-skillet/",
@@ -1314,7 +1141,7 @@ export const ALL_RECIPES: NewRecipe[] = [
     },
     "rating": 5.0,
     "review_count": 5,
-    "recipe_category": "Entree",
+    "recipe_category": "Dinner",
     "cuisine": "Mexican Inspired",
     "meal_type": "work"
   },
@@ -1812,47 +1639,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "work"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/261028/low-carb-keto-cheese-taco-shells/",
-    "category": "gluten-free",
-    "id": 261028,
-    "name": "Low-Carb Keto Cheese Taco Shells",
-    "description": "Try keto taco shells made from baked Cheddar cheese for a great gluten-free, low-carb, keto-friendly taco option. Quick, easy, and delicious.",
-    "author": "Fioa",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/fDSvmgGMgOUSh10rieiABhbiU4U=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/9302102-dd61ea9bc96f4c06b6d38c4f339973ef.jpg",
-      "alt": "Low-Carb Keto Cheese Taco Shells"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 10,
-    "total_time_minutes": 30,
-    "servings": "4",
-    "ingredients": [
-      "2 cups shredded Cheddar cheese"
-    ],
-    "instructions": [
-      "Preheat the oven to 400 degrees F (200 degrees C). Line two baking sheets with parchment paper or silicone mats.",
-      "Wrap the handle of a wooden spoon with aluminum foil. Balance between two tall cans.",
-      "Spread Cheddar cheese on the prepared baking sheets into four 6-inch circles placed 2 inches apart.",
-      "Bake in the preheated oven until cheese melts and is lightly brown, 6 to 8 minutes. Cool for 2 to 3 minutes. Lift with a spatula and drape over the wrapped wooden handle to make a taco shell shape. Cool until set, about 10 minutes."
-    ],
-    "nutrition_per_serving": {
-      "calories": 228,
-      "total_fat_g": 19.0,
-      "carbohydrates_g": 1.0,
-      "sugar_g": 0.0,
-      "protein_g": 14.0,
-      "sodium_mg": 351,
-      "cholesterol_mg": 59,
-      "saturated_fat_g": 12.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.9,
-    "review_count": 22,
-    "recipe_category": "Dinner",
-    "cuisine": "American",
-    "meal_type": "work"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/19660/no-bake-pizza-appetizer/",
     "category": "spinach-dips",
     "id": 19660,
@@ -1892,7 +1678,7 @@ export const ALL_RECIPES: NewRecipe[] = [
     },
     "rating": 4.5,
     "review_count": 19,
-    "recipe_category": "Appetizer",
+    "recipe_category": "Lunch",
     "meal_type": "study"
   },
   {
@@ -2081,96 +1867,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "recipe_category": "Dinner",
     "cuisine": "American",
     "meal_type": "fitness"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/12798/broiled-scallops/",
-    "category": "cooking-for-one",
-    "id": 12798,
-    "name": "Broiled Scallops",
-    "description": "These broiled scallops are flavored with butter, lemon, and garlic salt, then quickly broiled until golden brown and sweet for a quick, easy dinner.",
-    "author": "Gail New",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/FWtnyT9Y78ywEUU6qOKG3be9-58=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/12798-broiled-scallops-VAT-Beauty-4x3-9ea53aca52ea455bb39dae719a1c160c.jpg",
-      "alt": "Broiled Scallops"
-    },
-    "prep_time_minutes": 5,
-    "cook_time_minutes": 6,
-    "total_time_minutes": 11,
-    "servings": "3",
-    "ingredients": [
-      "1.5 pounds bay scallops",
-      "2 tablespoons melted butter, or as needed",
-      "2 tablespoons lemon juice",
-      "1 tablespoon garlic salt"
-    ],
-    "instructions": [
-      "Preheat the broiler to high heat.",
-      "Rinse scallops and place in a shallow baking pan. Sprinkle with 2 tablespoons melted butter, lemon juice, and garlic salt.",
-      "Broil in the preheated broiler until scallops begin to turn golden, 6 to 8 minutes. Remove from the oven and serve with extra melted butter on the side for dipping."
-    ],
-    "nutrition_per_serving": {
-      "calories": 273,
-      "total_fat_g": 9.0,
-      "carbohydrates_g": 7.0,
-      "fiber_g": 0.0,
-      "sugar_g": 0.0,
-      "protein_g": 38.0,
-      "sodium_mg": 2232,
-      "cholesterol_mg": 95,
-      "saturated_fat_g": 5.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.3,
-    "review_count": 748,
-    "recipe_category": "Dinner",
-    "cuisine": "American",
-    "meal_type": "fitness"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/156039/bite-sized-salmon-tikka/",
-    "category": "cooking-for-one",
-    "id": 156039,
-    "name": "Bite-Sized Salmon Tikka",
-    "description": "Bite-sized salmon tikka is an Indian-inspired recipe with ground cayenne and ground turmeric that is quick, tasty, and ideal as a short snack or a meal.",
-    "author": "Tarama",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/YTwJQen8G1N7TlqaCJFOTm-zcL4=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/392639-77d971f3016d465980065e8a0d431b0f.jpg",
-      "alt": "Bite-Sized Salmon Tikka"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 5,
-    "total_time_minutes": 30,
-    "servings": "2",
-    "ingredients": [
-      "2 teaspoons ground red pepper (cayenne)",
-      "0.5 teaspoon ground turmeric",
-      "0.5 teaspoon salt",
-      "0.5 pound wild Pacific salmon fillets, cut into 1-inch cubes",
-      "0.5 cup oil for frying",
-      "2 teaspoons cornstarch"
-    ],
-    "instructions": [
-      "Combine cayenne, turmeric, and salt in a bowl; add salmon and toss to coat. Set aside for 15 minutes.",
-      "Heat oil in a skillet over medium-high heat. While oil is heating, sprinkle cornstarch over salmon; toss to coat.",
-      "Add salmon to the skillet; cook until golden brown, about 1 minute per side."
-    ],
-    "nutrition_per_serving": {
-      "calories": 229,
-      "total_fat_g": 13.0,
-      "carbohydrates_g": 4.0,
-      "fiber_g": 1.0,
-      "sugar_g": 0.0,
-      "protein_g": 25.0,
-      "sodium_mg": 629,
-      "cholesterol_mg": 50,
-      "saturated_fat_g": 2.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.6,
-    "review_count": 41,
-    "recipe_category": "Dinner",
-    "cuisine": "Indian",
-    "meal_type": "study"
   },
   {
     "url": "https://www.allrecipes.com/recipe/23909/the-real-reuben/",
@@ -2394,100 +2090,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "review_count": 22,
     "recipe_category": "Dinner",
     "meal_type": "fitness"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/265641/halloumi-and-zucchini-frittata/",
-    "category": "frittatas",
-    "id": 265641,
-    "name": "Halloumi and Zucchini Frittata",
-    "description": "A tasty combination of zucchini, fresh mint, and dill pairs perfectly with salty halloumi cheese in this easy frittata that's perfect for a summer dinner.",
-    "author": "Diana Moutsopoulos",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/_FCPKlZvPZ62C3qRQQPb9o9t0c8=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/5488253-3539d30bce944920ab1abd97480e695a.jpg",
-      "alt": "Halloumi and Zucchini Frittata"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 15,
-    "total_time_minutes": 25,
-    "servings": "2",
-    "ingredients": [
-      "1 tablespoon olive oil",
-      "1 large zucchini, grated and squeezed dry",
-      "salt and freshly ground black pepper to taste",
-      "1 tablespoon chopped fresh mint",
-      "1 tablespoon chopped fresh dill",
-      "4 large eggs",
-      "4 ounces halloumi cheese, sliced"
-    ],
-    "instructions": [
-      "Heat olive oil in a small, ovenproof skillet over medium heat. Add zucchini and a pinch of salt and cook until soft, about 5 minutes. Add chopped mint and dill, and cook 1 minute more.",
-      "Beat eggs with salt and pepper in a small bowl. Pour into the hot skillet with the zucchini and briefly stir. Cook without stirring to allow the bottom of the frittata to set, about 2 minutes. Use a spatula around the edges of the skillet to ensure that the frittata isn't sticking as the bottom starts to set.",
-      "Set an oven rack about 6 inches from the heat source and preheat the oven's broiler.",
-      "Lay the slices of halloumi on the top of the frittata as the edges start to set. Place the skillet under the broiler until the top of the frittata is fully set and cheese is slightly browned, about 5 minutes. Serve immediately or at room temperature."
-    ],
-    "nutrition_per_serving": {
-      "calories": 407,
-      "total_fat_g": 31.0,
-      "carbohydrates_g": 8.0,
-      "fiber_g": 2.0,
-      "sugar_g": 4.0,
-      "protein_g": 27.0,
-      "sodium_mg": 859,
-      "cholesterol_mg": 415,
-      "saturated_fat_g": 13.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 5.0,
-    "review_count": 1,
-    "recipe_category": "Brunch",
-    "cuisine": "Greek",
-    "meal_type": "study"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/162383/duck-fried-rice/",
-    "category": "fried-rice",
-    "id": 162383,
-    "name": "Duck Fried Rice",
-    "description": "This duck fried rice is easy to make with takeout Chinese roast duck, cooked rice, green onions, and soy sauce for a delicious meal using leftovers.",
-    "author": "foodelicious",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/CMlnedBOR0SR3BY-cdTIGRl3DDE=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/9098126-9308bbe58684458aae3f8950a1731c02.jpg",
-      "alt": "Duck Fried Rice"
-    },
-    "prep_time_minutes": 15,
-    "cook_time_minutes": 25,
-    "total_time_minutes": 40,
-    "servings": "4",
-    "ingredients": [
-      "1 cup chopped Chinese roast duck meat, skin and fat separated and set aside",
-      "0.5 cup thinly sliced Chinese barbecued pork",
-      "6 green onions, thinly sliced",
-      "2 tablespoons soy sauce",
-      "2 eggs, beaten",
-      "3 cups cooked long-grain rice",
-      "salt and pepper to taste"
-    ],
-    "instructions": [
-      "Cook duck skin and fat in a wok or large skillet over medium heat until skin is crispy and fat has rendered, about 10 minutes. Increase the heat to medium-high and stir in duck meat, pork, 1/2 of the green onions, and soy sauce. Cook and stir until meats are heated through, about 5 minutes.",
-      "Add rice and toss together until rice is hot and sizzling, about 5 minutes. Make a wide well in the middle of rice, exposing the bottom of the pan. Pour in beaten eggs and stir until scrambled. Stir scrambled eggs into rice along with remaining green onions. Toss and stir until rice is very hot, about 5 minutes. Season to taste with salt and pepper before serving."
-    ],
-    "nutrition_per_serving": {
-      "calories": 375,
-      "total_fat_g": 16.0,
-      "carbohydrates_g": 36.0,
-      "fiber_g": 1.0,
-      "sugar_g": 1.0,
-      "protein_g": 21.0,
-      "sodium_mg": 528,
-      "cholesterol_mg": 144,
-      "saturated_fat_g": 5.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.6,
-    "review_count": 7,
-    "recipe_category": "Dinner",
-    "cuisine": "Asian Inspired",
-    "meal_type": "work"
   },
   {
     "url": "https://www.allrecipes.com/recipe/229360/bacon-and-chicken-fried-rice/",
@@ -2960,48 +2562,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "fitness"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/157854/buffys-refried-beans/",
-    "category": "refried-beans",
-    "id": 157854,
-    "name": "Buffy's Refried Beans",
-    "description": "These smooth and creamy beans make a tasty side for any Mexican dish.",
-    "author": "Buffy Ehlers Whitney",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/Z5cWl8FLh0-Mj-4ju4AN-2M-3n0=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/5433486-44838b33ad564becac6fae7f45a49f15.jpg",
-      "alt": "Buffy's Refried Beans"
-    },
-    "prep_time_minutes": 5,
-    "cook_time_minutes": 15,
-    "total_time_minutes": 20,
-    "servings": "6",
-    "ingredients": [
-      "0.5 cup lard",
-      "3 (15 ounce) cans pinto beans, rinsed and drained",
-      "salt to taste",
-      "1 cup water"
-    ],
-    "instructions": [
-      "Melt the lard in a deep, heavy pot over medium-high heat; when the lard is hot, add the beans. Stir constantly while cooking until the beans reach a paste-like consistency. Season with salt. Reduce heat to low and stir in the water. Simmer and stir until the beans cook down to your desired consistency."
-    ],
-    "nutrition_per_serving": {
-      "calories": 282,
-      "total_fat_g": 18.0,
-      "carbohydrates_g": 23.0,
-      "fiber_g": 7.0,
-      "sugar_g": 0.0,
-      "protein_g": 7.0,
-      "sodium_mg": 439,
-      "cholesterol_mg": 16,
-      "saturated_fat_g": 7.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.6,
-    "review_count": 101,
-    "recipe_category": "Side Dish",
-    "cuisine": "Mexican Inspired",
-    "meal_type": "work"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/284536/nova-lox-everything-breakfast-bagel/",
     "category": "bagels",
     "id": 284536,
@@ -3089,96 +2649,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "work"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/237759/skillet-baked-beans/",
-    "category": "baked-beans",
-    "id": 237759,
-    "name": "Skillet Baked Beans",
-    "description": "This skillet baked beans recipe combines canned pork and beans, crispy bacon, onion, sugar, molasses, and mustard for a quick and easy barbecue side dish.",
-    "author": "Michele Davis",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/2y81AzW3qrGxIn2OFS-YUZjTBFQ=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/1140298-9c76c3bc629d485e9dcaf8cb079a337d.jpg",
-      "alt": "Skillet Baked Beans"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 25,
-    "total_time_minutes": 35,
-    "servings": "8",
-    "ingredients": [
-      "6 slices bacon, cut into 1-inch pieces",
-      "4 (16 ounce) cans pork and beans",
-      "1 cup chopped onion",
-      "0.5 cup packed brown sugar",
-      "6 tablespoons molasses",
-      "2 teaspoons yellow mustard"
-    ],
-    "instructions": [
-      "Cook bacon in a large skillet over medium-high heat, stirring occasionally, until crisp, about 10 minutes.",
-      "Stir pork and beans, onion, brown sugar, molasses, and mustard into bacon in the skillet; bring to a boil, reduce heat to medium-low, and simmer, stirring occasionally, until thickened, 15 to 20 minutes."
-    ],
-    "nutrition_per_serving": {
-      "calories": 393,
-      "total_fat_g": 6.0,
-      "carbohydrates_g": 74.0,
-      "fiber_g": 10.0,
-      "sugar_g": 42.0,
-      "protein_g": 15.0,
-      "sodium_mg": 932,
-      "cholesterol_mg": 23,
-      "saturated_fat_g": 2.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.8,
-    "review_count": 9,
-    "recipe_category": "Side Dish",
-    "cuisine": "American",
-    "meal_type": "work"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/282969/baked-buffalo-dip-with-canned-chicken/",
-    "category": "buffalo-chicken-dips",
-    "id": 282969,
-    "name": "Baked Buffalo Dip with Canned Chicken",
-    "description": "Turn canned chicken into this zesty, cheesy, baked Buffalo dip with simple ingredients--perfect for a party or potluck!",
-    "author": "Nick Weaver",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/uE41_dprKL1NjL9_0RUo0WyxHSU=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/282969-Baked-Buffalo-Dip-with-Canned-Chicken-fabeveryday-12ebcbe9e7b541c68083573cdc6d6afd.jpg",
-      "alt": "Baked Buffalo Dip with Canned Chicken"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 30,
-    "total_time_minutes": 40,
-    "servings": "10",
-    "ingredients": [
-      "3 (5 ounce) cans chicken chunks, drained",
-      "1.5 (8 ounce) packages cream cheese, softened",
-      "1 (8 ounce) package shredded Cheddar cheese",
-      "0.75 (12 fluid ounce) bottle Buffalo wing sauce (such as Frank's RedHot\u00ae), or to taste",
-      "0.75 (8 ounce) bottle ranch dressing"
-    ],
-    "instructions": [
-      "Preheat the oven to 425 degrees F (220 degrees C).",
-      "Mix chicken chunks, cream cheese, Cheddar cheese, Buffalo sauce, and ranch dressing together until well combined. Transfer to a baking dish.",
-      "Bake in the preheated oven until bubbly and browned, stirring at least once so the top doesn't burn, 30 to 40 minutes."
-    ],
-    "nutrition_per_serving": {
-      "calories": 388,
-      "total_fat_g": 33.0,
-      "carbohydrates_g": 6.0,
-      "fiber_g": 0.0,
-      "sugar_g": 1.0,
-      "protein_g": 18.0,
-      "sodium_mg": 1213,
-      "cholesterol_mg": 92,
-      "saturated_fat_g": 15.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.7,
-    "review_count": 3,
-    "recipe_category": "Appetizer",
-    "cuisine": "American",
-    "meal_type": "work"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/257865/easy-chorizo-street-tacos/",
     "category": "cooking-for-one",
     "id": 257865,
@@ -3263,93 +2733,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "rating": 4.3,
     "review_count": 33,
     "cuisine": "Italian Inspired",
-    "meal_type": "work"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/228822/easy-cheesy-garlic-bread/",
-    "category": "garlic-bread",
-    "id": 228822,
-    "name": "Easy Cheesy Garlic Bread",
-    "description": "This irresistibly easy, cheesy garlic bread recipe is loaded with melted butter and Parmesan cheese and transforms French bread into a delicious treat.",
-    "author": "amberfoy1",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/H7CaHysqwVwwu1aaqc5jkjyhe5g=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/2042387-d721aaba8b4b4e01bcd0170ad5509929.jpg",
-      "alt": "Easy Cheesy Garlic Bread"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 15,
-    "total_time_minutes": 25,
-    "servings": "4",
-    "ingredients": [
-      "1 (8 ounce) loaf French bread",
-      "0.5 cup butter, softened",
-      "0.33333334326744 cup grated Parmesan cheese",
-      "2 tablespoons garlic powder",
-      "1 teaspoon dried parsley"
-    ],
-    "instructions": [
-      "Preheat the oven to 375 degrees F (190 degrees C).",
-      "Cut bread into 1-inch thick slices, without cutting all the way through the loaf. Combine butter, Parmesan cheese, garlic powder, and parsley in a small bowl; spread between bread slices and over top of loaf. Wrap loaf in aluminum foil, leaving top partially uncovered.",
-      "Bake in the preheated oven until butter melts and bread toasts, 15 to 20 minutes."
-    ],
-    "nutrition_per_serving": {
-      "calories": 411,
-      "total_fat_g": 26.0,
-      "carbohydrates_g": 35.0,
-      "fiber_g": 2.0,
-      "sugar_g": 3.0,
-      "protein_g": 10.0,
-      "sodium_mg": 636,
-      "cholesterol_mg": 67,
-      "saturated_fat_g": 16.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.6,
-    "review_count": 83,
-    "recipe_category": "Appetizer",
-    "cuisine": "American",
-    "meal_type": "work"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/73565/asparagus-wrapped-in-crisp-prosciutto/",
-    "category": "gluten-free",
-    "id": 73565,
-    "name": "Asparagus Wrapped in Crisp Prosciutto",
-    "description": "Prosciutto-wrapped asparagus is a quick, elegant appetizer that's simple to prep with just 2 ingredients and easy to roast to crispy perfection.",
-    "author": "Teresa Haider",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/cSmWzpnjzQYROCq5R4RsER53tgM=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/73565-asparagus-wrapped-in-crisp-prosciutto-ddmfs-beauty-287b1177b9814b0a86d558e5b64d835a.jpg",
-      "alt": "Asparagus Wrapped in Crisp Prosciutto"
-    },
-    "prep_time_minutes": 5,
-    "cook_time_minutes": 15,
-    "total_time_minutes": 20,
-    "servings": "4",
-    "ingredients": [
-      "1 tablespoon olive oil",
-      "16 spears fresh asparagus, trimmed",
-      "16 slices prosciutto"
-    ],
-    "instructions": [
-      "Preheat the oven to 450 degrees F (220 degrees C). Line a baking sheet with aluminum foil, and coat with olive oil.",
-      "Wrap one slice of prosciutto around each asparagus spear, starting at the bottom, and spiraling up to the tip. Place the wrapped spears on the prepared baking sheet.",
-      "Bake in the preheated oven for 5 minutes. Remove, and shake the pan back and forth to roll the spears over. Return to the oven until asparagus is tender and prosciutto is crisp, another 5 minutes. Serve immediately."
-    ],
-    "nutrition_per_serving": {
-      "calories": 255,
-      "total_fat_g": 22.0,
-      "carbohydrates_g": 3.0,
-      "fiber_g": 1.0,
-      "protein_g": 13.0,
-      "sodium_mg": 1114,
-      "cholesterol_mg": 51,
-      "saturated_fat_g": 8.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.7,
-    "review_count": 272,
-    "recipe_category": "Appetizer",
-    "cuisine": "Inspired",
     "meal_type": "work"
   },
   {
@@ -3488,55 +2871,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "work"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/20545/bruschetta-iii/",
-    "category": "bruschetta",
-    "id": 20545,
-    "name": "Bruschetta with Cheese",
-    "description": "A bruschetta with cheese recipe with two kinds of cheeses make this simple appetizer or snack everyone's favorite. Adjust the herbs to taste.",
-    "author": "SusanG",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/1kr7HxXryOS-eGYTTRM05FoVlv8=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/19597-c165703614dc4c149e6b0975174d2d81.jpg",
-      "alt": "Bruschetta with Cheese"
-    },
-    "prep_time_minutes": 5,
-    "cook_time_minutes": 10,
-    "total_time_minutes": 15,
-    "servings": "6",
-    "ingredients": [
-      "1 French baguette",
-      "1 tablespoon olive oil",
-      "2 roma (plum) tomatoes, thinly sliced",
-      "1 tablespoon chopped fresh basil",
-      "1 tablespoon chopped fresh oregano",
-      "1 teaspoon garlic powder",
-      "1 pinch ground white pepper",
-      "1 (8 ounce) package sliced mozzarella cheese",
-      "1 (6 ounce) package sliced provolone cheese"
-    ],
-    "instructions": [
-      "Preheat the oven to 350 degrees F (175 degrees C).",
-      "Slice baguette into 1/2-inch thick diagonal slices. Arrange slices in a single layer on a baking sheet. Brush both sides of each slice with olive oil. Place tomato slices and a sprinkling of basil and oregano on bread slices. Sprinkle tomatoes, basil, and oregano with garlic powder and white pepper. Cover tomato slices with mozzarella and provolone. Place more basil, oregano, and tomato slices on top of the cheese.",
-      "Bake in the preheated oven until cheese is bubbly, 7 to 10 minutes."
-    ],
-    "nutrition_per_serving": {
-      "calories": 439,
-      "total_fat_g": 17.0,
-      "carbohydrates_g": 46.0,
-      "fiber_g": 2.0,
-      "sugar_g": 3.0,
-      "protein_g": 26.0,
-      "sodium_mg": 972,
-      "cholesterol_mg": 43,
-      "saturated_fat_g": 9.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.6,
-    "review_count": 63,
-    "recipe_category": "Appetizer",
-    "cuisine": "Italian Inspired",
-    "meal_type": "fitness"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/87586/delicious-grilled-hamburgers/",
     "category": "burgers",
     "id": 87586,
@@ -3631,55 +2965,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "recipe_category": "Dinner",
     "cuisine": "American",
     "meal_type": "fitness"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/220617/beer-cheese-fondue/",
-    "category": "cheese-fondue",
-    "id": 220617,
-    "name": "Beer Cheese Fondue",
-    "description": "This beer cheese fondue is made with sharp Cheddar, Swiss cheese, beer, and hot pepper sauce. Perfect for dipping French bread cubes and vegetables.",
-    "author": "MARNIKINS",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/ToufHmjHPeE8hHvAHuh3y4cCw-k=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/7990829-53a173d3f00c4543aa48f74ca1d1d079.jpg",
-      "alt": "Beer Cheese Fondue"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 15,
-    "total_time_minutes": 25,
-    "servings": "6",
-    "ingredients": [
-      "8 ounces shredded sharp Cheddar cheese",
-      "8 ounces shredded Swiss cheese",
-      "2 tablespoons all-purpose flour",
-      "0.5 teaspoon salt",
-      "0.25 teaspoon ground black pepper",
-      "1 clove garlic, halved",
-      "1 (12 fluid ounce) can or bottle beer",
-      "1 dash hot pepper sauce (such as Tabasco\u00ae)"
-    ],
-    "instructions": [
-      "Combine Cheddar cheese, Swiss cheese, flour, salt, and black pepper in a bowl.",
-      "Rub cut side of garlic clove around bottom and sides of fondue pot.",
-      "Pour beer into fondue pot and slowly bring to a simmer over medium-low heat, about 5 minutes.",
-      "Gradually stir cheese mixture into beer, adding small amounts at a time, until cheese is melted and blended, 10 to 15 minutes. Stir in hot pepper sauce."
-    ],
-    "nutrition_per_serving": {
-      "calories": 332,
-      "total_fat_g": 23.0,
-      "carbohydrates_g": 7.0,
-      "fiber_g": 0.0,
-      "sugar_g": 1.0,
-      "protein_g": 20.0,
-      "sodium_mg": 505,
-      "cholesterol_mg": 75,
-      "saturated_fat_g": 15.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.5,
-    "review_count": 77,
-    "recipe_category": "Dinner",
-    "cuisine": "French",
-    "meal_type": "work"
   },
   {
     "url": "https://www.allrecipes.com/recipe/8636/parmesan-chicken-ii/",
@@ -3906,54 +3191,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "review_count": 11,
     "recipe_category": "Lunch",
     "cuisine": "American",
-    "meal_type": "fitness"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/160099/seared-ahi-tuna-steaks/",
-    "category": "cooking-for-one",
-    "id": 160099,
-    "name": "Seared Ahi Tuna Steaks",
-    "description": "Try this simple ahi tuna steak recipe for elegant slices of seared tuna that rival what you'd get at a fine restaurant.",
-    "author": "Bethany Joyful",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/mG4d_j0CwMDBqKJA2H3OugzCLEs=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/160099-seared-ahi-tuna-steaks-DDMFS-4x3-26f4691e91bd434e9d96c1c601608cbc.jpg",
-      "alt": "Seared Ahi Tuna Steaks"
-    },
-    "prep_time_minutes": 5,
-    "cook_time_minutes": 2,
-    "total_time_minutes": 7,
-    "servings": "2",
-    "ingredients": [
-      "2 (5 ounce) ahi tuna steaks",
-      "1 teaspoon kosher salt",
-      "0.25 teaspoon cayenne pepper",
-      "0.5 tablespoon butter",
-      "2 tablespoons olive oil",
-      "1 teaspoon whole peppercorns"
-    ],
-    "instructions": [
-      "Pat tuna steaks dry and season on both sides with salt and cayenne pepper.",
-      "Melt butter in a skillet over medium-high heat.",
-      "Add olive oil and pepper corns; cook until peppercorns soften and pop, about 5 minutes.",
-      "Gently place seasoned tuna in the skillet and cook to desired doneness, anywhere from 30 seconds to 1 1/2 minutes per side.",
-      "Slice tuna into 1/4-inch thick slices to serve.",
-      "Enjoy!"
-    ],
-    "nutrition_per_serving": {
-      "calories": 301,
-      "total_fat_g": 18.0,
-      "carbohydrates_g": 1.0,
-      "fiber_g": 0.0,
-      "protein_g": 33.0,
-      "sodium_mg": 1034,
-      "cholesterol_mg": 71,
-      "saturated_fat_g": 4.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.6,
-    "review_count": 854,
-    "recipe_category": "Entree",
-    "cuisine": "Japanese",
     "meal_type": "fitness"
   },
   {
@@ -4478,53 +3715,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "cuisine": "American"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/84364/spicy-lamb-patties/",
-    "category": "ground-lamb",
-    "id": 84364,
-    "name": "Spicy Lamb Patties",
-    "description": "Ground lamb meat and seasonings combine to make delicious grilled patties!",
-    "author": "CHEYENNIGANS",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/cYbioT8pTFUyiY-llZcVwBKHVgw=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/3087241-spicy-lamb-patties-Allrecipes-Magazine-4x3-1-9b0f16b6fe5046b99c7d518754e22907.jpg",
-      "alt": "Spicy Lamb Patties"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 15,
-    "total_time_minutes": 25,
-    "servings": "4",
-    "ingredients": [
-      "1 pound ground lamb",
-      "3 green onions, minced",
-      "4 cloves garlic, minced",
-      "1 tablespoon curry powder",
-      "1 teaspoon ground cumin",
-      "0.25 teaspoon dried red pepper flakes",
-      "salt and pepper to taste"
-    ],
-    "instructions": [
-      "Preheat the grill for high heat.",
-      "In a bowl, mix the lamb, green onions, garlic, curry powder, cumin, red pepper, salt and pepper. Form into 4 patties.",
-      "Lightly oil grill grate. Grill patties 5 minutes on each side, or until done."
-    ],
-    "nutrition_per_serving": {
-      "calories": 237,
-      "total_fat_g": 16.0,
-      "carbohydrates_g": 3.0,
-      "fiber_g": 1.0,
-      "sugar_g": 0.0,
-      "protein_g": 20.0,
-      "sodium_mg": 140,
-      "cholesterol_mg": 76,
-      "saturated_fat_g": 6.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.5,
-    "review_count": 77,
-    "recipe_category": "Dinner",
-    "cuisine": "American",
-    "meal_type": "work"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/51283/maple-salmon/",
     "category": "healthy-recipes",
     "id": 51283,
@@ -4714,53 +3904,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "fitness"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/257380/spaghetti-alla-carbonara-tradizionali/",
-    "category": "Pasta-Carbonara",
-    "id": 257380,
-    "name": "Spaghetti Alla Carbonara Tradizionali",
-    "description": "This carbonara recipe uses guanciale, eggs, and Pecorino cheese to make an authentic spaghetti alla carbonara, just like an Italian would make it!",
-    "author": "Andry008",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/cuDcxfQAvVOALbKcdoIzXPwqQMo=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/4499842-257380-AR-spaghetti-alla-carbonara-tradizionali-buckwheat-queen-4x3-eb4e48956fbd4277adcc3556e3bf6ecc.jpg",
-      "alt": "Spaghetti Alla Carbonara Tradizionali"
-    },
-    "prep_time_minutes": 15,
-    "cook_time_minutes": 20,
-    "total_time_minutes": 35,
-    "servings": "4",
-    "ingredients": [
-      "1 (14 ounce) package spaghetti",
-      "5 ounces guanciale (cured pork cheek), cut into small cubes",
-      "3 egg yolks",
-      "1 egg",
-      "0.75 cup grated Pecorino-Romano cheese",
-      "salt and freshly ground black pepper to taste"
-    ],
-    "instructions": [
-      "Fill a large pot with lightly salted water and bring to a rolling boil. Stir in spaghetti and return to a boil. Cook pasta uncovered, stirring occasionally, until tender yet firm to the bite, about 12 minutes. Reserve a little pasta water, then drain.",
-      "Meanwhile, heat a skillet over medium heat; add guanciale, cook and stir until crisp, 5 to 10 minutes.",
-      "Whisk egg yolks and whole egg together in a bowl; whisk in \u00be\u00a0cup Pecorino-Romano cheese, salt, and pepper until combined.",
-      "Stir in guanciale. Add spaghetti; toss until evenly coated. Season to taste with extra cheese, salt, and pepper; serve."
-    ],
-    "nutrition_per_serving": {
-      "calories": 488,
-      "total_fat_g": 11.0,
-      "carbohydrates_g": 75.0,
-      "fiber_g": 3.0,
-      "sugar_g": 3.0,
-      "protein_g": 21.0,
-      "sodium_mg": 334,
-      "cholesterol_mg": 213,
-      "saturated_fat_g": 3.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.8,
-    "review_count": 32,
-    "recipe_category": "Dinner",
-    "cuisine": "Italian",
-    "meal_type": "work"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/217970/buffalo-chicken-salad/",
     "category": "buffalo-chicken-wings",
     "id": 217970,
@@ -4890,96 +4033,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "recipe_category": "Dinner",
     "cuisine": "American",
     "meal_type": "study"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/264349/my-mango-lassi/",
-    "category": "indian",
-    "id": 264349,
-    "name": "My Mango Lassi",
-    "description": "Mango lassi is very rich and luxurious drink with yogurt and mangoes. It is the perfect summer drink when served chilled.",
-    "author": "pshinde2109",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/I030HCC_4PWzX-Pncd27lhHFBgo=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/5364119-61361d400ac640b3bbec7633577f546f.jpg",
-      "alt": "My Mango Lassi"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": null,
-    "total_time_minutes": 10,
-    "servings": "2",
-    "ingredients": [
-      "1.5 cups mangos - peeled, seeded, chopped, and chilled",
-      "1.5 cups plain yogurt",
-      "0.5 cup cold milk",
-      "2 tablespoons heavy cream",
-      "2 tablespoons confectioners' sugar",
-      "0.5 teaspoon ground cardamom"
-    ],
-    "instructions": [
-      "Combine mangos, yogurt, milk, cream, confectioners' sugar, and cardamom in a blender; blend until smooth and frothy. Pour into glasses and serve immediately."
-    ],
-    "nutrition_per_serving": {
-      "calories": 228,
-      "total_fat_g": 10.0,
-      "carbohydrates_g": 24.0,
-      "fiber_g": 0.0,
-      "sugar_g": 23.0,
-      "protein_g": 12.0,
-      "sodium_mg": 160,
-      "cholesterol_mg": 36,
-      "saturated_fat_g": 6.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.7,
-    "review_count": 6,
-    "recipe_category": "Drink",
-    "cuisine": "Indian",
-    "meal_type": "work"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/14465/orange-gelatin-salad/",
-    "category": "jell-o-salads",
-    "id": 14465,
-    "name": "Orange Gelatin Salad",
-    "description": "An easy orange Jell-O recipe. This is a classic, delicious spin on fruit salad with oranges, pineapple, cottage cheese, whipped topping and Jell-O.",
-    "author": "Susie Williams",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/0g1eO5r8ZO9h7vMSAhiEeETmlyM=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/2314465-orange-gelatin-salad-ddmfs-4x3-0105-6130c98bbb4e4cf3a8fa91ed1ff38f99.jpg",
-      "alt": "Orange Gelatin Salad"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": null,
-    "total_time_minutes": 40,
-    "servings": "7",
-    "ingredients": [
-      "1 (11 ounce) can mandarin oranges, drained",
-      "1 (8 ounce) can crushed pineapple, drained",
-      "1 (6 ounce) package orange flavored Jell-O\u00ae mix",
-      "16 ounces cottage cheese",
-      "8 ounces frozen whipped topping, thawed"
-    ],
-    "instructions": [
-      "Gather all ingredients.",
-      "Combine oranges, pineapple, and gelatin mix in a mixing bowl. Mix well and chill for 30 minutes.",
-      "Add cottage cheese to the fruit mixture; stir to combine.",
-      "Gently fold in whipped topping; chill and serve."
-    ],
-    "nutrition_per_serving": {
-      "calories": 289,
-      "total_fat_g": 8.0,
-      "carbohydrates_g": 41.0,
-      "fiber_g": 1.0,
-      "sugar_g": 35.0,
-      "protein_g": 10.0,
-      "sodium_mg": 350,
-      "cholesterol_mg": 10,
-      "saturated_fat_g": 7.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.7,
-    "review_count": 160,
-    "recipe_category": "Side Dish",
-    "cuisine": "American",
-    "meal_type": "work"
   },
   {
     "url": "https://www.allrecipes.com/recipe/232789/easy-mini-bagel-pizzas/",
@@ -5587,7 +4640,7 @@ export const ALL_RECIPES: NewRecipe[] = [
     },
     "rating": 4.7,
     "review_count": 196,
-    "recipe_category": "Soup",
+    "recipe_category": "Lunch",
     "cuisine": "American",
     "meal_type": "work"
   },
@@ -5738,54 +4791,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "recipe_category": "Dinner",
     "cuisine": "Mexican Inspired",
     "meal_type": "work"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/286256/grilled-filet-mignon-with-blue-cheese-butter/",
-    "category": "filet-mignon",
-    "id": 286256,
-    "name": "Grilled Filet Mignon with Blue Cheese Butter",
-    "description": "Grill filet mignon steaks to medium-rare perfection and top them with a blue cheese-thyme compound butter for a restaurant-quality main dish with simple ingredients.",
-    "author": "Frozen Meals",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/1yoTt6GuDouwsz6Et7_rlHt305U=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/286256-Grilled-Filet-Mignon-Bleu-Cheese-Aly-in-the-Kitchen-4x3-1-458405e727d3453995d9ce043c29321a.jpg",
-      "alt": "Grilled Filet Mignon with Blue Cheese Butter"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 10,
-    "total_time_minutes": 55,
-    "servings": "4",
-    "ingredients": [
-      "0.5 cup butter, softened",
-      "0.25 cup crumbled blue cheese",
-      "2 teaspoons fresh thyme leaves",
-      "salt and freshly ground black pepper to taste",
-      "4 (4 ounce) filet mignon steaks",
-      "2 teaspoons canola oil, or as needed"
-    ],
-    "instructions": [
-      "Mash butter, blue cheese, and thyme together in a small bowl until well combined. Season with salt and pepper. Cover and refrigerate for 30 minutes.",
-      "Preheat an outdoor grill for high heat and lightly oil the grate.",
-      "Brush steaks with oil and season with salt and pepper.",
-      "Cook steaks on the preheated grill until firm and reddish-pink and juicy in the center, about 5 minutes per side. An instant-read thermometer inserted into the center should read 130 degrees F (54 degrees C).",
-      "Transfer steaks to a platter and top with some of the butter mixture. Let them rest for 5 minutes before serving."
-    ],
-    "nutrition_per_serving": {
-      "calories": 474,
-      "total_fat_g": 37.0,
-      "carbohydrates_g": 1.0,
-      "fiber_g": 0.0,
-      "sugar_g": 0.0,
-      "protein_g": 34.0,
-      "sodium_mg": 348,
-      "cholesterol_mg": 157,
-      "saturated_fat_g": 20.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 5.0,
-    "review_count": 1,
-    "recipe_category": "Entree",
-    "cuisine": "American",
-    "meal_type": "fitness"
   },
   {
     "url": "https://www.allrecipes.com/recipe/279295/air-fryer-shrimp-fajitas/",
@@ -6176,50 +5181,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "work"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/230908/lisas-best-ever-garlic-bread/",
-    "category": "garlic-bread",
-    "id": 230908,
-    "name": "Lisa's Best Ever Garlic Bread",
-    "description": "Real butter, sliced garlic cloves, and French bread give this easy side dish an authentic flavor.",
-    "author": "momof3ccc",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/HjsKZ_40RqTCFXdtAvOUGE3Rfuo=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/2236614-c10bfdd22b554b04af366fd4307c14d7.jpg",
-      "alt": "Lisa's Best Ever Garlic Bread"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 10,
-    "total_time_minutes": 20,
-    "servings": "8",
-    "ingredients": [
-      "0.5 cup butter",
-      "3 cloves garlic, sliced",
-      "1 (16 ounce) loaf French bread, halved lengthwise"
-    ],
-    "instructions": [
-      "Melt butter in a small saucepan; simmer garlic slices in hot butter over low heat until butter turns foamy, about 5 minutes.",
-      "Set oven rack about 6 inches from the heat source and preheat the oven's broiler.",
-      "Place bread loaf halves under the preheated broiler to toast, 2 to 4 minutes. Watch carefully to prevent burning.",
-      "Slice toasted bread into 2-inch thick slices. Dip toasted side of each slice into garlic butter."
-    ],
-    "nutrition_per_serving": {
-      "calories": 267,
-      "total_fat_g": 13.0,
-      "carbohydrates_g": 32.0,
-      "fiber_g": 1.0,
-      "sugar_g": 2.0,
-      "protein_g": 7.0,
-      "sodium_mg": 451,
-      "cholesterol_mg": 31,
-      "saturated_fat_g": 8.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.7,
-    "review_count": 11,
-    "recipe_category": "Dinner",
-    "cuisine": "Italian Inspired",
-    "meal_type": "work"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/230326/gnocchi-with-chicken-pesto-and-fresh-mozzarella/",
     "category": "gnocchi",
     "id": 230326,
@@ -6508,52 +5469,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "fitness"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/44445/keema-indian-style-ground-meat/",
-    "category": "ground-lamb",
-    "id": 44445,
-    "name": "Keema (Indian-Style Ground Meat)",
-    "description": "This Indian recipe for ground lamb is saut\u00e9ed with onions and lots of masala, then served over rice or noodles for a quick, flavorful meal.",
-    "author": "ajr",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/sAngZKq2lDtNcb1IDUxhsev6T-Y=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/4470256-50fb804e315845429ea2989174352d30.jpg",
-      "alt": "Keema (Indian-Style Ground Meat)"
-    },
-    "prep_time_minutes": 5,
-    "cook_time_minutes": 20,
-    "total_time_minutes": 25,
-    "servings": "4",
-    "ingredients": [
-      "1.5 pounds ground lamb",
-      "1 onion, finely chopped",
-      "2 cloves garlic, minced",
-      "2 tablespoons garam masala",
-      "1 teaspoon salt",
-      "4 teaspoons tomato paste",
-      "0.75 cup beef broth"
-    ],
-    "instructions": [
-      "Cook lamb in a large, heavy skillet over medium heat until browned and crumbly, 5 to 7 minutes. Use a slotted spoon to transfer lamb to a bowl; drain off all but 1 tablespoon fat from the skillet.",
-      "Add onion to the skillet and saut\u00e9 until soft and translucent, about 5 minutes. Stir in garlic and cook until fragrant, about 1 minute. Stir in garam masala and salt; cook for 1 minute. Return browned lamb to the pan with broth and tomato paste. Reduce the heat and simmer until lamb is fully cooked through and liquid has evaporated, 10 to 15 minutes."
-    ],
-    "nutrition_per_serving": {
-      "calories": 513,
-      "total_fat_g": 41.0,
-      "carbohydrates_g": 6.0,
-      "fiber_g": 2.0,
-      "sugar_g": 2.0,
-      "protein_g": 30.0,
-      "sodium_mg": 885,
-      "cholesterol_mg": 124,
-      "saturated_fat_g": 18.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.4,
-    "review_count": 151,
-    "recipe_category": "Dinner",
-    "cuisine": "Indian",
-    "meal_type": "fitness"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/239951/baked-turkey-meatballs/",
     "category": "ground-turkey",
     "id": 239951,
@@ -6599,55 +5514,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "review_count": 51,
     "recipe_category": "Dinner",
     "cuisine": "American",
-    "meal_type": "fitness"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/16539/italian-style-sausage/",
-    "category": "ground-pork",
-    "id": 16539,
-    "name": "Italian Style Sausage",
-    "description": "Custom-blend herbs and spices to make your own Italian sausage! Try this earthy mix of black pepper and fiery red pepper, anise seeds, paprika, onion flakes, garlic powder, salt and Italian-style seasoning.",
-    "author": "Lee",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/-k9YsweNumx8yt0_wmbdFzTmOrI=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/267099-3d7d2c6c0894440ea25492cfd6706655.jpg",
-      "alt": "Italian Style Sausage"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 15,
-    "total_time_minutes": 25,
-    "servings": "6",
-    "ingredients": [
-      "1 teaspoon ground black pepper",
-      "1 teaspoon dried parsley",
-      "1 teaspoon Italian-style seasoning",
-      "0.5 teaspoon garlic powder",
-      "0.125 teaspoon crushed red pepper flakes",
-      "0.75 teaspoon crushed anise seeds",
-      "0.5 teaspoon paprika",
-      "0.5 teaspoon dried minced onion",
-      "2 teaspoons salt",
-      "2 pounds ground pork"
-    ],
-    "instructions": [
-      "In a small bowl, combine the ground black pepper, parsley, Italian-style seasoning, garlic powder, crushed red pepper flakes, anise, paprika, minced onion flakes and salt; mix well.",
-      "Place pork in a separate large bowl and add the spice mix to it. Mix this thoroughly with your hands.",
-      "In a large skillet over medium high heat, saute the seasoned pork for 10 minutes, or until well browned and crumbly."
-    ],
-    "nutrition_per_serving": {
-      "calories": 315,
-      "total_fat_g": 22.0,
-      "carbohydrates_g": 1.0,
-      "fiber_g": 0.0,
-      "sugar_g": 0.0,
-      "protein_g": 27.0,
-      "sodium_mg": 852,
-      "cholesterol_mg": 98,
-      "saturated_fat_g": 8.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.7,
-    "review_count": 162,
-    "cuisine": "Italian",
     "meal_type": "fitness"
   },
   {
@@ -6932,233 +5798,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "work"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/21519/simple-baked-beans-ii/",
-    "category": "baked-beans",
-    "id": 21519,
-    "name": "Simple Baked Beans",
-    "description": "These baked beans are quick to make on the stovetop with bacon, onion, brown sugar, ketchup, and canned baked beans for a classic side dish made easy.",
-    "author": "DOOPER",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/LgEM55iZfiRc8eD0sc05BQTb2Ck=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/21519simple-baked-beans-iiYoly4x3-f1ef499249c04f13bf068c6f6ddd1d0f.jpg",
-      "alt": "Simple Baked Beans"
-    },
-    "prep_time_minutes": 5,
-    "cook_time_minutes": 25,
-    "total_time_minutes": 30,
-    "servings": "4",
-    "ingredients": [
-      "0.5 pound bacon, chopped",
-      "1 onion, finely chopped",
-      "2 (15 ounce) cans baked beans",
-      "0.25 cup brown sugar",
-      "0.25 cup ketchup",
-      "0.25 cup prepared mustard"
-    ],
-    "instructions": [
-      "Place bacon in a large, deep skillet. Cook over medium high heat until evenly brown. Add the onion and saut\u00e9 until tender. Drain excess oil, if desired.",
-      "Stir in baked beans, brown sugar, ketchup, and mustard. Cook, stirring occasionally, until hot and bubbly."
-    ],
-    "nutrition_per_serving": {
-      "calories": 527,
-      "total_fat_g": 27.0,
-      "carbohydrates_g": 61.0,
-      "fiber_g": 10.0,
-      "sugar_g": 31.0,
-      "protein_g": 18.0,
-      "sodium_mg": 1541,
-      "cholesterol_mg": 39,
-      "saturated_fat_g": 9.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.7,
-    "review_count": 109,
-    "recipe_category": "Dinner",
-    "cuisine": "New England",
-    "meal_type": "work"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/222338/burrata-bruschetta-with-figs/",
-    "category": "bruschetta",
-    "id": 222338,
-    "name": "Burrata Bruschetta with Figs",
-    "description": "Grilled Black Mission figs are paired with fresh, creamy Burrata cheese, and served on Italian bread with a drizzle of balsamic vinegar.",
-    "author": "John Mitzewich",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/Rm3brZy7ucAiYMsPCeB1YMcN9n4=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/3646620-d7dbbf2dce0c407495c400b43baa3eab.jpg",
-      "alt": "Burrata Bruschetta with Figs"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 5,
-    "total_time_minutes": 15,
-    "servings": "4",
-    "ingredients": [
-      "12 Black Mission figs, halved lengthwise",
-      "2 tablespoons balsamic vinegar",
-      "2 tablespoons extra virgin olive oil",
-      "6 ounces Burrata cheese, thickly sliced",
-      "6 (1/2 inch thick) slices Italian bread, toasted",
-      "sea salt and ground black pepper to taste"
-    ],
-    "instructions": [
-      "Preheat an outdoor grill for high heat, and lightly oil the grate.",
-      "Place figs, skin-side down, on grill. Cook until figs start to swell and bubble, 2 to 4 minutes.",
-      "Whisk together balsamic vinegar and olive oil until completely combined, about 1 minute.",
-      "Place Burrata cheese on top of each piece of toast. Spread figs around bread and drizzle with balsamic vinegar mixture. Season with sea salt and black pepper to taste."
-    ],
-    "nutrition_per_serving": {
-      "calories": 377,
-      "total_fat_g": 17.0,
-      "carbohydrates_g": 45.0,
-      "fiber_g": 5.0,
-      "sugar_g": 26.0,
-      "protein_g": 10.0,
-      "sodium_mg": 364,
-      "cholesterol_mg": 30,
-      "saturated_fat_g": 7.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.7,
-    "review_count": 7,
-    "recipe_category": "Appetizer",
-    "cuisine": "American",
-    "meal_type": "work"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/233777/buffalo-ranch-chicken-and-cheese-dip/",
-    "category": "buffalo-chicken-dips",
-    "id": 233777,
-    "name": "Buffalo Ranch Chicken and Cheese Dip",
-    "description": "This Buffalo ranch chicken dip has all the flavors of chicken wings baked together. Serve with scoop-shaped tortilla chips for a hearty, pleasing dip.",
-    "author": "Cookin'Momma",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/qlX44caJx-wTsCX9nksexS0xotk=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/2714476-6771e78028bc4ba6bf0cb5f6feac3727.jpg",
-      "alt": "Buffalo Ranch Chicken and Cheese Dip"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 25,
-    "total_time_minutes": 35,
-    "servings": "16",
-    "ingredients": [
-      "2 cooked chicken breasts, shredded",
-      "1 (8 ounce) package cream cheese, softened",
-      "0.5 cup buffalo wing sauce",
-      "0.25 cup ranch salad dressing",
-      "0.25 cup sour cream",
-      "1.5 cups shredded Colby-Monterey Jack cheese",
-      "1 (16 ounce) package scoop-shaped tortilla chips"
-    ],
-    "instructions": [
-      "Preheat the oven to 350 degrees F (175 degrees C).",
-      "Mix chicken, cream cheese, buffalo wing sauce, ranch dressing, and sour cream together in a large bowl; transfer to a 9x13-inch baking dish. Sprinkle Colby-Monterey Jack cheese evenly on top.",
-      "Bake in the preheated oven until cheese is melted and lightly browned, 25 to 30 minutes. Serve with tortilla chips."
-    ],
-    "nutrition_per_serving": {
-      "calories": 290,
-      "total_fat_g": 19.0,
-      "carbohydrates_g": 21.0,
-      "fiber_g": 2.0,
-      "sugar_g": 1.0,
-      "protein_g": 10.0,
-      "sodium_mg": 510,
-      "cholesterol_mg": 39,
-      "saturated_fat_g": 8.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.6,
-    "review_count": 56,
-    "recipe_category": "Appetizer",
-    "cuisine": "American",
-    "meal_type": "work"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/240027/cheddar-beer-fondue/",
-    "category": "cheese-fondue",
-    "id": 240027,
-    "name": "Cheddar-Beer Fondue",
-    "description": "Cheddar and beer fondue is easy to prepare and is perfect for dipping bread, vegetables, or apples at your next dinner party or special occasion.",
-    "author": "danzer19",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/bbT9R5_uNa2B1-i-nB7kA0OaVxA=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/3602864-c3633505b69047e7a127678f7091dea5.jpg",
-      "alt": "Cheddar-Beer Fondue"
-    },
-    "prep_time_minutes": 5,
-    "cook_time_minutes": 10,
-    "total_time_minutes": 15,
-    "servings": "8",
-    "ingredients": [
-      "1 pound shredded sharp Cheddar cheese",
-      "1 tablespoon all-purpose flour",
-      "0.75 cup lager beer",
-      "1 tablespoon minced garlic",
-      "2 teaspoons Worcestershire sauce",
-      "1.5 teaspoons mustard powder"
-    ],
-    "instructions": [
-      "Mix Cheddar cheese and flour together in a bowl.",
-      "Bring beer to a light boil in a fondue pot; add garlic, Worcestershire sauce, and mustard powder and stir. Gradually stir cheese mixture into beer mixture. Reduce heat to low; cook and stir mixture until cheese is melted, about 5 minutes."
-    ],
-    "nutrition_per_serving": {
-      "calories": 248,
-      "total_fat_g": 19.0,
-      "carbohydrates_g": 3.0,
-      "fiber_g": 0.0,
-      "sugar_g": 1.0,
-      "protein_g": 15.0,
-      "sodium_mg": 368,
-      "cholesterol_mg": 60,
-      "saturated_fat_g": 12.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.5,
-    "review_count": 29,
-    "recipe_category": "Appetizer",
-    "meal_type": "work"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/200360/rye-whiskey-brie/",
-    "category": "cheese-balls",
-    "id": 200360,
-    "name": "Rye Whiskey Brie",
-    "description": "This mix of baked brie topped with brown sugar, pecans, and rye whiskey is too good for words.",
-    "author": "Terri Gainer",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/CkCWtatG_r42VP5WGSxLQ1S7ACY=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/2264468-b7473f3135684c99ab4a80a758f00523.jpg",
-      "alt": "Rye Whiskey Brie"
-    },
-    "prep_time_minutes": 5,
-    "cook_time_minutes": 15,
-    "total_time_minutes": 20,
-    "servings": "4",
-    "ingredients": [
-      "1 (8 ounce) round Brie cheese",
-      "0.25 cup brown sugar",
-      "0.25 cup chopped pecans",
-      "1 tablespoon rye whiskey"
-    ],
-    "instructions": [
-      "Preheat an oven to 350 degrees F (175 degrees C).",
-      "Cut slits about 1/4-inch deep in a crossing pattern across the top and along the sides of the Brie wheel. Place the brie in a baking dish.",
-      "Bake the Brie in the preheated oven until softened, about 5 minutes.",
-      "While the Brie bakes, stir the brown sugar, pecans, and whiskey in a small bowl; pour onto the top of the Brie and return to the oven another 10 minutes. Serve immediately."
-    ],
-    "nutrition_per_serving": {
-      "calories": 298,
-      "total_fat_g": 21.0,
-      "carbohydrates_g": 15.0,
-      "fiber_g": 1.0,
-      "sugar_g": 14.0,
-      "protein_g": 12.0,
-      "sodium_mg": 361,
-      "cholesterol_mg": 57,
-      "saturated_fat_g": 10.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.5,
-    "review_count": 26,
-    "recipe_category": "Appetizer",
-    "meal_type": "work"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/169329/chipotle-chicken-salad/",
     "category": "chicken-salads",
     "id": 169329,
@@ -7338,139 +5977,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "work"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/269979/instant-pot-pork-chops/",
-    "category": "instant-pot",
-    "id": 269979,
-    "name": "Instant Pot Pork Chops",
-    "description": "These Instant Pot pork chops with butter, onion soup mix, and apple juice turn out tender and delicious for an easy dinner in just 30 minutes.",
-    "author": "LDMKitchen",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/Xsn2WtIgI_F-D_9tOacyu_wofvo=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/AR-269979-instant-pot-pork-chops-ddmfs-beauty-4x3-84a79fb55376443cafe54ef1f7297f84.jpg",
-      "alt": "Instant Pot Pork Chops"
-    },
-    "prep_time_minutes": 5,
-    "cook_time_minutes": 15,
-    "total_time_minutes": 30,
-    "servings": "4",
-    "ingredients": [
-      "4 pork chops",
-      "3 tablespoons butter, cut into small chunks",
-      "1 (1 ounce) package dry onion soup mix (such as Lipton\u00ae)",
-      "1 cup apple juice"
-    ],
-    "instructions": [
-      "Gather all ingredients.",
-      "Place pork chops into a multi-functional pressure cooker (such as Instant Pot).",
-      "Dot butter over chops, then sprinkle with onion soup mix. Pour in apple juice.",
-      "Close and lock the lid. Select high pressure according to the manufacturer's instructions; set the timer for 5 minutes. Allow 10 to 15 minutes for the pressure to build. Release the pressure using the natural-release method according to the manufacturer's instructions, 10 to 40 minutes."
-    ],
-    "nutrition_per_serving": {
-      "calories": 208,
-      "total_fat_g": 13.0,
-      "carbohydrates_g": 12.0,
-      "fiber_g": 1.0,
-      "sugar_g": 6.0,
-      "protein_g": 11.0,
-      "sodium_mg": 662,
-      "cholesterol_mg": 56,
-      "saturated_fat_g": 7.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.5,
-    "review_count": 58,
-    "recipe_category": "Dinner",
-    "cuisine": "American",
-    "meal_type": "work"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/87198/cottage-cheese-fluff/",
-    "category": "jell-o-salads",
-    "id": 87198,
-    "name": "Cottage Cheese Fluff",
-    "description": "Low-fat cottage cheese is mixed with light whipped topping and sugar-free gelatin to create a delightful guilt-free dessert.",
-    "author": "Jamie",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/J5we6GypKLBjfUWLo30be6N6_nk=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/87198-cottage-cheese-fluff-DDMFS-Beauty-4x3-92e47445ccf14476a1ab5fb70f55f00a.jpg",
-      "alt": "Cottage Cheese Fluff"
-    },
-    "prep_time_minutes": 5,
-    "cook_time_minutes": null,
-    "total_time_minutes": 35,
-    "servings": "6",
-    "ingredients": [
-      "3 cups low-fat cottage cheese",
-      "2 (0.3 ounce) packages sugar-free lemon flavored Jell-O\u00ae mix",
-      "1 (8 ounce) container lite frozen whipped topping, thawed"
-    ],
-    "instructions": [
-      "Gather the ingredients.",
-      "Place the cottage cheese in a food processor and blend until creamy.",
-      "Whisk in the flavored gelatin powder, then fold in the thawed whipped topping. Refrigerate until serving."
-    ],
-    "nutrition_per_serving": {
-      "calories": 183,
-      "total_fat_g": 4.0,
-      "carbohydrates_g": 18.0,
-      "sugar_g": 9.0,
-      "protein_g": 16.0,
-      "sodium_mg": 519,
-      "cholesterol_mg": 5,
-      "saturated_fat_g": 4.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.5,
-    "review_count": 48,
-    "recipe_category": "Dessert",
-    "cuisine": "American",
-    "meal_type": "work"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/284800/oven-roasted-lamb-chops/",
-    "category": "lamb",
-    "id": 284800,
-    "name": "The Best Lamb Chops",
-    "description": "Lamb chops seasoned with garlic and rosemary are roasted in the oven and always turn out flavorsome, perfectly juicy, and tender in under 30 minutes.",
-    "author": "Lucky Noodles",
-    "image": {
-      "url": "https://cdn.jwplayer.com/v2/media/I4TtSAm1/thumbnails/04B596ot.jpg",
-      "alt": "The Best Lamb Chops"
-    },
-    "prep_time_minutes": 5,
-    "cook_time_minutes": 10,
-    "total_time_minutes": 25,
-    "servings": "4",
-    "ingredients": [
-      "4 (4 ounce) lamb chops",
-      "1 tablespoon olive oil, or as needed",
-      "1 clove garlic, minced",
-      "0.5 tablespoon crushed fresh rosemary leaves",
-      "sea salt and freshly ground black pepper to taste",
-      "0.25 cup mint jelly"
-    ],
-    "instructions": [
-      "Preheat the oven to 425 degrees F (220 degrees C).",
-      "Cut away excess fat from lamb chops (some fat does add flavor). Coat each chop lightly in olive oil. Season lamb chops with garlic, rosemary, salt, and pepper. Place lamb chops in a cast iron skillet.",
-      "Bake uncovered in the preheated oven until cooked through, 8 to 10 minutes. An instant-read thermometer inserted into the center should read at least 140 degrees F (60 degrees C) for medium-well doneness.",
-      "Remove from the oven and cover tightly with foil; let rest for 8 to 10 minutes. Serve with mint jelly on the side."
-    ],
-    "nutrition_per_serving": {
-      "calories": 289,
-      "total_fat_g": 19.0,
-      "carbohydrates_g": 12.0,
-      "sugar_g": 11.0,
-      "protein_g": 17.0,
-      "sodium_mg": 52,
-      "cholesterol_mg": 67,
-      "saturated_fat_g": 7.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.7,
-    "review_count": 38,
-    "recipe_category": "Dinner",
-    "cuisine": "Greek",
-    "meal_type": "work"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/148142/curried-quinoa/",
     "category": "quinoa",
     "id": 148142,
@@ -7514,98 +6020,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "review_count": 295,
     "recipe_category": "Dinner",
     "cuisine": "Indian",
-    "meal_type": "study"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/213505/filet-mignons-with-pepper-cream-sauce/",
-    "category": "beef-tenderloin",
-    "id": 213505,
-    "name": "Filet Mignons with Pepper Cream Sauce",
-    "description": "Delectable filet mignons get a coating of crushed peppercorns, then are cooked to perfect doneness and served with a velvety cream sauce to take the peppery bite down a notch.",
-    "author": "goodeets7",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/t8cu4Lw7Qa4PMjnSZ8rOCaFE4l0=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/4261774-filet-mignons-with-pepper-cream-sauce-Allrecipes-Magazine-4x3-1-d0e102c9ff1c49a2b8739cc23e9ead04.jpg",
-      "alt": "Filet Mignons with Pepper Cream Sauce"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 15,
-    "total_time_minutes": 25,
-    "servings": "4",
-    "ingredients": [
-      "0.25 cup coarsely crushed black peppercorns",
-      "4 (6 ounce) 1 1/2 inch thick filet mignon steaks",
-      "salt to taste",
-      "1 tablespoon butter",
-      "1 teaspoon olive oil",
-      "0.33333334326744 cup beef broth",
-      "1 cup heavy cream"
-    ],
-    "instructions": [
-      "Place the peppercorns into a shallow bowl. Sprinkle the beef tenderloin filets with salt on both sides, and coat both sides with crushed peppercorns.",
-      "Melt the butter with the olive oil over high heat in a heavy skillet (not nonstick) until the foam disappears from the butter. Gently place the steaks in the pan, and cook until they start to become firm and are reddish-pink and juicy in the center, about 3 1/2 minutes per side. An instant-read thermometer inserted into the center should read 130 degrees F (54 degrees C). Remove the steaks to platter, and cover tightly with foil.",
-      "Pour the beef broth into the skillet, and use a whisk to stir the broth and scrape up any dissolved brown flavor bits from the skillet. Whisk in the cream, and simmer the sauce until it's reduced and thickened, 6 to 7 minutes. Place the steaks back in the skillet, turn to coat with sauce, and serve with the remaining sauce."
-    ],
-    "nutrition_per_serving": {
-      "calories": 549,
-      "total_fat_g": 47.0,
-      "carbohydrates_g": 5.0,
-      "fiber_g": 1.0,
-      "sugar_g": 0.0,
-      "protein_g": 28.0,
-      "sodium_mg": 209,
-      "cholesterol_mg": 176,
-      "saturated_fat_g": 24.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.6,
-    "review_count": 151,
-    "recipe_category": "Dinner",
-    "cuisine": "French Inspired",
-    "meal_type": "work"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/152578/spelt-biscuits/",
-    "category": "biscuits",
-    "id": 152578,
-    "name": "Spelt Biscuits",
-    "description": "I have made these biscuits for health nuts and non healthy eaters alike, but there are never leftovers. These are heavier on account of the spelt flour, but the nutty whole grain flavor is divine. Best when served fresh out of the oven, eaten with butter and honey or jam.",
-    "author": "Joy",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/uPvFbV0L-_P7Vc0Oy_4AAKptXKg=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/73227-1e91a340fc524a8ab3723bb149029d7f.jpg",
-      "alt": "Spelt Biscuits"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 15,
-    "total_time_minutes": 25,
-    "servings": "6",
-    "ingredients": [
-      "2 cups spelt flour",
-      "1 tablespoon baking powder",
-      "1 teaspoon salt",
-      "6 tablespoons butter",
-      "0.66666668653488 cup milk"
-    ],
-    "instructions": [
-      "Preheat the oven to 450 degrees F (220 degrees C).",
-      "Whisk flour, baking powder, and salt together in a large bowl. Cut in butter with 2 knives or pastry blender until mixture resembles coarse crumbs. Gradually stir in milk until dough pulls away from the sides of the bowl. You may need to adjust the amount of milk. Turn dough out onto a floured surface; pat until about 1-inch thick. Cut into biscuits and place on a baking sheet.",
-      "Bake in the preheated oven until bottoms are golden brown, 12 to 15 minutes."
-    ],
-    "nutrition_per_serving": {
-      "calories": 250,
-      "total_fat_g": 13.0,
-      "carbohydrates_g": 30.0,
-      "fiber_g": 1.0,
-      "sugar_g": 3.0,
-      "protein_g": 6.0,
-      "sodium_mg": 726,
-      "cholesterol_mg": 33,
-      "saturated_fat_g": 8.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.7,
-    "review_count": 128,
-    "recipe_category": "Side Dish",
-    "cuisine": "American",
     "meal_type": "study"
   },
   {
@@ -8232,50 +6646,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "work"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/236025/salt-and-pepper-skillet-fries/",
-    "category": "fries",
-    "id": 236025,
-    "name": "Salt and Pepper Skillet Fries",
-    "description": "Pan fry potatoes in a skillet with hot olive oil and butter to make simple and delicious fries seasoned with sea salt and coarse black pepper.",
-    "author": "miskyn",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/sO_s_dayUMu87UWS9mgjk6zlbek=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/1092733-3044d24240554942910a95f92e44d164.jpg",
-      "alt": "Salt and Pepper Skillet Fries"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 20,
-    "total_time_minutes": 30,
-    "servings": "4",
-    "ingredients": [
-      "2 tablespoons olive oil",
-      "1 teaspoon butter",
-      "3 large potatoes, sliced lengthwise into 1/2-inch circles and cut into 1/2-inch strips",
-      "0.25 teaspoon coarse sea salt",
-      "0.25 teaspoon cracked black pepper"
-    ],
-    "instructions": [
-      "Heat olive oil and butter in a skillet over medium heat.",
-      "Cook and stir potato strips in hot oil mixture until browned on all sides, 20 to 25 minutes.",
-      "Transfer fries to a paper towel-lined plate; season with sea salt and cracked black pepper."
-    ],
-    "nutrition_per_serving": {
-      "calories": 282,
-      "total_fat_g": 8.0,
-      "carbohydrates_g": 48.0,
-      "fiber_g": 6.0,
-      "sugar_g": 2.0,
-      "protein_g": 6.0,
-      "sodium_mg": 134,
-      "cholesterol_mg": 3,
-      "saturated_fat_g": 2.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.7,
-    "review_count": 46,
-    "recipe_category": "Snack",
-    "meal_type": "work"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/273734/air-fryer-bang-bang-chicken/",
     "category": "fried-chicken",
     "id": 273734,
@@ -8515,99 +6885,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "work"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/229989/turkey-breakfast-sausage/",
-    "category": "ground-turkey",
-    "id": 229989,
-    "name": "Turkey Breakfast Sausage",
-    "description": "This turkey breakfast sausage is made from scratch with ground turkey, brown sugar, sage, thyme, marjoram, and red pepper flakes for a breakfast side.",
-    "author": "mechanicmike",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/ZlvkGf8Gc5kEukWzE59kFUenYls=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/9335232-f67fba6ed83e45e59d4247a726c1060d.jpg",
-      "alt": "Turkey Breakfast Sausage"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 15,
-    "total_time_minutes": 25,
-    "servings": "8",
-    "ingredients": [
-      "2 pounds ground turkey",
-      "1 tablespoon brown sugar",
-      "2 teaspoons kosher salt",
-      "1.5 teaspoons ground black pepper",
-      "1.5 teaspoons ground sage",
-      "1.5 teaspoons ground thyme",
-      "0.5 teaspoon dried marjoram",
-      "0.5 teaspoon red pepper flakes"
-    ],
-    "instructions": [
-      "Mix together turkey, brown sugar, salt, black pepper, sage, thyme, marjoram, and red pepper flakes in a bowl until well combined. Shape turkey mixture into patties.",
-      "Working in batches, fry patties in a large skillet over medium-high heat until golden brown and no longer pink in the center, 6 to 8 minutes. An instant-read thermometer inserted into the center should read at least 165 degrees F (74 degrees C)."
-    ],
-    "nutrition_per_serving": {
-      "calories": 176,
-      "total_fat_g": 9.0,
-      "carbohydrates_g": 2.0,
-      "fiber_g": 0.0,
-      "sugar_g": 2.0,
-      "protein_g": 23.0,
-      "sodium_mg": 545,
-      "cholesterol_mg": 84,
-      "saturated_fat_g": 2.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.7,
-    "review_count": 201,
-    "recipe_category": "Breakfast",
-    "cuisine": "American",
-    "meal_type": "fitness"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/77747/moms-turkey-sausage-patties/",
-    "category": "ground-turkey",
-    "id": 77747,
-    "name": "Mom's Turkey Sausage Patties",
-    "description": "This easy recipe for turkey sausage patties adds ground ginger, sage, and cayenne pepper to make breakfast extra tasty. Great with pancakes and eggs!",
-    "author": "Ms A",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/kW_Jwi2HYAN-8gXv4vrMrh2k6lI=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/7776192-3ce7c2d6d41547a096f295f84a10d668.jpg",
-      "alt": "Mom's Turkey Sausage Patties"
-    },
-    "prep_time_minutes": 5,
-    "cook_time_minutes": 15,
-    "total_time_minutes": 20,
-    "servings": "8",
-    "ingredients": [
-      "2 pounds ground turkey",
-      "1.5 teaspoons ground black pepper",
-      "1.5 teaspoons salt",
-      "1 teaspoon dried sage",
-      "0.75 teaspoon ground ginger",
-      "0.25 teaspoon cayenne pepper",
-      "nonstick cooking spray"
-    ],
-    "instructions": [
-      "Mix ground turkey, black pepper, salt, sage, ginger, and cayenne pepper together in a large bowl until well blended. Form mixture into 8 equal-sized patties.",
-      "Heat a skillet over medium-high heat; coat with nonstick spray.",
-      "Add patties and fry until browned on both sides and no longer pink in the center, about 15 minutes. An instant-read thermometer inserted into the center should read at least 165 degrees F (74 degrees C)."
-    ],
-    "nutrition_per_serving": {
-      "calories": 169,
-      "total_fat_g": 9.0,
-      "carbohydrates_g": 1.0,
-      "fiber_g": 0.0,
-      "protein_g": 23.0,
-      "sodium_mg": 500,
-      "cholesterol_mg": 84,
-      "saturated_fat_g": 2.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.7,
-    "review_count": 404,
-    "recipe_category": "Breakfast",
-    "cuisine": "American",
-    "meal_type": "fitness"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/74053/lazygirls-ground-turkey-stroganoff/",
     "category": "ground-turkey",
     "id": 74053,
@@ -8799,98 +7076,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "fitness"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/18810/baked-lamb-chops/",
-    "category": "lamb",
-    "id": 18810,
-    "name": "Baked Lamb Chops",
-    "description": "These baked lamb shoulder chops are flavored with Worcestershire and coated in bread crumbs for a party appetizer or special occasion main dish.",
-    "author": "Leslie W Dobson",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/-278GdF3yHeXP9A6Y8v9poYKVdk=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/RM-18810-baked-lamb-chops-ddmfs-3x4-13592-7002d9d3cd82466bba7210e74f931494.jpg",
-      "alt": "Baked Lamb Chops"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 40,
-    "total_time_minutes": 50,
-    "servings": "6",
-    "ingredients": [
-      "3 large eggs",
-      "3 teaspoons Worcestershire sauce",
-      "2 cups dry bread crumbs",
-      "12 (5.5 ounce) lamb chops"
-    ],
-    "instructions": [
-      "Gather all ingredients and preheat the oven to 375 degrees F (190 degrees C).",
-      "Beat together eggs and Worcestershire sauce in a shallow bowl.",
-      "Place bread crumbs in a second shallow bowl. Dip each lamb chop in egg mixture, then lightly dredge in bread crumbs to coat. Arrange lamb chops in a 9x13-inch baking dish.",
-      "Bake in the preheated oven for 20 minutes. Turn lamb chops over and continue cooking to desired doneness, about 20 more minutes. An instant-read thermometer inserted into the center of chops should read 130 degrees F (55 degrees C) for medium doneness."
-    ],
-    "nutrition_per_serving": {
-      "calories": 738,
-      "total_fat_g": 45.0,
-      "carbohydrates_g": 27.0,
-      "fiber_g": 2.0,
-      "sugar_g": 3.0,
-      "protein_g": 52.0,
-      "sodium_mg": 462,
-      "cholesterol_mg": 270,
-      "saturated_fat_g": 19.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.2,
-    "review_count": 188,
-    "recipe_category": "Dinner",
-    "cuisine": "American",
-    "meal_type": "fitness"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/236418/easy-lemon-pepper-chicken-wings/",
-    "category": "Paleo",
-    "id": 236418,
-    "name": "Easy Lemon-Pepper Chicken Wings",
-    "description": "Lemon-pepper wings inspired by a restaurant favorite. Quick, easy, and delicious, and with just 4 ingredients they're a game-day (or any-day) winner.",
-    "author": "FleurSweetLoves",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/ZnwujkXZHWtAbJw1YGYnK9QfeQc=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/236418-Easy-Lemon-Pepper-Chicken-Wings-ddmfs-4x3-356-0aaffc0d362f442aaa35a5dd2593fd80.jpg",
-      "alt": "Easy Lemon-Pepper Chicken Wings"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 10,
-    "total_time_minutes": 20,
-    "servings": "4",
-    "ingredients": [
-      "2 cups oil, or as needed",
-      "2 tablespoons extra-virgin olive oil",
-      "1 tablespoon lemon-pepper seasoning",
-      "12 chicken wings"
-    ],
-    "instructions": [
-      "Gather all ingredients.",
-      "Heat oil in a deep-fryer or large saucepan to 375 degrees F (190 degrees C).",
-      "Stir olive oil and lemon-pepper seasoning together in a bowl; set aside.",
-      "Fry wings in hot oil until no longer pink at the bone and the juices run clear, about 8 minutes. An instant-read thermometer inserted near the bone should read 165 degrees F (74 degrees C).",
-      "Toss hot wings with lemon-pepper mixture to coat.",
-      "Enjoy!"
-    ],
-    "nutrition_per_serving": {
-      "calories": 1181,
-      "total_fat_g": 123.0,
-      "carbohydrates_g": 0.0,
-      "fiber_g": 0.0,
-      "sugar_g": 0.0,
-      "protein_g": 21.0,
-      "sodium_mg": 409,
-      "cholesterol_mg": 58,
-      "saturated_fat_g": 17.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.7,
-    "review_count": 124,
-    "recipe_category": "Appetizer",
-    "cuisine": "American",
-    "meal_type": "work"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/24681/oven-fried-pork-chops/",
     "category": "Pork-Chops",
     "id": 24681,
@@ -8989,50 +7174,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "recipe_category": "Lunch",
     "cuisine": "American",
     "meal_type": "fitness"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/213849/caprese-on-a-stick/",
-    "category": "antipasti",
-    "id": 213849,
-    "name": "Caprese on a Stick",
-    "description": "Serve your Caprese salad on toothpicks for a fun, easy appetizer. It takes just a few minutes to thread mozzarella balls, cherry tomatoes, and fresh basil leaves onto the picks and drizzle with olive oil.",
-    "author": "ALZ",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/HZZgCEZjbIzkTrIXBqtxPHAV1CI=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/1387537-11bc6fcc8095476888824e864155ba56.jpg",
-      "alt": "Caprese on a Stick"
-    },
-    "prep_time_minutes": 15,
-    "cook_time_minutes": null,
-    "total_time_minutes": 15,
-    "servings": "8",
-    "ingredients": [
-      "1 pint cherry tomatoes, halved",
-      "1 (.6 ounce) package fresh basil leaves",
-      "1 (16 ounce) package small fresh mozzarella balls",
-      "toothpicks",
-      "3 tablespoons olive oil",
-      "salt and pepper to taste"
-    ],
-    "instructions": [
-      "Thread a tomato half, a small piece of basil leaf, and a mozzarella ball onto toothpicks until all ingredients are used. Drizzle the olive oil over the tomato, cheese and basil, leaving the end of the toothpick clean. Sprinkle with salt and pepper. Serve immediately."
-    ],
-    "nutrition_per_serving": {
-      "calories": 215,
-      "total_fat_g": 17.0,
-      "carbohydrates_g": 3.0,
-      "fiber_g": 0.0,
-      "sugar_g": 1.0,
-      "protein_g": 11.0,
-      "sodium_mg": 85,
-      "cholesterol_mg": 45,
-      "saturated_fat_g": 9.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.7,
-    "review_count": 229,
-    "recipe_category": "Dinner",
-    "cuisine": "Italian Inspired",
-    "meal_type": "work"
   },
   {
     "url": "https://www.allrecipes.com/recipe/237284/creamy-avocado-chicken-salad/",
@@ -9363,149 +7504,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "work"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/266870/cheesy-grilled-bread/",
-    "category": "garlic-bread",
-    "id": 266870,
-    "name": "Cheesy Grilled Bread",
-    "description": "This grilled bread recipe is perfect to serve with Italian dishes or as an appetizer.",
-    "author": "Myra",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/ZciqItoleZEf_Ecbl-8HaoRaNgc=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/5831018-c30358a820e44a8880b44b8277fd7602.jpg",
-      "alt": "Cheesy Grilled Bread"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 15,
-    "total_time_minutes": 25,
-    "servings": "8",
-    "ingredients": [
-      "0.5 cup unsalted butter, softened",
-      "0.25 cup sun-dried tomatoes packed in oil, drained",
-      "2 tablespoons pesto",
-      "1 clove garlic",
-      "0.25 teaspoon salt",
-      "0.125 teaspoon ground black pepper",
-      "1.5 cups shredded provolone cheese, divided",
-      "1 loaf Italian bread, sliced in half lengthwise"
-    ],
-    "instructions": [
-      "Preheat an outdoor grill for medium heat and lightly oil the grate.",
-      "Combine butter, tomatoes, pesto, garlic, salt, and black pepper in a food processor. Pulse until thoroughly combined and tomatoes are chopped. Scrape into a bowl and stir in 1 cup shredded provolone cheese.",
-      "Grill bread on the preheated grill until toasted, about 1 1/2 minutes. Spread butter mixture equally onto cut sides of both halves of bread and sprinkle with remaining cheese. Grill bread, cut-side up, over indirect heat with grill covered, until toping melts, 8 to 10 minutes. Let cool slightly; cut into slices using a serrated knife. Serve warm."
-    ],
-    "nutrition_per_serving": {
-      "calories": 444,
-      "total_fat_g": 23.0,
-      "carbohydrates_g": 44.0,
-      "fiber_g": 3.0,
-      "sugar_g": 1.0,
-      "protein_g": 15.0,
-      "sodium_mg": 821,
-      "cholesterol_mg": 49,
-      "saturated_fat_g": 13.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 5.0,
-    "review_count": 2,
-    "recipe_category": "Dinner",
-    "meal_type": "work"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/21080/great-garlic-bread/",
-    "category": "garlic-bread",
-    "id": 21080,
-    "name": "Great Garlic Bread",
-    "description": "This Italian garlic bread is drenched in garlicky herb butter, oven-baked until crisp, topped with melted mozzarella cheese, and ready in 30 minutes.",
-    "author": "Noelle C",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/ymrjQ3GFq_Fc7Fu2yfvIj108tcM=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/21080-great-garlic-bread-DDMFS-4x3-e1c7b5c79fde4d629a9b7bce6c0702ed.jpg",
-      "alt": "Great Garlic Bread"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 15,
-    "total_time_minutes": 25,
-    "servings": "8",
-    "ingredients": [
-      "0.5 cup butter",
-      "1.5 tablespoons garlic powder",
-      "1 tablespoon dried parsley",
-      "1 (1 pound) loaf Italian bread, cut into 1/2 inch slices",
-      "1 (8 ounce) package shredded mozzarella cheese"
-    ],
-    "instructions": [
-      "Gather all ingredients.",
-      "Preheat the oven to 350 degrees F (175 degrees C).",
-      "Melt butter in a small saucepan over medium heat; stir in garlic powder and dried parsley.",
-      "Place bread slices on a medium baking sheet. Using a basting brush, brush bread generously with melted butter mixture.",
-      "Bake in the preheated oven until lightly toasted, about 10 minutes.",
-      "Sprinkle bread with mozzarella cheese and any remaining butter mixture. Continue baking until cheese is melted and bread is lightly browned, about 5 minutes."
-    ],
-    "nutrition_per_serving": {
-      "calories": 332,
-      "total_fat_g": 18.0,
-      "carbohydrates_g": 30.0,
-      "fiber_g": 2.0,
-      "sugar_g": 1.0,
-      "protein_g": 12.0,
-      "sodium_mg": 588,
-      "cholesterol_mg": 48,
-      "saturated_fat_g": 11.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.6,
-    "review_count": 530,
-    "recipe_category": "Appetizer",
-    "cuisine": "Italian",
-    "meal_type": "work"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/277285/cheesy-grits/",
-    "category": "grits",
-    "id": 277285,
-    "name": "Cheesy Grits",
-    "description": "These buttery cheese grits are a quick and easy side dish for any meal \u2014 you'll love the cheesy combination of Cheddar and Parmesan in every bite.",
-    "author": "elljoymit",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/1fWtyLfotSJQ7UBJbuAspCH8Nlg=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/277285-Cheesy-Grits-DDMFS-Beauty-4x3-3c7f5240c7554ee2a32582f4f3988092.jpg",
-      "alt": "Cheesy Grits"
-    },
-    "prep_time_minutes": 5,
-    "cook_time_minutes": 10,
-    "total_time_minutes": 15,
-    "servings": "4",
-    "ingredients": [
-      "4 cups water",
-      "1 teaspoon salt",
-      "1 cup uncooked quick-cooking grits",
-      "1 cup shredded Cheddar cheese",
-      "0.5 cup shredded Parmesan cheese",
-      "2 tablespoons butter",
-      "ground black pepper to taste"
-    ],
-    "instructions": [
-      "Gather the ingredients.",
-      "Bring water and salt to a boil in a saucepan. Whisk in grits, reduce heat to medium-low, and cook until thickened, 5 to 6 minutes. Remove from heat.",
-      "Stir in Cheddar, Parmesan, and butter until combined and cheese has melted.",
-      "Season with pepper; serve immediately."
-    ],
-    "nutrition_per_serving": {
-      "calories": 353,
-      "total_fat_g": 19.0,
-      "carbohydrates_g": 32.0,
-      "fiber_g": 1.0,
-      "sugar_g": 1.0,
-      "protein_g": 14.0,
-      "sodium_mg": 958,
-      "cholesterol_mg": 54,
-      "saturated_fat_g": 11.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.8,
-    "review_count": 10,
-    "recipe_category": "Dinner",
-    "cuisine": "Southern",
-    "meal_type": "work"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/281371/sheet-pan-blueberry-pancakes/",
     "category": "meal-prep",
     "id": 281371,
@@ -9644,100 +7642,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "work"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/18244/baked-beans-i/",
-    "category": "baked-beans",
-    "id": 18244,
-    "name": "Super Easy Baked Beans",
-    "description": "This super-easy baked beans recipe makes incredible baked beans in the oven with canned beans and other savory-sweet ingredients to deepen the flavor.",
-    "author": "Margie Kirkman",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/DjCkkDbRRni2h8Lc1zXRlQWmKT8=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/18244baked-beans-iFranceC4x3-0981859e6f144c74814e211ec4eaa24a.jpg",
-      "alt": "Super Easy Baked Beans"
-    },
-    "prep_time_minutes": 5,
-    "cook_time_minutes": 45,
-    "total_time_minutes": 50,
-    "servings": "6",
-    "ingredients": [
-      "1 (29 ounce) can baked beans with pork",
-      "0.5 cup packed brown sugar",
-      "0.5 cup ketchup",
-      "1 tablespoon Worcestershire sauce"
-    ],
-    "instructions": [
-      "Preheat the oven to 350 degrees F (175 degrees C).",
-      "Combine baked beans, brown sugar, ketchup, and Worcestershire sauce in a casserole dish.",
-      "Bake in the preheated oven, covered, until hot and bubbly, about 45 minutes."
-    ],
-    "nutrition_per_serving": {
-      "calories": 261,
-      "total_fat_g": 2.0,
-      "carbohydrates_g": 54.0,
-      "fiber_g": 6.0,
-      "sugar_g": 33.0,
-      "protein_g": 7.0,
-      "sodium_mg": 635,
-      "cholesterol_mg": 3,
-      "saturated_fat_g": 1.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.3,
-    "review_count": 116,
-    "recipe_category": "Dinner",
-    "cuisine": "New England",
-    "meal_type": "work"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/268013/instant-pot-spinach-and-artichoke-dip/",
-    "category": "artichoke-dips",
-    "id": 268013,
-    "name": "Instant Pot Spinach and Artichoke Dip",
-    "description": "This Instant Pot spinach artichoke dip with garlic, red chile flakes, and cheese has all of the creamy goodness you'd expect \u2014 without the hassle.",
-    "author": "Soup Loving Nicole",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/TPdiUcLSBe5zEab20VMnsA6s4a0=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/5728671-1cbabcf8877b440e893200e3da20f838.jpg",
-      "alt": "Instant Pot Spinach and Artichoke Dip"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 15,
-    "total_time_minutes": 30,
-    "servings": "8",
-    "ingredients": [
-      "1 (14 ounce) can artichoke hearts, drained and quartered",
-      "1 (10 ounce) package frozen chopped spinach",
-      "8 ounces cream cheese",
-      "1 cup sour cream",
-      "0.5 cup chopped white onion",
-      "0.5 cup chicken broth",
-      "3 cloves garlic, minced",
-      "0.5 teaspoon salt",
-      "crushed red chile flakes",
-      "3 cups shredded Monterey Jack cheese",
-      "2 cups grated Parmesan cheese"
-    ],
-    "instructions": [
-      "Combine artichoke hearts, frozen spinach, cream cheese, sour cream, onion, chicken broth, garlic, salt, and chile flakes in a multi-functional pressure cooker (such as Instant Pot). Close and lock the lid. Select manual pressure according to manufacturer's instructions; set timer for 4 minutes. Allow 10 to 15 minutes for pressure to build.",
-      "Release pressure carefully using the quick-release method according to manufacturer's instructions, about 5 minutes. Unlock and remove the lid. Whisk in Monterey Jack and Parmesan cheese until smooth; serve immediately."
-    ],
-    "nutrition_per_serving": {
-      "calories": 439,
-      "total_fat_g": 35.0,
-      "carbohydrates_g": 9.0,
-      "fiber_g": 2.0,
-      "sugar_g": 1.0,
-      "protein_g": 24.0,
-      "sodium_mg": 1059,
-      "cholesterol_mg": 100,
-      "saturated_fat_g": 22.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.9,
-    "review_count": 20,
-    "recipe_category": "Dinner",
-    "cuisine": "American",
-    "meal_type": "study"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/280268/air-fryer-beef-tenderloin/",
     "category": "beef-tenderloin",
     "id": 280268,
@@ -9832,54 +7736,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "review_count": 29,
     "recipe_category": "Dinner",
     "cuisine": "U.S.",
-    "meal_type": "fitness"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/151006/korean-soft-tofu-stew-soon-du-bu-jigae/",
-    "category": "beef-stews",
-    "id": 151006,
-    "name": "Korean Soft Tofu Stew (Soon Du Bu Jigae)",
-    "description": "This versatile tofu stew is hearty and simple to make. Use more Korean chile powder for an added kick or toss in a few clams for an even more exotic treat.",
-    "author": "susi EM",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/A0os2OIz3dU9yGj8cefIBtdwZlE=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/1194567-korean-soft-tofu-stew-soon-du-bu-jigae-Hungry-Gopher-4x3-1-73f41cf82431497f896e8ad1aa4afb61.jpg",
-      "alt": "Korean Soft Tofu Stew (Soon Du Bu Jigae)"
-    },
-    "prep_time_minutes": 5,
-    "cook_time_minutes": 15,
-    "total_time_minutes": 20,
-    "servings": "2",
-    "ingredients": [
-      "1 teaspoon vegetable oil",
-      "1 teaspoon Korean chile powder",
-      "2 tablespoons ground beef",
-      "1 tablespoon Korean soy bean paste (doenjang)",
-      "1 cup water",
-      "salt and pepper to taste",
-      "1 (12 ounce) package Korean soon tofu or soft tofu, drained and sliced",
-      "1 egg",
-      "1 teaspoon sesame seeds",
-      "1 green onion, chopped"
-    ],
-    "instructions": [
-      "Heat the vegetable oil in a large saucepan over medium heat. Stir in the Korean chile powder and ground beef. Cook and stir until the beef is crumbly, evenly browned, and no longer pink. Stir in the soy bean paste, coating the beef. Pour in the water and bring to a boil. Season with salt and pepper. Gently drop tofu into the soup and continue cooking until the tofu is heated through, 1 to 2 minutes. Remove from heat and quickly add the egg into the soup, stirring gently to break it up. Garnish with sesame seeds and green onion."
-    ],
-    "nutrition_per_serving": {
-      "calories": 242,
-      "total_fat_g": 17.0,
-      "carbohydrates_g": 7.0,
-      "fiber_g": 2.0,
-      "sugar_g": 1.0,
-      "protein_g": 20.0,
-      "sodium_mg": 415,
-      "cholesterol_mg": 99,
-      "saturated_fat_g": 3.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.1,
-    "review_count": 17,
-    "recipe_category": "Dinner",
-    "cuisine": "Korean",
     "meal_type": "fitness"
   },
   {
@@ -10079,54 +7935,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "work"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/241239/clamato-shrimp-ceviche-style/",
-    "category": "ceviche",
-    "id": 241239,
-    "name": "Clamato Shrimp \"Ceviche\" Style",
-    "description": "This cool and delicious shrimp ceviche with Clamato recipe is perfect for warm summer days and is sure to be a hit at your next outdoor gathering.",
-    "author": "Clamato",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/7eZW-OqF8fP04eaZEfXjqkHNM-8=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/3991373-272fb0c7133c4dbaad5a19afded2ecd4.jpg",
-      "alt": "Clamato Shrimp \"Ceviche\" Style"
-    },
-    "prep_time_minutes": 15,
-    "cook_time_minutes": null,
-    "total_time_minutes": 45,
-    "servings": "4",
-    "ingredients": [
-      "2 pounds cooked shrimp",
-      "1 small red onion, thinly sliced",
-      "1 fresh jalapeno chile, seeded and minced",
-      "1 cucumber, peeled, seeded, thinly sliced",
-      "0.5 bunch cilantro, finely chopped",
-      "2 limes, juiced",
-      "0.5 cup Clamato\u00ae Tomato Cocktail"
-    ],
-    "instructions": [
-      "In a bowl, combine shrimp, onion, jalape\u00f1o, cucumber, and cilantro.",
-      "Add lime juice and Clamato; toss to mix well.",
-      "Chill in the refrigerator for 30 minutes.",
-      "Serve cold with tostadas (hard tortillas) or soda crackers."
-    ],
-    "nutrition_per_serving": {
-      "calories": 210,
-      "total_fat_g": 2.0,
-      "carbohydrates_g": 9.0,
-      "fiber_g": 2.0,
-      "sugar_g": 2.0,
-      "protein_g": 38.0,
-      "sodium_mg": 503,
-      "cholesterol_mg": 346,
-      "saturated_fat_g": 1.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 5.0,
-    "review_count": 6,
-    "recipe_category": "Dinner",
-    "cuisine": "Mexican",
-    "meal_type": "fitness"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/9044/tomato-chicken-parmesan/",
     "category": "chicken-parmesan",
     "id": 9044,
@@ -10217,7 +8025,7 @@ export const ALL_RECIPES: NewRecipe[] = [
     },
     "rating": 4.7,
     "review_count": 827,
-    "recipe_category": "Salad",
+    "recipe_category": "Lunch",
     "cuisine": "American",
     "meal_type": "fitness"
   },
@@ -10309,102 +8117,7 @@ export const ALL_RECIPES: NewRecipe[] = [
     },
     "rating": 5.0,
     "review_count": 2,
-    "recipe_category": "Snack",
-    "meal_type": "fitness"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/8919/grilled-asian-chicken/",
-    "category": "chinese",
-    "id": 8919,
-    "name": "Grilled Asian Chicken",
-    "description": "Asian chicken flavored with a delicious combo of soy, sesame, ginger, garlic, and honey. The marinade creates a delicious glaze on grilled chicken.",
-    "author": "Janet M Leichliter",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/9kvHxT42Ya746tznY2kK-GWC8HE=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/AR-8919-Grilled-Asian-Chicken-DDMFS-4x3-fcbb5e879e94411eb11702b2403ba620.jpg",
-      "alt": "Grilled Asian Chicken"
-    },
-    "prep_time_minutes": 15,
-    "cook_time_minutes": 15,
-    "total_time_minutes": 45,
-    "servings": "4",
-    "ingredients": [
-      "0.25 cup soy sauce",
-      "2 tablespoons honey",
-      "4 teaspoons sesame oil",
-      "2 cloves garlic, crushed",
-      "3 slices fresh ginger root",
-      "4 skinless, boneless chicken breast halves"
-    ],
-    "instructions": [
-      "Gather all ingredients.",
-      "Combine soy sauce, honey, sesame oil, garlic, and ginger in a small microwave-safe bowl; heat in the microwave on medium power for 1 minute, then stir. Heat again for 30 seconds, watching closely to prevent boiling.",
-      "Place chicken breasts in a shallow dish. Pour soy sauce mixture over top and set aside to marinate for 15 minutes.",
-      "Preheat an outdoor grill for medium-high heat and lightly oil the grate. Meanwhile, remove chicken from marinade; transfer marinade into a small saucepan and bring to a boil. Reduce heat to low and simmer until thick, about 1 minute. Set aside for basting.",
-      "Cook chicken on the preheated grill, basting frequently with reserved marinade, until golden brown on all sides and chicken is no longer pink in the center, about 6 to 8 minutes per side. An instant-read meat thermometer inserted into the thickest piece should read at least 160 degrees F (70 degrees C)."
-    ],
-    "nutrition_per_serving": {
-      "calories": 217,
-      "total_fat_g": 8.0,
-      "carbohydrates_g": 11.0,
-      "fiber_g": 0.0,
-      "sugar_g": 9.0,
-      "protein_g": 26.0,
-      "sodium_mg": 961,
-      "cholesterol_mg": 67,
-      "saturated_fat_g": 2.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.5,
-    "review_count": 553,
     "recipe_category": "Dinner",
-    "cuisine": "Chinese",
-    "meal_type": "fitness"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/261452/velveting-chicken-breast-chinese-restaurant-style/",
-    "category": "chinese",
-    "id": 261452,
-    "name": "Velveting Chicken Breast, Chinese Restaurant Style",
-    "description": "This velveting chicken recipe uses a Chinese technique that parboils chicken marinated in egg white, vinegar, and cornstarch for smooth, silken meat.",
-    "author": "VICTORIA",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/fuTegA8PjbiwBOb6QP7fCskPBqg=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/165436262820220603_125536VelvetingChicken4x3-df67512025b34d86b1ca027c1aa245c9.jpg",
-      "alt": "Velveting Chicken Breast, Chinese Restaurant Style"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 10,
-    "total_time_minutes": 50,
-    "servings": "4",
-    "ingredients": [
-      "1 large egg white",
-      "1 tablespoon Chinese rice vinegar",
-      "1 tablespoon cornstarch",
-      "1 teaspoon kosher salt",
-      "1 pound skinless, boneless chicken breast, thinly sliced",
-      "8 cups water",
-      "1 tablespoon peanut oil"
-    ],
-    "instructions": [
-      "Whisk together egg white, vinegar, cornstarch, and salt in a large bowl until smooth. Add sliced chicken; mix to coat thoroughly. Cover with plastic wrap and marinate in the refrigerator for 30 minutes.",
-      "Bring water and oil to a boil in a pot over high heat. Reduce heat to medium.",
-      "Remove chicken from the marinade and shake off excess; discard remaining marinade. Add chicken to boiling water and cook until just white on the outside but not completely cooked through, about 1 minute.",
-      "Drain chicken and finish cooking in a hot oiled wok or skillet until no longer pink in the center and the juices run clear, or store parboiled chicken in the refrigerator in a sealed container until ready to use, up to a few hours."
-    ],
-    "nutrition_per_serving": {
-      "calories": 156,
-      "total_fat_g": 6.0,
-      "carbohydrates_g": 2.0,
-      "sugar_g": 0.0,
-      "protein_g": 23.0,
-      "sodium_mg": 556,
-      "cholesterol_mg": 58,
-      "saturated_fat_g": 1.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.7,
-    "review_count": 67,
-    "recipe_category": "Dinner",
-    "cuisine": "Chinese",
     "meal_type": "fitness"
   },
   {
@@ -10505,147 +8218,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "fitness"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/229032/parchment-baked-salmon/",
-    "category": "cooking-for-one",
-    "id": 229032,
-    "name": "Parchment Baked Salmon",
-    "description": "Cook salmon in parchment paper with lemon slices and basil leaves stuffed into the fillet for a no-fuss, healthy, and quick salmon dinner for two.",
-    "author": "tiger77",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/JZsLVAsVN15S3PKP5mHcpOgNwqU=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/963911-parchment-baked-salmon-Bibi-4x3-1-361a040fc5a04575af66405ddb7a7ffd.jpg",
-      "alt": "Parchment Baked Salmon"
-    },
-    "prep_time_minutes": 15,
-    "cook_time_minutes": 25,
-    "total_time_minutes": 40,
-    "servings": "2",
-    "ingredients": [
-      "1 (8 ounce) salmon fillet",
-      "salt and ground black pepper to taste",
-      "0.25 cup chopped basil leaves",
-      "olive oil cooking spray",
-      "1 lemon, thinly sliced"
-    ],
-    "instructions": [
-      "Preheat the oven to 400 degrees F (200 degrees C). Move an oven rack to the lowest position.",
-      "Place salmon fillet, skin-side down, in the middle of a large piece of parchment paper; season with salt and black pepper. Cut two 3-inch slits into fillet with a sharp knife. Stuff chopped basil leaves into the slits. Spray fillet with cooking spray and arrange lemon slices on top.",
-      "Fold the edges of parchment paper over fillet several times to seal it into an airtight packet. Place sealed packet onto a baking sheet.",
-      "Bake in the preheated oven on the bottom rack until salmon flakes easily and flesh is pink and opaque with an interior of slightly darker pink color, about 25 minutes. An instant-read thermometer inserted into the thickest part of fillet should read at least 145 degrees F (65 degrees C). To serve, cut open the parchment paper and remove lemon slices before plating."
-    ],
-    "nutrition_per_serving": {
-      "calories": 175,
-      "total_fat_g": 7.0,
-      "carbohydrates_g": 6.0,
-      "fiber_g": 3.0,
-      "protein_g": 25.0,
-      "sodium_mg": 48,
-      "cholesterol_mg": 50,
-      "saturated_fat_g": 1.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.6,
-    "review_count": 95,
-    "recipe_category": "Dinner",
-    "cuisine": "American",
-    "meal_type": "fitness"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/237637/miso-glazed-black-cod/",
-    "category": "cooking-for-one",
-    "id": 237637,
-    "name": "Miso-Glazed Black Cod",
-    "description": "This recipe for miso-glazed black cod is Chef John's take on the dish made famous by Chef Nobu Matsuhisa. It's similar in taste with a lot less marinating.",
-    "author": "John Mitzewich",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/PMS71CQn0KsQfV8xTXr0zDdt97s=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/237637-Miso-Glazed-Black-Cod-4x3-177-c65cd0606c0741ecbd92407a57d648ae.jpg",
-      "alt": "Miso-Glazed Black Cod"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 15,
-    "total_time_minutes": 45,
-    "servings": "2",
-    "ingredients": [
-      "cooking spray",
-      "3 tablespoons white miso paste",
-      "2 tablespoons water",
-      "2 tablespoons mirin (Japanese sweet wine)",
-      "2 tablespoons sake",
-      "1 tablespoon brown sugar",
-      "2 (7 ounce) black cod fillets"
-    ],
-    "instructions": [
-      "Gather all ingredients.",
-      "Set an oven rack about 6 inches from the heat source and preheat the oven's broiler. Line a baking sheet with aluminum foil and lightly grease the foil with cooking spray.",
-      "Whisk miso, water, mirin, sake, and brown sugar together in a small skillet over medium heat until mixture simmers and thickens slightly, 1 to 3 minutes. Remove from the heat and let cool completely, 3 to 5 minutes.",
-      "Place cod fillets on the prepared baking sheet. Brush fillets all over with cooled miso mixture. Marinate at room temperature for 15 to 20 minutes.",
-      "Broil in the preheated oven for 5 minutes. Turn the baking sheet 180 degrees and continue broiling until fish flakes easily with a fork, about 5 minutes more. Remove pin bones before serving.",
-      "Serve with your favorite sides, enjoy!"
-    ],
-    "nutrition_per_serving": {
-      "calories": 290,
-      "total_fat_g": 2.0,
-      "carbohydrates_g": 21.0,
-      "fiber_g": 0.0,
-      "sugar_g": 17.0,
-      "protein_g": 37.0,
-      "sodium_mg": 847,
-      "cholesterol_mg": 72,
-      "saturated_fat_g": 0.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.7,
-    "review_count": 97,
-    "recipe_category": "Dinner",
-    "cuisine": "American",
-    "meal_type": "fitness"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/22381/creamy-cornbread-casserole/",
-    "category": "cornbread",
-    "id": 22381,
-    "name": "Creamy Cornbread Casserole",
-    "description": "A deliciously moist and dense cornbread with a topping of melted cheese.",
-    "author": "HOBOLTH4",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/rfrCQ_rt_d1GCi2v9JXuwCBU3Uw=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/103842-47d45d3d16674eb0b684ad418fc27459.jpg",
-      "alt": "Creamy Cornbread Casserole"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 30,
-    "total_time_minutes": 40,
-    "servings": "12",
-    "ingredients": [
-      "1 (15 ounce) can whole kernel corn, drained and 1/2 liquid reserved",
-      "1 (14.75 ounce) can cream-style corn",
-      "2 eggs",
-      "1 (8 ounce) package dry corn bread mix",
-      "1 cup sour cream",
-      "8 ounces Cheddar cheese, shredded"
-    ],
-    "instructions": [
-      "Preheat oven to 400 degrees F (200 degrees C). Lightly grease a 9x13 inch baking pan.",
-      "In a large mixing bowl, combine corn, reserved liquid, eggs, corn bread mix and sour cream; stir until blended. Pour batter into prepared pan; sprinkle with cheese.",
-      "Bake in preheated oven for 30 minutes, until golden brown."
-    ],
-    "nutrition_per_serving": {
-      "calories": 255,
-      "total_fat_g": 13.0,
-      "carbohydrates_g": 26.0,
-      "fiber_g": 1.0,
-      "sugar_g": 4.0,
-      "protein_g": 9.0,
-      "sodium_mg": 642,
-      "cholesterol_mg": 60,
-      "saturated_fat_g": 7.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.5,
-    "review_count": 258,
-    "recipe_category": "Dinner",
-    "cuisine": "American",
-    "meal_type": "work"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/47717/reuben-sandwich-ii/",
     "category": "corned-beef",
     "id": 47717,
@@ -10738,54 +8310,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "recipe_category": "Lunch",
     "meal_type": "work",
     "cuisine": "American"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/142404/cheesesteak-egg-rolls/",
-    "category": "egg-rolls",
-    "id": 142404,
-    "name": "Cheesesteak Egg Rolls",
-    "description": "This mouthwatering appetizer combines cheesesteak and egg rolls. Golden, crispy wrappers are filled with a delicious cheesy mixture of steak and onion.",
-    "author": "brandi380",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/v9GIayPAecTZVk56KW36Gxk6Oec=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/1437348-a5c8efb414854c1d9858fac03c118f33.jpg",
-      "alt": "Cheesesteak Egg Rolls"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 25,
-    "total_time_minutes": 35,
-    "servings": "4",
-    "ingredients": [
-      "1 tablespoon vegetable oil",
-      "1 onion, chopped",
-      "1 (12.5 ounce) package frozen sandwich steak meat",
-      "1 (14 ounce) package egg roll wrappers",
-      "4 slices American cheese, halved",
-      "2 cups oil for frying, or as needed",
-      "0.25 cup ketchup"
-    ],
-    "instructions": [
-      "Heat 1 tablespoon vegetable oil in a large skillet over medium heat. Cook and stir onion in hot oil until onion is translucent, about 5 minutes. Break frozen steak pieces into the skillet; cook and stir until steak is no longer pink, about 10 minutes. Remove from heat and set aside.",
-      "Arrange 8 egg roll wrappers on a flat surface; place a half cheese slice on each one. Layer an equal amount of steak-onion mixture on top of each cheese slice. Roll up wrappers according to package directions and seal edges, wetting with water if necessary.",
-      "Heat 1 inch oil in a deep fryer or large skillet to 375 degrees F (190 degrees C). Working in batches, fry egg rolls in hot oil until golden brown on all sides, about 5 minutes. Remove; drain on paper towels.",
-      "Serve warm egg rolls with ketchup for dipping."
-    ],
-    "nutrition_per_serving": {
-      "calories": 779,
-      "total_fat_g": 39.0,
-      "carbohydrates_g": 66.0,
-      "fiber_g": 3.0,
-      "sugar_g": 6.0,
-      "protein_g": 39.0,
-      "sodium_mg": 1213,
-      "cholesterol_mg": 106,
-      "saturated_fat_g": 13.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.5,
-    "review_count": 83,
-    "recipe_category": "Appetizer",
-    "cuisine": "American",
-    "meal_type": "fitness"
   },
   {
     "url": "https://www.allrecipes.com/recipe/234487/fajita-quesadillas/",
@@ -11030,47 +8554,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "fitness"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/231970/just-garlic-toast/",
-    "category": "garlic-bread",
-    "id": 231970,
-    "name": "Just Garlic Toast",
-    "description": "Rubbing garlic on toasted slices of fresh baguette bread makes a quick-and-easy accompaniment to pasta, salad, or soup. It also has no added fat!",
-    "author": "MNJCARTER",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/_H7KYnMtJuWIjqX9DfbHtT9A_js=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/1003704-61b4071b736c4d0f96a0ca2c7eaea22e.jpg",
-      "alt": "Just Garlic Toast"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 5,
-    "total_time_minutes": 15,
-    "servings": "4",
-    "ingredients": [
-      "0.5 (1 pound) loaf French baguette, cut into 1/2 inch slices",
-      "6 cloves garlic, halved"
-    ],
-    "instructions": [
-      "Set the oven rack about 6 inches from the heat source and preheat the oven's broiler. Arrange baguette slices on a baking sheet.",
-      "Toast in the preheated oven until golden brown, 5 to 10 minutes.",
-      "Rub garlic halves on warm bread."
-    ],
-    "nutrition_per_serving": {
-      "calories": 171,
-      "total_fat_g": 1.0,
-      "carbohydrates_g": 34.0,
-      "fiber_g": 2.0,
-      "sugar_g": 2.0,
-      "protein_g": 7.0,
-      "sodium_mg": 370,
-      "saturated_fat_g": 0.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.5,
-    "review_count": 6,
-    "recipe_category": "Appetizer",
-    "cuisine": "American",
-    "meal_type": "work"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/14554/sirloin-steak-with-garlic-butter/",
     "category": "gluten-free",
     "id": 14554,
@@ -11217,55 +8700,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "recipe_category": "Dinner",
     "cuisine": "Italian",
     "meal_type": "fitness"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/268252/baked-lamb-meatballs/",
-    "category": "ground-lamb",
-    "id": 268252,
-    "name": "Baked Lamb Meatballs",
-    "description": "Yogurt, raisins, cilantro, and dried herbs jazz up these easy-to-make lamb meatballs; just mix everything together and bake!",
-    "author": "Spiderwoman77",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/p_APFZFiDYJwmHbnM76RFRy0YfE=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/8200367-829b17e5b8214631bc41e8158c164908.jpg",
-      "alt": "Baked Lamb Meatballs"
-    },
-    "prep_time_minutes": 15,
-    "cook_time_minutes": 20,
-    "total_time_minutes": 35,
-    "servings": "4",
-    "ingredients": [
-      "1 pound ground lamb",
-      "2 slices bread, torn into small pieces",
-      "0.25 cup yogurt",
-      "0.25 cup raisins",
-      "0.25 cup fresh cilantro",
-      "1 clove garlic, minced",
-      "0.25 teaspoon dried oregano",
-      "0.25 teaspoon dried basil",
-      "0.125 teaspoon salt",
-      "0.125 teaspoon ground black pepper"
-    ],
-    "instructions": [
-      "Preheat the oven to 375 degrees F (190 degrees C).",
-      "Mix lamb, bread, yogurt, raisins, cilantro, garlic, oregano, basil, salt, and pepper together in a bowl. Shape into 1-inch balls and place on a greased baking sheet.",
-      "Bake in the preheated oven until meatballs are browned on the outsides and only slightly pink in the centers, about 20 minutes."
-    ],
-    "nutrition_per_serving": {
-      "calories": 298,
-      "total_fat_g": 16.0,
-      "carbohydrates_g": 16.0,
-      "fiber_g": 1.0,
-      "sugar_g": 8.0,
-      "protein_g": 22.0,
-      "sodium_mg": 235,
-      "cholesterol_mg": 77,
-      "saturated_fat_g": 7.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.5,
-    "review_count": 6,
-    "recipe_category": "Dinner",
-    "meal_type": "work"
   },
   {
     "url": "https://www.allrecipes.com/recipe/280926/baked-chicken-burgers-with-mushrooms-and-spinach/",
@@ -11418,103 +8852,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "fitness"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/130764/simple-cranberry-spinach-salad/",
-    "category": "green-salads",
-    "id": 130764,
-    "name": "Simple Cranberry Spinach Salad",
-    "description": "This is a simple salad that can be made in minutes. Use a light vinaigrette dressing.",
-    "author": "Bethanie Rose",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/9J0Uji-PtVyUTQHNUPfMjD8DzVQ=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/340583-simple-cranberry-spinach-salad-SHORECOOK-4x3-1-c6aaf7867c6745189e7f58baf29f36ca.jpg",
-      "alt": "Simple Cranberry Spinach Salad"
-    },
-    "prep_time_minutes": 5,
-    "cook_time_minutes": null,
-    "total_time_minutes": 5,
-    "servings": "4",
-    "ingredients": [
-      "1 (6 ounce) package fresh spinach",
-      "0.33333334326744 cup dried cranberries",
-      "0.33333334326744 cup chopped walnuts",
-      "0.33333334326744 cup raspberry walnut vinaigrette",
-      "1 tablespoon finely shredded Romano cheese"
-    ],
-    "instructions": [
-      "Combine the spinach, cranberries, walnuts, vinaigrette, and Romano cheese in a large bowl; toss until spinach is evenly coated. Serve immediately."
-    ],
-    "nutrition_per_serving": {
-      "calories": 138,
-      "total_fat_g": 7.0,
-      "carbohydrates_g": 18.0,
-      "fiber_g": 2.0,
-      "sugar_g": 14.0,
-      "protein_g": 3.0,
-      "sodium_mg": 338,
-      "cholesterol_mg": 2,
-      "saturated_fat_g": 1.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 5.0,
-    "review_count": 32,
-    "recipe_category": "Lunch",
-    "meal_type": "work",
-    "cuisine": "American"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/245536/paleo-applesauce-pancakes/",
-    "category": "gluten-free",
-    "id": 245536,
-    "name": "Paleo Applesauce Pancakes",
-    "description": "These paleo pancakes made with tapioca flour, applesauce, and cinnamon are a quick and easy gluten-free breakfast treat.",
-    "author": "PiePony",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/f46pEBaSVNKnypoVWLrN89_zpfM=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/245536-paleo-applesauce-pancakes-VAT-Beauty-4x3-3468bc569dab48d684176aa5fe101d69.jpg",
-      "alt": "Paleo Applesauce Pancakes"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 5,
-    "total_time_minutes": 30,
-    "servings": "6",
-    "ingredients": [
-      "2 eggs",
-      "0.33333334326744 cup applesauce",
-      "0.5 teaspoon vanilla extract",
-      "0.5 cup almond flour",
-      "0.33333334326744 cup tapioca flour",
-      "0.5 teaspoon ground cinnamon",
-      "0.5 teaspoon baking soda",
-      "1 pinch salt",
-      "3 tablespoons water, or as needed",
-      "1.5 teaspoons coconut oil, or as needed"
-    ],
-    "instructions": [
-      "Gather all ingredients.",
-      "Whisk eggs lightly in a large bowl. Add applesauce and vanilla extract; mix well to combine.",
-      "Combine almond flour, tapioca flour, cinnamon, baking soda, and salt in a separate bowl.",
-      "Add to egg mixture and mix until just combined. Add water until pancake batter is desired thickness. Set batter aside to rest for 15 minutes.",
-      "Melt coconut oil on a griddle over medium-high heat. Drop batter by large spoonfuls onto the griddle and cook until bubbles form in the center and the edges are dry, 3 to 4 minutes.",
-      "Flip and cook until golden on the other side, 2 to 3 minutes. Repeat with remaining batter.",
-      "Serve and enjoy!"
-    ],
-    "nutrition_per_serving": {
-      "calories": 127,
-      "total_fat_g": 8.0,
-      "carbohydrates_g": 11.0,
-      "fiber_g": 1.0,
-      "sugar_g": 2.0,
-      "protein_g": 4.0,
-      "sodium_mg": 155,
-      "cholesterol_mg": 62,
-      "saturated_fat_g": 2.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 5.0,
-    "review_count": 20,
-    "recipe_category": "Breakfast",
-    "cuisine": "American",
-    "meal_type": "fitness"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/275571/fruity-chicken-salad-with-tarragon/",
     "category": "chicken-salads",
     "id": 275571,
@@ -11562,110 +8899,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "rating": 5.0,
     "review_count": 5,
     "recipe_category": "Lunch",
-    "cuisine": "American",
-    "meal_type": "work"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/281839/instant-pot-butternut-squash-soup/",
-    "category": "butternut-squash-soups",
-    "id": 281839,
-    "name": "Instant Pot Butternut Squash Soup",
-    "description": "This Instant Pot butternut squash soup with thyme and marjoram is smooth, velvety, and quick to make in any electric pressure cooker.",
-    "author": "Buckwheat Queen",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/8xPcsVpnKZ5_64uPaSIPZdrD0RE=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/8617726-dcdf127bcb45431c9f41bd4784a5e86b.jpg",
-      "alt": "Instant Pot Butternut Squash Soup"
-    },
-    "prep_time_minutes": 20,
-    "cook_time_minutes": 35,
-    "total_time_minutes": 60,
-    "servings": "6",
-    "ingredients": [
-      "2 tablespoons extra-virgin olive oil",
-      "1 large yellow onion, diced",
-      "1 large carrot, diced",
-      "1 stalk celery, diced",
-      "2 pounds butternut squash - peeled, seeded, and cubed",
-      "1 teaspoon dried thyme",
-      "1 teaspoon dried marjoram",
-      "4 cups low-sodium chicken broth",
-      "salt and ground black pepper to taste"
-    ],
-    "instructions": [
-      "Turn on a multi-functional pressure cooker (such as Instant Pot\u00ae) and select Saute function. Heat olive oil and add onion, carrot, and celery; cook until translucent and tender, about 6 to 8 minutes. Add squash, thyme, and marjoram; cook until the squash has begun to sweat and absorb the flavors, about 5 minutes more. Pour in broth.",
-      "Close and lock the lid. Select high pressure according to manufacturer's instructions; set timer for 10 minutes. Allow 10 to 15 minutes for pressure to build.",
-      "Release pressure carefully using the quick-release method according to manufacturer's instructions, about 5 minutes. Unlock and remove lid. Adjust seasoning with salt and pepper. Blend with an immersion blender until creamy."
-    ],
-    "nutrition_per_serving": {
-      "calories": 139,
-      "total_fat_g": 5.0,
-      "carbohydrates_g": 22.0,
-      "fiber_g": 4.0,
-      "sugar_g": 6.0,
-      "protein_g": 4.0,
-      "sodium_mg": 96,
-      "cholesterol_mg": 3,
-      "saturated_fat_g": 1.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 5.0,
-    "review_count": 4,
-    "recipe_category": "Lunch",
-    "cuisine": "American",
-    "meal_type": "work"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/8486409/crispy-fried-poached-eggs/",
-    "category": "easter",
-    "id": 8486409,
-    "name": "Crispy Fried Poached Eggs",
-    "description": "This truly wow-worthy dish combines smooth silky egg yolks with a crispy tasty crust. Top with pickled onions and scallions",
-    "author": "Annie Campbell",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/a5tZEnwz5Ccf9U2o296UK6t_ZlY=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/ALR-8486409-crispy-fried-poached-eggs-VAT-hero-02-4x3-3bad718bfa794b458c5120f4cf03eb79.jpg",
-      "alt": "Crispy Fried Poached Eggs"
-    },
-    "prep_time_minutes": 20,
-    "cook_time_minutes": 7,
-    "total_time_minutes": 27,
-    "servings": "4",
-    "ingredients": [
-      "4 large fresh eggs",
-      "2 tablespoons white vinegar",
-      "4 cups vegetable oil",
-      "1.5 cups all-purpose flour",
-      "2 large eggs, lightly beaten",
-      "2 teaspoons salt",
-      "1 teaspoon freshly ground black pepper",
-      "1.5 cups panko bread crumbs",
-      "2 tablespoons chopped pickled red onions (for garnish)",
-      "2 tablespoons chopped green onions (for garnish)",
-      "1 tablespoon red pepper flakes for garnish, or to taste"
-    ],
-    "instructions": [
-      "Gather all ingredients.",
-      "Fill a saucepan with cold water and place over medium heat. Stir in vinegar and bring to a gentle, slow simmer. Working with one egg at a time, crack an egg into a ramekin or measuring cup for easier transfer.",
-      "Stir the water vigorously to create a whirlpool effect. As the whirlpool is turning, drop the egg into the center of the water. Continue to stir gently, cooking until the egg white turns opaque.",
-      "Using a slotted spoon, carefully remove the egg from the water and move to a paper towel-lined plate to drain. In a medium saucepan, heat oil to 375 degrees F (190 degrees C).",
-      "Meanwhile, set up a dredging station with 3 separate bowls. To the first bowl, add the flour. Beat 2 eggs with salt and pepper in a second bowl. Add breadcrumbs to the third bowl.",
-      "Carefully dip the cooled egg first into the flour, second into the egg mixture, and last into the breadcrumbs, coating egg on all sides at each station.",
-      "Using a slotted spoon, carefully drop the egg into the hot oil and fry until golden brown, 2 to 3 minutes, being careful not to overcook. Drain on a paper-towel lined plate.",
-      "Garnish with pickled red onions, green onions, and red pepper flakes. Serve immediately."
-    ],
-    "nutrition_per_serving": {
-      "calories": 2321,
-      "total_fat_g": 228.0,
-      "carbohydrates_g": 67.0,
-      "fiber_g": 2.0,
-      "protein_g": 19.0,
-      "sodium_mg": 1456,
-      "cholesterol_mg": 279,
-      "saturated_fat_g": 37.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 5.0,
-    "review_count": 4,
-    "recipe_category": "Breakfast",
     "cuisine": "American",
     "meal_type": "work"
   },
@@ -11872,57 +9105,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "work"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/266822/cucumber-gazpacho-with-mint-paste/",
-    "category": "gazpacho",
-    "id": 266822,
-    "name": "Cucumber Gazpacho with Mint Paste",
-    "description": "Looking for a cold, refreshing soup on a hot day? Try this cucumber gazpacho, garnished with a delicious mint paste with hazelnuts.",
-    "author": "Barbara Sauermann",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/mQNSJ7szTHBJnui5pIbJbZDAiMs=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/266822cucumber-gazpacho-with-mint-pastefrancec4x3-44a955495efc42de9c294ee74b7c9e68.jpg",
-      "alt": "Cucumber Gazpacho with Mint Paste"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": null,
-    "total_time_minutes": 10,
-    "servings": "6",
-    "ingredients": [
-      "2 large cucumbers, peeled and halved lengthwise",
-      "0.5 (16 ounce) container sour cream",
-      "1 pinch white sugar",
-      "1 pinch cayenne pepper",
-      "0.5 bunch fresh mint leaves",
-      "3 tablespoons olive oil, or more to taste",
-      "1 tablespoon chopped hazelnuts",
-      "0.5 teaspoon salt, or to taste",
-      "0.5 teaspoon lemon juice, or more to taste"
-    ],
-    "instructions": [
-      "Scrape cucumber seeds into a fine mesh sieve and press out as much liquid as possible. Reserve liquid and roughly chop cucumbers.",
-      "Combine cucumbers and cucumber liquid in the bowl of a food processor; process until smooth.",
-      "Whisk cucumber puree and sour cream together in a bowl. Season with sugar and cayenne. Cover and refrigerate.",
-      "Mash together mint, olive oil, and hazelnuts in a mortar and pestle until a paste forms. Season with salt and lemon juice.",
-      "Divide gazpacho between individual bowls and place a spoonful of mint paste on top of each."
-    ],
-    "nutrition_per_serving": {
-      "calories": 165,
-      "total_fat_g": 16.0,
-      "carbohydrates_g": 6.0,
-      "fiber_g": 1.0,
-      "sugar_g": 2.0,
-      "protein_g": 2.0,
-      "sodium_mg": 216,
-      "cholesterol_mg": 17,
-      "saturated_fat_g": 6.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 5.0,
-    "review_count": 3,
-    "recipe_category": "Lunch",
-    "cuisine": "Spanish",
-    "meal_type": "study"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/268426/blt-egg-salad/",
     "category": "meal-prep",
     "id": 268426,
@@ -11971,57 +9153,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "recipe_category": "Lunch",
     "cuisine": "American",
     "meal_type": "work"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/255446/originals-oven-roasted-chicken-salad-mason-jar/",
-    "category": "meal-prep",
-    "id": 255446,
-    "name": "Originals Oven Roasted Chicken Salad Mason Jar",
-    "description": "Prep for the workweek with the Mason Jar Chicken Salad--an easy way to save on carbs and cash.",
-    "author": "Dietz Watson",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/Q1v46Abm9koPFjhx_rnWIAxDrHw=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/3962381-d563719a15624909a0ce1a1bbc6bd842.jpg",
-      "alt": "Originals Oven Roasted Chicken Salad Mason Jar"
-    },
-    "prep_time_minutes": null,
-    "cook_time_minutes": null,
-    "total_time_minutes": 10,
-    "servings": "2",
-    "ingredients": [
-      "6 ounces Dietz & Watson Originals Oven Roasted Chicken Breast, diced",
-      "0.125 cup Greek yogurt",
-      "0.25 red onion, diced",
-      "1 stalk celery, diced",
-      "1 green apple, chopped",
-      "0.25 cup dried cranberries",
-      "1 cup spring mix greens",
-      "0.25 cup pecans",
-      "0.5 tablespoon freshly squeezed lemon juice"
-    ],
-    "instructions": [
-      "In small bowl, combine Originals Oven Roasted Chicken Breast, Greek yogurt, red onion, celery and lemon juice.",
-      "Divide chicken mixture, spring mix, cranberries, apples and pecans in half.",
-      "To assemble, begin by placing chicken and dressing mixture into the bottom of 2 jars.",
-      "Next add lettuce then finish by topping with cranberries and pecans and tighten lids.",
-      "Once ready to eat, empty jar into a bowl, mix and enjoy!"
-    ],
-    "nutrition_per_serving": {
-      "calories": 200,
-      "total_fat_g": 11.0,
-      "carbohydrates_g": 26.0,
-      "fiber_g": 5.0,
-      "sugar_g": 19.0,
-      "protein_g": 3.0,
-      "sodium_mg": 41,
-      "cholesterol_mg": 4,
-      "saturated_fat_g": 2.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 5.0,
-    "review_count": 3,
-    "recipe_category": "Lunch",
-    "meal_type": "work",
-    "cuisine": "American"
   },
   {
     "url": "https://www.allrecipes.com/recipe/284668/spinach-feta-frittata/",
@@ -12073,59 +9204,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "recipe_category": "Breakfast",
     "meal_type": "work",
     "cuisine": "American"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/281840/broccoli-cheddar-frittata/",
-    "category": "frittatas",
-    "id": 281840,
-    "name": "Broccoli-Cheddar Frittata",
-    "description": "Broccoli and Cheddar cheese are the key ingredients in this easy frittata your family will love for breakfast or brunch.",
-    "author": "Bibi",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/mNLDorMxg4hzYnn5hRWfRrUGR70=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/8600461-d95612ba846d457d9c2988dcc19a47ef.jpg",
-      "alt": "Broccoli-Cheddar Frittata"
-    },
-    "prep_time_minutes": 15,
-    "cook_time_minutes": 15,
-    "total_time_minutes": 40,
-    "servings": "8",
-    "ingredients": [
-      "7 large eggs",
-      "0.25 cup heavy cream",
-      "1 teaspoon smoked paprika",
-      "salt and freshly ground black pepper to taste",
-      "2 tablespoons unsalted butter",
-      "0.5 cup chopped onion",
-      "1.5 cups chopped fresh broccoli",
-      "1 cup frozen diced hash brown potatoes, thawed",
-      "1 cup shredded Cheddar cheese",
-      "4 slices bacon, cooked and crumbled"
-    ],
-    "instructions": [
-      "Position a rack in the center of the oven and preheat the oven to 400 degrees F (200 degrees C).",
-      "Whisk eggs, cream, smoked paprika, salt, and pepper together in a bowl. Set aside.",
-      "Melt butter in a 12-inch nonstick, oven-proof skillet over medium-high heat until bubbly. Add chopped onion and cook until softened, 1 to 2 minutes. Add chopped broccoli and cook, stirring occasionally, about 2 minutes. Add potatoes and cook, stirring occasionally, about 2 minutes. Lightly season vegetables with additional salt and pepper.",
-      "Gently pat the vegetables into an even layer with the back of a spatula or spoon and turn off the heat. Sprinkle cheese over the vegetables, followed by bacon.",
-      "Pour the egg mixture into the skillet and gently shake to eliminate any holes around the vegetables. Let the residual heat cook the eggs slightly, about 2 minutes.",
-      "Bake in the preheated oven for 8 to 10 minutes. Check for doneness by using a knife to cut the center slightly. Eggs should not be runny enough to fill the cut. Allow to cool in the skillet for 5 minutes before serving."
-    ],
-    "nutrition_per_serving": {
-      "calories": 179,
-      "total_fat_g": 15.0,
-      "carbohydrates_g": 6.0,
-      "fiber_g": 1.0,
-      "sugar_g": 1.0,
-      "protein_g": 8.0,
-      "sodium_mg": 261,
-      "cholesterol_mg": 43,
-      "saturated_fat_g": 9.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 5.0,
-    "review_count": 2,
-    "recipe_category": "Breakfast",
-    "cuisine": "American",
-    "meal_type": "study"
   },
   {
     "url": "https://www.allrecipes.com/recipe/266829/make-ahead-rhubarb-yogurt-parfaits/",
@@ -12477,52 +9555,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "work"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/241920/easy-homemade-pasta-dough/",
-    "category": "homemade-pasta",
-    "id": 241920,
-    "name": "Easy Homemade Pasta",
-    "description": "This homemade pasta recipe is easy to make with flour, eggs, salt, olive oil, and water in less than 30 minutes for fresh pasta that tastes great!",
-    "author": "pho1962",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/fclPUtUAfb-SvePj3o4crWTsFcM=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/241920-easy-homemade-pasta-dough-ddmfs-4x3-c7172fe3104e43868f928c077d3a3397.jpg",
-      "alt": "Easy Homemade Pasta"
-    },
-    "prep_time_minutes": 20,
-    "cook_time_minutes": null,
-    "total_time_minutes": 25,
-    "servings": "4",
-    "ingredients": [
-      "2 cups flour",
-      "3 large eggs, at room temperature",
-      "2 tablespoons olive oil",
-      "1 teaspoon salt",
-      "2 tablespoons water, or as needed"
-    ],
-    "instructions": [
-      "Gather all ingredients.",
-      "Mix flour, eggs, olive oil, and salt in a bowl until combined. Add water, 1 teaspoon at a time, to flour mixture until a smooth, thick dough forms.",
-      "Turn dough out onto a lightly floured work surface and knead for 10 minutes. Let dough rest for 5 to 10 minutes.",
-      "Divide dough into 8 balls; use a pasta machine to roll and cut dough into desired pasta shape."
-    ],
-    "nutrition_per_serving": {
-      "calories": 341,
-      "total_fat_g": 11.0,
-      "carbohydrates_g": 48.0,
-      "fiber_g": 2.0,
-      "sugar_g": 1.0,
-      "protein_g": 11.0,
-      "sodium_mg": 636,
-      "cholesterol_mg": 140,
-      "saturated_fat_g": 2.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.9,
-    "review_count": 145,
-    "recipe_category": "Lunch",
-    "cuisine": "Italian",
-    "meal_type": "work"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/220814/maple-pecan-granola/",
     "category": "granola",
     "id": 220814,
@@ -12725,102 +9757,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "work"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/269196/dairy-free-savory-sausage-gravy/",
-    "category": "gravies",
-    "id": 269196,
-    "name": "Dairy-Free Savory Sausage Gravy",
-    "description": "This dairy-free sausage gravy uses almond milk to create a smooth, rich gravy that's simple and easy to customize. Perfect for biscuits and gravy.",
-    "author": "Athlon",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/8LTtG4WDZ-Nj0lkUVhljKKgPqVE=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/7876250-37ef649b2b0b4258957d6b6b18436dcf.jpg",
-      "alt": "Dairy-Free Savory Sausage Gravy"
-    },
-    "prep_time_minutes": 5,
-    "cook_time_minutes": 20,
-    "total_time_minutes": 25,
-    "servings": "20",
-    "ingredients": [
-      "2 pounds breakfast sausage",
-      "2.5 tablespoons Worcestershire sauce",
-      "1 cube beef bouillon, crushed",
-      "1 teaspoon ground nutmeg",
-      "1 cup all-purpose flour",
-      "4 cups almond milk, or as needed",
-      "3 teaspoons ground black pepper, or to taste",
-      "1 teaspoon salt"
-    ],
-    "instructions": [
-      "Break sausage apart in a large skillet over medium-high heat. Cook until starting to brown, 3 to 5 minutes. Add Worcestershire sauce and let it heat up before adding beef bouillon and nutmeg. Stir and cook sausage until no longer pink, 3 to 5 minutes more.",
-      "Reduce heat to medium-low and sprinkle in flour gradually. Cook, stirring constantly, until flour coats sausage and is completely absorbed. Cook for 1 to 2 minutes more.",
-      "Pour in almond milk gradually, stirring constantly until gravy starts to thicken, up to 12 minutes. Add a little more almond milk if too thick. Season with pepper and salt. Continue stirring vigorously until gravy reaches desired thickness.",
-      "Remove from heat and let cool. Taste and adjust seasoning as desired."
-    ],
-    "nutrition_per_serving": {
-      "calories": 155,
-      "total_fat_g": 10.0,
-      "carbohydrates_g": 8.0,
-      "fiber_g": 1.0,
-      "sugar_g": 2.0,
-      "protein_g": 7.0,
-      "sodium_mg": 618,
-      "cholesterol_mg": 26,
-      "saturated_fat_g": 3.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.9,
-    "review_count": 20,
-    "recipe_category": "Breakfast",
-    "cuisine": "Southern",
-    "meal_type": "fitness"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/244914/chef-johns-fresh-spring-rolls/",
-    "category": "chef-john",
-    "id": 244914,
-    "name": "Chef John's Fresh Spring Rolls",
-    "description": "Chef John uses rice paper wrappers and ingredients he has on hand--cooked chicken, bell peppers, English cucumbers, carrots, and fresh herbs--to make his versatile spring rolls.",
-    "author": "John Mitzewich",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/AvhNip840bO54v17OsbOFWepR1M=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/244914-chef-johns-fresh-spring-rolls-GOLDMAN-4x3-4536-00355ea8689d440eb06d2f0c66c6f34b.jpg",
-      "alt": "Chef John's Fresh Spring Rolls"
-    },
-    "prep_time_minutes": 15,
-    "cook_time_minutes": null,
-    "total_time_minutes": 35,
-    "servings": "4",
-    "ingredients": [
-      "4 (8 1/2-inch) rice paper wrappers",
-      "1 cooked chicken breast half, cut into thin strips",
-      "1 red bell pepper, cut into thin strips",
-      "1 English cucumber, cut into thin strips",
-      "1 carrot, cut into thin strips",
-      "4 sprigs chopped fresh basil",
-      "4 sprigs chopped fresh mint",
-      "4 sprigs chopped fresh cilantro"
-    ],
-    "instructions": [
-      "Soak a rice paper wrapper in cold water just until it becomes flexible, 1 minute or less. Place on a slightly damp towel. Place some baby greens near the bottom of the round. Top with strips of chicken and pepper, leaving about a 1-inch margin on the sides. Roll tightly just until the bottom edge meets the center of the paper and sticks there. Then continue to add more chicken strips and vegetable strips. Finish with torn pieces of herbs. Complete the roll, pressing the ingredients to keep roll tight and tucking in the sides.",
-      "Transfer completed rolls to a plate lined with damp paper towels. Cover each roll with damp papers towels as you work to prevent them from drying out; don't let the rolls touch each other or they will stick together."
-    ],
-    "nutrition_per_serving": {
-      "calories": 146,
-      "total_fat_g": 4.0,
-      "carbohydrates_g": 9.0,
-      "fiber_g": 2.0,
-      "sugar_g": 3.0,
-      "protein_g": 17.0,
-      "sodium_mg": 49,
-      "cholesterol_mg": 41,
-      "saturated_fat_g": 1.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.9,
-    "review_count": 18,
-    "recipe_category": "Lunch",
-    "cuisine": "Vietnamese",
-    "meal_type": "fitness"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/232414/the-girls-chicken-sandwiches/",
     "category": "Purim",
     "id": 232414,
@@ -12864,147 +9800,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "recipe_category": "Lunch",
     "meal_type": "work",
     "cuisine": "American"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/215125/fruit-salad-with-vanilla-yogurt/",
-    "category": "fruit-salads",
-    "id": 215125,
-    "name": "Fruit Salad with Vanilla Yogurt",
-    "description": "A bright, pretty salad with summer's sweet fruits has a ready-made dressing of low-fat vanilla yogurt.",
-    "author": "Leslie",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/BIn8MWqtY0hiKNhcWJOUoLgqVHA=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/975309-5312180f7c7047629fb6d3f8d35c4036.jpg",
-      "alt": "Fruit Salad with Vanilla Yogurt"
-    },
-    "prep_time_minutes": 30,
-    "cook_time_minutes": null,
-    "total_time_minutes": 30,
-    "servings": "12",
-    "ingredients": [
-      "1 (16 ounce) package fresh strawberries, hulled and halved",
-      "1 large peach, pitted and cut into bite-size pieces",
-      "2 plums, pitted and cut into bite-size pieces",
-      "2 kiwi fruit, peeled and cut into bite-size pieces",
-      "1 cup dark sweet cherries, pitted and halved",
-      "1 cup honeydew melon balls or cubes",
-      "1 cup cantaloupe balls or cubes",
-      "1 cup cubed fresh pineapple",
-      "1 cup grapes",
-      "2 (16 ounce) containers low-fat vanilla yogurt"
-    ],
-    "instructions": [
-      "In a large salad bowl, lightly mix together the strawberries, peach, plums, kiwi fruit, cherries, honeydew melon, cantaloupe, pineapple, and grapes until the fruit is well mixed. Serve in bowls with yogurt spooned over the top."
-    ],
-    "nutrition_per_serving": {
-      "calories": 126,
-      "total_fat_g": 1.0,
-      "carbohydrates_g": 26.0,
-      "fiber_g": 2.0,
-      "sugar_g": 23.0,
-      "protein_g": 5.0,
-      "sodium_mg": 56,
-      "cholesterol_mg": 4,
-      "saturated_fat_g": 1.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.9,
-    "review_count": 14,
-    "recipe_category": "Lunch",
-    "meal_type": "fitness",
-    "cuisine": "American"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/228681/fresh-fruit-salad/",
-    "category": "fruit-salads",
-    "id": 228681,
-    "name": "Fresh Fruit Salad",
-    "description": "This is a simple fruit salad with fresh berries, mango, banana, and orange. Add yogurt and maple syrup for extra flavor.",
-    "author": "Patricia OHara",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/Oei8FzMb5qHnl4UtDjLia5abDEE=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/970419-ad2ca36407714dd0ad9d12edfe040335.jpg",
-      "alt": "Fresh Fruit Salad"
-    },
-    "prep_time_minutes": 15,
-    "cook_time_minutes": null,
-    "total_time_minutes": 15,
-    "servings": "2",
-    "ingredients": [
-      "1 small orange, peeled and diced",
-      "0.5 mango, diced",
-      "0.5 cup fresh blueberries",
-      "0.5 cup fresh strawberries, sliced",
-      "0.5 cup fresh raspberries",
-      "0.5 small banana, sliced",
-      "2 tablespoons plain yogurt",
-      "1 tablespoon maple syrup",
-      "1 pinch white sugar"
-    ],
-    "instructions": [
-      "Toss orange, mango, blueberries, strawberries, raspberries, and banana in a large bowl. Stir yogurt and syrup into the mixture to coat evenly. Sprinkle sugar over the salad; stir to serve."
-    ],
-    "nutrition_per_serving": {
-      "calories": 156,
-      "total_fat_g": 1.0,
-      "carbohydrates_g": 38.0,
-      "fiber_g": 6.0,
-      "sugar_g": 28.0,
-      "protein_g": 3.0,
-      "sodium_mg": 14,
-      "cholesterol_mg": 1,
-      "saturated_fat_g": 0.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.9,
-    "review_count": 12,
-    "recipe_category": "Lunch",
-    "meal_type": "work",
-    "cuisine": "American"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/278665/papas-con-chorizo/",
-    "category": "breakfast-potatoes",
-    "id": 278665,
-    "name": "Papas con Chorizo",
-    "description": "This papas con chorizo recipe is for a breakfast made with tender diced potatoes, chorizo sausage, and serrano pepper that's popular throughout Mexico.",
-    "author": "Yoly",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/Pm6wYLoGXAW50tVpYrr4km-YxQw=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/7695829-85a0d18d1ad44fcf8275610ea2bc85fd.jpg",
-      "alt": "Papas con Chorizo"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 20,
-    "total_time_minutes": 30,
-    "servings": "6",
-    "ingredients": [
-      "1 (9 ounce) package Mexican chorizo sausage, casings removed",
-      "1.5 tablespoons bacon drippings",
-      "2 cups diced potatoes",
-      "0.33333334326744 cup chopped onion",
-      "1 serrano pepper, chopped",
-      "0.5 teaspoon salt, or to taste",
-      "0.25 teaspoon freshly ground black pepper, or to taste"
-    ],
-    "instructions": [
-      "Cook chorizo in a large skillet over medium-high heat until turns dark red, 6 to 8 minutes, stirring frequently. Transfer chorizo to a bowl; set aside.",
-      "Melt bacon grease in the same skillet over medium to medium-high heat. Add potatoes; cook and stir for 10 minutes. Add onion and serrano; cook and stir until potatoes are fork-tender, onion is translucent, and serrano is soft, 2 to 6 minutes more. Return chorizo to the skillet; stir until heated through. Season with salt and black pepper."
-    ],
-    "nutrition_per_serving": {
-      "calories": 199,
-      "total_fat_g": 13.0,
-      "carbohydrates_g": 11.0,
-      "fiber_g": 1.0,
-      "sugar_g": 1.0,
-      "protein_g": 9.0,
-      "sodium_mg": 617,
-      "cholesterol_mg": 30,
-      "saturated_fat_g": 5.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.9,
-    "review_count": 8,
-    "recipe_category": "Breakfast",
-    "cuisine": "Mexican",
-    "meal_type": "fitness"
   },
   {
     "url": "https://www.allrecipes.com/recipe/278815/air-fryer-frittata/",
@@ -13523,53 +10318,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "work"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/21672/sauteed-apples/",
-    "category": "gluten-free",
-    "id": 21672,
-    "name": "Saut\u00e9ed Apples",
-    "description": "Saut\u00e9ed apples cooked in butter with brown sugar and cinnamon until tender, syrupy, and delicious. Spoon on top of porridge, pancakes, or pork chops!",
-    "author": "356",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/XuWvqN_RNbptO860C2qs3O41Un8=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/21672-SauteedApples-ddmfs-Step5-0055-00e1950fab834d7a9d988794925e1bc5.jpg",
-      "alt": "Saut\u00e9ed Apples"
-    },
-    "prep_time_minutes": 5,
-    "cook_time_minutes": 15,
-    "total_time_minutes": 20,
-    "servings": "8",
-    "ingredients": [
-      "0.25 cup butter",
-      "4 large tart apples - peeled, cored and sliced 1/4 inch thick",
-      "0.5 cup cold water",
-      "2 teaspoons cornstarch",
-      "0.5 cup brown sugar",
-      "0.5 teaspoon ground cinnamon"
-    ],
-    "instructions": [
-      "Melt butter in a large skillet or saucepan over medium heat.",
-      "Add apples and cook, stirring constantly, until almost tender, 6 to 7 minutes.",
-      "Mix water and cornstarch together in a small bowl until cornstarch is dissolved; pour over apples. Stir in brown sugar and cinnamon. Bring to a boil for 2 minutes, stirring occasionally.",
-      "Remove from heat and serve warm."
-    ],
-    "nutrition_per_serving": {
-      "calories": 143,
-      "total_fat_g": 6.0,
-      "carbohydrates_g": 24.0,
-      "fiber_g": 3.0,
-      "sugar_g": 20.0,
-      "protein_g": 0.0,
-      "sodium_mg": 45,
-      "cholesterol_mg": 15,
-      "saturated_fat_g": 4.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.8,
-    "review_count": 1814,
-    "recipe_category": "Breakfast",
-    "cuisine": "American",
-    "meal_type": "work"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/146572/sweet-cornbread-cake/",
     "category": "cornbread",
     "id": 146572,
@@ -13666,53 +10414,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "recipe_category": "Breakfast",
     "cuisine": "American",
     "meal_type": "fitness"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/87848/missys-candied-walnut-gorgonzola-salad/",
-    "category": "green-salads",
-    "id": 87848,
-    "name": "Missy's Candied Walnut Gorgonzola Salad",
-    "description": "A yummy, easy salad with candied walnuts, cranberries, Gorgonzola cheese, mixed greens, and a raspberry vinaigrette. It's always a big hit and is requested by my friends and family constantly!",
-    "author": "MissyPorkChop",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/yzm8KkPNOH41pPBI-s9GjNCfxkY=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/507461-b06459a53a544f069b3c6bce550c5c1e.jpg",
-      "alt": "Missy's Candied Walnut Gorgonzola Salad"
-    },
-    "prep_time_minutes": 5,
-    "cook_time_minutes": 5,
-    "total_time_minutes": 10,
-    "servings": "4",
-    "ingredients": [
-      "0.5 cup walnut halves",
-      "0.25 cup sugar",
-      "3 cups mixed greens",
-      "0.5 cup dried cranberries",
-      "0.5 cup crumbled Gorgonzola cheese",
-      "1 tablespoon raspberry vinaigrette",
-      "1 tablespoon white vinegar",
-      "1 tablespoon olive oil"
-    ],
-    "instructions": [
-      "Place walnuts and sugar in a skillet over medium heat, stirring constantly until the sugar dissolves into a light brown liquid and coats the walnuts. Remove walnuts from skillet, and spread them out on a sheet of aluminum foil to cool.",
-      "Place in a large salad bowl the mixed greens, cranberries, cheese, vinaigrette, vinegar, and olive oil. Toss gently; add candied walnuts, and toss again."
-    ],
-    "nutrition_per_serving": {
-      "calories": 308,
-      "total_fat_g": 19.0,
-      "carbohydrates_g": 29.0,
-      "fiber_g": 2.0,
-      "sugar_g": 24.0,
-      "protein_g": 7.0,
-      "sodium_mg": 273,
-      "cholesterol_mg": 23,
-      "saturated_fat_g": 5.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.8,
-    "review_count": 436,
-    "recipe_category": "Lunch",
-    "cuisine": "North American",
-    "meal_type": "work"
   },
   {
     "url": "https://www.allrecipes.com/recipe/237358/hawaiian-ham-and-cheese-sliders/",
@@ -13813,141 +10514,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "work"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/272293/fluffy-microwave-scrambled-eggs/",
-    "category": "keto",
-    "id": 272293,
-    "name": "Fluffy Microwave Scrambled Eggs",
-    "description": "Learn how to make scrambled eggs for breakfast that are soft, fluffy, and absolutely delicious with this quick and easy 3-ingredient microwave recipe.",
-    "author": "Diana71",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/ygWJ_53Z7xfnporuVJF1LYpFon0=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/272293-fluffy-microwave-scrambled-eggs-DDMFS-4x3-5b0c4f0fc5b4464e8ba1d1886667631e.jpg",
-      "alt": "Fluffy Microwave Scrambled Eggs"
-    },
-    "prep_time_minutes": 5,
-    "cook_time_minutes": 5,
-    "total_time_minutes": 10,
-    "servings": "2",
-    "ingredients": [
-      "4 eggs",
-      "0.25 cup milk",
-      "0.125 teaspoon salt"
-    ],
-    "instructions": [
-      "Gather all ingredients.",
-      "Break the eggs into a microwave-proof mixing bowl. Add milk and salt; mix well.",
-      "Pop the bowl into the microwave and cook on high power for 30 seconds. Remove bowl, beat eggs very well, scraping down the sides of the bowl, and return to the microwave for another 30 seconds.",
-      "Repeat this pattern, stirring every 30 seconds for up to 2 \u00bd minutes. Stop when eggs have the consistency you desire.",
-      "Serve warm and enjoy!"
-    ],
-    "nutrition_per_serving": {
-      "calories": 141,
-      "total_fat_g": 9.0,
-      "carbohydrates_g": 2.0,
-      "sugar_g": 2.0,
-      "protein_g": 12.0,
-      "sodium_mg": 281,
-      "cholesterol_mg": 330,
-      "saturated_fat_g": 3.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.8,
-    "review_count": 153,
-    "recipe_category": "Breakfast",
-    "cuisine": "American",
-    "meal_type": "fitness"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/239852/homemade-turkey-breakfast-sausage/",
-    "category": "ground-turkey",
-    "id": 239852,
-    "name": "Homemade Turkey Breakfast Sausage",
-    "description": "Make deliciously seasoned homemade turkey sausage patties in minutes, then cook and eat, or freeze to have on hand for breakfasts throughout the week.",
-    "author": "cathy35",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/X-v-Dhcw6CSHj6FSdedKhywtL6g=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/1634786-homemade-turkey-breakfast-sausage-France-C-4x3-1-541304f443a849faa7f56ba450116543.jpg",
-      "alt": "Homemade Turkey Breakfast Sausage"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 20,
-    "total_time_minutes": 30,
-    "servings": "10",
-    "ingredients": [
-      "2 teaspoons dried sage",
-      "2 teaspoons salt",
-      "1 teaspoon ground black pepper",
-      "0.5 teaspoon red pepper flakes",
-      "0.25 teaspoon dried marjoram",
-      "2 pounds ground turkey"
-    ],
-    "instructions": [
-      "Mix sage, salt, black pepper, red pepper flakes, and marjoram together in a small bowl. Place turkey into a large bowl and mix in spice mixture with your hands until well combined. Form into 10 patties.",
-      "Cook patties in batches in a large skillet over medium-high heat until no longer pink in the center and the juices run clear, about 5 minutes per side. An instant-read thermometer inserted into the center should read at least 165 degrees F (74 degrees C)."
-    ],
-    "nutrition_per_serving": {
-      "calories": 135,
-      "total_fat_g": 7.0,
-      "carbohydrates_g": 0.0,
-      "fiber_g": 0.0,
-      "protein_g": 18.0,
-      "sodium_mg": 517,
-      "cholesterol_mg": 67,
-      "saturated_fat_g": 2.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.8,
-    "review_count": 135,
-    "recipe_category": "Breakfast",
-    "cuisine": "American",
-    "meal_type": "fitness"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/127167/spinach-pomegranate-salad/",
-    "category": "green-salads",
-    "id": 127167,
-    "name": "Spinach Pomegranate Salad",
-    "description": "This easy pomegranate salad with spinach, feta, walnuts, juicy red pomegranate arils, and balsamic vinaigrette makes a flavorful Christmas side.",
-    "author": "SarieNickle",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/EEiNfpIRRBbXHbmYLGQzxvdP3qo=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/127167-Spinach-Pomegranate-Salad-DDMFS-3x4-a4c6b5062a704821a8ad378ddd71a890.jpg",
-      "alt": "Spinach Pomegranate Salad"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": null,
-    "total_time_minutes": 10,
-    "servings": "4",
-    "ingredients": [
-      "1 (10 ounce) bag baby spinach leaves, rinsed and drained",
-      "0.5 cup walnut pieces",
-      "0.5 cup crumbled feta",
-      "0.25 medium red onion, sliced very thin",
-      "0.25 cup alfalfa sprouts",
-      "0.5 cup pomegranate seeds, or to taste",
-      "4 tablespoons balsamic vinaigrette"
-    ],
-    "instructions": [
-      "Gather all ingredients.",
-      "Place spinach into a salad bowl. Top with walnuts, feta, red onion, alfalfa sprouts, and pomegranate seeds.",
-      "Drizzle with vinaigrette. Enjoy!"
-    ],
-    "nutrition_per_serving": {
-      "calories": 273,
-      "total_fat_g": 21.0,
-      "carbohydrates_g": 15.0,
-      "fiber_g": 3.0,
-      "sugar_g": 9.0,
-      "protein_g": 10.0,
-      "sodium_mg": 585,
-      "cholesterol_mg": 28,
-      "saturated_fat_g": 6.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.8,
-    "review_count": 129,
-    "recipe_category": "Lunch",
-    "cuisine": "American",
-    "meal_type": "work"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/270310/instant-pot-italian-wedding-soup/",
     "category": "instant-pot",
     "id": 270310,
@@ -14001,49 +10567,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "review_count": 126,
     "recipe_category": "Lunch",
     "cuisine": "Italian",
-    "meal_type": "work"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/230202/homemade-pancake-mix/",
-    "category": "camping-recipes",
-    "id": 230202,
-    "name": "Homemade Pancake Mix",
-    "description": "Having pancake mix ready in your cupboard or pantry makes impromptu brunches a breeze.",
-    "author": "deltasky",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/jq86lVijVrqbxCHVP6YRLhXHHb4=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/230202homemade-pancake-mixYoly4x3-c641ec92479c45009717a521695dc45c.jpg",
-      "alt": "Homemade Pancake Mix"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": null,
-    "total_time_minutes": 10,
-    "servings": "12",
-    "ingredients": [
-      "5 cups all-purpose flour",
-      "1.25 cups powdered milk",
-      "0.25 cup white sugar",
-      "0.25 cup baking powder",
-      "1 tablespoon salt"
-    ],
-    "instructions": [
-      "Combine flour, powdered milk, sugar, baking powder, and salt in a large bowl; stir to blend. Store mixture in an airtight container and use within 8 months."
-    ],
-    "nutrition_per_serving": {
-      "calories": 274,
-      "total_fat_g": 4.0,
-      "carbohydrates_g": 50.0,
-      "fiber_g": 1.0,
-      "sugar_g": 9.0,
-      "protein_g": 9.0,
-      "sodium_mg": 1120,
-      "cholesterol_mg": 13,
-      "saturated_fat_g": 2.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.8,
-    "review_count": 108,
-    "recipe_category": "Breakfast",
-    "cuisine": "American",
     "meal_type": "work"
   },
   {
@@ -14150,52 +10673,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "fitness"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/257457/meyer-lemon-avocado-toast/",
-    "category": "diabetic",
-    "id": 257457,
-    "name": "Meyer Lemon Avocado Toast",
-    "description": "This avocado toast recipe, made with Meyer lemon juice and zest, is topped with chia seeds for a hearty, vegan snack or lunch that is quick and easy.",
-    "author": "princessofmontecito",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/W7qxZ1EaZNXan2kpORUQXBg6x8g=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/4487253-e6669e70d4114beb857b6aeac7814444.jpg",
-      "alt": "Meyer Lemon Avocado Toast"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 5,
-    "total_time_minutes": 15,
-    "servings": "2",
-    "ingredients": [
-      "2 slices whole grain bread",
-      "0.5 avocado",
-      "2 tablespoons chopped fresh cilantro, or more to taste",
-      "0.25 teaspoon Meyer lemon zest",
-      "1 teaspoon Meyer lemon juice, or to taste",
-      "1 pinch cayenne pepper",
-      "1 pinch fine sea salt",
-      "0.25 teaspoon chia seeds"
-    ],
-    "instructions": [
-      "Toast bread slices to desired doneness, 3 to 5 minutes.",
-      "Mash avocado in a medium bowl; stir in cilantro, Meyer lemon zest, Meyer lemon juice, cayenne pepper, and sea salt until well combined. Spread avocado mixture onto toast; top with chia seeds."
-    ],
-    "nutrition_per_serving": {
-      "calories": 72,
-      "total_fat_g": 1.0,
-      "carbohydrates_g": 12.0,
-      "fiber_g": 2.0,
-      "sugar_g": 2.0,
-      "protein_g": 4.0,
-      "sodium_mg": 271,
-      "saturated_fat_g": 0.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.8,
-    "review_count": 68,
-    "recipe_category": "Lunch",
-    "cuisine": "American",
-    "meal_type": "fitness"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/238314/bacon-and-potato-frittata-with-greens/",
     "category": "frittatas",
     "id": 238314,
@@ -14294,59 +10771,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "study"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/236471/decadent-hummus/",
-    "category": "hummus",
-    "id": 236471,
-    "name": "Decadent Hummus",
-    "description": "This decadent hummus includes kalamata olives, plenty of garlic, and feta cheese for a crowd-pleasing snack. Serve with pita bread and veggies!",
-    "author": "Karra Showen",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/KKxhaUPQs-Z3vrsk_z3yWSmeiSw=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/3408924-e5c45ea131ea41cd96e3c215fffa25cb.jpg",
-      "alt": "Decadent Hummus"
-    },
-    "prep_time_minutes": 15,
-    "cook_time_minutes": null,
-    "total_time_minutes": 15,
-    "servings": "16",
-    "ingredients": [
-      "2 (15 ounce) cans garbanzo beans, drained",
-      "0.25 cup olive oil",
-      "0.25 cup lemon juice",
-      "0.25 cup crumbled feta cheese",
-      "0.25 cup tahini",
-      "0.25 cup sweet chili sauce",
-      "15 pitted kalamata olives",
-      "3 cloves garlic, or more to taste",
-      "2 teaspoons dried basil",
-      "2 teaspoons ground cumin",
-      "2 teaspoons dried dill weed",
-      "1 teaspoon salt",
-      "1 tablespoon water, or as needed",
-      "1 tablespoon chopped fresh parsley, or as needed",
-      "1 teaspoon olive oil, or to taste"
-    ],
-    "instructions": [
-      "Blend garbanzo beans, 1/4 cup olive oil, lemon juice, feta cheese, tahini, chili sauce, olives, garlic, basil, cumin, dill, and salt in the blender until smooth. Add water for a thinner consistency. Transfer hummus to a serving bowl and garnish with parsley and drizzle with 1 teaspoon olive oil. Serve warm or cold."
-    ],
-    "nutrition_per_serving": {
-      "calories": 127,
-      "total_fat_g": 8.0,
-      "carbohydrates_g": 12.0,
-      "fiber_g": 2.0,
-      "sugar_g": 2.0,
-      "protein_g": 3.0,
-      "sodium_mg": 399,
-      "cholesterol_mg": 4,
-      "saturated_fat_g": 2.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.8,
-    "review_count": 55,
-    "recipe_category": "Lunch",
-    "meal_type": "study",
-    "cuisine": "American"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/242351/spring-vegetable-frittata-for-mother/",
     "category": "frittatas",
     "id": 242351,
@@ -14396,147 +10820,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "rating": 4.8,
     "review_count": 51,
     "recipe_category": "Breakfast",
-    "cuisine": "American",
-    "meal_type": "work"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/214713/potato-salad-deviled-eggs/",
-    "category": "deviled-eggs",
-    "id": 214713,
-    "name": "Potato Salad Deviled Eggs",
-    "description": "Deviled eggs stuffed with a creamy homemade potato salad filling make a light and tasty savory bite for brunch, picnics, and summer potlucks.",
-    "author": "Sumrall Butler",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/Cf-0ebq4SiDwdaHNJr9tic6SdyA=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/687563-bd58401fe73c4b5a82161574c8c7f983.jpg",
-      "alt": "Potato Salad Deviled Eggs"
-    },
-    "prep_time_minutes": 15,
-    "cook_time_minutes": 15,
-    "total_time_minutes": 60,
-    "servings": "16",
-    "ingredients": [
-      "8 eggs",
-      "1 large potato, coarsely chopped",
-      "2 teaspoons pickle relish",
-      "2 teaspoons mustard",
-      "4 teaspoons creamy salad dressing (such as Miracle Whip\u00ae)",
-      "salt to taste",
-      "ground black pepper to taste",
-      "paprika for garnish"
-    ],
-    "instructions": [
-      "Place eggs into a saucepan in a single layer and fill with water to cover the eggs by 1 inch. Cover the saucepan and bring water to a boil over high heat. Once water is boiling, remove from the heat and let eggs stand in the hot water for 15 minutes. Pour out water, then cool eggs under cold running water in the sink. Peel once cold. Slice cooled eggs in half lengthwise; scoop out and reserve the yolks.",
-      "While eggs are cooking, place chopped potato into a saucepan with enough water to cover; bring to a boil, reduce heat, and simmer until potato pieces are tender, 10 to 15 minutes. Drain and let potatoes cool.",
-      "Mash reserved egg yolks with pickle relish, mustard, creamy dressing, salt, and pepper until well combined. Place potato into a bowl, and coarsely mash with a fork; gently stir into egg yolk mixture.",
-      "Stuff each egg half generously with potato salad, and sprinkle with paprika. Cover and chill until ready to serve, at least 20 minutes."
-    ],
-    "nutrition_per_serving": {
-      "calories": 58,
-      "total_fat_g": 3.0,
-      "carbohydrates_g": 5.0,
-      "fiber_g": 1.0,
-      "sugar_g": 1.0,
-      "protein_g": 4.0,
-      "sodium_mg": 52,
-      "cholesterol_mg": 93,
-      "saturated_fat_g": 1.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.8,
-    "review_count": 38,
-    "recipe_category": "Lunch",
-    "cuisine": "American",
-    "meal_type": "fitness"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/213127/spinach-feta-and-pine-nut-ravioli-filling/",
-    "category": "homemade-pasta",
-    "id": 213127,
-    "name": "Spinach, Feta, and Pine Nut Ravioli Filling",
-    "description": "This recipe for cheesy ravioli filling for fresh pasta is made from scratch with saut\u00e9ed spinach, feta, and pine nuts for a delicious, simple Italian meal.",
-    "author": "Matthew Valleau",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/dC1jJD9xwNgqrvOdGZmo2Nk5dF0=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/2616698-9337ef485ecf4e35b76a858b92479fa2.jpg",
-      "alt": "Spinach, Feta, and Pine Nut Ravioli Filling"
-    },
-    "prep_time_minutes": 30,
-    "cook_time_minutes": 10,
-    "total_time_minutes": 40,
-    "servings": "4",
-    "ingredients": [
-      "1 tablespoon olive oil",
-      "1 (10 ounce) bag fresh spinach",
-      "1 cup feta cheese",
-      "0.5 cup pine nuts",
-      "1 egg",
-      "1 tablespoon water",
-      "2 fresh pasta sheets"
-    ],
-    "instructions": [
-      "Heat olive oil in a large skillet over medium-high heat. Add spinach; cook until fully wilted, about 2 minutes. Cool, then squeeze spinach to remove as much liquid as possible.",
-      "Combine spinach, feta, and pine nuts in a blender or the bowl of a food processor; pulse until a fine paste consistency.",
-      "Drop 30 teaspoonfuls of filling onto 1 pasta sheet, spaced about 1 inch apart. Beat egg and water together in a small bowl; brush over remaining pasta sheet. Gently lay egg washed pasta sheet, egg washed-side down, over filled bottom layer, matching up the 2 sheets evenly. Press out air around each filling portion. Cut into individual ravioli. Press ravioli edges with the tines of a fork to seal.",
-      "Fill a large pot with lightly salted water and bring to a rolling boil; stir in ravioli and return to a boil. Cook uncovered, stirring occasionally, until the ravioli float to the top and the filling is hot, 3 to 5 minutes."
-    ],
-    "nutrition_per_serving": {
-      "calories": 383,
-      "total_fat_g": 22.0,
-      "carbohydrates_g": 31.0,
-      "fiber_g": 3.0,
-      "sugar_g": 3.0,
-      "protein_g": 18.0,
-      "sodium_mg": 499,
-      "cholesterol_mg": 76,
-      "saturated_fat_g": 8.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.8,
-    "review_count": 34,
-    "recipe_category": "Lunch",
-    "cuisine": "Italian Inspired",
-    "meal_type": "work"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/214986/strawberry-melon-summer-salad/",
-    "category": "fruit-salads",
-    "id": 214986,
-    "name": "Strawberry-Melon Summer Salad",
-    "description": "A lightly sweet lemon yogurt and honey dressing adds to this refreshing and colorful strawberry-melon summer salad recipe with cantaloupe and watermelon.",
-    "author": "Drizzler",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/9SG_fV9KvHgt8sdTQgG_aO1T-PM=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/656452-c8fbf94aff03445fbdc071d5f45e88d6.jpg",
-      "alt": "Strawberry-Melon Summer Salad"
-    },
-    "prep_time_minutes": 20,
-    "cook_time_minutes": null,
-    "total_time_minutes": 20,
-    "servings": "6",
-    "ingredients": [
-      "1 cup lemon yogurt",
-      "1 tablespoon honey",
-      "1 teaspoon lemon juice",
-      "2 cups watermelon balls",
-      "2 cups cantaloupe balls",
-      "2 cups halved fresh strawberries"
-    ],
-    "instructions": [
-      "Whisk yogurt, honey, and lemon juice together in a large bowl until combined. Gently stir in watermelon, cantaloupe, and strawberries until evenly coated."
-    ],
-    "nutrition_per_serving": {
-      "calories": 100,
-      "total_fat_g": 0.0,
-      "carbohydrates_g": 23.0,
-      "fiber_g": 2.0,
-      "sugar_g": 20.0,
-      "protein_g": 3.0,
-      "sodium_mg": 39,
-      "cholesterol_mg": 1,
-      "saturated_fat_g": 0.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.8,
-    "review_count": 32,
-    "recipe_category": "Lunch",
     "cuisine": "American",
     "meal_type": "work"
   },
@@ -14635,55 +10918,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "recipe_category": "Breakfast",
     "cuisine": "American",
     "meal_type": "fitness"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/255841/autumn-waldorf-salad/",
-    "category": "fruit-salads",
-    "id": 255841,
-    "name": "Autumn Waldorf Salad",
-    "description": "This fall spin on a Waldorf salad made with apple, pear, celery, cranberries, and yogurt is a light side dish with festive autumnal flavor.",
-    "author": "ALLIDAWN",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/xIkXhjLyWvCq2s-SJuQwyKaJesE=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/4073553-f83c55683bfb4a8bb68fdcc17617348f.jpg",
-      "alt": "Autumn Waldorf Salad"
-    },
-    "prep_time_minutes": 20,
-    "cook_time_minutes": null,
-    "total_time_minutes": 50,
-    "servings": "2",
-    "ingredients": [
-      "0.25 cup plain yogurt",
-      "1.5 teaspoons brown sugar",
-      "1 pear, diced",
-      "1 apple, diced",
-      "1 cup sliced celery",
-      "0.5 cup raisins",
-      "0.25 cup dried cranberries",
-      "2 tablespoons chopped walnuts",
-      "1 dash ground cinnamon",
-      "1 dash ground nutmeg"
-    ],
-    "instructions": [
-      "Mix yogurt and brown sugar together in a bowl to make dressing.",
-      "Combine pear, apple, celery, raisins, cranberries, and walnuts in a bowl. Add dressing and toss well to combine. Sprinkle cinnamon and nutmeg on top.",
-      "Chill salad before serving, at least 30 minutes."
-    ],
-    "nutrition_per_serving": {
-      "calories": 312,
-      "total_fat_g": 6.0,
-      "carbohydrates_g": 70.0,
-      "fiber_g": 8.0,
-      "sugar_g": 51.0,
-      "protein_g": 3.0,
-      "sodium_mg": 55,
-      "saturated_fat_g": 1.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.8,
-    "review_count": 20,
-    "recipe_category": "Lunch",
-    "meal_type": "work",
-    "cuisine": "American"
   },
   {
     "url": "https://www.allrecipes.com/recipe/280276/blueberry-lemon-breakfast-biscuits/",
@@ -14841,53 +11075,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "work"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/262798/oeufs-cocotte-baked-eggs/",
-    "category": "cooking-for-one",
-    "id": 262798,
-    "name": "Oeufs Cocotte (Baked Eggs)",
-    "description": "Oeufs cocotte, also called eggs en cocotte, are delicious French soft baked eggs gently cooked in cream with ham, Gruy\u00e8re cheese, and chives.",
-    "author": "chatoune",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/1mQWRpMotKt01UrClwZJFhCZIGE=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/5151490-oeufs-cocotte-baked-eggs-AllrecipesPhoto-4x3-1-634c5374fbc74b26a2d3e70ed9e2ba69.jpg",
-      "alt": "Oeufs Cocotte (Baked Eggs)"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 15,
-    "total_time_minutes": 25,
-    "servings": "2",
-    "ingredients": [
-      "1 tablespoon olive oil, or to taste",
-      "0.5 cup finely chopped ham",
-      "2 tablespoons grated Gruyere cheese",
-      "0.5 cup heavy whipping cream",
-      "salt and ground black pepper to taste",
-      "2 large eggs",
-      "0.25 teaspoon chopped fresh chives"
-    ],
-    "instructions": [
-      "Preheat the oven to 375 degrees F (190 degrees C). Grease a small, lidded casserole dish with olive oil. Boil water in a kettle and set aside.",
-      "Arrange ham in the bottom of the prepared casserole dish. Sprinkle with 1 tablespoon Gruy\u00e8re cheese. Pour in cream and season with black pepper. Crack eggs on top, one at a time, making sure yolks remain intact. Sprinkle with remaining 1 tablespoon Gruy\u00e8re cheese and chives. Season with salt and black pepper.",
-      "Cover the casserole dish and place it into a roasting pan. Pour enough boiled water into the roasting pan so it reaches about halfway up the sides of the casserole dish.",
-      "Bake in the preheated oven for 9 minutes. Uncover and continue baking until whites are just set and yolks are still runny, 3 to 6 more minutes."
-    ],
-    "nutrition_per_serving": {
-      "calories": 447,
-      "total_fat_g": 42.0,
-      "carbohydrates_g": 2.0,
-      "sugar_g": 1.0,
-      "protein_g": 16.0,
-      "sodium_mg": 626,
-      "cholesterol_mg": 294,
-      "saturated_fat_g": 20.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.8,
-    "review_count": 17,
-    "recipe_category": "Breakfast",
-    "cuisine": "French",
-    "meal_type": "work"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/256301/carne-asada-breakfast-burrito/",
     "category": "breakfast-potatoes",
     "id": 256301,
@@ -14996,52 +11183,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "fitness"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/283232/air-fryer-seasoned-breakfast-potatoes/",
-    "category": "breakfast-potatoes",
-    "id": 283232,
-    "name": "Air Fryer Seasoned Breakfast Potatoes",
-    "description": "These easy breakfast potatoes are tossed with olive oil, salt, onion powder, paprika, and pepper, then cooked in the air fryer until perfectly crisp.",
-    "author": "Soup Loving Nicole",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/eXvJasDoDU8zDKOaPCvJyPmABXY=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/8998896_283232_air-fryer-seasoned-breakfast-potatoes-4x3-f94f54db8bf344338e0fcaae7a88f118.jpg",
-      "alt": "Air Fryer Seasoned Breakfast Potatoes"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 20,
-    "total_time_minutes": 60,
-    "servings": "4",
-    "ingredients": [
-      "1 pound russet potatoes, peeled and cut into 1-inch cubes",
-      "1 tablespoon olive oil",
-      "1 teaspoon salt",
-      "0.5 teaspoon onion powder",
-      "0.5 teaspoon paprika",
-      "0.125 teaspoon ground black pepper"
-    ],
-    "instructions": [
-      "Place potatoes in a large bowl, cover with cold water, and let sit for 30 minutes.",
-      "Preheat an air fryer to 400 degrees F (200 degrees C).",
-      "Drain potatoes and pat dry with a paper towel. Add olive oil, salt, onion powder, paprika, and pepper to potatoes; stir until evenly combined. Place potatoes in the air fryer basket.",
-      "Cook in the preheated air fryer for 20 minutes, shaking halfway through cook time."
-    ],
-    "nutrition_per_serving": {
-      "calories": 121,
-      "total_fat_g": 4.0,
-      "carbohydrates_g": 21.0,
-      "fiber_g": 2.0,
-      "sugar_g": 1.0,
-      "protein_g": 3.0,
-      "sodium_mg": 587,
-      "saturated_fat_g": 1.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.8,
-    "review_count": 9,
-    "recipe_category": "Breakfast",
-    "cuisine": "American",
-    "meal_type": "study"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/285341/cream-cheese-filled-bagel-balls/",
     "category": "bagels",
     "id": 285341,
@@ -15092,100 +11233,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "recipe_category": "Breakfast",
     "meal_type": "work",
     "cuisine": "American"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/223453/italian-tuna-spread/",
-    "category": "antipasti",
-    "id": 223453,
-    "name": "Italian Tuna Spread",
-    "description": "This recipe blends canned tuna with capers, lemon juice, parsley, and butter for a tuna spread with Italian flair for your antipasto platter or sandwiches.",
-    "author": "JBrown",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/Ww8l6JoPDpWumbtS9ecaCNSlOhw=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/2485033-8aa5d08e8660470e903a3e7dbd112203.jpg",
-      "alt": "Italian Tuna Spread"
-    },
-    "prep_time_minutes": 15,
-    "cook_time_minutes": null,
-    "total_time_minutes": 15,
-    "servings": "8",
-    "ingredients": [
-      "3 (4.5 ounce) cans tuna packed in olive oil, drained",
-      "0.5 cup unsalted butter at room temperature",
-      "3 tablespoons capers, drained",
-      "1 tablespoon chopped Italian flat-leaf parsley",
-      "1 teaspoon lemon juice",
-      "salt and ground black pepper to taste"
-    ],
-    "instructions": [
-      "Combine tuna, butter, capers, parsley, lemon juice, salt, and black pepper in the bowl of a food processor; pulse until smooth."
-    ],
-    "nutrition_per_serving": {
-      "calories": 158,
-      "total_fat_g": 12.0,
-      "carbohydrates_g": 0.0,
-      "fiber_g": 0.0,
-      "protein_g": 12.0,
-      "sodium_mg": 121,
-      "cholesterol_mg": 45,
-      "saturated_fat_g": 7.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.8,
-    "review_count": 8,
-    "recipe_category": "Lunch",
-    "cuisine": "Italian Inspired",
-    "meal_type": "fitness"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/245478/turkey-kofta-kabobs/",
-    "category": "ground-turkey",
-    "id": 245478,
-    "name": "Turkey Kofta Kebabs",
-    "description": "This turkey kofta kebab recipe for giant Persian meatballs boasts flavors of cilantro, chili, coriander, and paprika and is great for summer grilling.",
-    "author": "Susan",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/zDgn4jhtcw37n6XcJZRzy6UBx-0=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/2953745-12a096ee9fcb4ce89676ff7dc8fb114b.jpg",
-      "alt": "Turkey Kofta Kebabs"
-    },
-    "prep_time_minutes": 15,
-    "cook_time_minutes": 25,
-    "total_time_minutes": 40,
-    "servings": "12",
-    "ingredients": [
-      "vegetable oil for grill",
-      "1 pound ground turkey",
-      "1 small onion, minced",
-      "0.25 cup chopped fresh cilantro",
-      "1 large egg",
-      "2 cloves garlic, minced",
-      "0.25 teaspoon chopped green chile pepper",
-      "0.25 teaspoon ground coriander",
-      "0.25 teaspoon ground paprika",
-      "0.25 teaspoon chili powder",
-      "salt to taste"
-    ],
-    "instructions": [
-      "Preheat the grill for medium heat and lightly oil the grate.",
-      "Combine turkey, onion, cilantro, egg, garlic, chile pepper, coriander, paprika, chili powder, and salt in a large bowl; mix thoroughly. Divide mixture into twelve 1/4-cup portions; roll into log-shaped ovals and place on a baking sheet.",
-      "Grill ovals over indirect heat, turning occasionally, until no longer pink in the center, 25 to 30 minutes. An instant-read thermometer inserted into the center should read at least 165 degrees F (74 degrees C)."
-    ],
-    "nutrition_per_serving": {
-      "calories": 65,
-      "total_fat_g": 3.0,
-      "carbohydrates_g": 1.0,
-      "fiber_g": 0.0,
-      "sugar_g": 0.0,
-      "protein_g": 8.0,
-      "sodium_mg": 41,
-      "cholesterol_mg": 42,
-      "saturated_fat_g": 1.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.8,
-    "review_count": 8,
-    "recipe_category": "Lunch",
-    "cuisine": "Persian",
-    "meal_type": "fitness"
   },
   {
     "url": "https://www.allrecipes.com/recipe/267900/pumpkin-seed-granola/",
@@ -15581,59 +11628,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "work"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/16947/amazingly-easy-irish-soda-bread/",
-    "category": "irish-soda-bread",
-    "id": 16947,
-    "name": "Amazingly Easy Irish Soda Bread",
-    "description": "Irish soda bread is a quick bread to make with flour, buttermilk, and baking soda for a rich and tender loaf with a delicious crust.",
-    "author": "MP Welty",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/ZWL8QsRQB6oPP63fIZAw5hQPV10=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/16947-Amazingly-Easy-Irish-Soda-Bread-DDMFS-4x3-1082-9cb658303de1482bba427f4bcadd4dc6.jpg",
-      "alt": "Amazingly Easy Irish Soda Bread"
-    },
-    "prep_time_minutes": 15,
-    "cook_time_minutes": 45,
-    "total_time_minutes": 60,
-    "servings": "20",
-    "ingredients": [
-      "4 cups all-purpose flour",
-      "0.5 cup margarine, softened",
-      "4 tablespoons white sugar",
-      "1 teaspoon baking soda",
-      "1 tablespoon baking powder",
-      "0.5 teaspoon salt",
-      "1 cup buttermilk",
-      "1 egg",
-      "0.25 cup butter, melted",
-      "0.25 cup buttermilk"
-    ],
-    "instructions": [
-      "Preheat the oven to 375 degrees F (190 degrees C). Lightly grease a large baking sheet.",
-      "Mix flour, softened butter, sugar, baking soda, baking powder, and salt together in a large bowl. Stir in 1 cup of buttermilk and egg.",
-      "Turn dough out onto a lightly floured surface and knead slightly. Form dough into a round loaf and place on the prepared baking sheet. Note that the dough will be a little sticky.",
-      "Combine melted butter with 1/4 cup buttermilk in a small bowl; brush loaf with this mixture. Use a sharp knife to cut an 'X' into the top of the loaf.",
-      "Bake in preheated oven until a toothpick inserted into the center of the loaf comes out clean, 45 to 50 minutes. Check for doneness after 30 minutes. You may continue to brush the loaf with the butter mixture while it bakes.",
-      "Slice and enjoy!"
-    ],
-    "nutrition_per_serving": {
-      "calories": 172,
-      "total_fat_g": 8.0,
-      "carbohydrates_g": 23.0,
-      "fiber_g": 1.0,
-      "sugar_g": 3.0,
-      "protein_g": 3.0,
-      "sodium_mg": 277,
-      "cholesterol_mg": 28,
-      "saturated_fat_g": 5.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.7,
-    "review_count": 1620,
-    "recipe_category": "Breakfast",
-    "cuisine": "Irish",
-    "meal_type": "work"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/20792/b-and-ls-strawberry-smoothie/",
     "category": "smoothies",
     "id": 20792,
@@ -15926,53 +11920,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "work"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/71600/easy-arugula-salad/",
-    "category": "green-salads",
-    "id": 71600,
-    "name": "Easy Arugula Salad",
-    "description": "Let this simple arugula salad take your main dish to stellar heights! With Parmesan, tomatoes, avocado, and pine nuts, it's quick, easy, and delicious!",
-    "author": "KELLID26",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/Qbt-L0cS_Dry7POE1R_2ID6EJmA=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/71600-easy-arugula-salad-natasha-titanov-4x3-0a343755e0364a11bedf323c3056a35a.jpg",
-      "alt": "Easy Arugula Salad"
-    },
-    "prep_time_minutes": 15,
-    "cook_time_minutes": null,
-    "total_time_minutes": 15,
-    "servings": "4",
-    "ingredients": [
-      "4 cups young arugula leaves, rinsed and dried",
-      "1 cup cherry tomatoes, halved",
-      "0.25 cup pine nuts",
-      "0.25 cup grated Parmesan cheese",
-      "2 tablespoons grapeseed oil or olive oil",
-      "1 tablespoon rice vinegar",
-      "salt to taste",
-      "1 large avocado - peeled, pitted and sliced"
-    ],
-    "instructions": [
-      "Combine arugula, tomatoes, pine nuts, Parmesan, oil, and vinegar in a large, lidded plastic bowl. Season with salt and pepper, then cover with the lid and shake to mix.",
-      "Divide salad onto serving plates and top with avocado slices."
-    ],
-    "nutrition_per_serving": {
-      "calories": 257,
-      "total_fat_g": 23.0,
-      "carbohydrates_g": 10.0,
-      "fiber_g": 6.0,
-      "sugar_g": 1.0,
-      "protein_g": 6.0,
-      "sodium_mg": 381,
-      "cholesterol_mg": 4,
-      "saturated_fat_g": 4.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.7,
-    "review_count": 361,
-    "recipe_category": "Lunch",
-    "cuisine": "American",
-    "meal_type": "study"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/236198/chicken-club-pasta-salad/",
     "category": "chicken-salads",
     "id": 236198,
@@ -16121,50 +12068,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     },
     "rating": 4.7,
     "review_count": 340,
-    "recipe_category": "Lunch",
-    "cuisine": "American",
-    "meal_type": "fitness"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/14399/the-best-chicken-salad-ever/",
-    "category": "chicken-salads",
-    "id": 14399,
-    "name": "The Best Chicken Salad Ever",
-    "description": "This creamy chicken salad is quick and easy to prepare in a food processor for a delicious and spreadable sandwich filling.",
-    "author": "Rich",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/EFWkzX_YUDGyaWz1TT8_G0Fr3iQ=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/14399the-best-chicken-salad-everYoly4x3-c04ae0e0cab74cfabfe8ca270cccd59e.jpg",
-      "alt": "The Best Chicken Salad Ever"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": null,
-    "total_time_minutes": 10,
-    "servings": "8",
-    "ingredients": [
-      "2 boneless chicken breast halves, cooked",
-      "0.25 cup creamy salad dressing",
-      "4 tablespoons cole slaw dressing",
-      "1 stalk celery, chopped",
-      "0.25 onion, chopped",
-      "salt and pepper to taste"
-    ],
-    "instructions": [
-      "Combine cooked chicken, creamy salad dressing, coleslaw dressing, celery, onion, salt, and pepper in a food processor. Pulse until ingredients are chopped and blended to desired consistency."
-    ],
-    "nutrition_per_serving": {
-      "calories": 103,
-      "total_fat_g": 6.0,
-      "carbohydrates_g": 3.0,
-      "fiber_g": 0.0,
-      "sugar_g": 3.0,
-      "protein_g": 8.0,
-      "sodium_mg": 141,
-      "cholesterol_mg": 26,
-      "saturated_fat_g": 1.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.7,
-    "review_count": 309,
     "recipe_category": "Lunch",
     "cuisine": "American",
     "meal_type": "fitness"
@@ -16970,58 +12873,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "work"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/240996/lentil-ham-soup/",
-    "category": "lentil-soups",
-    "id": 240996,
-    "name": "Lentil Ham Soup",
-    "description": "This rich lentil soup with ham recipe is quick and easy to prepare. Mustard, garlic, and a splash of red wine vinegar add a delicious boost of flavor.",
-    "author": "Arielle Darling",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/-lHs4sBGxhh-FkXcutbIrbgJML8=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/240996-lentil-ham-soup-DDMFS-4x3-073-8d1137c801f2446b9a2aa83cd14a0f93.jpg",
-      "alt": "Lentil Ham Soup"
-    },
-    "prep_time_minutes": 15,
-    "cook_time_minutes": 30,
-    "total_time_minutes": 45,
-    "servings": "8",
-    "ingredients": [
-      "1 (32 ounce) carton low-sodium chicken broth",
-      "2 cups water",
-      "2 carrots, chopped",
-      "2 stalks celery, chopped",
-      "1 large onion, chopped",
-      "1 cup dried lentils",
-      "2 cloves garlic, minced",
-      "2 tablespoons red wine vinegar",
-      "1.5 cups cubed fully cooked ham",
-      "1 teaspoon dry mustard",
-      "1 teaspoon salt",
-      "0.5 teaspoon ground black pepper"
-    ],
-    "instructions": [
-      "Gather the ingredients.",
-      "Stir chicken broth, water, carrots, celery, onion, lentils, garlic, and red wine vinegar together in a large stockpot; bring to a boil, reduce heat to low, and simmer until carrots are tender, about 10 minutes.",
-      "Stir in ham, mustard, salt, and pepper; simmer until lentils are tender, 20 to 30 minutes more."
-    ],
-    "nutrition_per_serving": {
-      "calories": 178,
-      "total_fat_g": 5.0,
-      "carbohydrates_g": 19.0,
-      "fiber_g": 8.0,
-      "sugar_g": 3.0,
-      "protein_g": 13.0,
-      "sodium_mg": 694,
-      "cholesterol_mg": 16,
-      "saturated_fat_g": 2.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.7,
-    "review_count": 89,
-    "recipe_category": "Lunch",
-    "cuisine": "American",
-    "meal_type": "study"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/236012/pancake-casserole/",
     "category": "breakfast-casseroles",
     "id": 236012,
@@ -17459,56 +13310,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "work"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/221923/japanese-tamago-egg/",
-    "category": "low-calorie",
-    "id": 221923,
-    "name": "Japanese Tamago Egg",
-    "description": "Tamago is a light, slightly sweet and savory Japanese rolled omelet also known as tamagoyaki \u2014 it will make a great addition to your sushi platter!",
-    "author": "Pokerman11",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/IblFluR7YI4OZQsQ635Es0Vd8OE=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/AR-221923-japanese-tamago-egg-DDMFS-beauty-4x3-b8de3ef2e85c461eacee804ecd7d5025.jpg",
-      "alt": "Japanese Tamago Egg"
-    },
-    "prep_time_minutes": 15,
-    "cook_time_minutes": 10,
-    "total_time_minutes": 25,
-    "servings": "6",
-    "ingredients": [
-      "4 eggs",
-      "0.25 cup prepared dashi stock",
-      "1 tablespoon white sugar",
-      "1 teaspoon mirin (Japanese sweet wine)",
-      "0.5 teaspoon soy sauce",
-      "0.5 teaspoon vegetable oil, or more as needed"
-    ],
-    "instructions": [
-      "Gather all ingredients.",
-      "Beat eggs thoroughly in a bowl; whisk in dashi stock, sugar, mirin, and soy sauce until sugar has dissolved. Lightly grease a tamago pan or a small nonstick skillet and heat over medium heat.",
-      "Pour a thin layer of egg mixture into the hot pan and swirl to coat the pan. Cook until egg layer is firm on the bottom but still slightly liquid on top, about 1 minute.",
-      "Then lift up one edge using a spatula and roll up the egg layer.",
-      "Push omelet roll to one side of the skillet. Oil the skillet again and pour in another thin layer of egg, lifting the first omelet roll up slightly to allow the egg to flow underneath.",
-      "Roll up the first omelet in the new layer of egg and push omelet to the edge of the skillet as before.",
-      "Repeat the process with the remaining egg mixture, oiling the pan each time if needed.",
-      "Remove rolled omelet to a serving platter and cut into 6 equal pieces to serve."
-    ],
-    "nutrition_per_serving": {
-      "calories": 63,
-      "total_fat_g": 4.0,
-      "carbohydrates_g": 3.0,
-      "sugar_g": 3.0,
-      "protein_g": 4.0,
-      "sodium_mg": 87,
-      "cholesterol_mg": 124,
-      "saturated_fat_g": 1.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.7,
-    "review_count": 43,
-    "recipe_category": "Lunch",
-    "cuisine": "Japanese",
-    "meal_type": "fitness"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/221175/cauliflower-and-egg-salad/",
     "category": "egg-salads",
     "id": 221175,
@@ -17708,47 +13509,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "work"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/215472/berry-fruit-salad/",
-    "category": "diabetic",
-    "id": 215472,
-    "name": "Berry Fruit Salad",
-    "description": "Fresh berries with a touch of sugar are easily packed into resealable containers for a refreshing lunch box dessert.",
-    "author": "faulknor",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/_qdvD52FCB1hcyVVWxiOAEnhuCM=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/9155453-1bcd13cd17474504baaea2c3674c40df.jpg",
-      "alt": "Berry Fruit Salad"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": null,
-    "total_time_minutes": 10,
-    "servings": "6",
-    "ingredients": [
-      "1 cup fresh strawberries, hulled and quartered lengthwise",
-      "1 cup fresh blueberries",
-      "1 cup fresh blackberries",
-      "1 cup fresh raspberries",
-      "1 teaspoon white sugar"
-    ],
-    "instructions": [
-      "Mix strawberries, blueberries, blackberries, and raspberries together in a bowl. Sprinkle with sugar."
-    ],
-    "nutrition_per_serving": {
-      "calories": 45,
-      "total_fat_g": 0.0,
-      "carbohydrates_g": 11.0,
-      "fiber_g": 4.0,
-      "sugar_g": 6.0,
-      "protein_g": 1.0,
-      "sodium_mg": 1,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.7,
-    "review_count": 24,
-    "recipe_category": "Lunch",
-    "cuisine": "American",
-    "meal_type": "study"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/232171/brown-bears/",
     "category": "camping-recipes",
     "id": 232171,
@@ -17793,53 +13553,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "recipe_category": "Breakfast",
     "cuisine": "American",
     "meal_type": "work"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/231873/wild-rocket-arugula-and-parmesan-salad/",
-    "category": "green-salads",
-    "id": 231873,
-    "name": "Wild Rocket (Arugula) and Parmesan Salad",
-    "description": "This wild rocket (arugula) and Parmesan salad recipe combines fresh arugula, cilantro, Parmesan cheese shavings, and an easy lemon-balsamic vinaigrette.",
-    "author": "HDN",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/ndNbc9nIhKhUjQstGADBRyQkjUw=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/231873wild-rocket-arugula-and-parmesan-saladlutzflcat4x3-273ee433efd54636a3722eddcb7c1ae2.jpg",
-      "alt": "Wild Rocket (Arugula) and Parmesan Salad"
-    },
-    "prep_time_minutes": 20,
-    "cook_time_minutes": null,
-    "total_time_minutes": 20,
-    "servings": "4",
-    "ingredients": [
-      "2 (5 ounce) packages arugula",
-      "0.25 cup roughly chopped cilantro",
-      "1 teaspoon fresh lemon juice",
-      "1 teaspoon olive oil",
-      "1 teaspoon balsamic vinegar",
-      "1 teaspoon red pepper flakes",
-      "1 pinch ground black pepper",
-      "0.25 cup shaved Parmesan cheese"
-    ],
-    "instructions": [
-      "Toss arugula and cilantro together in a large salad bowl; drizzle with lemon juice, olive oil, and balsamic vinegar. Sprinkle with red pepper flakes and black pepper; toss. Taste and adjust seasonings if desired.",
-      "Sprinkle salad with Parmesan cheese shavings; toss then serve."
-    ],
-    "nutrition_per_serving": {
-      "calories": 54,
-      "total_fat_g": 3.0,
-      "carbohydrates_g": 4.0,
-      "fiber_g": 2.0,
-      "sugar_g": 2.0,
-      "protein_g": 4.0,
-      "sodium_mg": 106,
-      "cholesterol_mg": 4,
-      "saturated_fat_g": 1.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.7,
-    "review_count": 22,
-    "recipe_category": "Lunch",
-    "cuisine": "Italian Inspired",
-    "meal_type": "fitness"
   },
   {
     "url": "https://www.allrecipes.com/recipe/244512/roasted-beet-arugula-and-walnut-salad/",
@@ -17987,94 +13700,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "study"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/234219/orange-fig-and-gorgonzola-salad/",
-    "category": "fruit-salads",
-    "id": 234219,
-    "name": "Orange, Fig, and Gorgonzola Salad",
-    "description": "Oranges, figs, and gorgonzola cheese are tossed with romaine lettuce and vinaigrette dressing for a sweet and savory salad.",
-    "author": "Shari",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/_qqHaDK6ZWLhH1a2HGVFI_bBhFk=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/1044911-f6351628dccb47349e1673c4cfcbfc0c.jpg",
-      "alt": "Orange, Fig, and Gorgonzola Salad"
-    },
-    "prep_time_minutes": 15,
-    "cook_time_minutes": null,
-    "total_time_minutes": 15,
-    "servings": "4",
-    "ingredients": [
-      "2 heads romaine lettuce, chopped",
-      "2 oranges - peeled, pith removed, and cut into segments",
-      "0.5 cup crumbled Gorgonzola cheese",
-      "2 fresh figs, cut into 1-inch cubes",
-      "0.25 cup vinaigrette dressing, or to taste"
-    ],
-    "instructions": [
-      "Combine lettuce, oranges, Gorgonzola cheese, and figs in a large bowl. Drizzle dressing over salad and toss to coat."
-    ],
-    "nutrition_per_serving": {
-      "calories": 141,
-      "total_fat_g": 7.0,
-      "carbohydrates_g": 15.0,
-      "fiber_g": 4.0,
-      "sugar_g": 10.0,
-      "protein_g": 7.0,
-      "sodium_mg": 468,
-      "cholesterol_mg": 23,
-      "saturated_fat_g": 4.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.7,
-    "review_count": 10,
-    "recipe_category": "Lunch",
-    "meal_type": "study",
-    "cuisine": "American"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/254503/arugula-and-strawberry-salad-with-feta-cheese/",
-    "category": "green-salads",
-    "id": 254503,
-    "name": "Arugula and Strawberry Salad with Feta Cheese",
-    "description": "This refreshing arugula and strawberry salad with feta cheese is dressed with balsamic vinegar and olive oil and can be ready in 10 minutes.",
-    "author": "acali07",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/PmW3Jmdd_M4xquu7Pma5-In4huU=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/3794632-c690744cf00048c5aa6cfe28cbfd265f.jpg",
-      "alt": "Arugula and Strawberry Salad with Feta Cheese"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": null,
-    "total_time_minutes": 10,
-    "servings": "4",
-    "ingredients": [
-      "4 cups arugula",
-      "8 strawberries, stemmed and sliced",
-      "2 tablespoons aged balsamic vinegar, or to taste",
-      "2 tablespoons extra-virgin olive oil, or to taste",
-      "2 tablespoons toasted almonds",
-      "1 ounce crumbled feta cheese",
-      "sea salt to taste"
-    ],
-    "instructions": [
-      "Combine arugula, strawberries, balsamic vinegar, olive oil, almonds, feta cheese, and sea salt together in a bowl; toss until well combined."
-    ],
-    "nutrition_per_serving": {
-      "calories": 118,
-      "total_fat_g": 10.0,
-      "carbohydrates_g": 6.0,
-      "fiber_g": 1.0,
-      "sugar_g": 4.0,
-      "protein_g": 2.0,
-      "sodium_mg": 167,
-      "cholesterol_mg": 6,
-      "saturated_fat_g": 2.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.7,
-    "review_count": 10,
-    "recipe_category": "Lunch",
-    "cuisine": "American",
-    "meal_type": "study"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/228504/monster-breakfast-cookies/",
     "category": "Purim",
     "id": 228504,
@@ -18181,49 +13806,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "work"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/266549/blueberry-pineapple-salad-with-creamy-yogurt-dressing/",
-    "category": "fruit-salads",
-    "id": 266549,
-    "name": "Blueberry-Pineapple Salad with Creamy Yogurt Dressing",
-    "description": "Naturally sweetened yogurt is the dressing for this blueberry-pineapple salad, an easy, fruity treat.",
-    "author": "Kim",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/Nf8DNrCVPUnXO7ZIxIDLa2JTIkQ=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/5548215-af9cc915e6e74cf7be859743aa769275.jpg",
-      "alt": "Blueberry-Pineapple Salad with Creamy Yogurt Dressing"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": null,
-    "total_time_minutes": 10,
-    "servings": "4",
-    "ingredients": [
-      "1 (20 ounce) can pineapple chunks in juice, drained, juice reserved",
-      "3 tablespoons whole-milk plain Greek yogurt",
-      "1 teaspoon honey, or to taste",
-      "0.25 teaspoon grated lime zest",
-      "1 cup fresh blueberries"
-    ],
-    "instructions": [
-      "Whisk 1 tablespoon pineapple juice, Greek yogurt, honey, and lime zest in a medium bowl. Fold in pineapple chunks and blueberries until coated with yogurt mixture. Serve immediately."
-    ],
-    "nutrition_per_serving": {
-      "calories": 123,
-      "total_fat_g": 1.0,
-      "carbohydrates_g": 29.0,
-      "fiber_g": 2.0,
-      "sugar_g": 26.0,
-      "protein_g": 1.0,
-      "sodium_mg": 8,
-      "cholesterol_mg": 2,
-      "saturated_fat_g": 1.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.7,
-    "review_count": 3,
-    "recipe_category": "Lunch",
-    "meal_type": "work",
-    "cuisine": "American"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/242249/maple-pecan-granola-with-dried-fruit/",
     "category": "granola",
     "id": 242249,
@@ -18273,48 +13855,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "recipe_category": "Breakfast",
     "meal_type": "work",
     "cuisine": "American"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/255283/hummus-without-a-food-processor/",
-    "category": "hummus",
-    "id": 255283,
-    "name": "Hummus Without a Food Processor",
-    "description": "Creamy hummus is still possible to make without a food processor when you have a potato masher, tahini, and chickpeas on hand.",
-    "author": "Doug in Manhattan",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/8O-Eppb5keWb25P_UBYUETtUUxM=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/3920154-78d5bd0c89ab4a37b1c94a715d9a8ba5.jpg",
-      "alt": "Hummus Without a Food Processor"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": null,
-    "total_time_minutes": 10,
-    "servings": "6",
-    "ingredients": [
-      "1 (15.5 ounce) can low-sodium chickpeas (such as Goya\u00ae), drained and liquid reserved",
-      "0.25 cup tahini",
-      "1 tablespoon toasted sesame oil, or to taste",
-      "1 pinch red pepper flakes, or to taste",
-      "1 pinch garlic powder, or to taste"
-    ],
-    "instructions": [
-      "Mash chickpeas, 2 tablespoons reserved chickpea liquid, tahini, sesame oil, red pepper flakes, and garlic powder together in a bowl using a potato masher, adding more reserved liquid if desired, until hummus is desired consistency, 50 to 100 strokes."
-    ],
-    "nutrition_per_serving": {
-      "calories": 153,
-      "total_fat_g": 8.0,
-      "carbohydrates_g": 15.0,
-      "fiber_g": 4.0,
-      "sugar_g": 1.0,
-      "protein_g": 6.0,
-      "sodium_mg": 28,
-      "saturated_fat_g": 1.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.7,
-    "review_count": 3,
-    "recipe_category": "Lunch",
-    "cuisine": "Middle Eastern",
-    "meal_type": "study"
   },
   {
     "url": "https://www.allrecipes.com/recipe/241207/auntie-maes-irish-bread/",
@@ -19103,95 +14643,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "work"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/21657/sausage-gravy/",
-    "category": "gravies",
-    "id": 21657,
-    "name": "Sausage Gravy",
-    "description": "This sausage gravy uses 3 ingredients to make a thick, flavorful sauce just like Grandma used to make and serve with hot, freshly baked biscuits.",
-    "author": "Denyse",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/kXXuogUpF6DFpl6uKUdho-wG4FQ=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/492910-88b4c92751e1457994495051268df211.jpg",
-      "alt": "Sausage Gravy"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 20,
-    "total_time_minutes": 30,
-    "servings": "12",
-    "ingredients": [
-      "1 pound ground pork sausage",
-      "3 tablespoons all-purpose flour",
-      "3 cups milk"
-    ],
-    "instructions": [
-      "Heat a large, deep skillet over medium-high heat. Cook and stir sausage in the hot skillet until crumbly and browned, 5 to 7 minutes. Use a slotted spoon to remove sausage to a paper towel-lined plate to drain; set aside.",
-      "Pour off most of the grease from the skillet, leaving 2 to 3 tablespoons. Stir flour into grease in the skillet over medium-low heat. Whisk vigorously until roux forms, scraping the bottom of the skillet. Reduce heat to low and let roux cook for at least 5 minutes, stirring occasionally. Grandma always \"burned\" hers a little on purpose.",
-      "Stream milk into roux, whisking constantly. After adding about 2 1/2 cups, increase heat to medium and continue cooking, whisking constantly. Bring gravy to a boil and cook to desired thickness. Add some of the sausage to gravy if desired."
-    ],
-    "nutrition_per_serving": {
-      "calories": 195,
-      "total_fat_g": 17.0,
-      "carbohydrates_g": 5.0,
-      "fiber_g": 0.0,
-      "sugar_g": 3.0,
-      "protein_g": 7.0,
-      "sodium_mg": 277,
-      "cholesterol_mg": 31,
-      "saturated_fat_g": 6.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.6,
-    "review_count": 158,
-    "recipe_category": "Breakfast",
-    "cuisine": "Southern",
-    "meal_type": "fitness"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/22768/tangy-poppy-seed-fruit-salad/",
-    "category": "fruit-salads",
-    "id": 22768,
-    "name": "Tangy Poppy Seed Fruit Salad",
-    "description": "Pineapple, orange, kiwi, grapes and strawberries tossed with a sweet, lime and poppy seed dressing.",
-    "author": "Katy",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/1cpNfvhhJsXx7dIlYLL2OwAL6BU=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/663547-412e0946ddcd4e91adb1512277ad87ec.jpg",
-      "alt": "Tangy Poppy Seed Fruit Salad"
-    },
-    "prep_time_minutes": 15,
-    "cook_time_minutes": null,
-    "total_time_minutes": 15,
-    "servings": "4",
-    "ingredients": [
-      "1 (20 ounce) can pineapple chunks - drained with juice reserved",
-      "1 orange, peeled and segmented",
-      "1 kiwi -- peeled, halved and sliced",
-      "1 cup seedless grapes",
-      "1 cup quartered strawberries",
-      "0.25 teaspoon grated lime zest",
-      "2 tablespoons lime juice",
-      "1 tablespoon honey",
-      "1 teaspoon poppy seeds"
-    ],
-    "instructions": [
-      "In a large bowl, toss pineapple, orange, kiwi, grapes and strawberries. In a small cup or bowl, combine lime zest, lime juice, honey, poppy seeds and 1/4 cup reserved pineapple juice. Stir well and toss with fruit."
-    ],
-    "nutrition_per_serving": {
-      "calories": 178,
-      "total_fat_g": 1.0,
-      "carbohydrates_g": 45.0,
-      "fiber_g": 4.0,
-      "sugar_g": 39.0,
-      "protein_g": 2.0,
-      "sodium_mg": 4,
-      "saturated_fat_g": 0.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.6,
-    "review_count": 148,
-    "recipe_category": "Lunch",
-    "meal_type": "work",
-    "cuisine": "American"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/45729/chilaquiles-ii/",
     "category": "chilaquiles",
     "id": 45729,
@@ -19338,58 +14789,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "recipe_category": "Lunch",
     "meal_type": "study",
     "cuisine": "American"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/228116/warm-dijon-potato-salad/",
-    "category": "Potluck-Recipes",
-    "id": 228116,
-    "name": "Warm Dijon Potato Salad",
-    "description": "This warm potato salad is a combination of red potatoes, onion, and creamy Dijon mustard dressing for a tangy salad that's perfect for any gathering.",
-    "author": "MommyKirsten",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/1bpOVbuFk7pKrcIyEXHkZ3f_ap4=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/228116-Warm-dijon-Potato-Salad-dmfs-4x3-1399-c0cd5aa4fe034a79b6b71f84323be612.jpg",
-      "alt": "Warm Dijon Potato Salad"
-    },
-    "prep_time_minutes": 15,
-    "cook_time_minutes": 20,
-    "total_time_minutes": 35,
-    "servings": "8",
-    "ingredients": [
-      "5 red potatoes",
-      "0.5 cup reduced-fat mayonnaise",
-      "2 tablespoons grated Parmesan cheese",
-      "1.5 tablespoons Dijon mustard",
-      "4 teaspoons cider vinegar",
-      "0.5 teaspoon cayenne pepper",
-      "0.5 teaspoon salt",
-      "0.25 teaspoon ground black pepper",
-      "0.25 teaspoon paprika",
-      "0.5 red onion, thinly sliced",
-      "2 green onions, chopped"
-    ],
-    "instructions": [
-      "Gather all ingredients.",
-      "Place potatoes into a large pot and cover with salted water; bring to a boil. Reduce heat to medium-low, cover, and simmer until tender, about 20 minutes. Drain and cut into cubes.",
-      "Whisk mayonnaise, Parmesan cheese, Dijon mustard, vinegar, cayenne pepper, salt, black pepper, and paprika together in a large bowl.",
-      "Add potatoes, red onion, and green onions; gently toss to combine."
-    ],
-    "nutrition_per_serving": {
-      "calories": 155,
-      "total_fat_g": 6.0,
-      "carbohydrates_g": 24.0,
-      "fiber_g": 3.0,
-      "sugar_g": 2.0,
-      "protein_g": 3.0,
-      "sodium_mg": 345,
-      "cholesterol_mg": 6,
-      "saturated_fat_g": 1.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.6,
-    "review_count": 92,
-    "recipe_category": "Lunch",
-    "cuisine": "American",
-    "meal_type": "work"
   },
   {
     "url": "https://www.allrecipes.com/recipe/213795/dees-dark-chocolate-granola/",
@@ -19585,57 +14984,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "recipe_category": "Breakfast",
     "cuisine": "American",
     "meal_type": "fitness"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/148765/real-new-orleans-style-bbq-shrimp/",
-    "category": "lent",
-    "id": 148765,
-    "name": "Real New Orleans-Style BBQ Shrimp",
-    "description": "This barbecue shrimp recipe is oven-baked in butter and doused in Creole seasoning, making a deliciously rich dinner that is sure to please a crowd.",
-    "author": "Melissa S",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/wDfzPlyphzl-5lNSKk_NEIdY684=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/1355810-7b3f51dea1d74e1ba11aba96f0c146f5.jpg",
-      "alt": "Real New Orleans-Style BBQ Shrimp"
-    },
-    "prep_time_minutes": 15,
-    "cook_time_minutes": 25,
-    "total_time_minutes": 40,
-    "servings": "8",
-    "ingredients": [
-      "5 pounds medium shrimp, with shells",
-      "2 pounds butter",
-      "1 medium sweet onion, minced",
-      "8 cloves garlic, minced",
-      "2 stalks celery, diced",
-      "0.25 cup chopped fresh parsley",
-      "2 tablespoons Creole seasoning",
-      "2 tablespoons dried rosemary",
-      "ground black pepper to taste",
-      "0.5 cup Worcestershire sauce",
-      "2 teaspoons fresh lemon juice"
-    ],
-    "instructions": [
-      "Preheat the oven to 350 degrees F (175 degrees C). Arrange the shrimp in a single layer in as many baking dishes as you need. Set aside.",
-      "Melt 1/2 cup of butter in a large skillet over medium heat. Add onion, garlic, celery, parsley, Creole seasoning, and rosemary. Cook and stir for a few minutes, until onion is tender. Add rest of butter and cook until melted over low heat. Stir in pepper, Worcestershire sauce, and lemon juice. Pour this mixture over shrimp so that shrimp are completely submerged.",
-      "Bake in the preheated oven until shrimp are pink, 15 to 20 minutes."
-    ],
-    "nutrition_per_serving": {
-      "calories": 1148,
-      "total_fat_g": 97.0,
-      "carbohydrates_g": 10.0,
-      "fiber_g": 1.0,
-      "sugar_g": 3.0,
-      "protein_g": 59.0,
-      "sodium_mg": 1606,
-      "cholesterol_mg": 675,
-      "saturated_fat_g": 59.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.6,
-    "review_count": 48,
-    "recipe_category": "Lunch",
-    "cuisine": "Southern",
-    "meal_type": "work"
   },
   {
     "url": "https://www.allrecipes.com/recipe/162936/nonies-best-bbq/",
@@ -20097,98 +15445,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "work"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/256155/english-lemon-curd/",
-    "category": "frostings-and-icings",
-    "id": 256155,
-    "name": "English Lemon Curd",
-    "description": "Homemade lemon curd is quick and easy to make using 5 simple ingredients, creating a tangy and sweet topping for scones or croissants.",
-    "author": "Al Marti Voss",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/MjTOpvcQjMbzHkhLh_Auby3zP_k=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/256155english-lemon-curdKim4x3-b334d999e8434bba83ec13a9abceb8c8.jpg",
-      "alt": "English Lemon Curd"
-    },
-    "prep_time_minutes": 15,
-    "cook_time_minutes": 8,
-    "total_time_minutes": 53,
-    "servings": "48",
-    "ingredients": [
-      "1.5 cups freshly squeezed lemon juice",
-      "6 eggs, beaten",
-      "1 cup unsalted butter, softened",
-      "1 cup white sugar",
-      "0.25 cup freshly grated lemon zest"
-    ],
-    "instructions": [
-      "Combine lemon juice, eggs, butter, sugar, and lemon zest in a 2-quart saucepan; cook over medium-low heat, stirring constantly, until curd is thick and just beginning to boil, about 8 minutes.",
-      "Remove curd from heat and cool to room temperature, stirring occasionally to keep the surface soft, about 30 minutes. Pour curd into clean jars, seal, and store in the refrigerator."
-    ],
-    "nutrition_per_serving": {
-      "calories": 61,
-      "total_fat_g": 5.0,
-      "carbohydrates_g": 5.0,
-      "fiber_g": 0.0,
-      "sugar_g": 4.0,
-      "protein_g": 1.0,
-      "sodium_mg": 9,
-      "cholesterol_mg": 33,
-      "saturated_fat_g": 3.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.6,
-    "review_count": 14,
-    "recipe_category": "Breakfast",
-    "cuisine": "British",
-    "meal_type": "fitness"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/223494/southern-deviled-eggs/",
-    "category": "deviled-eggs",
-    "id": 223494,
-    "name": "Southern Deviled Eggs",
-    "description": "A simple recipe for Southern deviled eggs has a secret ingredient: a little sweetened condensed milk to give the filling a smooth and glossy texture. Top with a sprinkle of paprika and a couple of black olive slices for an easy appetizer.",
-    "author": "Joy",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/AGCcnmE9Byo64WV16sPgB1XRH_g=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/Southern-Deviled-Eggs-2000-acfa83976a6f43c0958f0db96094caae.jpeg",
-      "alt": "Southern Deviled Eggs"
-    },
-    "prep_time_minutes": 25,
-    "cook_time_minutes": null,
-    "total_time_minutes": 25,
-    "servings": "8",
-    "ingredients": [
-      "8 hard-cooked eggs, peeled and sliced in half lengthwise",
-      "2 tablespoons mayonnaise",
-      "1 teaspoon prepared yellow mustard",
-      "1 teaspoon spicy brown mustard",
-      "1 pinch ground black pepper",
-      "0.125 teaspoon distilled white vinegar",
-      "0.125 teaspoon white sugar",
-      "0.25 teaspoon sweetened condensed milk, or more to taste",
-      "0.25 teaspoon paprika for garnish",
-      "16 slices black olives"
-    ],
-    "instructions": [
-      "Scoop yolks from egg halves into a bowl. Mash the yolks with mayonnaise, yellow mustard, spicy brown mustard, black pepper, white vinegar, sugar, and sweetened condensed milk until the mixture is smooth. Spoon yolk filling into egg halves and sprinkle each deviled egg with paprika; top deviled eggs with 2 slices of black olive."
-    ],
-    "nutrition_per_serving": {
-      "calories": 107,
-      "total_fat_g": 8.0,
-      "carbohydrates_g": 1.0,
-      "fiber_g": 0.0,
-      "sugar_g": 1.0,
-      "protein_g": 6.0,
-      "sodium_mg": 115,
-      "cholesterol_mg": 213,
-      "saturated_fat_g": 2.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.6,
-    "review_count": 13,
-    "recipe_category": "Lunch",
-    "cuisine": "Southern",
-    "meal_type": "fitness"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/8400714/two-ingredient-bagels/",
     "category": "bagels",
     "id": 8400714,
@@ -20233,53 +15489,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "recipe_category": "Breakfast",
     "cuisine": "American",
     "meal_type": "fitness"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/239492/best-chicken-salad-ever/",
-    "category": "chicken-salads",
-    "id": 239492,
-    "name": "Best Chicken Salad Ever",
-    "description": "In this recipe for chicken salad with raisins, you can use canned or leftover chicken. Sweet relish and apples give this dish a touch of sweetness.",
-    "author": "pepper",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/0OBhXFpEdrqjKC0QgH1gliljcQA=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/1487948-26209f07902948498fc46df6be03897c.jpg",
-      "alt": "Best Chicken Salad Ever"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": null,
-    "total_time_minutes": 40,
-    "servings": "6",
-    "ingredients": [
-      "1 (5 ounce) can chunk chicken, drained and flaked",
-      "1 large apple, cored and diced",
-      "0.66666668653488 cup raisins",
-      "0.5 stalk celery, chopped",
-      "0.5 cup chopped pecans",
-      "3 tablespoons plain fat-free Greek yogurt",
-      "1 teaspoon sweet pickle relish",
-      "salt and ground black pepper to taste"
-    ],
-    "instructions": [
-      "Mix chicken, apple, raisins, celery, pecans, yogurt, and relish together in a bowl; season with salt and pepper.",
-      "Cover bowl with plastic wrap and refrigerate until chilled, at least 30 minutes."
-    ],
-    "nutrition_per_serving": {
-      "calories": 174,
-      "total_fat_g": 9.0,
-      "carbohydrates_g": 20.0,
-      "fiber_g": 2.0,
-      "sugar_g": 14.0,
-      "protein_g": 7.0,
-      "sodium_mg": 133,
-      "cholesterol_mg": 15,
-      "saturated_fat_g": 1.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.6,
-    "review_count": 5,
-    "recipe_category": "Lunch",
-    "cuisine": "American",
-    "meal_type": "work"
   },
   {
     "url": "https://www.allrecipes.com/recipe/236896/egg-style-avocado-salad-sandwiches/",
@@ -20876,57 +16085,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "work"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/92525/pasta-pancetta/",
-    "category": "linguine",
-    "id": 92525,
-    "name": "Pasta Pancetta",
-    "description": "This pancetta pasta recipe with flavorful Italian bacon, shallots, mushrooms, Parmesan, garlic, and oregano teaches you how long to cook pancetta.",
-    "author": "kempcooking",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/JMtbbpgUH5Y_XjF_fuqQ8DSQrbY=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/966816-ad654254c8c74c89803d3dd6810301e3.jpg",
-      "alt": "Pasta Pancetta"
-    },
-    "prep_time_minutes": 5,
-    "cook_time_minutes": 20,
-    "total_time_minutes": 25,
-    "servings": "6",
-    "ingredients": [
-      "1 (12 ounce) package linguine pasta",
-      "0.25 cup olive oil",
-      "6 ounces pancetta bacon, diced",
-      "5 shallots, chopped",
-      "2 cups fresh sliced mushrooms",
-      "4 cloves garlic, chopped",
-      "2 pinches freshly ground black pepper, or as needed",
-      "2 pinches dried oregano",
-      "0.5 cup chicken broth",
-      "0.5 cup freshly grated Parmesan cheese"
-    ],
-    "instructions": [
-      "Bring a large pot of lightly salted water to a boil. Cook linguine at a boil until tender yet firm to the bite, about 11 minutes. Drain, transfer back to the pot, and set aside.",
-      "Meanwhile, heat olive oil in a large skillet over medium heat. Cook pancetta in hot oil until just beginning to brown. Stir in shallots, mushrooms, garlic, pepper, and oregano; cook until fragrant, about 1 minute.",
-      "Pour in chicken broth; bring to a boil over medium-high heat, stirring occasionally, for 1 to 2 minutes. Reduce heat, cover, and simmer for 5 to 7 minutes.",
-      "Strain liquid from the pan into pasta; toss to coat. Divide pasta onto individual serving plates, then top with equal portions of pancetta and mushrooms. Serve with Parmesan cheese and pepper."
-    ],
-    "nutrition_per_serving": {
-      "calories": 477,
-      "total_fat_g": 25.0,
-      "carbohydrates_g": 50.0,
-      "fiber_g": 3.0,
-      "sugar_g": 4.0,
-      "protein_g": 15.0,
-      "sodium_mg": 345,
-      "cholesterol_mg": 25,
-      "saturated_fat_g": 7.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.5,
-    "review_count": 130,
-    "recipe_category": "Lunch",
-    "cuisine": "Italian",
-    "meal_type": "work"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/23553/basic-fruit-smoothie/",
     "category": "high-fiber",
     "id": 23553,
@@ -21071,53 +16229,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "recipe_category": "Breakfast",
     "cuisine": "American",
     "meal_type": "work"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/111822/bulk-venison-breakfast-sausage/",
-    "category": "ground-pork",
-    "id": 111822,
-    "name": "Bulk Venison Breakfast Sausage",
-    "description": "This venison sausage recipe is flavored with sage and red pepper flakes. Stock up your freezer with this savory sausage for a tasty breakfast anytime!",
-    "author": "AMYNJOHN36",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/3vxQOX-vV0jfxTH1FlqbhLJXnsk=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/JF_111822_BulkVenisonBreakfastSausage_4x3_12299-a592fc7cbfed4f83ae66c6ee888d0ae3.jpg",
-      "alt": "Bulk Venison Breakfast Sausage"
-    },
-    "prep_time_minutes": 45,
-    "cook_time_minutes": null,
-    "total_time_minutes": 45,
-    "servings": "64",
-    "ingredients": [
-      "6 pounds ground venison",
-      "2 pounds ground pork",
-      "0.25 cup sugar-based curing mixture (such as Morton\u00ae Tender Quick\u00ae)",
-      "0.25 cup packed brown sugar",
-      "3 tablespoons dried sage",
-      "1 tablespoon crushed red pepper flakes",
-      "1 tablespoon fresh-ground black pepper"
-    ],
-    "instructions": [
-      "Gather all ingredients.",
-      "Place venison and pork in a very large bowl or plastic tub; sprinkle with curing mixture, sugar, sage, red pepper flakes, and black pepper. Mix well until evenly combined.",
-      "Divide into 1-pound portions and freeze."
-    ],
-    "nutrition_per_serving": {
-      "calories": 93,
-      "total_fat_g": 4.0,
-      "carbohydrates_g": 1.0,
-      "fiber_g": 0.0,
-      "sugar_g": 1.0,
-      "protein_g": 12.0,
-      "sodium_mg": 472,
-      "cholesterol_mg": 46,
-      "saturated_fat_g": 2.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.5,
-    "review_count": 68,
-    "recipe_category": "Breakfast",
-    "cuisine": "American",
-    "meal_type": "fitness"
   },
   {
     "url": "https://www.allrecipes.com/recipe/14020/breakfast-grits/",
@@ -21446,53 +16557,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "recipe_category": "Breakfast",
     "cuisine": "American",
     "meal_type": "work"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/265170/birthday-cake-for-your-cat/",
-    "category": "Pet-Food",
-    "id": 265170,
-    "name": "Birthday Cake for Your Cat",
-    "description": "This cat birthday cake is purr-fect for those looking for a special treat for a favorite feline. Your kitty will love this easy tuna fish cake.",
-    "author": "Nate Bartlett",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/lkm0669OrUYil_K9Pz5Xq2dQsW0=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/AR-265170-birthday-cake-for-your-cat-DDMFS-4x3-Beauty-6aa665121db148d0ae60b741551f8fe5.jpg",
-      "alt": "Birthday Cake for Your Cat"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 15,
-    "total_time_minutes": 30,
-    "servings": "2",
-    "ingredients": [
-      "cooking spray",
-      "1 (6 ounce) can tuna, drained",
-      "2 tablespoons all-purpose flour",
-      "1 egg white",
-      "0.125 teaspoon shredded mild Cheddar cheese",
-      "4 peeled, cooked shrimp"
-    ],
-    "instructions": [
-      "Gather all ingredients. Preheat the oven to 350 degrees F (175 degrees C). Spray 2 muffin tin cups with cooking spray.",
-      "Combine tuna, flour, egg white, and Cheddar cheese in a bowl. Fill the prepared muffin cups equally with the mixture.",
-      "Bake in the preheated oven for 15 minutes. Let cool in the tin for 5 minutes. Invert onto a wire rack to cool completely.",
-      "Garnish cakes with shrimp."
-    ],
-    "nutrition_per_serving": {
-      "calories": 145,
-      "total_fat_g": 1.0,
-      "carbohydrates_g": 6.0,
-      "fiber_g": 0.0,
-      "sugar_g": 0.0,
-      "protein_g": 26.0,
-      "sodium_mg": 96,
-      "cholesterol_mg": 45,
-      "saturated_fat_g": 0.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.5,
-    "review_count": 31,
-    "recipe_category": "Lunch",
-    "cuisine": "American",
-    "meal_type": "fitness"
   },
   {
     "url": "https://www.allrecipes.com/recipe/201510/sweet-and-salty-granola/",
@@ -21854,59 +16918,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "fitness"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/233648/summer-fruit-salad-with-whipped-cream/",
-    "category": "fruit-salads",
-    "id": 233648,
-    "name": "Summer Fruit Salad with Whipped Cream",
-    "description": "In this fruit salad with whipped cream, use raspberry-flavored liqueur to bring flavor to the nectarines, cherries, strawberries, and other fruits.",
-    "author": "gagund",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/qlz4jKvs8v3ek35K85rPGXoFYxA=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/2342617-1f0bdf99f2b3456fb771318bb1bfa24e.jpg",
-      "alt": "Summer Fruit Salad with Whipped Cream"
-    },
-    "prep_time_minutes": 30,
-    "cook_time_minutes": 15,
-    "total_time_minutes": 45,
-    "servings": "8",
-    "ingredients": [
-      "0.33333334326744 cup water",
-      "5 tablespoons white sugar",
-      "0.25 cup raspberry-flavored liqueur (such as Chambord\u00ae)",
-      "2 tablespoons fresh lemon juice",
-      "2 cups diced nectarines",
-      "1 cup pitted and halved sweet cherries",
-      "1 cup sliced strawberries",
-      "1 cup fresh raspberries",
-      "1 cup fresh blueberries",
-      "0.33333334326744 cup heavy whipping cream",
-      "2 teaspoons white sugar",
-      "1 teaspoon raspberry-flavored liqueur (such as Chambord\u00ae)",
-      "3 tablespoons toasted slivered almonds"
-    ],
-    "instructions": [
-      "Stir water, 5 tablespoons sugar, 1/4 cup raspberry-flavored liqueur, and lemon juice together in a saucepan over medium-low heat. Bring mixture to a boil, reduce heat to low, and simmer, frequently stirring, until sugar dissolves completely, about 8 minutes. Set aside to cool.",
-      "Mix nectarines, cherries, strawberries, raspberries, and blueberries in a large bowl. Pour cooled sugar mixture over fruit and toss gently to coat.",
-      "Beat heavy whipping cream and 2 teaspoons sugar in a bowl with an electric hand mixer on high until stiff peaks form. Fold 1 teaspoon raspberry-flavored liqueur into whipped cream; spoon over fruit salad and sprinkle evenly with almonds."
-    ],
-    "nutrition_per_serving": {
-      "calories": 168,
-      "total_fat_g": 6.0,
-      "carbohydrates_g": 26.0,
-      "fiber_g": 3.0,
-      "sugar_g": 21.0,
-      "protein_g": 2.0,
-      "sodium_mg": 5,
-      "cholesterol_mg": 14,
-      "saturated_fat_g": 2.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.5,
-    "review_count": 2,
-    "recipe_category": "Lunch",
-    "cuisine": "American",
-    "meal_type": "work"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/275464/individual-baked-frittatas/",
     "category": "frittatas",
     "id": 275464,
@@ -22261,96 +17272,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "cuisine": "American"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/6953/hot-water-cornbread/",
-    "category": "camping-recipes",
-    "id": 6953,
-    "name": "Hot Water Cornbread",
-    "description": "This hot water cornbread is an old-fashioned Southern recipe for easy-to-make cornmeal cakes fried in a skillet in shortening until crisp and golden.",
-    "author": "Karin Christian",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/5hfvmnbgLqhlsM2cXC-FRomBgtE=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/AR-6953-hot-water-cornbread-4x3-hero-c64e10609c114183976cf4238b1d39ee.jpg",
-      "alt": "Hot Water Cornbread"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 5,
-    "total_time_minutes": 15,
-    "servings": "6",
-    "ingredients": [
-      "1 cup cornmeal",
-      "1 teaspoon salt",
-      "1 teaspoon white sugar",
-      "0.75 cup boiling water",
-      "1 tablespoon bacon grease",
-      "1 cup bacon grease, or as needed"
-    ],
-    "instructions": [
-      "Gather all ingredients.",
-      "Combine cornmeal, salt, and sugar in a medium bowl. Add boiling water and 1 tablespoon bacon grease; stir until bacon grease melts.",
-      "Pour bacon grease to a depth of 1/2-inch in a large skillet; heat to 375 degrees F (190 degrees C).",
-      "Shape cornmeal mixture into 12 flattened balls using a heaping tablespoon as a measuring guide.",
-      "Fry, turning once, in hot oil until crisp and golden brown, about 5 minutes. Drain on paper towels and serve warm."
-    ],
-    "nutrition_per_serving": {
-      "calories": 95,
-      "total_fat_g": 3.0,
-      "carbohydrates_g": 16.0,
-      "fiber_g": 2.0,
-      "sugar_g": 1.0,
-      "protein_g": 2.0,
-      "sodium_mg": 396,
-      "saturated_fat_g": 1.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.4,
-    "review_count": 205,
-    "recipe_category": "Lunch",
-    "cuisine": "U.S.",
-    "meal_type": "study"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/174386/homemade-biscuit-mix/",
-    "category": "biscuits",
-    "id": 174386,
-    "name": "Homemade Biscuit Mix",
-    "description": "Keep this basic biscuit mix on hand and you'll be able to make quick, tasty homemade biscuits in minutes\u2014or use this in any recipe that calls for biscuit mix.",
-    "author": "DAVES_POOKY",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/-2R_9EfMZL3Re9weoplD_BDwfI4=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/2933393-36108d83b7fd4bc4b587cfd7b997028f.jpg",
-      "alt": "Homemade Biscuit Mix"
-    },
-    "prep_time_minutes": 15,
-    "cook_time_minutes": null,
-    "total_time_minutes": 15,
-    "servings": "48",
-    "ingredients": [
-      "10 cups all-purpose flour",
-      "0.5 cup baking powder",
-      "2 tablespoons white sugar",
-      "2 teaspoons salt",
-      "1.25 cups vegetable oil"
-    ],
-    "instructions": [
-      "Combine flour, baking powder, sugar and salt in a mixing bowl. Add oil and mix with a fork or pastry blender; you should have small lumps throughout the mixture.",
-      "Store in an airtight container in a cool, dry place for up to three months."
-    ],
-    "nutrition_per_serving": {
-      "calories": 148,
-      "total_fat_g": 6.0,
-      "carbohydrates_g": 21.0,
-      "fiber_g": 1.0,
-      "sugar_g": 1.0,
-      "protein_g": 3.0,
-      "sodium_mg": 341,
-      "saturated_fat_g": 1.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.4,
-    "review_count": 139,
-    "recipe_category": "Breakfast",
-    "cuisine": "American",
-    "meal_type": "work"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/23913/spicy-potatoes-and-scrambled-eggs/",
     "category": "breakfast-potatoes",
     "id": 23913,
@@ -22448,44 +17369,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "recipe_category": "Breakfast",
     "cuisine": "American",
     "meal_type": "work"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/71400/sweet-dijon-salad-dressing/",
-    "category": "sugar-free-recipes",
-    "id": 71400,
-    "name": "Sweet Dijon Salad Dressing",
-    "description": "A sweet onion Dijon vinaigrette that is perfect for your next green salad. This tangy dressing is easy to whip up and use over and over again.",
-    "author": "THYMEFORME",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/EAQgk26pwGXZNe8fAAdJ-oJ8Sxk=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/7666749-8ae3e04abc054c3dbed0f6f04133cf8e.jpg",
-      "alt": "Sweet Dijon Salad Dressing"
-    },
-    "prep_time_minutes": 5,
-    "cook_time_minutes": null,
-    "total_time_minutes": 5,
-    "servings": "12",
-    "ingredients": [
-      "0.25 cup apple cider vinegar",
-      "0.25 cup Dijon mustard",
-      "0.25 cup olive oil",
-      "4 (1 gram) packets granular sucrolose sweetener (such as Splenda\u00ae)"
-    ],
-    "instructions": [
-      "Place vinegar, Dijon mustard, oil, and sugar substitute into a jar with a tight-fitting lid. Close the jar, and shake vigorously to blend. Refrigerate until chilled before using."
-    ],
-    "nutrition_per_serving": {
-      "calories": 46,
-      "total_fat_g": 5.0,
-      "carbohydrates_g": 1.0,
-      "sodium_mg": 125,
-      "saturated_fat_g": 1.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.4,
-    "review_count": 74,
-    "recipe_category": "Lunch",
-    "meal_type": "study",
-    "cuisine": "American"
   },
   {
     "url": "https://www.allrecipes.com/recipe/265505/maple-and-brown-sugar-oatmeal/",
@@ -22672,53 +17555,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "recipe_category": "Lunch",
     "meal_type": "work",
     "cuisine": "American"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/233886/zucchini-scallion-frittata-cups/",
-    "category": "frittatas",
-    "id": 233886,
-    "name": "Zucchini Scallion Frittata Cups",
-    "description": "These portion-controlled, protein-packed portable egg, zucchini, and scallion cups are excellent for on-the-go lifestyles.",
-    "author": "Nocciola",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/CDRN3ezCZsJcx62Bsv48cYZBMJI=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/1088863-zucchini-scallion-frittata-cups-SunnyDaysNora-4x3-1-fe21d786849441e9830491f39084831f.jpg",
-      "alt": "Zucchini Scallion Frittata Cups"
-    },
-    "prep_time_minutes": 15,
-    "cook_time_minutes": 30,
-    "total_time_minutes": 45,
-    "servings": "12",
-    "ingredients": [
-      "cooking spray",
-      "7 egg whites",
-      "3 eggs",
-      "2 tablespoons half-and-half",
-      "2 cups shredded zucchini",
-      "1 cup chopped green onion",
-      "3 tablespoons grated Parmigiano-Reggiano cheese"
-    ],
-    "instructions": [
-      "Preheat the oven to 350 degrees F (175 degrees C). Prepare 12 muffin cups with cooking spray.",
-      "Whisk egg whites, eggs, and half-and-half together in a bowl. Stir zucchini, green onion, and cheese into egg mixture; pour into prepared muffin cups.",
-      "Bake in the preheated oven until set in the middle, 30 to 35 minutes."
-    ],
-    "nutrition_per_serving": {
-      "calories": 45,
-      "total_fat_g": 2.0,
-      "carbohydrates_g": 2.0,
-      "fiber_g": 1.0,
-      "sugar_g": 1.0,
-      "protein_g": 5.0,
-      "sodium_mg": 74,
-      "cholesterol_mg": 37,
-      "saturated_fat_g": 1.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.4,
-    "review_count": 25,
-    "recipe_category": "Breakfast",
-    "cuisine": "American",
-    "meal_type": "fitness"
   },
   {
     "url": "https://www.allrecipes.com/recipe/73155/porridge/",
@@ -23014,47 +17850,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "work"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/20797/extra-easy-hummus/",
-    "category": "hummus",
-    "id": 20797,
-    "name": "Extra Easy Hummus",
-    "description": "Tahini-free hummus that only takes minutes, and is a favorite with my kids.",
-    "author": "Donalyn",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/hL9f5cCm7wDg90Q0WsBOGgXEoB8=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/588854-274b47807d6a4f09996f6c9a09c77293.jpg",
-      "alt": "Extra Easy Hummus"
-    },
-    "prep_time_minutes": 5,
-    "cook_time_minutes": null,
-    "total_time_minutes": 5,
-    "servings": "4",
-    "ingredients": [
-      "1 (15 ounce) can garbanzo beans, drained, liquid reserved",
-      "1 clove garlic, crushed",
-      "2 teaspoons ground cumin",
-      "0.5 teaspoon salt",
-      "1 tablespoon olive oil"
-    ],
-    "instructions": [
-      "In a blender or food processor combine garbanzo beans, garlic, cumin, salt and olive oil. Blend on low speed, gradually adding reserved bean liquid, until desired consistency is achieved."
-    ],
-    "nutrition_per_serving": {
-      "calories": 118,
-      "total_fat_g": 4.0,
-      "carbohydrates_g": 17.0,
-      "fiber_g": 3.0,
-      "protein_g": 4.0,
-      "sodium_mg": 502,
-      "saturated_fat_g": 1.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.3,
-    "review_count": 673,
-    "recipe_category": "Lunch",
-    "cuisine": "Middle Eastern",
-    "meal_type": "study"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/102151/easy-baking-powder-drop-biscuits/",
     "category": "biscuits",
     "id": 102151,
@@ -23101,53 +17896,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "recipe_category": "Breakfast",
     "cuisine": "American",
     "meal_type": "work"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/6797/moms-baking-powder-biscuits/",
-    "category": "biscuits",
-    "id": 6797,
-    "name": "Mom's Baking Powder Biscuits",
-    "description": "This is the recipe for baking powder biscuits my mom always made. The amount of biscuits you get depends on how big you make them. Delicious and easy.",
-    "author": "Jodeen Brown",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/GINFWlcGqak9v0MN00PzvqisV54=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/9238695-b8df961212194b92bf5369ee2b5d918c.jpg",
-      "alt": "Mom's Baking Powder Biscuits"
-    },
-    "prep_time_minutes": 15,
-    "cook_time_minutes": 15,
-    "total_time_minutes": 30,
-    "servings": "24",
-    "ingredients": [
-      "2 cups all-purpose flour, plus more for dusting",
-      "2.5 teaspoons baking powder",
-      "0.75 teaspoon salt",
-      "5 tablespoons shortening",
-      "0.75 cup milk",
-      "1 tablespoon melted shortening, or as needed"
-    ],
-    "instructions": [
-      "Preheat the oven to 450 degrees F (230 degrees C).",
-      "Mix flour, baking powder, and salt in a bowl. Add shortening and cut into flour until incorporated into little pieces. Add milk a little at a time and mix until dough forms a ball.",
-      "Roll out dough on a floured board to 1/2- to 1/4-inch thick. Cut out biscuits to desired size and dip in melted shortening. Place biscuits on an ungreased baking sheet.",
-      "Bake in the preheated oven for 12 to 15 minutes."
-    ],
-    "nutrition_per_serving": {
-      "calories": 66,
-      "total_fat_g": 3.0,
-      "carbohydrates_g": 8.0,
-      "fiber_g": 0.0,
-      "sugar_g": 0.0,
-      "protein_g": 1.0,
-      "sodium_mg": 127,
-      "cholesterol_mg": 1,
-      "saturated_fat_g": 1.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.3,
-    "review_count": 346,
-    "recipe_category": "Breakfast",
-    "cuisine": "American",
-    "meal_type": "study"
   },
   {
     "url": "https://www.allrecipes.com/recipe/21005/easy-banana-fritters/",
@@ -23247,50 +17995,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "recipe_category": "Breakfast",
     "cuisine": "American",
     "meal_type": "work"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/8790/chicken-salad-spread/",
-    "category": "chicken-salads",
-    "id": 8790,
-    "name": "Chicken Salad Spread",
-    "description": "This quick and easy chicken salad spread comes together in minutes with canned chicken and basic pantry ingredients. Delicious on salads and sandwiches.",
-    "author": "MYSST",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/LOvJX5Ciwdl8RR50Wh0AkOchHqk=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/AR-8790-Chicken-Salad-Spread-gw-ddmfs-beauty-4x3-a3a69c843ec34d84a7754834fe20ba32.jpg",
-      "alt": "Chicken Salad Spread"
-    },
-    "prep_time_minutes": 5,
-    "cook_time_minutes": null,
-    "total_time_minutes": 5,
-    "servings": "4",
-    "ingredients": [
-      "1 (10 ounce) can chicken chunks, drained",
-      "0.5 cup sweet pickles, chopped",
-      "0.33333298563957 cup low-fat mayonnaise",
-      "0.25 cup chopped celery",
-      "0.5 teaspoon onion powder"
-    ],
-    "instructions": [
-      "Gather all ingredients.",
-      "Stir chicken, pickles, mayonnaise, celery, and onion powder together in a bowl until well combined."
-    ],
-    "nutrition_per_serving": {
-      "calories": 145,
-      "total_fat_g": 6.0,
-      "carbohydrates_g": 7.0,
-      "fiber_g": 0.0,
-      "sugar_g": 7.0,
-      "protein_g": 15.0,
-      "sodium_mg": 476,
-      "cholesterol_mg": 43,
-      "saturated_fat_g": 2.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.3,
-    "review_count": 135,
-    "recipe_category": "Lunch",
-    "cuisine": "American",
-    "meal_type": "fitness"
   },
   {
     "url": "https://www.allrecipes.com/recipe/46353/asparagus-and-mushroom-frittata/",
@@ -23526,50 +18230,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "rating": 4.3,
     "review_count": 53,
     "recipe_category": "Breakfast",
-    "cuisine": "American",
-    "meal_type": "study"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/231850/cilantro-jalapeno-hummus/",
-    "category": "hummus",
-    "id": 231850,
-    "name": "Cilantro Jalapeno Hummus",
-    "description": "Cilantro and a jalapeno pepper take this hummus recipe to a new spicy and colorful level. Enjoy with pita or tortilla chips.",
-    "author": "tastywhalebacon",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/cTCw7HcannAiAC6wMA3iDNpeI9M=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/1124384-657cd06b82e44fc6825f70c4ce111a9f.jpg",
-      "alt": "Cilantro Jalapeno Hummus"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": null,
-    "total_time_minutes": 10,
-    "servings": "12",
-    "ingredients": [
-      "1 (15 ounce) can garbanzo beans, drained",
-      "1 cup fresh cilantro, or to taste",
-      "1 jalapeno pepper, stemmed and diced - or to taste",
-      "2 cloves garlic, diced",
-      "1 tablespoon olive oil, or as needed",
-      "salt and ground black pepper to taste",
-      "1 pinch garlic powder, or to taste"
-    ],
-    "instructions": [
-      "Blend garbanzo beans, cilantro, jalapeno pepper, garlic, olive oil, salt, black pepper, and garlic powder in a blender until smooth."
-    ],
-    "nutrition_per_serving": {
-      "calories": 40,
-      "total_fat_g": 1.0,
-      "carbohydrates_g": 6.0,
-      "fiber_g": 1.0,
-      "sugar_g": 0.0,
-      "protein_g": 1.0,
-      "sodium_mg": 72,
-      "saturated_fat_g": 0.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.3,
-    "review_count": 36,
-    "recipe_category": "Lunch",
     "cuisine": "American",
     "meal_type": "study"
   },
@@ -24101,50 +18761,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "review_count": 3,
     "recipe_category": "Lunch",
     "cuisine": "Canadian",
-    "meal_type": "work"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/242181/fresh-watermelon-gazpacho/",
-    "category": "gazpacho",
-    "id": 242181,
-    "name": "Fresh Watermelon Gazpacho",
-    "description": "This fresh watermelon gazpacho recipe with cucumber, jalape\u00f1o, blueberries, and a touch of red wine vinegar is a tweak on the usual gazpacho recipe.",
-    "author": "Scott Koeneman",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/qG2TQQ60xCeRr_xpf_IULWEcuY0=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/3440781-153b9b8cdbfb44e2be2a4a0c820c016b.jpg",
-      "alt": "Fresh Watermelon Gazpacho"
-    },
-    "prep_time_minutes": 20,
-    "cook_time_minutes": null,
-    "total_time_minutes": 50,
-    "servings": "4",
-    "ingredients": [
-      "8 cups diced seeded watermelon, divided",
-      "1 cucumber - peeled, seeded, and diced, divided",
-      "1 jalapeno pepper, minced",
-      "3 tablespoons red wine vinegar",
-      "1 cup fresh blueberries"
-    ],
-    "instructions": [
-      "Place 6 cups watermelon, \u00bd cucumber, jalape\u00f1o, and vinegar in a blender; blend until smooth.",
-      "Transfer gazpacho to a large bowl; stir in remaining 2 cups watermelon and remaining \u00bd cucumber. Refrigerate until chilled, at least 30 minutes.",
-      "Divide gazpacho among 4 bowls; top servings with blueberries."
-    ],
-    "nutrition_per_serving": {
-      "calories": 122,
-      "total_fat_g": 1.0,
-      "carbohydrates_g": 31.0,
-      "fiber_g": 3.0,
-      "sugar_g": 23.0,
-      "protein_g": 3.0,
-      "sodium_mg": 4,
-      "saturated_fat_g": 0.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.3,
-    "review_count": 3,
-    "recipe_category": "Lunch",
-    "cuisine": "Spanish",
     "meal_type": "work"
   },
   {
@@ -24888,51 +19504,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "work"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/215981/warm-winter-citrus-dessert/",
-    "category": "fruit-salads",
-    "id": 215981,
-    "name": "Warm Winter Citrus Dessert",
-    "description": "A simple dessert--or breakfast dish--of broiled grapefruit, orange, and pineapple topped with butter and brown sugar.",
-    "author": "Dianemwj",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/e4z6_shJPhsmaUj5qANevKjQTgo=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/962901-6382d85ec14d41879d5bf0628e326efd.jpg",
-      "alt": "Warm Winter Citrus Dessert"
-    },
-    "prep_time_minutes": 20,
-    "cook_time_minutes": 5,
-    "total_time_minutes": 35,
-    "servings": "4",
-    "ingredients": [
-      "2 red grapefruit, peeled and sectioned",
-      "2 large oranges, peeled and sectioned",
-      "1 cup fresh pineapple chunks",
-      "0.5 cup packed brown sugar",
-      "2 tablespoons butter, softened"
-    ],
-    "instructions": [
-      "Preheat the oven's broiler and set the oven rack about 6 inches from the heat source.",
-      "Place the grapefruit sections, orange sections, and pineapple chunks into an 8x8-inch baking dish. Stir the brown sugar and butter together in a small bowl, and scatter the butter mixture evenly across the fruit.",
-      "Broil the fruit until the sugar is bubbly, 5 to 6 minutes. Allow to cool for several minutes before serving warm."
-    ],
-    "nutrition_per_serving": {
-      "calories": 279,
-      "total_fat_g": 6.0,
-      "carbohydrates_g": 58.0,
-      "fiber_g": 5.0,
-      "sugar_g": 50.0,
-      "protein_g": 2.0,
-      "sodium_mg": 49,
-      "cholesterol_mg": 15,
-      "saturated_fat_g": 4.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.1,
-    "review_count": 15,
-    "recipe_category": "Breakfast",
-    "meal_type": "work",
-    "cuisine": "American"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/238064/easiest-peanut-butter-granola-ever/",
     "category": "granola",
     "id": 238064,
@@ -25130,97 +19701,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "fitness"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/214054/kimberlys-curried-deviled-eggs/",
-    "category": "deviled-eggs",
-    "id": 214054,
-    "name": "Kimberly's Curried Deviled Eggs",
-    "description": "Simple deviled eggs with curry flavoring and sweet pickle relish get a cheerful yellow color from the curry.",
-    "author": "Kimberly",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/c8_tVAzjz7Lloe6J5x0NCy54vww=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/709928-0e3823ca3e3c4bb1aa5478218473fe48.jpg",
-      "alt": "Kimberly's Curried Deviled Eggs"
-    },
-    "prep_time_minutes": 15,
-    "cook_time_minutes": 15,
-    "total_time_minutes": 60,
-    "servings": "12",
-    "ingredients": [
-      "6 eggs",
-      "0.25 cup mayonnaise",
-      "1 tablespoon stone-ground mustard, or to taste",
-      "1 teaspoon curry powder",
-      "0.5 teaspoon dried parsley",
-      "1 tablespoon sweet pickle relish",
-      "0.25 teaspoon ground black pepper",
-      "1 pinch paprika for garnish"
-    ],
-    "instructions": [
-      "Place the eggs into a saucepan in a single layer and fill with water to cover the eggs by 1 inch. Cover the saucepan and bring the water to a boil over high heat. Remove from the heat and let the eggs stand in the hot water for 15 minutes. Drain. Cool the eggs under cold running water. Peel once cold. Halve the eggs lengthwise and scoop the yolks into a bowl. Mash the yolks with a fork.",
-      "Stir the mayonnaise, mustard, curry powder, parsley, pickle relish, and pepper into the egg yolks until combined; spoon into the egg white halves. Garnish with paprika. Chill before serving."
-    ],
-    "nutrition_per_serving": {
-      "calories": 73,
-      "total_fat_g": 6.0,
-      "carbohydrates_g": 1.0,
-      "fiber_g": 0.0,
-      "sugar_g": 1.0,
-      "protein_g": 3.0,
-      "sodium_mg": 131,
-      "cholesterol_mg": 94,
-      "saturated_fat_g": 1.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.0,
-    "review_count": 23,
-    "recipe_category": "Lunch",
-    "cuisine": "Amish",
-    "meal_type": "fitness"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/21206/reduced-fat-french-toast/",
-    "category": "diabetic",
-    "id": 21206,
-    "name": "Reduced Fat French Toast",
-    "description": "This is an easy variation on the basic French toast recipe, except it uses reduced fat substitutes! Serve with fruit or sugar-free maple syrup.",
-    "author": "Jen",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/k_m6oclt6uyOXX35CRgWUHrmBy8=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/297427-866dff6383e74025b68315a2a03e6e08.jpg",
-      "alt": "Reduced Fat French Toast"
-    },
-    "prep_time_minutes": 5,
-    "cook_time_minutes": 10,
-    "total_time_minutes": 15,
-    "servings": "6",
-    "ingredients": [
-      "0.5 cup egg substitute",
-      "0.66666668653488 cup skim milk",
-      "1 teaspoon vanilla extract",
-      "0.5 teaspoon ground cinnamon",
-      "6 slices reduced calorie white bread"
-    ],
-    "instructions": [
-      "Beat together egg substitute, milk, vanilla and cinnamon. Dip bread slices in egg mixture until both sides are soaked.",
-      "Spray a skillet or frying pan with cooking spray and heat over medium high heat. Place bread slices into pan and cook until golden brown on both sides"
-    ],
-    "nutrition_per_serving": {
-      "calories": 77,
-      "total_fat_g": 1.0,
-      "carbohydrates_g": 12.0,
-      "fiber_g": 2.0,
-      "sugar_g": 3.0,
-      "protein_g": 5.0,
-      "sodium_mg": 153,
-      "cholesterol_mg": 1,
-      "saturated_fat_g": 0.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.0,
-    "review_count": 21,
-    "recipe_category": "Breakfast",
-    "meal_type": "fitness",
-    "cuisine": "American"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/23791/quick-microwave-frittata-casserole/",
     "category": "frittatas",
     "id": 23791,
@@ -25372,54 +19852,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "work"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/254373/spiralized-apple-salad/",
-    "category": "fruit-salads",
-    "id": 254373,
-    "name": "Spiralized Apple Salad",
-    "description": "Fresh apples are spiralized into crunchy noodles and tossed with a mild vinaigrette dressing in this quick and easy spin on fruit salad.",
-    "author": "lutzflcat",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/4TltYrVW0DPk20JAwPhJLuLIM78=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/3732998-e7e210dd3f934567acc67c5155e580c3.jpg",
-      "alt": "Spiralized Apple Salad"
-    },
-    "prep_time_minutes": 15,
-    "cook_time_minutes": 3,
-    "total_time_minutes": 18,
-    "servings": "4",
-    "ingredients": [
-      "2 tablespoons extra-virgin olive oil",
-      "2 tablespoons white balsamic vinegar",
-      "1 tablespoon Dijon mustard",
-      "1 teaspoon honey, or more to taste",
-      "2 unpeeled Granny Smith apples",
-      "1 unpeeled Red Delicious apple",
-      "0.5 lime, juiced",
-      "1 tablespoon pine nuts"
-    ],
-    "instructions": [
-      "Whisk olive oil, white balsamic vinegar, Dijon mustard, and honey in a small bowl to make dressing.",
-      "Cut Granny Smith and Red Delicious apples into noodles using a spiralizer fitted with the large shredding blade.",
-      "Place apple noodles in a large bowl and toss with lime juice to keep them from turning brown. Pour in dressing; mix gently until salad is combined.",
-      "Place pine nuts in a small skillet over medium-low heat. Toast pine nuts, shaking often, until golden brown, about 5 minutes. Sprinkle pine nuts over salad."
-    ],
-    "nutrition_per_serving": {
-      "calories": 136,
-      "total_fat_g": 8.0,
-      "carbohydrates_g": 17.0,
-      "fiber_g": 2.0,
-      "sugar_g": 13.0,
-      "protein_g": 1.0,
-      "sodium_mg": 97,
-      "saturated_fat_g": 1.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.0,
-    "review_count": 3,
-    "recipe_category": "Lunch",
-    "meal_type": "work",
-    "cuisine": "American"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/255309/cinnamon-apple-and-banana-granolameal/",
     "category": "granola",
     "id": 255309,
@@ -25466,153 +19898,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "recipe_category": "Breakfast",
     "meal_type": "work",
     "cuisine": "American"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/245625/purim-hamantaschen-with-prune-filling/",
-    "category": "Purim",
-    "id": 245625,
-    "name": "Purim Hamantaschen with Prune Filling",
-    "description": "These sweet hamantaschen cookies traditionally served on the Jewish holiday of Purim are filled with a classic homemade prune filling.",
-    "author": "RIELLA",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/kSmIRsoahilYaKlMA4SGMDwkXPw=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/4580644-1829b1f682f440e0ad882c76cd65bf10.jpg",
-      "alt": "Purim Hamantaschen with Prune Filling"
-    },
-    "prep_time_minutes": 25,
-    "cook_time_minutes": 33,
-    "total_time_minutes": 58,
-    "servings": "50",
-    "ingredients": [
-      "0.25 cup honey",
-      "2 tablespoons lemon juice",
-      "20 pitted prunes",
-      "water to cover",
-      "2.5 cups all-purpose flour",
-      "2.5 teaspoons baking powder",
-      "0.5 teaspoon salt",
-      "1.25 cups white sugar",
-      "0.5 cup butter, softened",
-      "0.5 cup shortening",
-      "3 eggs",
-      "0.25 cup orange juice",
-      "1.5 teaspoons vanilla extract"
-    ],
-    "instructions": [
-      "Combine honey, lemon juice, and prunes in a small saucepan. Add enough water to cover. Bring to a boil; reduce heat and simmer until prunes are softened, about 10 minutes. Remove prune filling from heat and let cool.",
-      "Preheat oven to 350 degrees F (175 degrees C). Line 3 baking sheets with parchment paper.",
-      "Combine flour, baking powder, and salt together in a bowl.",
-      "Beat sugar, butter, and shortening together with a wooden spoon until creamy. Add eggs; stir until smooth. Stir in orange juice and vanilla extract. Gently fold in flour mixture, mixing until a dough forms. Divide dough into 3 balls.",
-      "Roll out 1 ball of dough on a floured work surface to 1/4-inch thickness, using a piece of parchment paper under the rolling pin to prevent sticking. Use the rim of a glass to cut dough into circles.",
-      "Place 1/2 teaspoon prune filling in the center of each circle of dough. Pinch edges together to secure filling and form triangular pockets. Transfer cookies to baking sheet. Repeat rolling, cutting, and filling remaining balls of dough.",
-      "Bake cookies in the preheated oven until lightly golden, about 18 minutes."
-    ],
-    "nutrition_per_serving": {
-      "calories": 95,
-      "total_fat_g": 4.0,
-      "carbohydrates_g": 14.0,
-      "fiber_g": 0.0,
-      "sugar_g": 8.0,
-      "protein_g": 1.0,
-      "sodium_mg": 65,
-      "cholesterol_mg": 16,
-      "saturated_fat_g": 2.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.0,
-    "review_count": 2,
-    "recipe_category": "Lunch",
-    "cuisine": "U.S.",
-    "meal_type": "work"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/282083/beet-hummus/",
-    "category": "hummus",
-    "id": 282083,
-    "name": "Beet Hummus",
-    "description": "Besides being packed with essential nutrients, beets add the most beautiful purply pink color to this simply delicious homemade hummus recipe.",
-    "author": "The BoredTeenager",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/oCuoLHV22Gfu01qD9P_6CaqtOsQ=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/9049818-417697aa77594a62ab61913093548df5.jpg",
-      "alt": "Beet Hummus"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 25,
-    "total_time_minutes": 35,
-    "servings": "10",
-    "ingredients": [
-      "1 medium beet, top and bottom trimmed",
-      "0.25 cup tahini",
-      "2 tablespoons lemon juice",
-      "2 cloves garlic",
-      "1 (15 ounce) can chickpeas, rinsed and drained",
-      "0.25 cup olive oil",
-      "1 tablespoon water, or as needed"
-    ],
-    "instructions": [
-      "Bring a pot of lightly salted water to a low boil. Add beet and cook until tender, about 20 minutes. Remove beet and allow to cool, or place in a bowl of cold water. Peel beet, cut into small pieces, and transfer to the bowl of a food processor.",
-      "Add tahini to beet pieces and blend until smooth. Add lemon juice, garlic, and some of the chickpeas; pulse until combined. Continue adding chickpeas in small amounts, blending after each addition. Stream olive oil in slowly, with the processor running, until hummus is smooth but still thick and spreadable. Add a bit of water if needed."
-    ],
-    "nutrition_per_serving": {
-      "calories": 122,
-      "total_fat_g": 9.0,
-      "carbohydrates_g": 9.0,
-      "fiber_g": 2.0,
-      "sugar_g": 1.0,
-      "protein_g": 3.0,
-      "sodium_mg": 97,
-      "saturated_fat_g": 1.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.0,
-    "review_count": 1,
-    "recipe_category": "Lunch",
-    "meal_type": "study",
-    "cuisine": "American"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/278456/tuna-lettuce-wraps/",
-    "category": "lettuce-wraps",
-    "id": 278456,
-    "name": "Tuna Lettuce Wraps",
-    "description": "Swap green lettuce leaves for tortillas in these light and tasty tuna salad wraps that are ready in about 10 minutes.",
-    "author": "spjeffer",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/ihguP_Lv82Sh8-gPNQGXVL89BxM=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/7855198-08987e4444d14a1682e1334e1d3df74b.jpg",
-      "alt": "Tuna Lettuce Wraps"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": null,
-    "total_time_minutes": 10,
-    "servings": "3",
-    "ingredients": [
-      "1 (6 ounce) can chunk light tuna, drained",
-      "2 tablespoons chopped onion",
-      "1 tablespoon light mayonnaise",
-      "salt and ground black pepper to taste",
-      "3 leaves green lettuce, rinsed and patted dry",
-      "2 tablespoons finely shredded low-fat Cheddar cheese"
-    ],
-    "instructions": [
-      "Combine tuna, mayonnaise, onion, salt, and pepper in a bowl.",
-      "Lay lettuce leaves out. Divide tuna mixture among the leaves, placing it in the middle of each leaf. Sprinkle Cheddar cheese over the tuna. Roll leaves up to create wraps."
-    ],
-    "nutrition_per_serving": {
-      "calories": 95,
-      "total_fat_g": 3.0,
-      "carbohydrates_g": 1.0,
-      "fiber_g": 0.0,
-      "sugar_g": 1.0,
-      "protein_g": 16.0,
-      "sodium_mg": 148,
-      "cholesterol_mg": 20,
-      "saturated_fat_g": 1.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 4.0,
-    "review_count": 1,
-    "recipe_category": "Lunch",
-    "cuisine": "American",
-    "meal_type": "fitness"
   },
   {
     "url": "https://www.allrecipes.com/recipe/262473/fluffy-low-fat-vegan-blueberry-muffins/",
@@ -25663,52 +19948,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "rating": 4.0,
     "review_count": 1,
     "recipe_category": "Breakfast",
-    "meal_type": "study",
-    "cuisine": "American"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/214664/oatmeal-crackers/",
-    "category": "crackers",
-    "id": 214664,
-    "name": "Oatmeal Crackers",
-    "description": "Tender crackers made from oat flour, whole wheat flour, and a few other simple ingredients make nice quick treats for the kiddies. Make them sweet or savory by varying the seasonings. Grown-ups like them too.",
-    "author": "JKN",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/R_N9TqxEN7L-4KlQw0l2Pdf9_mc=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/721436-7d11136843834d959d80510db020d5ee.jpg",
-      "alt": "Oatmeal Crackers"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 10,
-    "total_time_minutes": 40,
-    "servings": "36",
-    "ingredients": [
-      "1.5 cups rolled oats",
-      "1 cup whole wheat flour",
-      "0.5 teaspoon salt",
-      "1 tablespoon white sugar",
-      "1 teaspoon ground cinnamon",
-      "0.5 cup water",
-      "5 tablespoons olive oil"
-    ],
-    "instructions": [
-      "Preheat oven to 350 degrees F (175 degrees C). Grease a baking sheet.",
-      "Place the rolled oats into a blender or the work bowl of a food processor, and pulse several times to grind them into coarse flour. Stir the oat flour together with whole wheat flour, salt, sugar, and cinnamon in a bowl. Pour in the water and olive oil, and mix to form a soft dough. Place the dough onto the prepared baking sheet, and roll out 1/8-inch thick. Using a knife, partially slice through the dough in desired shapes.",
-      "Bake in the preheated oven until just barely brown, 10 to 15 minutes. Watch carefully, as they burn easily. Allow to cool completely on baking sheet before breaking along score lines into individual crackers."
-    ],
-    "nutrition_per_serving": {
-      "calories": 42,
-      "total_fat_g": 2.0,
-      "carbohydrates_g": 5.0,
-      "fiber_g": 1.0,
-      "sugar_g": 0.0,
-      "protein_g": 1.0,
-      "sodium_mg": 33,
-      "saturated_fat_g": 0.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 3.8,
-    "review_count": 32,
-    "recipe_category": "Lunch",
     "meal_type": "study",
     "cuisine": "American"
   },
@@ -25809,137 +20048,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "recipe_category": "Breakfast",
     "cuisine": "American",
     "meal_type": "work"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/247286/gourmet-wasabi-grits/",
-    "category": "grits",
-    "id": 247286,
-    "name": "Gourmet Wasabi Grits",
-    "description": "Grits get a little spice and a little gourmet with wasabi stirred in at the end; serve at brunch with crab omelets or at dinner with salmon.",
-    "author": "TaMater",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/PZNSKWT8O8amMPvjiWuQmzOkBk0=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/3713740-6718f185c716400bbeaeba5b6817c6c7.jpg",
-      "alt": "Gourmet Wasabi Grits"
-    },
-    "prep_time_minutes": 5,
-    "cook_time_minutes": null,
-    "total_time_minutes": 5,
-    "servings": "1",
-    "ingredients": [
-      "1 (1 ounce) packet instant grits (such as Quaker\u00ae)",
-      "0.5 cup boiling water",
-      "1 teaspoon wasabi sauce (such as S&B\u00ae Wasabi)",
-      "salt and ground black pepper to taste"
-    ],
-    "instructions": [
-      "Mix grits and boiling water together in a bowl; stir in wasabi sauce, salt, and pepper."
-    ],
-    "nutrition_per_serving": {
-      "calories": 119,
-      "total_fat_g": 0.0,
-      "carbohydrates_g": 25.0,
-      "fiber_g": 0.0,
-      "sugar_g": 0.0,
-      "protein_g": 3.0,
-      "sodium_mg": 264,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 3.8,
-    "review_count": 4,
-    "recipe_category": "Breakfast",
-    "cuisine": "American",
-    "meal_type": "work"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/279620/sous-vide-poached-eggs/",
-    "category": "keto",
-    "id": 279620,
-    "name": "Sous Vide \"Poached\" Eggs",
-    "description": "Sous vide eggs with a perfectly set white and a runny yolk; this foolproof recipe might become your go-to method for perfectly poached eggs.",
-    "author": "France Cevallos",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/OA7ZVN7n3Uko58g4gjZoRo_M_ig=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/7921111-6a316d7bac6b407994c0b7712517e6b1.jpg",
-      "alt": "Sous Vide \"Poached\" Eggs"
-    },
-    "prep_time_minutes": 5,
-    "cook_time_minutes": 30,
-    "total_time_minutes": 40,
-    "servings": "4",
-    "ingredients": [
-      "4 large cold eggs",
-      "1 pinch salt and freshly ground black pepper"
-    ],
-    "instructions": [
-      "Fill a large pot with water and place a sous vide immersion cooker into the water. Set temperature to 167 degrees F (75 degrees C) according to manufacturer's instructions; allow 15 minutes for the water to heat.",
-      "Gently lower eggs into the water using a slotted spoon. Immediately set a kitchen timer for 13 minutes.",
-      "Remove eggs from water once timer is up and let cool for 3 minutes. Gently crack egg around the middle and peel top half of shell. Slide egg out into a small bowl or serve over toast. Season with salt and pepper."
-    ],
-    "nutrition_per_serving": {
-      "calories": 72,
-      "total_fat_g": 5.0,
-      "carbohydrates_g": 0.0,
-      "sugar_g": 0.0,
-      "protein_g": 6.0,
-      "sodium_mg": 109,
-      "cholesterol_mg": 186,
-      "saturated_fat_g": 2.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 3.7,
-    "review_count": 21,
-    "recipe_category": "Breakfast",
-    "cuisine": "American",
-    "meal_type": "fitness"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/222989/mojo-french-fries/",
-    "category": "fries",
-    "id": 222989,
-    "name": "Mojo French Fries",
-    "description": "Oven-baked potato wedges coated in flour with spicy seasonings are a nice alternative to French fries.",
-    "author": "Brooke'smom",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/ZIyKWwlB-5i4ddButHHfKjd2uig=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/1044483-mojo-french-fries-Alizah-4x3-1-1ae6a16481144ba1bb0425c96575600e.jpg",
-      "alt": "Mojo French Fries"
-    },
-    "prep_time_minutes": 15,
-    "cook_time_minutes": 20,
-    "total_time_minutes": 35,
-    "servings": "6",
-    "ingredients": [
-      "1.5 cups all-purpose flour",
-      "1.5 teaspoons paprika",
-      "1 teaspoon salt",
-      "0.5 teaspoon ground black pepper",
-      "0.5 teaspoon chili powder",
-      "0.25 teaspoon cayenne pepper",
-      "1 egg",
-      "0.33333334326744 cup milk",
-      "6 potatoes, cut into wedges",
-      "0.25 cup vegetable oil"
-    ],
-    "instructions": [
-      "Preheat oven to 450 degrees F (230 degrees C). Grease a baking sheet.",
-      "Whisk flour, paprika, salt, black pepper, chili powder, and cayenne pepper in a bowl. Whisk egg with milk together in a separate bowl. Dip potato wedges in the egg mixture, then dredge in the seasoned flour. Arrange coated potato wedges on prepared baking sheet. Drizzle wedges with vegetable oil.",
-      "Bake in the preheated oven until the coating is browned and the potatoes are tender, 20 to 25 minutes. Serve immediately."
-    ],
-    "nutrition_per_serving": {
-      "calories": 380,
-      "total_fat_g": 11.0,
-      "carbohydrates_g": 62.0,
-      "fiber_g": 6.0,
-      "sugar_g": 3.0,
-      "protein_g": 9.0,
-      "sodium_mg": 421,
-      "cholesterol_mg": 32,
-      "saturated_fat_g": 2.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 3.6,
-    "review_count": 26,
-    "recipe_category": "Lunch",
-    "meal_type": "work",
-    "cuisine": "American"
   },
   {
     "url": "https://www.allrecipes.com/recipe/279400/air-fryer-corned-beef-hash/",
@@ -26087,52 +20195,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "work"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/86805/citrus-salad/",
-    "category": "fruit-salads",
-    "id": 86805,
-    "name": "Citrus Salad",
-    "description": "Fresh summer fruit and lettuce salad made fast and easy.",
-    "author": "BARBMD",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/_M_GHXjuL6nQ0aQZdkXuMovgv5s=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/71982-b50f6ad3ddf2432291d3f9c8750fc31b.jpg",
-      "alt": "Citrus Salad"
-    },
-    "prep_time_minutes": 25,
-    "cook_time_minutes": null,
-    "total_time_minutes": 25,
-    "servings": "4",
-    "ingredients": [
-      "1 lime - zested, peeled, and sliced",
-      "1 mandarin orange (tangerine) - zested, peeled, and sectioned",
-      "1 navel orange, peeled and sectioned",
-      "1 grapefruit, peeled and sectioned",
-      "1 bulb shallots, diced",
-      "1 tablespoon lemon juice",
-      "1 tablespoon olive oil",
-      "0.5 teaspoon salt",
-      "1 head romaine lettuce, torn"
-    ],
-    "instructions": [
-      "Place lime slices, tangerine sections, navel orange, and grapefruit in a bowl. In a separate bowl, mix the lime zest, mandarin orange zest, shallots, lemon juice, olive oil, and salt. Pour over the fruit. Arrange dressed fruit atop romaine lettuce to serve."
-    ],
-    "nutrition_per_serving": {
-      "calories": 117,
-      "total_fat_g": 4.0,
-      "carbohydrates_g": 22.0,
-      "fiber_g": 5.0,
-      "sugar_g": 13.0,
-      "protein_g": 3.0,
-      "sodium_mg": 300,
-      "saturated_fat_g": 1.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 3.2,
-    "review_count": 6,
-    "recipe_category": "Lunch",
-    "meal_type": "study",
-    "cuisine": "American"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/25758/chicken-noodle-soup-iii/",
     "category": "chicken-noodle-soups",
     "id": 25758,
@@ -26181,51 +20243,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "recipe_category": "Lunch",
     "cuisine": "Asian",
     "meal_type": "fitness"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/282085/lemony-white-bean-hummus/",
-    "category": "hummus",
-    "id": 282085,
-    "name": "Lemony White Bean Hummus",
-    "description": "Serve this lemony, tahini-free white bean hummus with pita bread or raw vegetables, or add it to a sandwich or wrap for a delicious lunch.",
-    "author": "Gina Izzy Shores",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/srJMu71Dy5f31Zy4vO8Ol_9QUuQ=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/8677769-8d4c2ece81ec4938aba61a21ca381365.jpg",
-      "alt": "Lemony White Bean Hummus"
-    },
-    "prep_time_minutes": 5,
-    "cook_time_minutes": null,
-    "total_time_minutes": 5,
-    "servings": "6",
-    "ingredients": [
-      "1 (15 ounce) can great northern beans, rinsed and drained",
-      "0.5 cup nonfat sour cream",
-      "2 tablespoons lemon juice",
-      "1 tablespoon olive oil",
-      "0.5 teaspoon ground cumin",
-      "0.5 teaspoon salt",
-      "0.25 teaspoon freshly ground black pepper"
-    ],
-    "instructions": [
-      "Combine beans, sour cream, lemon juice, olive oil, cumin, salt, and pepper in the bowl of a food processor; mix until smooth."
-    ],
-    "nutrition_per_serving": {
-      "calories": 119,
-      "total_fat_g": 3.0,
-      "carbohydrates_g": 18.0,
-      "fiber_g": 4.0,
-      "sugar_g": 2.0,
-      "protein_g": 7.0,
-      "sodium_mg": 230,
-      "cholesterol_mg": 3,
-      "saturated_fat_g": 0.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 3.0,
-    "review_count": 2,
-    "recipe_category": "Lunch",
-    "meal_type": "work",
-    "cuisine": "American"
   },
   {
     "url": "https://www.allrecipes.com/recipe/267168/harissa-egg-salad/",
@@ -26488,55 +20505,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "work"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/256597/easy-creamy-hummus/",
-    "category": "hummus",
-    "id": 256597,
-    "name": "Easy Creamy Hummus",
-    "description": "There's no need to take out your food processor to make this quick and easy hummus, which gets its creamy texture from chickpea flour.",
-    "author": "Coffee4MySoul",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/JnjJP6BLzjPoRuMluSfBo1cZZcQ=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/4408346-db82e8ed96d54696bfe9f02771406bf0.jpg",
-      "alt": "Easy Creamy Hummus"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 20,
-    "total_time_minutes": 30,
-    "servings": "16",
-    "ingredients": [
-      "0.25 cup tahini",
-      "0.25 cup lemon juice",
-      "0.5 teaspoon ground cumin",
-      "0.5 teaspoon ground fennel seed",
-      "salt and ground black pepper to taste",
-      "1 dash hot sauce (such as Cholula\u00ae)",
-      "0.25 cup olive oil",
-      "0.5 teaspoon garlic powder",
-      "2.5 cups water",
-      "0.75 cup chickpea flour"
-    ],
-    "instructions": [
-      "Mix tahini, lemon juice, cumin, fennel, salt, pepper, and hot sauce together in a small bowl.",
-      "Heat olive oil in a large saucepan over medium heat. Cook garlic powder in the hot oil until fragrant, about 30 seconds. Pour in 1 1/2 cup water. Whisk in chickpea flour until smooth. Slowly whisk in remaining 1 cup water. Bring to a boil, whisking constantly. Reduce heat to low; cook and stir until mixture thickens, about 15 minutes.",
-      "Scrape chickpea mixture into a large bowl using a rubber spatula. Add tahini mixture; whisk until well incorporated."
-    ],
-    "nutrition_per_serving": {
-      "calories": 70,
-      "total_fat_g": 6.0,
-      "carbohydrates_g": 4.0,
-      "fiber_g": 1.0,
-      "sugar_g": 1.0,
-      "protein_g": 2.0,
-      "sodium_mg": 17,
-      "saturated_fat_g": 1.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "rating": 2.0,
-    "review_count": 2,
-    "recipe_category": "Lunch",
-    "cuisine": "American",
-    "meal_type": "study"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/261488/mocha-morning-breakfast-yogurt/",
     "category": "granola",
     "id": 261488,
@@ -26731,109 +20699,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "meal_type": "fitness"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/282830/kuku-sabzi/",
-    "category": "frittatas",
-    "id": 282830,
-    "name": "Kuku Sabzi",
-    "description": "This kuku sabzi is an easy Persian frittata that uses egg as the binder to showcase the fresh herbs that make this dish delicious and unforgettable.",
-    "author": "Ali Ramee",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/UJM2ETxEToyLy_4S6R5GUC-UEmo=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/8932070-203a706304094905a0e7c9161a9ba745.jpg",
-      "alt": "Kuku Sabzi"
-    },
-    "prep_time_minutes": 15,
-    "cook_time_minutes": 20,
-    "total_time_minutes": 35,
-    "servings": "4",
-    "ingredients": [
-      "1 large leek",
-      "3 tablespoons extra-virgin olive oil, divided",
-      "4 large eggs",
-      "1 teaspoon baking powder",
-      "1 teaspoon ground fenugreek",
-      "0.75 teaspoon kosher salt",
-      "0.5 teaspoon ground turmeric",
-      "1.5 cups finely chopped fresh parsley",
-      "1 cup finely chopped fresh cilantro",
-      "0.75 cup finely chopped fresh dill"
-    ],
-    "instructions": [
-      "Slice leek in half lengthwise, then slice thinly crosswise.",
-      "Heat 1 tablespoon olive oil in a 10-inch, nonstick, broiler-safe skillet over medium heat. Add leek and cook, stirring occasionally, until softened and cooked through, 8 to 10 minutes. Remove from heat.",
-      "Preheat the oven's broiler with the rack in the upper third position.",
-      "Whisk eggs in a large bowl. Add baking powder, fenugreek, salt, and turmeric; whisk until thoroughly combined. Fold in parsley, cilantro, dill, and leeks. Gently stir to combine; the mixture will be mostly herbs, with just enough egg for moisture.",
-      "Heat remaining 2 tablespoons olive oil in the same skillet over medium heat. Add herb mixture and distribute evenly in the skillet, smoothing the top. Cover and cook, undisturbed, until the bottom and edges are just set, about 8 minutes.",
-      "Uncover and cook under the preheated broiler until the top and middle are cooked through, 1 to 2 minutes."
-    ],
-    "nutrition_per_serving": {
-      "calories": 203,
-      "total_fat_g": 16.0,
-      "carbohydrates_g": 9.0,
-      "fiber_g": 2.0,
-      "sugar_g": 2.0,
-      "protein_g": 8.0,
-      "sodium_mg": 581,
-      "cholesterol_mg": 186,
-      "saturated_fat_g": 3.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "recipe_category": "Lunch",
-    "cuisine": "Persian",
-    "meal_type": "study"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/272609/mini-vegetarian-frittatas/",
-    "category": "frittatas",
-    "id": 272609,
-    "name": "Mini Vegetarian Frittatas",
-    "description": "These mini vegetarian frittatas filled with Parmesan cheese, Swiss chard, scallions, and mushrooms are a good option for a light brunch or dinner.",
-    "author": "LauraF",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/Phdis6xit6Lwz9jN0m8vfYS2H8Q=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/6511352-eab18c63a22a4e2889f031b0d88700a1.jpg",
-      "alt": "Mini Vegetarian Frittatas"
-    },
-    "prep_time_minutes": 15,
-    "cook_time_minutes": 25,
-    "total_time_minutes": 50,
-    "servings": "7",
-    "ingredients": [
-      "cooking spray",
-      "1 tablespoon butter",
-      "0.5 cup finely chopped mushrooms",
-      "0.5 teaspoon herbes de Provence",
-      "1 pinch salt and ground black pepper to taste",
-      "0.25 cup finely chopped scallions",
-      "1.5 cups thinly sliced Swiss chard",
-      "1 tablespoon water",
-      "4 large eggs",
-      "0.25 cup milk",
-      "1 tablespoon coarsely grated Parmesan cheese",
-      "1 teaspoon Dijon mustard",
-      "2 tablespoons drained and chopped sun-dried tomatoes"
-    ],
-    "instructions": [
-      "Preheat the oven to 375 degrees F (190 degrees C). Grease 7 muffin cups with cooking spray.",
-      "Melt butter in a large skillet over medium heat. Add mushrooms, herbes de Provence, salt, and pepper; cook and stir until mushrooms are tender and begin to brown, about 5 minutes. Stir in scallions and cook until softened, 1 to 2 minutes. Add chard and water; cook and stir until wilted, about 2 minutes. Remove from heat and cool for 5 minutes.",
-      "Whisk together eggs, milk, Parmesan cheese, and Dijon mustard in a large bowl until well combined. Fold in mushroom mixture and sun-dried tomatoes. Pour egg mixture into the prepared muffin cups.",
-      "Bake in the preheated oven until puffed and golden brown, about 15 minutes. Cool frittatas for 5 minutes before lifting out of the muffin cups."
-    ],
-    "nutrition_per_serving": {
-      "calories": 76,
-      "total_fat_g": 5.0,
-      "carbohydrates_g": 3.0,
-      "fiber_g": 1.0,
-      "sugar_g": 2.0,
-      "protein_g": 5.0,
-      "sodium_mg": 243,
-      "cholesterol_mg": 112,
-      "saturated_fat_g": 2.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "recipe_category": "Breakfast",
-    "cuisine": "American",
-    "meal_type": "study"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/98390/megans-granola/",
     "category": "granola",
     "id": 98390,
@@ -26980,55 +20845,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     "cuisine": "American"
   },
   {
-    "url": "https://www.allrecipes.com/recipe/275182/cranberry-hibiscus-granola/",
-    "category": "granola",
-    "id": 275182,
-    "name": "Cranberry-Hibiscus Granola",
-    "description": "Cranberries and hibiscus petals add beautiful pops of pink to this nut and seed granola sweetened with maple syrup.",
-    "author": "Twinmadre99",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/2BperzI7GPV8G9V2DyCQ6fBFQ-s=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/2363713-e69d00e971bc45739f4f92af70428d6d.jpg",
-      "alt": "Cranberry-Hibiscus Granola"
-    },
-    "prep_time_minutes": 10,
-    "cook_time_minutes": 25,
-    "total_time_minutes": 35,
-    "servings": "24",
-    "ingredients": [
-      "4 cups old-fashioned rolled oats",
-      "1 cup sliced almonds",
-      "0.5 cup unsweetened shredded coconut",
-      "0.25 cup raw cashews",
-      "0.25 cup whole raw hazelnuts",
-      "0.25 cup raw sunflower seeds",
-      "0.25 cup unsalted pumpkin seeds (pepitas)",
-      "0.5 cup pure maple syrup",
-      "2 tablespoons safflower oil",
-      "0.5 teaspoon kosher salt",
-      "0.5 cup dried cranberries",
-      "0.5 cup dried hibiscus petals, coarsely chopped"
-    ],
-    "instructions": [
-      "Preheat the oven to 350 degrees F (175 degrees C).",
-      "Pour oats, almonds, coconut, cashews, hazelnuts, sunflower seeds, and pumpkin seeds onto a rimmed baking sheet. Add maple syrup, oil, and salt; toss together until evenly coated.",
-      "Bake in the preheated oven, tossing once, until golden and crisp, 25 to 30 minutes. Add cranberries and hibiscus petals and toss with a spoon to combine. Let cool."
-    ],
-    "nutrition_per_serving": {
-      "calories": 156,
-      "total_fat_g": 8.0,
-      "carbohydrates_g": 18.0,
-      "fiber_g": 3.0,
-      "sugar_g": 6.0,
-      "protein_g": 4.0,
-      "sodium_mg": 43,
-      "saturated_fat_g": 2.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "recipe_category": "Breakfast",
-    "meal_type": "work",
-    "cuisine": "American"
-  },
-  {
     "url": "https://www.allrecipes.com/recipe/246015/honey-nutty-granola/",
     "category": "granola",
     "id": 246015,
@@ -27167,55 +20983,6 @@ export const ALL_RECIPES: NewRecipe[] = [
     },
     "recipe_category": "Breakfast",
     "cuisine": "Jewish",
-    "meal_type": "work"
-  },
-  {
-    "url": "https://www.allrecipes.com/recipe/11314/delicious-raspberry-oatmeal-cookie-bars/",
-    "category": "Potluck-Recipes",
-    "id": 11314,
-    "name": "Delicious Raspberry Oatmeal Cookie Bars",
-    "description": "This oatmeal cookie bar recipe is easy to make with seedless raspberry jam sandwiched between buttery brown sugar-oat cookie crusts for a sweet treat.",
-    "author": "MARBALET",
-    "image": {
-      "url": "https://www.allrecipes.com/thmb/5N0xLXT3VOJVPxg4wfwN_VYRxQU=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/11314-delicious-raspberry-oatmeal-cookie-bars-DDMFS-beauty-4x3-d016a9f8d1e243e39816dc3f6cb1696a.jpg",
-      "alt": "Delicious Raspberry Oatmeal Cookie Bars"
-    },
-    "prep_time_minutes": 15,
-    "cook_time_minutes": 35,
-    "total_time_minutes": 50,
-    "servings": "9",
-    "ingredients": [
-      "1 cup all-purpose flour",
-      "1 cup rolled oats",
-      "0.5 cup packed light brown sugar",
-      "0.25 teaspoon baking soda",
-      "0.125 teaspoon salt",
-      "0.5 cup butter, softened",
-      "0.75 cup seedless raspberry jam"
-    ],
-    "instructions": [
-      "Gather all ingredients. Preheat the oven to 350 degrees F (175 degrees C). Grease an 8x8-inch square pan; line with greased foil.",
-      "Combine flour, oats, brown sugar, baking soda, and salt in a large bowl. Rub in butter using your hands or a pastry blender to form a crumbly mixture.",
-      "Press 2 cups oat mixture into the bottom of the prepared pan.",
-      "Spread jam to within 1/4 inch of the edge.",
-      "Sprinkle remaining crumb mixture on top; press down lightly into jam.",
-      "Bake in the preheated oven until lightly browned, 35 to 40 minutes.",
-      "Allow to cool before cutting into bars."
-    ],
-    "nutrition_per_serving": {
-      "calories": 292,
-      "total_fat_g": 11.0,
-      "carbohydrates_g": 47.0,
-      "fiber_g": 1.0,
-      "sugar_g": 29.0,
-      "protein_g": 3.0,
-      "sodium_mg": 144,
-      "cholesterol_mg": 27,
-      "saturated_fat_g": 7.0,
-      "unsaturated_fat_g": 0.0
-    },
-    "recipe_category": "Lunch",
-    "cuisine": "American",
     "meal_type": "work"
   },
   {

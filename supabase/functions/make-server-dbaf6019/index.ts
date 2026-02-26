@@ -501,11 +501,44 @@ function generateMealPlanFromRecipes(
 
 // ========== RECIPE INITIALIZATION ==========
 
+// Recipe IDs to remove from the database (audit 2026-02-26)
+const REMOVED_RECIPE_IDS = new Set([
+  // Dips / Appetizers / Sides as meals
+  240342, 89707, 282969, 233777, 240027, 200360, 220617, 268013,
+  228822, 21080, 230908, 266870, 231970, 236418, 142404, 20545,
+  213849, 157854, 237759, 21519, 18244, 14465, 277285, 22381,
+  236025, 87198, 71400, 236471, 255283, 20797, 231850, 256597,
+  282083, 282085, 214664, 222989, 6953, 228116,
+  // Desserts / Cookies / Drinks as meals
+  215981, 245625, 11314, 233648, 264349, 256155, 21672,
+  // Not actual recipes / Components / Special equipment
+  230202, 174386, 241920, 261452, 261028, 16539, 279620, 8486409,
+  // Exotic / Expensive ingredients
+  286256, 213505, 257284, 284800, 18810, 268252, 44445, 84364,
+  12827, 12798, 160099, 237637, 162383, 257380, 265641, 262798,
+  222338, 151006, 111822, 148765, 275182, 282830,
+  // Fruit salads / Tiny salads as meals
+  215472, 215125, 228681, 214986, 266549, 22768, 86805, 254373,
+  231873, 254503, 242181, 130764,
+  // Too low calorie / Not a real meal
+  245478, 214713, 223494, 214054, 257457, 221923, 278456, 14399,
+  223453, 8790, 255841, 266822, 255446, 239492, 244914, 127167,
+  71600, 87848, 229032, 8919, 269979, 241239, 156039, 283232, 265170,
+  // Sausage / Gravy components
+  269196, 21657, 229989, 77747, 239852,
+  // Misc low-cal breakfast removals
+  245536, 281840, 272293, 278665, 16947, 247286, 272609, 233886, 6797, 21206,
+  // Misc low-cal lunch removals
+  281839, 213127, 234219, 92525, 240996,
+]);
+
 // Initialize all recipes from recipe-data.ts into kv_store
 app.post("/make-server-dbaf6019/init-recipes", async (c) => {
   try {
+    const recipes = ALL_RECIPES.filter(r => !REMOVED_RECIPE_IDS.has(r.id));
+    const removedCount = ALL_RECIPES.length - recipes.length;
     console.log('=== Recipe Database Initialization Started ===');
-    console.log(`Total recipes to process: ${ALL_RECIPES.length}`);
+    console.log(`Total recipes in source: ${ALL_RECIPES.length}, removed: ${removedCount}, to process: ${recipes.length}`);
 
     // Clear existing recipe keys
     const existingRecipes = await getByPrefixWithKeys('recipe:');
@@ -533,7 +566,7 @@ app.post("/make-server-dbaf6019/init-recipes", async (c) => {
     let focusCount = 0;
     let sleepCount = 0;
 
-    for (const recipe of ALL_RECIPES) {
+    for (const recipe of recipes) {
       try {
         // Auto-classify each recipe during init
         const classification = classifyRecipe(recipe);
@@ -554,7 +587,7 @@ app.post("/make-server-dbaf6019/init-recipes", async (c) => {
 
     // Store metadata
     await kv.set('recipes:meta', JSON.stringify({
-      total: ALL_RECIPES.length,
+      total: recipes.length,
       byMealType,
       byCategory,
       focusCount,
@@ -562,12 +595,13 @@ app.post("/make-server-dbaf6019/init-recipes", async (c) => {
       initialized: new Date().toISOString()
     }));
 
-    console.log(`=== Initialization Complete: ${successCount} success, ${errorCount} errors ===`);
+    console.log(`=== Initialization Complete: ${successCount} success, ${errorCount} errors, ${removedCount} removed ===`);
     console.log(`By category: ${JSON.stringify(byCategory)}`);
 
     return c.json({
       message: "Recipe database initialized successfully",
-      totalRecipes: ALL_RECIPES.length,
+      totalRecipes: recipes.length,
+      removedCount,
       successCount,
       errorCount,
       byMealType,
