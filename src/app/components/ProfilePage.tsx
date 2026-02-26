@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../hooks/useLanguage';
 import { useSubscription } from '../hooks/useSubscription';
-import { LogOut, Settings, Bell, Shield, HelpCircle, ChevronRight, Moon, Globe, Crown, Pencil, Search, GraduationCap, Check, Loader2, X, Plus } from 'lucide-react';
+import { LogOut, Settings, Bell, Shield, HelpCircle, ChevronRight, Moon, Globe, Crown, Pencil, Search, GraduationCap, Check, Loader2, X, Plus, User } from 'lucide-react';
 import { BottomNavigation, NavTab } from './BottomNavigation';
 import { ACHIEVEMENTS } from '../constants/achievements';
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
+import { Gender } from '../utils/nutritionTargets';
 
 interface ProfilePageProps {
   user: any;
@@ -297,8 +298,15 @@ export function ProfilePage({ user, onLogout, onOpenAdmin, onUserUpdate, activeT
   );
 }
 
+const GENDER_OPTIONS: { id: Gender; name: string }[] = [
+  { id: 'male', name: 'Male' },
+  { id: 'female', name: 'Female' },
+  { id: 'decline', name: 'Decline to Answer' },
+];
+
 function EditProfileModal({ user, onClose, onSave }: { user: any; onClose: () => void; onSave: (user: any) => void }) {
   const [name, setName] = useState(user?.user_metadata?.name || '');
+  const [gender, setGender] = useState<Gender>(user?.user_metadata?.gender || null);
   const [selectedSchool, setSelectedSchool] = useState<School | null>(
     user?.user_metadata?.school_id
       ? { id: user.user_metadata.school_id, name: user.user_metadata.school_name }
@@ -368,6 +376,9 @@ function EditProfileModal({ user, onClose, onSave }: { user: any; onClose: () =>
       if (name.trim() !== (user?.user_metadata?.name || '')) {
         body.name = name.trim();
       }
+      if (gender !== (user?.user_metadata?.gender || null)) {
+        body.gender = gender;
+      }
       if (selectedSchool && selectedSchool.id !== user?.user_metadata?.school_id) {
         body.school_id = selectedSchool.id;
         body.school_name = selectedSchool.name;
@@ -394,6 +405,7 @@ function EditProfileModal({ user, onClose, onSave }: { user: any; onClose: () =>
         user_metadata: {
           ...user.user_metadata,
           ...(body.name !== undefined && { name: body.name }),
+          ...(body.gender !== undefined && { gender: body.gender }),
           ...(body.school_id !== undefined && { school_id: body.school_id, school_name: body.school_name }),
         },
       };
@@ -434,6 +446,33 @@ function EditProfileModal({ user, onClose, onSave }: { user: any; onClose: () =>
               placeholder="Your name"
               className="w-full px-4 py-3 bg-[#2D2D2D] border border-[#3D3D3D] rounded-xl text-white placeholder-[#6B7280] focus:outline-none focus:border-[#22C55E] transition-colors"
             />
+          </div>
+
+          {/* Gender */}
+          <div>
+            <label className="block text-sm font-medium text-[#9CA3AF] mb-2">Gender</label>
+            <div className="space-y-2">
+              {GENDER_OPTIONS.map((option) => {
+                const isSelected = gender === option.id;
+                return (
+                  <button
+                    key={option.id}
+                    onClick={() => setGender(option.id)}
+                    className={`w-full p-3 rounded-xl transition-all flex items-center justify-between text-sm ${
+                      isSelected
+                        ? 'bg-[#22C55E]/10 border border-[#22C55E] text-white'
+                        : 'bg-[#2D2D2D] border border-[#3D3D3D] text-[#D1D5DB] hover:border-[#22C55E]/50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <User className="w-4 h-4 text-[#22C55E] shrink-0" />
+                      <span>{option.name}</span>
+                    </div>
+                    {isSelected && <Check className="w-4 h-4 text-[#22C55E] shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* School */}

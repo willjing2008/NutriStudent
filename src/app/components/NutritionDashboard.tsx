@@ -1,4 +1,5 @@
 import { Activity, Flame, Drumstick, Wheat, Droplet } from 'lucide-react';
+import { Gender, getNutritionTargets } from '../utils/nutritionTargets';
 
 interface NutritionDashboardProps {
   totalNutrition: {
@@ -15,6 +16,7 @@ interface NutritionDashboardProps {
     fats: number;
   };
   goal: string;
+  gender?: Gender;
   dayNumber?: number; // NEW: Optional day number for header
 }
 
@@ -63,13 +65,14 @@ function ProgressRing({
   );
 }
 
-export function NutritionDashboard({ totalNutrition, dailyTargets, goal, dayNumber }: NutritionDashboardProps) {
-  // Default targets based on goal if not provided
+export function NutritionDashboard({ totalNutrition, dailyTargets, goal, gender, dayNumber }: NutritionDashboardProps) {
+  // Default targets based on gender if not provided
+  const genderTargets = getNutritionTargets(gender ?? null);
   const targets = dailyTargets || {
-    calories: goal === 'fitness' ? 2400 : goal === 'work' ? 2200 : 2000,
-    protein: goal === 'fitness' ? 150 : goal === 'work' ? 80 : 70,
-    carbs: goal === 'fitness' ? 250 : goal === 'work' ? 250 : 230,
-    fats: goal === 'fitness' ? 70 : goal === 'work' ? 75 : 65,
+    calories: genderTargets.calories,
+    protein: genderTargets.protein,
+    carbs: genderTargets.carbs,
+    fats: genderTargets.fats,
   };
 
   const stats = [

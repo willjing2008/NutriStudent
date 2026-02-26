@@ -268,8 +268,11 @@ export function MealSwapModal({
   const handleSwapCommunityRecipe = () => {
     if (!selectedCommunityRecipe) return;
 
+    // Strip community-specific fields that shouldn't be on a meal plan meal
+    const { creatorId, creatorName, createdAt, timesCooked, likesCount, likedByMe, ...recipeFields } = selectedCommunityRecipe;
+
     const swappedMeal = {
-      ...selectedCommunityRecipe,
+      ...recipeFields,
       cost: selectedCommunityRecipe.totalCost / selectedCommunityRecipe.servings,
       rationale: selectedCommunityRecipe.description,
       benefits: [selectedCommunityRecipe.description],

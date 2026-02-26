@@ -2065,6 +2065,15 @@ app.post("/make-server-dbaf6019/my-recipes", async (c) => {
       }
     }
 
+    // Exclude community recipes not created by this user
+    const customRecipeIds = Array.from(recipeMap.keys());
+    for (const recipeId of customRecipeIds) {
+      const communityRecipe = await kv.get(`community_recipe_${recipeId}`);
+      if (communityRecipe && communityRecipe.creatorId !== userId) {
+        recipeMap.delete(recipeId);
+      }
+    }
+
     // Sort by most recently cooked, then by count
     const recipes = Array.from(recipeMap.entries())
       .sort((a, b) => {
@@ -2182,6 +2191,114 @@ app.post("/make-server-dbaf6019/toggle-community-like", async (c) => {
   } catch (error: any) {
     console.log(`Error in /toggle-community-like: ${error.message}`);
     return c.json({ error: error.message || "Failed to toggle like" }, 500);
+  }
+});
+
+// Search schools (stored in KV with prefix "school_")
+app.get("/make-server-dbaf6019/schools/search", async (c) => {
+  try {
+    const query = (c.req.query("q") || "").toLowerCase().trim();
+
+    const allSchools = await kv.getByPrefix("school_");
+
+    const schools = query
+      ? allSchools.filter((s: any) => s.name?.toLowerCase().includes(query))
+      : allSchools;
+
+    // Sort alphabetically
+    schools.sort((a: any, b: any) => (a.name || "").localeCompare(b.name || ""));
+
+    return c.json({ schools });
+  } catch (error: any) {
+    console.log(`Error in /schools/search: ${error.message}`);
+    return c.json({ error: error.message || "Failed to search schools" }, 500);
+  }
+});
+
+// Create a new school
+app.post("/make-server-dbaf6019/schools", async (c) => {
+  try {
+    const { name } = await c.req.json();
+
+    if (!name || !name.trim()) {
+      return c.json({ error: "School name is required" }, 400);
+    }
+
+    const trimmedName = name.trim();
+    const id = crypto.randomUUID();
+    const school = { id, name: trimmedName };
+
+    await kv.set(`school_${id}`, school);
+
+    return c.json({ school });
+  } catch (error: any) {
+    console.log(`Error in POST /schools: ${error.message}`);
+    return c.json({ error: error.message || "Failed to create school" }, 500);
+  }
+});
+
+// Select/assign school to user (sets school_id and school_name in user_metadata)
+app.post("/make-server-dbaf6019/schools/select", async (c) => {
+  try {
+    const { userId, schoolId, schoolName } = await c.req.json();
+
+    if (!userId || !schoolId) {
+      return c.json({ error: "userId and schoolId are required" }, 400);
+    }
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
+    const { error } = await supabase.auth.admin.updateUserById(userId, {
+      user_metadata: { school_id: schoolId, school_name: schoolName },
+    });
+
+    if (error) {
+      return c.json({ error: error.message }, 400);
+    }
+
+    return c.json({ success: true });
+  } catch (error: any) {
+    console.log(`Error in /schools/select: ${error.message}`);
+    return c.json({ error: error.message || "Failed to select school" }, 500);
+  }
+});
+
+// Update user profile (name, school, etc.)
+app.post("/make-server-dbaf6019/auth/update-profile", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { userId, name, school_id, school_name, gender } = body;
+
+    if (!userId) {
+      return c.json({ error: "userId is required" }, 400);
+    }
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
+    const metadata: Record<string, any> = {};
+    if (name !== undefined) metadata.name = name;
+    if (school_id !== undefined) metadata.school_id = school_id;
+    if (school_name !== undefined) metadata.school_name = school_name;
+    if (gender !== undefined) metadata.gender = gender;
+
+    const { error } = await supabase.auth.admin.updateUserById(userId, {
+      user_metadata: metadata,
+    });
+
+    if (error) {
+      return c.json({ error: error.message }, 400);
+    }
+
+    return c.json({ success: true, updated: metadata });
+  } catch (error: any) {
+    console.log(`Error in /auth/update-profile: ${error.message}`);
+    return c.json({ error: error.message || "Failed to update profile" }, 500);
   }
 });
 

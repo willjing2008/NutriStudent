@@ -1,5 +1,6 @@
 import { ShoppingCart, ArrowLeft, Loader2, X, Clock, ChefHat, Users, Flame, RefreshCw, Repeat2, MapPin, ArrowRight, Save, Check, Plus, Bell, ExternalLink, Play } from 'lucide-react';
 import { UserPreferences } from '../App';
+import { getNutritionTargets } from '../utils/nutritionTargets';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
 import { ShoppingMode } from './ShoppingMode';
@@ -610,7 +611,9 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
     if (!mealPlan || !selectedMealForSwap) return;
 
     const updatedMeals = mealPlan.meals.map(meal =>
-      meal.id === selectedMealForSwap.id ? newMeal : meal
+      meal.id === selectedMealForSwap.id
+        ? { ...newMeal, dayNumber: meal.dayNumber, mealNumber: meal.mealNumber }
+        : meal
     );
 
     const newTotalCost = updatedMeals.reduce((sum, meal) => sum + meal.totalCost, 0);
@@ -824,22 +827,13 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
   const dailyBudgetUsed = currentDayMeals.reduce((sum, meal) => sum + (meal.totalCost || 0), 0);
   const dailyBudgetLimit = mealPlan?.dailyBudget || (preferences.budget / 7);
 
-  // Target nutrition based on user's goal
-  const nutritionTargets = (() => {
-    switch (preferences.goal) {
-      case 'fitness':
-        return { calories: 2200, protein: 160, carbs: 260, fats: 75 };
-      case 'work':
-        return { calories: 2000, protein: 120, carbs: 270, fats: 70 };
-      case 'study':
-      default:
-        return { calories: 1850, protein: 130, carbs: 250, fats: 65 };
-    }
-  })();
+  // Target nutrition based on user's gender
+  const nutritionTargets = getNutritionTargets(preferences.gender);
   const targetCalories = nutritionTargets.calories;
   const targetProtein = nutritionTargets.protein;
   const targetCarbs = nutritionTargets.carbs;
   const targetFats = nutritionTargets.fats;
+  const targetFiber = nutritionTargets.fiber;
 
   const caloriePercentage = Math.round((todayNutrition.calories / targetCalories) * 100);
   const cookedCount = currentDayMeals.filter(meal => cookedMeals.has(meal.id)).length;
@@ -1126,12 +1120,12 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
             <div>
               <div className="flex justify-between text-sm mb-1.5">
                 <span className="text-[#9CA3AF]">Fiber</span>
-                <span className="text-white">{todayNutrition.fiber}g/30g</span>
+                <span className="text-white">{todayNutrition.fiber}g/{targetFiber}g</span>
               </div>
               <div className="h-2 bg-[#1E4029] rounded-full overflow-hidden">
                 <div
                   className="h-full bg-[#BBF7D0] rounded-full transition-all"
-                  style={{ width: `${Math.min((todayNutrition.fiber / 30) * 100, 100)}%` }}
+                  style={{ width: `${Math.min((todayNutrition.fiber / targetFiber) * 100, 100)}%` }}
                 />
               </div>
             </div>

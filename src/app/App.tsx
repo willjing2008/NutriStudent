@@ -15,10 +15,13 @@ import { supabase } from '../utils/supabaseClient';
 import { projectId, publicAnonKey } from '../../utils/supabase/info';
 import { useSubscription } from './hooks/useSubscription';
 import { Apple, LogOut } from 'lucide-react';
+import { Gender } from './utils/nutritionTargets';
 
 export type EquipmentType = 'microwave' | 'hot-plate' | 'rice-cooker' | 'kettle' | 'toaster' | 'full-kitchen';
+export type { Gender } from './utils/nutritionTargets';
 
 export interface UserPreferences {
+  gender: Gender;
   location: string;
   selectedStore: {
     id: string;
@@ -66,6 +69,7 @@ export default function App() {
   
   // User preferences
   const [preferences, setPreferences] = useState<UserPreferences>({
+    gender: null,
     location: '',
     selectedStore: null,
     selectedStores: [],
@@ -106,6 +110,14 @@ export default function App() {
           setUser(session.user);
           setAccessToken(session.access_token);
           loadSavedMealPlan(session.user.id);
+
+          // Restore gender from user_metadata if available
+          if (session.user.user_metadata?.gender) {
+            setPreferences(prev => ({
+              ...prev,
+              gender: prev.gender || session.user.user_metadata.gender,
+            }));
+          }
 
           // Identify returning user with RevenueCat
           try {
@@ -158,6 +170,26 @@ export default function App() {
 
     document.documentElement.style.setProperty('--safe-area-bg', safeAreaBg);
   }, [isAuthenticated, showAdminDashboard, isOnboarding, activeNavTab, isPro, isReady]);
+
+  // Persist gender selection to user_metadata
+  useEffect(() => {
+    if (!user?.id || preferences.gender === null) return;
+
+    fetch(
+      `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/auth/update-profile`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${publicAnonKey}`,
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          gender: preferences.gender,
+        }),
+      }
+    ).catch(err => console.error('Failed to persist gender:', err));
+  }, [preferences.gender, user?.id]);
 
   const loadSavedMealPlan = async (userId: string) => {
     setLoadingSavedPlan(true);
@@ -320,6 +352,14 @@ export default function App() {
     setIsOnboarding(false);
     loadSavedMealPlan(loggedInUser.id);
 
+    // Restore gender from user_metadata if available
+    if (loggedInUser.user_metadata?.gender) {
+      setPreferences(prev => ({
+        ...prev,
+        gender: prev.gender || loggedInUser.user_metadata.gender,
+      }));
+    }
+
     // Identify user with RevenueCat
     try {
       await rcIdentify(loggedInUser.id);
@@ -356,6 +396,7 @@ export default function App() {
 
   const resetPreferences = () => {
     setPreferences({
+      gender: null,
       location: '',
       selectedStore: null,
       selectedStores: [],
@@ -567,7 +608,12 @@ export default function App() {
           user={user}
           onLogout={handleLogout}
           onOpenAdmin={() => setShowAdminDashboard(true)}
-          onUserUpdate={setUser}
+          onUserUpdate={(updatedUser) => {
+            setUser(updatedUser);
+            if (updatedUser.user_metadata?.gender !== undefined) {
+              setPreferences(prev => ({ ...prev, gender: updatedUser.user_metadata.gender }));
+            }
+          }}
           activeTab={activeNavTab}
           onTabChange={handleNavTabChange}
         />

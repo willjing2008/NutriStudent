@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Mail, Lock, Loader2, Eye, EyeOff, User, ArrowRight, Apple } from 'lucide-react';
+import { Mail, Lock, Loader2, Eye, EyeOff, User, ArrowRight, Apple, Check } from 'lucide-react';
 import { supabase } from '../../utils/supabaseClient';
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
 import { SchoolSelectionStep } from './SchoolSelectionStep';
 import { SubscriptionPage } from './SubscriptionPage';
 import { useSubscription } from '../hooks/useSubscription';
+import { Gender } from '../utils/nutritionTargets';
 
 interface LoginPageProps {
   onLoginSuccess: (user: any, accessToken: string) => void;
@@ -21,6 +22,8 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [signedUpUserId, setSignedUpUserId] = useState<string | null>(null);
+  const [showGenderStep, setShowGenderStep] = useState(false);
+  const [selectedGender, setSelectedGender] = useState<Gender>(null);
   const [showSignupPaywall, setShowSignupPaywall] = useState(false);
 
   const { isPro, identify: rcIdentify } = useSubscription();
@@ -135,18 +138,20 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
     }
   };
 
-  // Signup Paywall (after school selection)
+  // Signup Paywall (after gender selection)
   if (showSignupPaywall && signedUpUserId) {
     return (
       <SubscriptionPage mandatory />
     );
   }
 
-  // School Selection (after signup)
-  if (signedUpUserId) {
+  // Gender Selection (after school selection)
+  if (showGenderStep && signedUpUserId) {
     return (
-      <SchoolSelectionStep
+      <GenderSelectionStep
         userId={signedUpUserId}
+        selectedGender={selectedGender}
+        onSelectGender={setSelectedGender}
         onComplete={async () => {
           // Identify the new user with RevenueCat before showing paywall
           try {
@@ -155,6 +160,18 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
             console.error('RevenueCat identify failed:', err);
           }
           setShowSignupPaywall(true);
+        }}
+      />
+    );
+  }
+
+  // School Selection (after signup)
+  if (signedUpUserId) {
+    return (
+      <SchoolSelectionStep
+        userId={signedUpUserId}
+        onComplete={() => {
+          setShowGenderStep(true);
         }}
       />
     );
@@ -441,6 +458,127 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
               )}
             </p>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const GENDER_OPTIONS: { id: Gender; name: string }[] = [
+  { id: 'male', name: 'Male' },
+  { id: 'female', name: 'Female' },
+  { id: 'decline', name: 'Decline to Answer' },
+];
+
+function GenderSelectionStep({
+  userId,
+  selectedGender,
+  onSelectGender,
+  onComplete,
+}: {
+  userId: string;
+  selectedGender: Gender;
+  onSelectGender: (g: Gender) => void;
+  onComplete: () => void;
+}) {
+  const [saving, setSaving] = useState(false);
+
+  const handleContinue = async () => {
+    setSaving(true);
+    try {
+      // Save gender to user_metadata if selected
+      if (selectedGender) {
+        await fetch(
+          `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/auth/update-profile`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${publicAnonKey}`,
+            },
+            body: JSON.stringify({ userId, gender: selectedGender }),
+          }
+        );
+      }
+      onComplete();
+    } catch (err) {
+      console.error('Failed to save gender:', err);
+      onComplete(); // Continue even if save fails
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0A1F13] flex flex-col">
+      {/* Header */}
+      <div className="px-6 pt-12 pb-6 text-center">
+        <div className="w-16 h-16 rounded-2xl bg-[#22C55E]/20 flex items-center justify-center mx-auto mb-4">
+          <User className="w-8 h-8 text-[#22C55E]" />
+        </div>
+        <h1 className="text-2xl font-bold text-white mb-2">
+          Select Your Gender
+        </h1>
+        <p className="text-[#9CA3AF] text-sm">
+          This helps us set your daily nutrition targets.
+        </p>
+      </div>
+
+      {/* Options */}
+      <div className="flex-1 px-6">
+        <div className="max-w-md mx-auto space-y-3">
+          {GENDER_OPTIONS.map((option) => {
+            const isSelected = selectedGender === option.id;
+            return (
+              <button
+                key={option.id}
+                onClick={() => onSelectGender(option.id)}
+                className={`w-full p-4 rounded-xl transition-all flex items-center ${
+                  isSelected
+                    ? 'bg-[#22C55E]/20 border-2 border-[#22C55E]'
+                    : 'bg-[#142A1D] border border-[#2D5A3D] hover:border-[#22C55E]'
+                }`}
+              >
+                <div className="flex-1 text-left">
+                  <div className={`font-semibold ${isSelected ? 'text-[#22C55E]' : 'text-white'}`}>
+                    {option.name}
+                  </div>
+                </div>
+                {isSelected && (
+                  <div className="w-6 h-6 rounded-full bg-[#22C55E] flex items-center justify-center">
+                    <Check className="w-4 h-4 text-[#052E16]" />
+                  </div>
+                )}
+              </button>
+            );
+          })}
+
+          <p className="text-[#6B7280] text-xs text-center pt-2">
+            This is optional. You can change this later in your profile.
+          </p>
+        </div>
+      </div>
+
+      {/* Continue Button */}
+      <div className="px-6 pb-10 pt-6">
+        <div className="max-w-md mx-auto">
+          <button
+            onClick={handleContinue}
+            disabled={saving}
+            className="w-full py-4 px-8 bg-[#22C55E] text-[#052E16] font-semibold rounded-full flex items-center justify-center gap-2 hover:bg-[#4ADE80] transition-all disabled:opacity-50"
+          >
+            {saving ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                Continue
+                <ArrowRight className="w-5 h-5" />
+              </>
+            )}
+          </button>
         </div>
       </div>
     </div>

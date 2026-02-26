@@ -162,7 +162,7 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
       {/* Scrollable Content */}
       <div className="flex-1 px-6 pb-32 overflow-y-auto">
         <div className="max-w-md mx-auto space-y-8">
-          
+
           {/* Section 1: Shopping Date */}
           <div className="bg-[#142A1D] rounded-2xl p-5 border border-[#2D5A3D]">
             <SectionHeader icon={Calendar} title="Next Shopping Date" />
