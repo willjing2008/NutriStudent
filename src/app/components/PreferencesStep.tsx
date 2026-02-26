@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { ArrowRight, ArrowLeft, X, Calendar, Users, Target, Clock, ChefHat, Utensils, AlertCircle } from 'lucide-react';
-import { UserPreferences, EquipmentType } from '../App';
+import { ArrowRight, ArrowLeft, X, Calendar, Users, Target, Clock, AlertCircle, Sunrise, Sun, Moon } from 'lucide-react';
+import { UserPreferences, MealTimes } from '../App';
 
 // Common ingredients for autocomplete
 const COMMON_INGREDIENTS = [
@@ -22,25 +22,20 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
   const [mealsPerDay, setMealsPerDay] = useState(preferences.mealsPerDay);
   const [goal, setGoal] = useState(preferences.goal);
   const [maxCookingTime, setMaxCookingTime] = useState(preferences.maxCookingTime);
-  const [cookingMethods, setCookingMethods] = useState<('one-pot' | 'microwave' | 'meal-prep')[]>(
-    preferences.cookingMethods || []
-  );
   const [avoidIngredients, setAvoidIngredients] = useState<string[]>(
     preferences.avoidIngredients || []
   );
   const [searchInput, setSearchInput] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
-  
-  // Dietary restrictions state
-  const [dietaryRestrictions, setDietaryRestrictions] = useState<string[]>([]);
-  
-  // Kitchen equipment state (Dorm Chef Mode)
-  const [availableEquipment, setAvailableEquipment] = useState<EquipmentType[]>(
-    preferences.availableEquipment || []
+  const [mealTimes, setMealTimes] = useState<MealTimes>(
+    preferences.mealTimes || { breakfast: '08:00', lunch: '12:00', dinner: '18:00' }
   );
 
+  // Dietary restrictions state
+  const [dietaryRestrictions, setDietaryRestrictions] = useState<string[]>([]);
+
   const filteredSuggestions = COMMON_INGREDIENTS.filter(
-    ingredient => 
+    ingredient =>
       ingredient.toLowerCase().includes(searchInput.toLowerCase()) &&
       !avoidIngredients.includes(ingredient)
   ).slice(0, 6);
@@ -58,26 +53,10 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
   };
 
   const toggleDietaryRestriction = (restriction: string) => {
-    setDietaryRestrictions(prev => 
-      prev.includes(restriction) 
+    setDietaryRestrictions(prev =>
+      prev.includes(restriction)
         ? prev.filter(r => r !== restriction)
         : [...prev, restriction]
-    );
-  };
-
-  const toggleEquipment = (eq: EquipmentType) => {
-    setAvailableEquipment(prev =>
-      prev.includes(eq)
-        ? prev.filter(e => e !== eq)
-        : [...prev, eq]
-    );
-  };
-
-  const toggleCookingMethod = (method: 'one-pot' | 'microwave' | 'meal-prep') => {
-    setCookingMethods(prev => 
-      prev.includes(method) 
-        ? prev.filter(m => m !== method)
-        : [...prev, method]
     );
   };
 
@@ -87,9 +66,8 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
       mealsPerDay,
       goal,
       maxCookingTime,
-      cookingMethods,
       avoidIngredients,
-      availableEquipment,
+      mealTimes,
     });
     onNext();
   };
@@ -110,15 +88,6 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
     { id: 'keto', label: 'Keto' },
   ];
 
-  const equipmentOptions: { id: EquipmentType; label: string; desc: string }[] = [
-    { id: 'microwave', label: 'Microwave', desc: 'Mug meals & quick cooking' },
-    { id: 'hot-plate', label: 'Hot Plate', desc: 'One-pot & stir fry' },
-    { id: 'rice-cooker', label: 'Rice Cooker', desc: 'Rice & grain bowls' },
-    { id: 'kettle', label: 'Kettle', desc: 'Noodles & hot drinks' },
-    { id: 'toaster', label: 'Toaster', desc: 'Toast & sandwiches' },
-    { id: 'full-kitchen', label: 'Full Kitchen', desc: 'Oven, stove & all tools' },
-  ];
-
   const cookingTimeOptions = [
     { time: 15, label: '15 min', name: 'Quicker' },
     { time: 30, label: '30 min', name: 'Quick' },
@@ -126,11 +95,12 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
     { time: 60, label: '60 min', name: 'Take Time' },
   ];
 
-  const cookingMethodOptions = [
-    { method: 'one-pot' as const, label: 'One-Pot Meals', desc: 'Everything in one pot' },
-    { method: 'microwave' as const, label: 'Microwave Meals', desc: 'Quick microwave cooking' },
-    { method: 'meal-prep' as const, label: 'Meal Prep', desc: 'Make ahead & store' },
-  ];
+  const formatTime12h = (time24: string) => {
+    const [h, m] = time24.split(':').map(Number);
+    const suffix = h >= 12 ? 'PM' : 'AM';
+    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+    return `${h12}:${m.toString().padStart(2, '0')} ${suffix}`;
+  };
 
   // Section header component for consistency
   const SectionHeader = ({ icon: Icon, title, optional = false }: { icon: any; title: string; optional?: boolean }) => (
@@ -154,7 +124,7 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
             Set Your Preferences
           </h1>
           <p className="text-[#9CA3AF]">
-            Help us tailor a meal plan that fits your lifestyle and kitchen setup.
+            Help us tailor a meal plan that fits your lifestyle.
           </p>
         </div>
       </div>
@@ -203,7 +173,42 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
             </div>
           </div>
 
-          {/* Section 3: Choose Your Goal */}
+          {/* Section 3: Meal Times */}
+          <div className="bg-[#142A1D] rounded-2xl p-5 border border-[#2D5A3D]">
+            <SectionHeader icon={Clock} title="Meal Times" />
+            <p className="text-[#6B7280] text-sm mb-4">When do you usually eat? This helps schedule meals around your classes.</p>
+            <div className="space-y-3">
+              {[
+                { key: 'breakfast' as const, label: 'Breakfast', icon: Sunrise, color: '#F59E0B' },
+                { key: 'lunch' as const, label: 'Lunch', icon: Sun, color: '#22C55E' },
+                { key: 'dinner' as const, label: 'Dinner', icon: Moon, color: '#8B5CF6' },
+              ].map(({ key, label, icon: MealIcon, color }) => (
+                <div key={key} className="flex items-center gap-3 p-3 bg-[#0A1F13] rounded-xl border border-[#2D5A3D]">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${color}20` }}>
+                    <MealIcon className="w-4 h-4" style={{ color }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-white text-sm font-medium">{label}</span>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="time"
+                      value={mealTimes[key]}
+                      onChange={(e) => setMealTimes(prev => ({ ...prev, [key]: e.target.value }))}
+                      className="bg-[#142A1D] text-white text-sm rounded-lg px-4 py-2 border border-[#2D5A3D] focus:outline-none focus:border-[#22C55E] transition-colors [color-scheme:dark] w-[140px]"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 p-3 bg-[#22C55E]/10 rounded-xl border border-[#22C55E]/20">
+              <p className="text-sm text-[#22C55E]">
+                Meals scheduled at <strong>{formatTime12h(mealTimes.breakfast)}</strong>, <strong>{formatTime12h(mealTimes.lunch)}</strong>, and <strong>{formatTime12h(mealTimes.dinner)}</strong>
+              </p>
+            </div>
+          </div>
+
+          {/* Section 4: Choose Your Goal */}
           <div className="bg-[#142A1D] rounded-2xl p-5 border border-[#2D5A3D]">
             <SectionHeader icon={Target} title="Choose Your Goal" />
             <div className="space-y-3">
@@ -265,95 +270,7 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
             </div>
           </div>
 
-          {/* Section 6: Preferred Cooking Methods */}
-          <div className="bg-[#142A1D] rounded-2xl p-5 border border-[#2D5A3D]">
-            <SectionHeader icon={ChefHat} title="Preferred Cooking Methods" optional />
-            <div className="space-y-3">
-              {cookingMethodOptions.map((option) => {
-                const isSelected = cookingMethods.includes(option.method);
-                return (
-                  <button
-                    key={option.method}
-                    onClick={() => toggleCookingMethod(option.method)}
-                    className={`w-full p-4 rounded-xl transition-all flex items-center justify-between text-left ${
-                      isSelected
-                        ? 'bg-[#22C55E]/20 border-2 border-[#22C55E]'
-                        : 'bg-[#0A1F13] border border-[#2D5A3D] hover:border-[#22C55E]'
-                    }`}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <span className={`block text-sm font-semibold leading-tight ${isSelected ? 'text-[#22C55E]' : 'text-white'}`}>
-                        {option.label}
-                      </span>
-                      <span className="block text-[11px] text-[#6B7280] mt-0.5">{option.desc}</span>
-                    </div>
-                    {isSelected && (
-                      <div className="w-6 h-6 rounded-full bg-[#22C55E] flex items-center justify-center ml-3 shrink-0">
-                        <span className="text-[#052E16] text-sm">✓</span>
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-            {cookingMethods.length === 0 && (
-              <div className="mt-4 px-3 py-2.5 bg-transparent rounded-lg border border-dashed border-[#2D5A3D]/70">
-                <p className="text-xs text-[#7A8A82] leading-relaxed">
-                  No preference selected - we'll include all cooking methods
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Section 7: Dorm Chef Mode - Kitchen Equipment */}
-          <div className="bg-[#142A1D] rounded-2xl p-5 border border-[#2D5A3D]">
-            <SectionHeader icon={Utensils} title="Your Kitchen Equipment" optional />
-            <p className="text-[#6B7280] text-sm mb-4">Select what you have — we'll only suggest recipes you can actually make.</p>
-            <div className="space-y-3">
-              {equipmentOptions.map((eq) => {
-                const isSelected = availableEquipment.includes(eq.id);
-                return (
-                  <button
-                    key={eq.id}
-                    onClick={() => toggleEquipment(eq.id)}
-                    className={`w-full p-4 rounded-xl transition-all flex items-center justify-between text-left ${
-                      isSelected
-                        ? 'bg-[#22C55E]/20 border-2 border-[#22C55E]'
-                        : 'bg-[#0A1F13] border border-[#2D5A3D] hover:border-[#22C55E]'
-                    }`}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <span className={`block text-sm font-semibold leading-tight ${isSelected ? 'text-[#22C55E]' : 'text-white'}`}>
-                        {eq.label}
-                      </span>
-                      <span className="block text-[11px] text-[#6B7280] mt-0.5">{eq.desc}</span>
-                    </div>
-                    {isSelected && (
-                      <div className="w-6 h-6 rounded-full bg-[#22C55E] flex items-center justify-center ml-3 shrink-0">
-                        <span className="text-[#052E16] text-sm">✓</span>
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-            {availableEquipment.length === 0 && (
-              <div className="mt-4 px-3 py-2.5 bg-transparent rounded-lg border border-dashed border-[#2D5A3D]/70">
-                <p className="text-xs text-[#7A8A82] leading-relaxed">
-                  No equipment selected — we'll include all recipes
-                </p>
-              </div>
-            )}
-            {availableEquipment.length > 0 && !availableEquipment.includes('full-kitchen') && (
-              <div className="mt-4 p-3 bg-[#22C55E]/10 rounded-xl border border-[#22C55E]/20">
-                <p className="text-sm text-[#22C55E]">
-                  Dorm Chef Mode active — showing recipes for: {availableEquipment.join(', ')}
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Section 8: Dietary Restrictions */}
+          {/* Section 6: Dietary Restrictions */}
           <div className="bg-[#142A1D] rounded-2xl p-5 border border-[#2D5A3D]">
             <SectionHeader icon={AlertCircle} title="Dietary Restrictions" optional />
             <div className="flex flex-wrap gap-3">
@@ -376,7 +293,7 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
             </div>
           </div>
 
-          {/* Section 9: Allergies & Dislikes */}
+          {/* Section 7: Allergies & Dislikes */}
           <div className="bg-[#142A1D] rounded-2xl p-5 border border-[#2D5A3D]">
             <SectionHeader icon={AlertCircle} title="Allergies & Dislikes" optional />
             <div className="relative">
@@ -406,7 +323,7 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
                 </div>
               )}
             </div>
-            
+
             {avoidIngredients.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-4">
                 {avoidIngredients.map((ingredient) => (
@@ -435,7 +352,7 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          
+
           <button
             onClick={handleNext}
             disabled={!canProceed}

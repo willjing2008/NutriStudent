@@ -14,11 +14,17 @@ import { NavTab } from './components/BottomNavigation';
 import { supabase } from '../utils/supabaseClient';
 import { projectId, publicAnonKey } from '../../utils/supabase/info';
 import { useSubscription } from './hooks/useSubscription';
+import { useAcademicCalendar } from './hooks/useAcademicCalendar';
 import { Apple, LogOut } from 'lucide-react';
 import { Gender } from './utils/nutritionTargets';
 
-export type EquipmentType = 'microwave' | 'hot-plate' | 'rice-cooker' | 'kettle' | 'toaster' | 'full-kitchen';
 export type { Gender } from './utils/nutritionTargets';
+
+export interface MealTimes {
+  breakfast: string; // "08:00" (24h)
+  lunch: string;     // "12:00"
+  dinner: string;    // "18:00"
+}
 
 export interface UserPreferences {
   gender: Gender;
@@ -40,9 +46,8 @@ export interface UserPreferences {
   budget: number;
   goal: 'study' | 'work' | 'fitness' | null;
   maxCookingTime: number;
-  cookingMethods: ('one-pot' | 'microwave' | 'meal-prep')[];
   avoidIngredients: string[];
-  availableEquipment: EquipmentType[];
+  mealTimes: MealTimes;
 }
 
 export default function App() {
@@ -60,7 +65,10 @@ export default function App() {
 
   // RevenueCat subscription
   const { identify: rcIdentify, reset: rcReset, isPro, isReady } = useSubscription();
-  
+
+  // Academic calendar + recipe queue
+  const calendar = useAcademicCalendar();
+
   // Meal plan state
   const [savedPlansHistory, setSavedPlansHistory] = useState<any[]>([]);
   const [savedMealPlan, setSavedMealPlan] = useState<any>(null);
@@ -78,9 +86,8 @@ export default function App() {
     budget: 100,
     goal: null,
     maxCookingTime: 30,
-    cookingMethods: [],
     avoidIngredients: [],
-    availableEquipment: [],
+    mealTimes: { breakfast: '08:00', lunch: '12:00', dinner: '18:00' },
   });
 
   // Shopping list ingredients (derived from meal plan)
@@ -110,6 +117,7 @@ export default function App() {
           setUser(session.user);
           setAccessToken(session.access_token);
           loadSavedMealPlan(session.user.id);
+          calendar.initCalendar(session.user.id);
 
           // Restore gender from user_metadata if available
           if (session.user.user_metadata?.gender) {
@@ -351,6 +359,7 @@ export default function App() {
     setActiveNavTab('home');
     setIsOnboarding(false);
     loadSavedMealPlan(loggedInUser.id);
+    calendar.initCalendar(loggedInUser.id);
 
     // Restore gender from user_metadata if available
     if (loggedInUser.user_metadata?.gender) {
@@ -405,9 +414,8 @@ export default function App() {
       budget: 100,
       goal: null,
       maxCookingTime: 30,
-      cookingMethods: [],
       avoidIngredients: [],
-      availableEquipment: [],
+      mealTimes: { breakfast: '08:00', lunch: '12:00', dinner: '18:00' },
     });
   };
 
@@ -579,13 +587,29 @@ export default function App() {
           activeNavTab={activeNavTab}
           onNavTabChange={handleNavTabChange}
           savedMealPlan={savedMealPlan}
+          // Calendar + queue props
+          academicSchedule={calendar.schedule}
+          recipeQueue={calendar.recipeQueue}
+          currentWeekMealPlan={calendar.currentWeekMealPlan}
+          isTestingPeriod={calendar.isTestingPeriod}
+          mealConflicts={calendar.mealConflicts}
+          queueShoppingList={calendar.queueShoppingList}
+          onSaveSchedule={calendar.saveSchedule}
+          onGenerateQueue={calendar.generateQueue}
+          onSwapQueueMeal={calendar.swapQueueMeal}
+          onMarkMealConsumed={calendar.markMealConsumed}
+          onCheckQueueTestingChange={calendar.checkQueueTestingChange}
         />
       )}
 
       {/* Shop Tab - Shopping/Grocery List */}
       {activeNavTab === 'shop' && (
         <ShoppingMode
-          ingredients={uniqueIngredients}
+          ingredients={
+            calendar.recipeQueue && calendar.queueShoppingList?.length
+              ? calendar.queueShoppingList
+              : savedMealPlan ? uniqueIngredients : []
+          }
           storeName={preferences.selectedStores[0]?.name || 'Supermarket'}
           onBack={() => setActiveNavTab('home')}
           activeNavTab={activeNavTab}

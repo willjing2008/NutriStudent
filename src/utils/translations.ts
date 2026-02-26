@@ -51,8 +51,30 @@ export const translations = {
     // Time
     created: 'Created',
     week: 'WEEK',
+
+    // Academic Calendar
+    schedule: 'Schedule',
+    classes: 'Classes',
+    addClass: 'Add Class',
+    editClass: 'Edit Class',
+    testingPeriod: 'Testing Period',
+    midterm: 'Midterm',
+    finals: 'Finals',
+    focusMode: 'Focus Mode',
+    brainFood: 'Brain Food',
+    sleepFriendly: 'Sleep Friendly',
+    mealReminder: 'Meal Reminder',
+    eatBefore: 'Eat before',
+    eatAfter: 'Eat after',
+    bedtime: 'Bedtime',
+    wakeTime: 'Wake Time',
+    generateQueue: 'Generate Queue',
+    weekOf: 'Week of',
+    editSchedule: 'Edit Schedule',
+    noSchedule: 'No Schedule',
+    setupSchedule: 'Set Up Schedule',
   },
-  
+
   'zh-CN': {
     // Navigation
     home: '首页',
@@ -101,6 +123,28 @@ export const translations = {
     // Time
     created: '创建于',
     week: '第周',
+
+    // Academic Calendar
+    schedule: '课程表',
+    classes: '课程',
+    addClass: '添加课程',
+    editClass: '编辑课程',
+    testingPeriod: '考试期',
+    midterm: '期中考试',
+    finals: '期末考试',
+    focusMode: '专注模式',
+    brainFood: '健脑食物',
+    sleepFriendly: '助眠食物',
+    mealReminder: '用餐提醒',
+    eatBefore: '提前用餐',
+    eatAfter: '推后用餐',
+    bedtime: '就寝时间',
+    wakeTime: '起床时间',
+    generateQueue: '生成队列',
+    weekOf: '第几周',
+    editSchedule: '编辑课表',
+    noSchedule: '暂无课表',
+    setupSchedule: '设置课表',
   }
 };
 

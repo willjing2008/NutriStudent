@@ -170,21 +170,29 @@ export function selectOverlapCluster(
 
 /**
  * Select core recipes across all three categories, maximizing cross-category overlap.
- * Dinner first (4), then lunch (4), then breakfast (3).
+ * Default sizes: Dinner (4), Lunch (4), Breakfast (3).
+ * For 28-day queue, use larger sizes: Dinner (8), Lunch (8), Breakfast (6).
  */
 export function selectAllCoreRecipes(
   breakfastPool: ScoredRecipe[],
   lunchPool: ScoredRecipe[],
-  dinnerPool: ScoredRecipe[]
+  dinnerPool: ScoredRecipe[],
+  clusterSizes?: { breakfast?: number; lunch?: number; dinner?: number }
 ): { breakfast: ScoredRecipe[]; lunch: ScoredRecipe[]; dinner: ScoredRecipe[] } {
+  const sizes = {
+    breakfast: clusterSizes?.breakfast ?? 3,
+    lunch: clusterSizes?.lunch ?? 4,
+    dinner: clusterSizes?.dinner ?? 4,
+  };
+
   // Dinner first — largest pool, most freedom
-  const dinner = selectOverlapCluster(dinnerPool, 4, []);
+  const dinner = selectOverlapCluster(dinnerPool, sizes.dinner, []);
 
   // Lunch — cross-overlap with dinner
-  const lunch = selectOverlapCluster(lunchPool, 4, dinner);
+  const lunch = selectOverlapCluster(lunchPool, sizes.lunch, dinner);
 
   // Breakfast — cross-overlap with dinner + lunch
-  const breakfast = selectOverlapCluster(breakfastPool, 3, [...dinner, ...lunch]);
+  const breakfast = selectOverlapCluster(breakfastPool, sizes.breakfast, [...dinner, ...lunch]);
 
   return { breakfast, lunch, dinner };
 }

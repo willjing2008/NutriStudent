@@ -4,7 +4,9 @@ import { logger } from "npm:hono/logger";
 import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
 import * as kv from "./kv_store.tsx";
 import { ALL_RECIPES, NewRecipe } from "./recipe-data.ts";
-import { toMealPlanMeal, toSwapOption, getRecipesByMealType, getAllRecipesFromDB } from "./recipe-adapter.ts";
+import { toMealPlanMeal, toSwapOption, getRecipesByMealType, getAllRecipesFromDB, getRecipesByFocusType, getSleepFriendlyRecipes } from "./recipe-adapter.ts";
+import { classifyRecipe } from "./focus-classifier.ts";
+import { generateRecipeQueue, getQueueWeekAsMealPlan, getQueueWeekShoppingList, swapQueueMeal, RecipeQueue } from "./recipe-queue.ts";
 import { generateImageQuery, enhanceImageQuery } from "./image-query-helper.ts";
 import { calculateRecipeNutrition } from "./calorie-ninjas.ts";
 import { ACHIEVEMENTS } from "./achievements.ts";
@@ -528,14 +530,22 @@ app.post("/make-server-dbaf6019/init-recipes", async (c) => {
     const byMealType: Record<string, number> = {};
     const byCategory: Record<string, number> = {};
 
+    let focusCount = 0;
+    let sleepCount = 0;
+
     for (const recipe of ALL_RECIPES) {
       try {
+        // Auto-classify each recipe during init
+        const classification = classifyRecipe(recipe);
+        const enriched = { ...recipe, ...classification };
         const key = `recipe:${recipe.meal_type}:${recipe.id}`;
-        await kv.set(key, JSON.stringify(recipe));
+        await kv.set(key, JSON.stringify(enriched));
         successCount++;
         byMealType[recipe.meal_type] = (byMealType[recipe.meal_type] || 0) + 1;
         const cat = recipe.recipe_category || 'Other';
         byCategory[cat] = (byCategory[cat] || 0) + 1;
+        if (classification.promotes_focus) focusCount++;
+        if (classification.promotes_sleep) sleepCount++;
       } catch (error: any) {
         errorCount++;
         console.error(`Failed to store recipe ${recipe.id}: ${error.message}`);
@@ -547,6 +557,8 @@ app.post("/make-server-dbaf6019/init-recipes", async (c) => {
       total: ALL_RECIPES.length,
       byMealType,
       byCategory,
+      focusCount,
+      sleepCount,
       initialized: new Date().toISOString()
     }));
 
@@ -564,6 +576,46 @@ app.post("/make-server-dbaf6019/init-recipes", async (c) => {
   } catch (error: any) {
     console.log(`Error initializing cuisine database: ${error.message}`);
     return c.json({ error: error.message || "Failed to initialize recipes" }, 500);
+  }
+});
+
+// ========== RECIPE CLASSIFICATION ==========
+
+// One-time migration: classify all recipes for focus/sleep properties
+app.post("/make-server-dbaf6019/classify-recipes", async (c) => {
+  try {
+    const allRecipes = await getAllRecipesFromDB();
+    let focusCount = 0;
+    let sleepCount = 0;
+
+    for (const recipe of allRecipes) {
+      const classification = classifyRecipe(recipe);
+      // Store classification alongside the recipe
+      const enriched = { ...recipe, ...classification };
+      const key = `recipe:${recipe.meal_type}:${recipe.id}`;
+      await kv.set(key, JSON.stringify(enriched));
+      if (classification.promotes_focus) focusCount++;
+      if (classification.promotes_sleep) sleepCount++;
+    }
+
+    // Update metadata
+    const metaRaw = await kv.get("recipes:meta");
+    const meta = metaRaw ? (typeof metaRaw === "string" ? JSON.parse(metaRaw) : metaRaw) : {};
+    await kv.set("recipes:meta", JSON.stringify({
+      ...meta,
+      focusCount,
+      sleepCount,
+      classifiedAt: new Date().toISOString(),
+    }));
+
+    return c.json({
+      message: "Recipes classified successfully",
+      total: allRecipes.length,
+      focusCount,
+      sleepCount,
+    });
+  } catch (error: any) {
+    return c.json({ error: error.message || "Failed to classify recipes" }, 500);
   }
 });
 
@@ -902,6 +954,329 @@ app.post("/make-server-dbaf6019/get-swap-options", async (c) => {
   } catch (error: any) {
     console.log(`Error getting swap options: ${error.message}`);
     return c.json({ error: error.message || "Failed to get swap options" }, 500);
+  }
+});
+
+// ========== ACADEMIC CALENDAR ENDPOINTS ==========
+
+// Save/update academic schedule (classes, testing periods, sleep schedule)
+app.post("/make-server-dbaf6019/save-academic-schedule", async (c) => {
+  try {
+    const { userId, classes, testingPeriods, sleepSchedule } = await c.req.json();
+    if (!userId) return c.json({ error: "Missing userId" }, 400);
+
+    const schedule = {
+      classes: classes || [],
+      testingPeriods: testingPeriods || [],
+      sleepSchedule: sleepSchedule || { bedtime: "23:00", wakeTime: "07:00", lastMealBeforeBed: 120 },
+      updatedAt: new Date().toISOString(),
+    };
+
+    await kv.set(`academic_schedule_${userId}`, JSON.stringify(schedule));
+    return c.json({ schedule });
+  } catch (error: any) {
+    return c.json({ error: error.message || "Failed to save academic schedule" }, 500);
+  }
+});
+
+// Get academic schedule
+app.post("/make-server-dbaf6019/get-academic-schedule", async (c) => {
+  try {
+    const { userId } = await c.req.json();
+    if (!userId) return c.json({ error: "Missing userId" }, 400);
+
+    const raw = await kv.get(`academic_schedule_${userId}`);
+    if (!raw) return c.json({ schedule: null });
+
+    const schedule = typeof raw === "string" ? JSON.parse(raw) : raw;
+    return c.json({ schedule });
+  } catch (error: any) {
+    return c.json({ error: error.message || "Failed to get academic schedule" }, 500);
+  }
+});
+
+// Check if a date falls within a testing period
+app.post("/make-server-dbaf6019/check-testing-period", async (c) => {
+  try {
+    const { userId, date } = await c.req.json();
+    if (!userId) return c.json({ error: "Missing userId" }, 400);
+
+    const checkDate = date || new Date().toISOString().split("T")[0];
+    const raw = await kv.get(`academic_schedule_${userId}`);
+    if (!raw) return c.json({ inTestingPeriod: false, period: null });
+
+    const schedule = typeof raw === "string" ? JSON.parse(raw) : raw;
+    const matchingPeriod = (schedule.testingPeriods || []).find(
+      (p: any) => checkDate >= p.startDate && checkDate <= p.endDate
+    );
+
+    return c.json({
+      inTestingPeriod: !!matchingPeriod,
+      period: matchingPeriod || null,
+    });
+  } catch (error: any) {
+    return c.json({ error: error.message || "Failed to check testing period" }, 500);
+  }
+});
+
+// Check if any testing period overlaps a date range (used by queue generation)
+function isInTestingPeriod(testingPeriods: any[], startDate: string, endDate: string): boolean {
+  return testingPeriods.some(
+    (p: any) => p.startDate <= endDate && p.endDate >= startDate
+  );
+}
+
+// Get meal-time conflicts with classes for a given date
+app.post("/make-server-dbaf6019/get-meal-conflicts", async (c) => {
+  try {
+    const { userId, date } = await c.req.json();
+    if (!userId) return c.json({ error: "Missing userId" }, 400);
+
+    const raw = await kv.get(`academic_schedule_${userId}`);
+    if (!raw) return c.json({ conflicts: [] });
+
+    const schedule = typeof raw === "string" ? JSON.parse(raw) : raw;
+    const checkDate = new Date(date || new Date().toISOString().split("T")[0]);
+    const dayOfWeek = checkDate.getDay(); // 0=Sun..6=Sat
+
+    const todayClasses = (schedule.classes || []).filter(
+      (cls: any) => cls.dayOfWeek === dayOfWeek
+    );
+
+    // Meal time windows
+    const mealWindows = [
+      { slot: "lunch", start: "11:00", end: "13:00" },
+      { slot: "dinner", start: "16:00", end: "18:00" },
+    ];
+
+    const conflicts: any[] = [];
+    for (const cls of todayClasses) {
+      for (const window of mealWindows) {
+        // Check overlap: class overlaps with meal window
+        if (cls.startTime < window.end && cls.endTime > window.start) {
+          const eatBefore = cls.startTime <= window.start ? null : cls.startTime;
+          const eatAfter = cls.endTime >= window.end ? null : cls.endTime;
+          conflicts.push({
+            mealSlot: window.slot,
+            className: cls.name,
+            classStart: cls.startTime,
+            classEnd: cls.endTime,
+            suggestion: eatBefore
+              ? `Eat ${window.slot} before ${eatBefore}`
+              : eatAfter
+              ? `Eat ${window.slot} after ${eatAfter}`
+              : `${cls.name} covers the full ${window.slot} window — plan to eat earlier or later`,
+          });
+        }
+      }
+    }
+
+    return c.json({ conflicts });
+  } catch (error: any) {
+    return c.json({ error: error.message || "Failed to get meal conflicts" }, 500);
+  }
+});
+
+// ========== RECIPE QUEUE ENDPOINTS ==========
+
+// Generate a 28-day recipe queue for a user
+app.post("/make-server-dbaf6019/generate-recipe-queue", async (c) => {
+  try {
+    const { userId, mealsPerDay, goal, avoidIngredients, maxCookingTime, budget } = await c.req.json();
+    if (!userId || !mealsPerDay || !goal) {
+      return c.json({ error: "Missing required parameters: userId, mealsPerDay, goal" }, 400);
+    }
+
+    // Check testing period status
+    const schedRaw = await kv.get(`academic_schedule_${userId}`);
+    const schedule = schedRaw ? (typeof schedRaw === "string" ? JSON.parse(schedRaw) : schedRaw) : null;
+
+    const today = new Date().toISOString().split("T")[0];
+    const fourWeeksOut = new Date(Date.now() + 28 * 86400000).toISOString().split("T")[0];
+    const focusMode = schedule
+      ? isInTestingPeriod(schedule.testingPeriods || [], today, fourWeeksOut)
+      : false;
+
+    const preferSleepDinners = !!(schedule?.sleepSchedule?.bedtime);
+
+    const queue = await generateRecipeQueue({
+      userId,
+      mealsPerDay,
+      goal,
+      focusMode,
+      avoidIngredients,
+      maxCookingTime,
+      preferSleepDinners,
+    });
+
+    await kv.set(`recipe_queue_${userId}`, JSON.stringify(queue));
+
+    console.log(`📋 Generated ${queue.meals.length}-meal queue for user ${userId} (focus=${focusMode})`);
+    return c.json({ queue });
+  } catch (error: any) {
+    return c.json({ error: error.message || "Failed to generate recipe queue" }, 500);
+  }
+});
+
+// Get user's current recipe queue
+app.post("/make-server-dbaf6019/get-recipe-queue", async (c) => {
+  try {
+    const { userId } = await c.req.json();
+    if (!userId) return c.json({ error: "Missing userId" }, 400);
+
+    const raw = await kv.get(`recipe_queue_${userId}`);
+    if (!raw) return c.json({ queue: null, needsRefresh: true });
+
+    const queue: RecipeQueue = typeof raw === "string" ? JSON.parse(raw) : raw;
+    const unconsumed = queue.meals.filter((m) => !m.isConsumed).length;
+
+    return c.json({ queue, needsRefresh: unconsumed < 7 });
+  } catch (error: any) {
+    return c.json({ error: error.message || "Failed to get recipe queue" }, 500);
+  }
+});
+
+// Get a specific week from the queue as a MealPlan-shaped object
+app.post("/make-server-dbaf6019/get-queue-week", async (c) => {
+  try {
+    const { userId, weekNumber, budget } = await c.req.json();
+    if (!userId) return c.json({ error: "Missing userId" }, 400);
+
+    const raw = await kv.get(`recipe_queue_${userId}`);
+    if (!raw) return c.json({ error: "No queue found. Generate one first." }, 404);
+
+    const queue: RecipeQueue = typeof raw === "string" ? JSON.parse(raw) : raw;
+    const week = weekNumber || 1;
+    const mealPlan = getQueueWeekAsMealPlan(queue, week, budget || 100);
+
+    return c.json({ mealPlan });
+  } catch (error: any) {
+    return c.json({ error: error.message || "Failed to get queue week" }, 500);
+  }
+});
+
+// Swap a meal in the queue
+app.post("/make-server-dbaf6019/queue-swap-meal", async (c) => {
+  try {
+    const { userId, dayNumber, mealSlot, newRecipeId } = await c.req.json();
+    if (!userId || !dayNumber || !mealSlot || !newRecipeId) {
+      return c.json({ error: "Missing required parameters" }, 400);
+    }
+
+    const raw = await kv.get(`recipe_queue_${userId}`);
+    if (!raw) return c.json({ error: "No queue found" }, 404);
+
+    let queue: RecipeQueue = typeof raw === "string" ? JSON.parse(raw) : raw;
+
+    // Fetch the new recipe
+    const allRecipes = await getAllRecipesFromDB();
+    const newRecipe = allRecipes.find((r) => String(r.id) === String(newRecipeId));
+    if (!newRecipe) return c.json({ error: "Recipe not found" }, 404);
+
+    const mealObj = toMealPlanMeal(newRecipe, dayNumber, 1);
+    queue = swapQueueMeal(queue, dayNumber, mealSlot, mealObj);
+
+    await kv.set(`recipe_queue_${userId}`, JSON.stringify(queue));
+
+    // Return updated week
+    const weekNumber = Math.ceil(dayNumber / 7);
+    const mealPlan = getQueueWeekAsMealPlan(queue, weekNumber);
+
+    return c.json({ mealPlan, queue });
+  } catch (error: any) {
+    return c.json({ error: error.message || "Failed to swap queue meal" }, 500);
+  }
+});
+
+// Mark a queue meal as consumed
+app.post("/make-server-dbaf6019/mark-queue-meal-consumed", async (c) => {
+  try {
+    const { userId, dayNumber, mealSlot } = await c.req.json();
+    if (!userId || !dayNumber || !mealSlot) {
+      return c.json({ error: "Missing required parameters" }, 400);
+    }
+
+    const raw = await kv.get(`recipe_queue_${userId}`);
+    if (!raw) return c.json({ error: "No queue found" }, 404);
+
+    const queue: RecipeQueue = typeof raw === "string" ? JSON.parse(raw) : raw;
+    const meal = queue.meals.find(
+      (m) => m.dayNumber === dayNumber && m.mealSlot === mealSlot
+    );
+    if (!meal) return c.json({ error: "Meal not found in queue" }, 404);
+
+    meal.isConsumed = true;
+    await kv.set(`recipe_queue_${userId}`, JSON.stringify(queue));
+
+    // Also track via existing cooked-meals system for streaks/stats
+    const today = new Date().toISOString().split("T")[0];
+    const cookedKey = `cooked_${userId}_${today}_${meal.recipeId}`;
+    await kv.set(cookedKey, JSON.stringify({
+      recipeId: meal.recipeId,
+      recipeName: meal.recipe.name,
+      mealCost: meal.recipe.totalCost || 0,
+      category: meal.mealSlot,
+      cookedAt: new Date().toISOString(),
+    }));
+
+    return c.json({ success: true });
+  } catch (error: any) {
+    return c.json({ error: error.message || "Failed to mark meal consumed" }, 500);
+  }
+});
+
+// Get shopping list for a specific queue week
+app.post("/make-server-dbaf6019/get-queue-shopping-list", async (c) => {
+  try {
+    const { userId, weekNumber } = await c.req.json();
+    if (!userId) return c.json({ error: "Missing userId" }, 400);
+
+    const raw = await kv.get(`recipe_queue_${userId}`);
+    if (!raw) return c.json({ error: "No queue found" }, 404);
+
+    const queue: RecipeQueue = typeof raw === "string" ? JSON.parse(raw) : raw;
+    const ingredients = getQueueWeekShoppingList(queue, weekNumber || 1);
+
+    return c.json({ ingredients, weekNumber: weekNumber || 1 });
+  } catch (error: any) {
+    return c.json({ error: error.message || "Failed to get queue shopping list" }, 500);
+  }
+});
+
+// Check if queue's focus mode matches current testing period status
+app.post("/make-server-dbaf6019/check-queue-testing-change", async (c) => {
+  try {
+    const { userId } = await c.req.json();
+    if (!userId) return c.json({ error: "Missing userId" }, 400);
+
+    const queueRaw = await kv.get(`recipe_queue_${userId}`);
+    if (!queueRaw) return c.json({ shouldRegenerate: false, reason: "no_queue" });
+
+    const queue: RecipeQueue = typeof queueRaw === "string" ? JSON.parse(queueRaw) : queueRaw;
+
+    const schedRaw = await kv.get(`academic_schedule_${userId}`);
+    const schedule = schedRaw ? (typeof schedRaw === "string" ? JSON.parse(schedRaw) : schedRaw) : null;
+
+    const today = new Date().toISOString().split("T")[0];
+    const fourWeeksOut = new Date(Date.now() + 28 * 86400000).toISOString().split("T")[0];
+    const currentFocusMode = schedule
+      ? isInTestingPeriod(schedule.testingPeriods || [], today, fourWeeksOut)
+      : false;
+
+    const shouldRegenerate = queue.focusMode !== currentFocusMode;
+
+    return c.json({
+      shouldRegenerate,
+      currentFocusMode,
+      queueFocusMode: queue.focusMode,
+      reason: shouldRegenerate
+        ? currentFocusMode
+          ? "testing_period_started"
+          : "testing_period_ended"
+        : "no_change",
+    });
+  } catch (error: any) {
+    return c.json({ error: error.message || "Failed to check queue testing change" }, 500);
   }
 });
 

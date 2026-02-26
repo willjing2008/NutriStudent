@@ -68,6 +68,18 @@ const CATEGORY_CONFIG = {
   },
 };
 
+/** Deduplicate ingredients by name (case-insensitive). */
+function deduplicateIngredients(ingredients: ShoppingIngredient[]): ShoppingIngredient[] {
+  const map = new Map<string, ShoppingIngredient>();
+  for (const ing of ingredients) {
+    const key = ing.name.toLowerCase().trim();
+    if (!map.has(key)) {
+      map.set(key, { ...ing });
+    }
+  }
+  return Array.from(map.values());
+}
+
 export function ShoppingMode({ ingredients, storeName, onBack, missingEssentials = [], activeNavTab, onNavTabChange }: ShoppingModeProps) {
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
 
@@ -81,17 +93,19 @@ export function ShoppingMode({ ingredients, storeName, onBack, missingEssentials
     setCheckedItems(newChecked);
   };
 
-  // Organize ingredients by category
-  const organizedIngredients = ingredients.reduce((acc, ingredient) => {
+  // Deduplicate first, then organize by category
+  const dedupedIngredients = deduplicateIngredients(ingredients);
+
+  const organizedIngredients = dedupedIngredients.reduce((acc, ingredient) => {
     if (!acc[ingredient.category]) {
       acc[ingredient.category] = [];
     }
     acc[ingredient.category].push(ingredient);
     return acc;
-  }, {} as Record<string, typeof ingredients>);
+  }, {} as Record<string, ShoppingIngredient[]>);
 
   // Calculate progress
-  const totalItems = ingredients.length + missingEssentials.length;
+  const totalItems = dedupedIngredients.length + missingEssentials.length;
   const checkedCount = checkedItems.size;
   const progress = totalItems > 0 ? (checkedCount / totalItems) * 100 : 0;
 
@@ -112,7 +126,6 @@ export function ShoppingMode({ ingredients, storeName, onBack, missingEssentials
             </button>
             <div className="text-center flex-1">
               <h1 className="text-xl font-bold text-white">Shopping List</h1>
-              <p className="text-xs text-[#6B7280] uppercase tracking-wider">{storeName}</p>
             </div>
             <div className="relative">
               <ShoppingCart className="w-6 h-6 text-white" />
@@ -164,15 +177,14 @@ export function ShoppingMode({ ingredients, storeName, onBack, missingEssentials
             {/* Essentials Items */}
             {missingEssentials.map((essential) => {
               const isChecked = checkedItems.has(essential.name);
-              
+
               return (
                 <button
                   key={essential.id}
                   onClick={() => toggleItem(essential.name)}
-                  className="w-full text-left px-4 py-4 rounded-xl bg-[#141414] border border-[#1E1E1E] transition-all hover:border-[#2D2D2D] active:scale-[0.99]"
+                  className="w-full text-left px-4 py-3 rounded-xl bg-[#141414] border border-[#1E1E1E] transition-all hover:border-[#2D2D2D] active:scale-[0.99]"
                 >
                   <div className="flex items-center gap-3">
-                    {/* Checkbox */}
                     <div
                       className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${
                         isChecked
@@ -182,27 +194,15 @@ export function ShoppingMode({ ingredients, storeName, onBack, missingEssentials
                     >
                       {isChecked && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
                     </div>
-
-                    {/* Essential Item Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">{essential.emoji}</span>
-                        <span
-                          className={`font-medium transition-all ${
-                            isChecked ? 'text-[#6B7280] line-through' : 'text-white'
-                          }`}
-                        >
-                          {essential.name}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 mt-1 text-sm">
-                        <span className={isChecked ? 'text-[#4B4B4B]' : 'text-[#6B7280]'}>
-                          {essential.amount}
-                        </span>
-                        <span className="ml-1 text-[10px] px-2 py-0.5 rounded bg-[#2D2D2D] text-[#9CA3AF] font-semibold uppercase tracking-wider">
-                          One-time
-                        </span>
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">{essential.emoji}</span>
+                      <span
+                        className={`font-medium transition-all ${
+                          isChecked ? 'text-[#6B7280] line-through' : 'text-white'
+                        }`}
+                      >
+                        {essential.name}
+                      </span>
                     </div>
                   </div>
                 </button>
@@ -215,10 +215,10 @@ export function ShoppingMode({ ingredients, storeName, onBack, missingEssentials
         {categoryOrder.map((category) => {
           const items = organizedIngredients[category];
           if (!items || items.length === 0) return null;
-          
+
           const config = CATEGORY_CONFIG[category as keyof typeof CATEGORY_CONFIG];
           const categoryChecked = items.filter(item => checkedItems.has(item.name)).length;
-          
+
           return (
             <div key={category} className="space-y-2">
               {/* Category Header */}
@@ -234,18 +234,17 @@ export function ShoppingMode({ ingredients, storeName, onBack, missingEssentials
                 </span>
               </div>
 
-              {/* Category Items */}
+              {/* Category Items — name only, no amounts */}
               {items.map((ingredient) => {
                 const isChecked = checkedItems.has(ingredient.name);
-                
+
                 return (
                   <button
                     key={ingredient.name}
                     onClick={() => toggleItem(ingredient.name)}
-                    className="w-full text-left px-4 py-4 rounded-xl bg-[#141414] border border-[#1E1E1E] transition-all hover:border-[#2D2D2D] active:scale-[0.99]"
+                    className="w-full text-left px-4 py-3 rounded-xl bg-[#141414] border border-[#1E1E1E] transition-all hover:border-[#2D2D2D] active:scale-[0.99]"
                   >
                     <div className="flex items-center gap-3">
-                      {/* Checkbox */}
                       <div
                         className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${
                           isChecked
@@ -255,22 +254,13 @@ export function ShoppingMode({ ingredients, storeName, onBack, missingEssentials
                       >
                         {isChecked && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
                       </div>
-
-                      {/* Ingredient Info */}
-                      <div className="flex-1 min-w-0">
-                        <div
-                          className={`font-medium transition-all ${
-                            isChecked ? 'text-[#6B7280] line-through' : 'text-white'
-                          }`}
-                        >
-                          {ingredient.name}
-                        </div>
-                        <div className="flex items-center gap-2 mt-1 text-sm">
-                          <span className={isChecked ? 'text-[#4B4B4B]' : 'text-[#6B7280]'}>
-                            {ingredient.amount}
-                          </span>
-                        </div>
-                      </div>
+                      <span
+                        className={`font-medium transition-all ${
+                          isChecked ? 'text-[#6B7280] line-through' : 'text-white'
+                        }`}
+                      >
+                        {ingredient.name}
+                      </span>
                     </div>
                   </button>
                 );
@@ -280,7 +270,7 @@ export function ShoppingMode({ ingredients, storeName, onBack, missingEssentials
         })}
 
         {/* Empty State */}
-        {ingredients.length === 0 && missingEssentials.length === 0 && (
+        {dedupedIngredients.length === 0 && missingEssentials.length === 0 && (
           <div className="text-center py-12">
             <div className="w-16 h-16 rounded-full bg-[#1A1A1A] flex items-center justify-center mx-auto mb-4">
               <ShoppingCart className="w-8 h-8 text-[#6B7280]" />
@@ -298,12 +288,9 @@ export function ShoppingMode({ ingredients, storeName, onBack, missingEssentials
       >
         <div className="max-w-md mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-[#6B7280] uppercase tracking-wider font-semibold">Shopping List</p>
-              <p className="text-xs text-[#6B7280]">
-                {totalItems - checkedCount} items remaining
-              </p>
-            </div>
+            <p className="text-xs text-[#6B7280]">
+              {totalItems - checkedCount} items remaining
+            </p>
             <span className="text-lg font-bold text-[#22C55E]">
               {checkedCount}/{totalItems} done
             </span>
@@ -312,15 +299,15 @@ export function ShoppingMode({ ingredients, storeName, onBack, missingEssentials
       </div>
 
       {/* Shared Bottom Navigation */}
-      <BottomNavigation 
-        activeTab={activeNavTab || 'shop'} 
+      <BottomNavigation
+        activeTab={activeNavTab || 'shop'}
         onTabChange={(tab) => {
           if (onNavTabChange) {
             onNavTabChange(tab);
           } else if (tab === 'home') {
             onBack();
           }
-        }} 
+        }}
       />
     </div>
   );

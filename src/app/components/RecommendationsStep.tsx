@@ -1,4 +1,4 @@
-import { ShoppingCart, ArrowLeft, Loader2, X, Clock, ChefHat, Users, Flame, RefreshCw, Repeat2, MapPin, ArrowRight, Save, Check, Plus, Bell, ExternalLink, Play } from 'lucide-react';
+import { ShoppingCart, ArrowLeft, Loader2, X, Clock, ChefHat, Users, Flame, RefreshCw, Repeat2, MapPin, ArrowRight, Save, Check, Plus, Bell, ExternalLink, Play, Brain } from 'lucide-react';
 import { UserPreferences } from '../App';
 import { getNutritionTargets } from '../utils/nutritionTargets';
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -6,11 +6,17 @@ import { projectId, publicAnonKey } from '../../../utils/supabase/info';
 import { ShoppingMode } from './ShoppingMode';
 import { getRecipeImageWithCache } from '../utils/recipeImages';
 import { MealSwapModal } from './MealSwapModal';
-import { KitchenInventoryWizard } from './KitchenInventoryWizard';
+
 import { supabase } from '../../utils/supabaseClient';
 import { SavedPlansModal } from './SavedPlansModal';
 import { BottomNavigation, NavTab } from './BottomNavigation';
 import { CelebrationOverlay, CelebrationType } from './CelebrationOverlay';
+import { PlanTabSubNav } from './PlanTabSubNav';
+import { MealReminderBanner } from './MealReminderBanner';
+import { WeeklyScheduleView } from './WeeklyScheduleView';
+import { AcademicScheduleEditor } from './AcademicScheduleEditor';
+import { useMealReminders } from '../hooks/useMealReminders';
+import type { AcademicSchedule, RecipeQueue, MealConflict, QueueWeekMealPlan } from '../types/calendar';
 
 interface RecommendationsStepProps {
   preferences: UserPreferences;
@@ -24,6 +30,18 @@ interface RecommendationsStepProps {
   activeNavTab?: NavTab;
   onNavTabChange?: (tab: NavTab) => void;
   savedMealPlan?: any;
+  // Academic calendar + queue props
+  academicSchedule?: AcademicSchedule | null;
+  recipeQueue?: RecipeQueue | null;
+  currentWeekMealPlan?: QueueWeekMealPlan | null;
+  isTestingPeriod?: boolean;
+  mealConflicts?: MealConflict[];
+  queueShoppingList?: any[];
+  onSaveSchedule?: (userId: string, schedule: Omit<AcademicSchedule, 'updatedAt'>) => Promise<any>;
+  onGenerateQueue?: (userId: string, params: any) => Promise<any>;
+  onSwapQueueMeal?: (userId: string, dayNumber: number, mealSlot: string, newRecipeId: string) => Promise<any>;
+  onMarkMealConsumed?: (userId: string, dayNumber: number, mealSlot: string) => Promise<boolean>;
+  onCheckQueueTestingChange?: (userId: string) => Promise<any>;
 }
 
 interface Ingredient {
@@ -94,7 +112,15 @@ const LOCAL_IMAGE_FALLBACK =
   'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjI0MCIgdmlld0JveD0iMCAwIDMyMCAyNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjMyMCIgaGVpZ2h0PSIyNDAiIGZpbGw9IiMxNDJBMUQiLz48Y2lyY2xlIGN4PSIxNjAiIGN5PSIxMDAiIHI9IjQwIiBmaWxsPSIjMUU0MDI5Ii8+PHJlY3QgeD0iNzIiIHk9IjE2MiIgd2lkdGg9IjE3NiIgaGVpZ2h0PSIxMiIgcng9IjYiIGZpbGw9IiMyMkM1NUUiIG9wYWNpdHk9IjAuNzUiLz48L3N2Zz4=';
 
 
-export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSaveMealPlan, onDeletePlan, activePlanId, onNavigateHome, activeNavTab, onNavTabChange, savedMealPlan: initialSavedPlan }: RecommendationsStepProps) {
+export function RecommendationsStep({
+  preferences, onBack, onNext, onReset, onSaveMealPlan, onDeletePlan, activePlanId,
+  onNavigateHome, activeNavTab, onNavTabChange, savedMealPlan: initialSavedPlan,
+  // Calendar + queue props
+  academicSchedule, recipeQueue, currentWeekMealPlan,
+  isTestingPeriod = false, mealConflicts = [], queueShoppingList,
+  onSaveSchedule, onGenerateQueue, onSwapQueueMeal,
+  onMarkMealConsumed, onCheckQueueTestingChange,
+}: RecommendationsStepProps) {
   const [mealPlan, setMealPlan] = useState<MealPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -122,16 +148,38 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
   const [showMealSwapModal, setShowMealSwapModal] = useState(false);
   const [selectedMealForSwap, setSelectedMealForSwap] = useState<MealPlanMeal | null>(null);
   const [cookedMeals, setCookedMeals] = useState<Set<string>>(new Set());
-  
-  const [showKitchenWizard, setShowKitchenWizard] = useState(false);
-  const [checkingWizardStatus, setCheckingWizardStatus] = useState(true);
-  const [missingEssentials, setMissingEssentials] = useState<any[]>([]);
-  
+
+
   const [savingPlan, setSavingPlan] = useState(false);
   const [planSaved, setPlanSaved] = useState(false);
   const [savedMealPlanSnapshot, setSavedMealPlanSnapshot] = useState<string | null>(null);
-  
+
   const [showSavedPlansModal, setShowSavedPlansModal] = useState(false);
+
+  // Calendar + queue state
+  const [planSubView, setPlanSubView] = useState<'meals' | 'schedule'>('meals');
+  const [showScheduleEditor, setShowScheduleEditor] = useState(false);
+  const [scheduleEditorTab, setScheduleEditorTab] = useState<'classes' | 'exams' | 'sleep'>('classes');
+  const [savingSchedule, setSavingSchedule] = useState(false);
+
+  // Whether we're operating in queue mode (queue exists and has meals)
+  const isQueueMode = !!(currentWeekMealPlan?.meals?.length);
+
+  // Use meal reminders hook
+  const {
+    activeConflicts: reminderConflicts,
+    dismissConflict,
+    requestNotificationPermission,
+  } = useMealReminders(academicSchedule || null, mealConflicts, preferences.mealTimes);
+
+  // When queue provides a week meal plan, sync it to the local mealPlan state
+  useEffect(() => {
+    if (currentWeekMealPlan?.meals?.length) {
+      setMealPlan(currentWeekMealPlan as any);
+      setLoading(false);
+      fetchMealImages(currentWeekMealPlan.meals);
+    }
+  }, [currentWeekMealPlan]);
   const [loadingPlan, setLoadingPlan] = useState(false);
   
   const [user, setUser] = useState<any>(null);
@@ -283,20 +331,34 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
     }
   };
 
+  // Check if required preferences are set
+  const hasRequiredPreferences = preferences.goal !== null;
+
   useEffect(() => {
     // If a saved plan was passed in, use it directly instead of generating a new one
     if (initialSavedPlan?.meals?.length) {
       const enriched = (initialSavedPlan);
       setMealPlan(enriched);
       setLoading(false);
-      setCheckingWizardStatus(false);
       setPlanSaved(true);
       setSavedMealPlanSnapshot(JSON.stringify(enriched.meals.map(m => m.id).sort()));
       fetchMealImages(enriched.meals);
+    } else if (hasRequiredPreferences) {
+      fetchMealPlan();
     } else {
-      checkKitchenInventoryStatus();
+      setLoading(false);
     }
   }, []);
+
+  // When the saved plan is deleted externally, clear local state
+  useEffect(() => {
+    if (!initialSavedPlan && planSaved) {
+      setMealPlan(null);
+      setPlanSaved(false);
+      setSavedMealPlanSnapshot(null);
+      setLoading(false);
+    }
+  }, [initialSavedPlan]);
   
   useEffect(() => {
     const getUser = async () => {
@@ -381,92 +443,31 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
     return () => cancelAnimationFrame(raf);
   }, [selectedCalendarOffset]);
 
-  // Check if required preferences are set
-  const hasRequiredPreferences = preferences.goal !== null;
-
-  const checkKitchenInventoryStatus = async () => {
-    // If preferences aren't set, don't fetch meal plan - show setup prompt instead
-    if (!hasRequiredPreferences) {
-      setCheckingWizardStatus(false);
-      setLoading(false);
-      return;
-    }
-
-    setCheckingWizardStatus(true);
-
+  // Schedule editor save
+  const handleSaveSchedule = async (newSchedule: Omit<AcademicSchedule, 'updatedAt'>) => {
+    if (!user || !onSaveSchedule) return;
+    setSavingSchedule(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) {
-        setCheckingWizardStatus(false);
-        fetchMealPlan();
-        return;
-      }
-
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/check-kitchen-inventory`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-          body: JSON.stringify({ userId: user.id }),
+      await onSaveSchedule(user.id, newSchedule);
+      setShowScheduleEditor(false);
+      // Check if testing period status changed and queue needs regeneration
+      if (onCheckQueueTestingChange) {
+        const result = await onCheckQueueTestingChange(user.id);
+        if (result.shouldRegenerate && onGenerateQueue) {
+          await onGenerateQueue(user.id, {
+            mealsPerDay: preferences.mealsPerDay,
+            goal: preferences.goal,
+            avoidIngredients: preferences.avoidIngredients,
+            maxCookingTime: preferences.maxCookingTime,
+            budget: preferences.budget,
+          });
         }
-      );
-
-      const data = await response.json();
-
-      if (data.completed) {
-        setMissingEssentials(data.missingEssentials || []);
-        setCheckingWizardStatus(false);
-        fetchMealPlan();
-      } else {
-        setCheckingWizardStatus(false);
-        setShowKitchenWizard(true);
-        // Don't fetch meal plan yet - wait for wizard completion to avoid double fetch
       }
     } catch (err) {
-      console.error('Error checking kitchen inventory status:', err);
-      setCheckingWizardStatus(false);
-      fetchMealPlan();
+      console.error('Failed to save schedule:', err);
+    } finally {
+      setSavingSchedule(false);
     }
-  };
-
-  const handleKitchenWizardComplete = async (missing: any[]) => {
-    setMissingEssentials(missing);
-    setShowKitchenWizard(false);
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/save-kitchen-inventory`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${publicAnonKey}`,
-            },
-            body: JSON.stringify({
-              userId: user.id,
-              missingEssentials: missing,
-            }),
-          }
-        );
-      }
-    } catch (err) {
-      console.error('Error saving kitchen inventory:', err);
-    }
-
-    fetchMealPlan();
-  };
-
-  const handleKitchenWizardSkip = () => {
-    setShowKitchenWizard(false);
-    setMissingEssentials([]);
-    fetchMealPlan();
   };
 
   const fetchMealPlan = async () => {
@@ -489,8 +490,8 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
             goal: preferences.goal,
             shoppingDate: preferences.shoppingDate,
             maxCookingTime: preferences.maxCookingTime,
-            cookingMethods: preferences.cookingMethods,
             avoidIngredients: preferences.avoidIngredients || [],
+            mealTimes: preferences.mealTimes,
           }),
         }
       );
@@ -860,15 +861,13 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
       <ShoppingMode
         ingredients={uniqueIngredients}
         storeName={preferences.selectedStores[0]?.name || 'Supermarket'}
-        totalCost={mealPlan.totalCost}
         onBack={() => setShoppingMode(false)}
-        missingEssentials={missingEssentials}
       />
     );
   }
 
   // Needs Setup State - when preferences aren't complete AND no plan is loaded/incoming
-  if (!hasRequiredPreferences && !loading && !checkingWizardStatus && !mealPlan && !initialSavedPlan?.meals?.length) {
+  if (!hasRequiredPreferences && !loading && !mealPlan && !initialSavedPlan?.meals?.length) {
     return (
       <div className="min-h-screen bg-[#0A0A0A] flex flex-col pb-24">
         <div className="flex-1 flex items-center justify-center p-6">
@@ -904,8 +903,8 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
     );
   }
 
-  // Loading State (don't show if kitchen wizard is active)
-  if (loading && !showKitchenWizard) {
+  // Loading State
+  if (loading) {
     return (
       <div className="min-h-screen bg-[#0A1F13] flex items-center justify-center">
         <div className="text-center">
@@ -930,16 +929,6 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
           </button>
         </div>
       </div>
-    );
-  }
-
-  // Show kitchen wizard before meal plan is loaded
-  if (showKitchenWizard) {
-    return (
-      <KitchenInventoryWizard
-        onComplete={handleKitchenWizardComplete}
-        onSkip={handleKitchenWizardSkip}
-      />
     );
   }
 
@@ -968,6 +957,62 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
             </button>
           </div>
             </div>
+
+      {/* Plan Sub-Navigation: Meals | Schedule */}
+      <PlanTabSubNav
+        activeView={planSubView}
+        onViewChange={setPlanSubView}
+        isTestingPeriod={isTestingPeriod}
+      />
+
+      {/* Testing Period Banner */}
+      {isTestingPeriod && planSubView === 'meals' && (
+        <div className="mx-5 mb-3 px-4 py-2.5 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center gap-2">
+          <Brain className="w-4 h-4 text-purple-300 flex-shrink-0" />
+          <span className="text-purple-300 text-sm font-medium">
+            Focus Mode Active — Brain-boosting meals prioritized
+          </span>
+        </div>
+      )}
+
+      {/* Meal Reminder Banners */}
+      {planSubView === 'meals' && (
+        <MealReminderBanner conflicts={reminderConflicts} onDismiss={dismissConflict} />
+      )}
+
+      {/* Schedule View */}
+      {planSubView === 'schedule' && (
+        <>
+          <WeeklyScheduleView
+            schedule={academicSchedule || null}
+            mealConflicts={mealConflicts}
+            isTestingPeriod={isTestingPeriod}
+            onEditSchedule={(tab) => {
+              setScheduleEditorTab(tab || 'classes');
+              setShowScheduleEditor(true);
+            }}
+            onViewMeal={(_dayIdx, _slot) => {
+              setPlanSubView('meals');
+            }}
+            currentWeekMeals={mealPlan?.meals}
+            mealTimes={preferences.mealTimes}
+          />
+          {/* Schedule Editor Modal */}
+          {showScheduleEditor && (
+            <AcademicScheduleEditor
+              schedule={academicSchedule || null}
+              onSave={handleSaveSchedule}
+              onClose={() => setShowScheduleEditor(false)}
+              isSaving={savingSchedule}
+              initialTab={scheduleEditorTab}
+            />
+          )}
+        </>
+      )}
+
+      {/* Meals View — only show when on meals sub-tab */}
+      {planSubView === 'meals' && (
+      <>
 
       {/* Calendar — scrollable, anchored to plan start date */}
       <div className="mb-4">
@@ -1279,6 +1324,10 @@ export function RecommendationsStep({ preferences, onBack, onNext, onReset, onSa
             )}
 
       </div>
+
+      </>
+      )}
+      {/* End of planSubView === 'meals' conditional */}
 
       {/* Shared Bottom Navigation — hidden when recipe details or swap modal are open */}
       {!showRecipeModal && !showMealSwapModal && (
