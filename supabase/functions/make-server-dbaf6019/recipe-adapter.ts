@@ -81,11 +81,16 @@ function generateBenefits(
 export function toMealPlanMeal(
   recipe: NewRecipe,
   dayNumber: number,
-  mealNumber: number
+  mealNumber: number,
+  assignedSlot?: string
 ) {
   const cookingTime = recipe.total_time_minutes ?? recipe.cook_time_minutes ?? 0;
   const classification = classifyRecipe(recipe);
   const benefits = generateBenefits(recipe.nutrition_per_serving, recipe);
+
+  // Use the assigned slot if provided, otherwise fall back to recipe's own category
+  const slot = assignedSlot || getCategorySlot(recipe.recipe_category);
+  const slotLabel = slot.charAt(0).toUpperCase() + slot.slice(1);
 
   return {
     id: String(recipe.id),
@@ -95,8 +100,8 @@ export function toMealPlanMeal(
     imageUrl: recipe.image?.url || null,
     rationale: benefits.join(". "),
     benefits,
-    mealType: recipe.recipe_category || "Dinner",
-    category: getCategorySlot(recipe.recipe_category),
+    mealType: slotLabel,
+    category: slot,
     cookingTime,
     servings: parseInt(recipe.servings) || 1,
     difficulty: inferDifficulty(recipe.total_time_minutes),

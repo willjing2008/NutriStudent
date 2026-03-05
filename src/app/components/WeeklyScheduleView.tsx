@@ -1,15 +1,18 @@
 import { useState, useRef, useEffect } from 'react';
 import { Plus, Edit3, X, MapPin, Clock, Flame, ChevronRight, AlertTriangle } from 'lucide-react';
-import type { AcademicSchedule, ClassEntry, MealConflict } from '../types/calendar';
+import type { AcademicSchedule, ClassEntry, MealConflict, MealTimeOverride } from '../types/calendar';
 import type { MealTimes } from '../App';
 
 interface WeeklyScheduleViewProps {
   schedule: AcademicSchedule | null;
   mealConflicts: MealConflict[];
+  weekConflicts?: Map<number, MealConflict[]>;
   isTestingPeriod: boolean;
   testingPeriodName?: string;
   onEditSchedule: (tab?: 'classes' | 'exams' | 'sleep') => void;
   onViewMeal?: (dayIdx: number, mealSlot: string) => void;
+  onSaveMealTimeOverride?: (override: MealTimeOverride) => void;
+  onRemoveMealTimeOverride?: (dayOfWeek: number, mealSlot: string) => void;
   currentWeekMeals?: any[];
   mealTimes?: MealTimes;
 }
@@ -68,10 +71,13 @@ function getMealSlotTimes(mealTimes?: MealTimes) {
 export function WeeklyScheduleView({
   schedule,
   mealConflicts,
+  weekConflicts,
   isTestingPeriod,
   testingPeriodName,
   onEditSchedule,
   onViewMeal,
+  onSaveMealTimeOverride,
+  onRemoveMealTimeOverride,
   currentWeekMeals,
   mealTimes,
 }: WeeklyScheduleViewProps) {
@@ -297,6 +303,132 @@ export function WeeklyScheduleView({
             )}
           </div>
         </div>
+      </div>
+
+      {/* Conflict resolution panel — adjust meal times for conflict days */}
+      {weekConflicts && weekConflicts.size > 0 && onSaveMealTimeOverride && (
+        <ConflictResolutionPanel
+          weekConflicts={weekConflicts}
+          mealTimes={mealTimes}
+          existingOverrides={schedule?.mealTimeOverrides || []}
+          onSaveOverride={onSaveMealTimeOverride}
+          onRemoveOverride={onRemoveMealTimeOverride}
+        />
+      )}
+    </div>
+  );
+}
+
+// ── Conflict resolution panel ─────────────────────────────────────────────
+
+function ConflictResolutionPanel({
+  weekConflicts,
+  mealTimes,
+  existingOverrides,
+  onSaveOverride,
+  onRemoveOverride,
+}: {
+  weekConflicts: Map<number, MealConflict[]>;
+  mealTimes?: MealTimes;
+  existingOverrides: MealTimeOverride[];
+  onSaveOverride: (override: MealTimeOverride) => void;
+  onRemoveOverride?: (dayOfWeek: number, mealSlot: string) => void;
+}) {
+  const [editingKey, setEditingKey] = useState<string | null>(null);
+  const [editTime, setEditTime] = useState('');
+
+  const getDefaultTime = (slot: string) => {
+    if (slot === 'breakfast') return mealTimes?.breakfast || '08:00';
+    if (slot === 'lunch') return mealTimes?.lunch || '12:00';
+    return mealTimes?.dinner || '18:00';
+  };
+
+  const getOverride = (dow: number, slot: string) =>
+    existingOverrides.find(o => o.dayOfWeek === dow && o.mealSlot === slot);
+
+  return (
+    <div className="mx-3 mt-3 rounded-xl bg-[#142A1D] border border-[#1E4029] overflow-hidden">
+      <div className="px-4 py-3 border-b border-[#1E4029] flex items-center gap-2">
+        <AlertTriangle className="w-4 h-4 text-red-400" />
+        <span className="text-sm font-semibold text-white">Adjust Meal Times for Conflict Days</span>
+      </div>
+      <div className="p-3 space-y-3">
+        {Array.from(weekConflicts.entries()).map(([dow, conflicts]) => (
+          <div key={dow} className="space-y-2">
+            <div className="text-xs font-medium text-[#9CA3AF]">{DAY_LABELS[dow]}</div>
+            {conflicts.map((conflict, i) => {
+              const key = `${dow}-${conflict.mealSlot}`;
+              const override = getOverride(dow, conflict.mealSlot);
+              const isEditing = editingKey === key;
+
+              return (
+                <div key={i} className="flex items-center gap-2 pl-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs text-red-300">
+                      <span className="font-medium capitalize">{conflict.mealSlot}</span>
+                      <span className="text-red-300/60"> conflicts with </span>
+                      <span className="font-medium">{conflict.className}</span>
+                    </div>
+                    {override && !isEditing && (
+                      <div className="text-[10px] text-[#22C55E] mt-0.5">
+                        Adjusted to {formatTimeRange(override.time, addHourToTime(override.time))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    {isEditing ? (
+                      <>
+                        <input
+                          type="time"
+                          value={editTime}
+                          onChange={(e) => setEditTime(e.target.value)}
+                          className="bg-[#0A1F13] text-white text-[11px] rounded-lg px-2 py-1.5 border border-[#1E4029] focus:outline-none focus:border-[#22C55E] [color-scheme:dark] w-[90px]"
+                        />
+                        <button
+                          onClick={() => {
+                            if (editTime) {
+                              onSaveOverride({ dayOfWeek: dow, mealSlot: conflict.mealSlot, time: editTime });
+                            }
+                            setEditingKey(null);
+                          }}
+                          className="px-2 py-1 text-[10px] font-medium bg-[#22C55E] text-[#052E16] rounded-lg hover:bg-[#4ADE80] transition-colors"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={() => setEditingKey(null)}
+                          className="text-[#6B7280] hover:text-white transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => {
+                            setEditingKey(key);
+                            setEditTime(override?.time || getDefaultTime(conflict.mealSlot));
+                          }}
+                          className="px-2 py-1 text-[10px] font-medium text-[#22C55E] bg-[#22C55E]/10 rounded-lg hover:bg-[#22C55E]/20 transition-colors"
+                        >
+                          {override ? 'Change' : 'Set Time'}
+                        </button>
+                        {override && onRemoveOverride && (
+                          <button
+                            onClick={() => onRemoveOverride(dow, conflict.mealSlot)}
+                            className="text-red-400/50 hover:text-red-400 transition-colors"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ))}
       </div>
     </div>
   );

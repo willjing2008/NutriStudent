@@ -30,6 +30,9 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
   const [mealTimes, setMealTimes] = useState<MealTimes>(
     preferences.mealTimes || { breakfast: '08:00', lunch: '12:00', dinner: '18:00' }
   );
+  const [selectedMealSlots, setSelectedMealSlots] = useState<Set<'breakfast' | 'lunch' | 'dinner'>>(
+    new Set(preferences.selectedMealSlots || ['breakfast', 'lunch', 'dinner'])
+  );
 
   // Dietary restrictions state
   const [dietaryRestrictions, setDietaryRestrictions] = useState<string[]>([]);
@@ -61,6 +64,10 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
   };
 
   const handleNext = () => {
+    // For 3+ meals all slots are active; for <3, use the user's selection
+    const activeSlots = mealsPerDay >= 3
+      ? ['breakfast', 'lunch', 'dinner'] as ('breakfast' | 'lunch' | 'dinner')[]
+      : (['breakfast', 'lunch', 'dinner'] as const).filter(k => selectedMealSlots.has(k));
     updatePreferences({
       shoppingDate,
       mealsPerDay,
@@ -68,6 +75,7 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
       maxCookingTime,
       avoidIngredients,
       mealTimes,
+      selectedMealSlots: activeSlots,
     });
     onNext();
   };
@@ -160,7 +168,19 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
               {[1, 2, 3, 4].map((num) => (
                 <button
                   key={num}
-                  onClick={() => setMealsPerDay(num)}
+                  onClick={() => {
+                    setMealsPerDay(num);
+                    if (num >= 3) {
+                      setSelectedMealSlots(new Set(['breakfast', 'lunch', 'dinner']));
+                    } else {
+                      // Keep current selection but trim to fit, or default sensibly
+                      setSelectedMealSlots(prev => {
+                        if (prev.size <= num) return prev;
+                        const kept = [...prev].slice(0, num);
+                        return new Set(kept) as Set<'breakfast' | 'lunch' | 'dinner'>;
+                      });
+                    }
+                  }}
                   className={`py-4 rounded-xl font-semibold text-lg transition-all ${
                     mealsPerDay === num
                       ? 'bg-[#22C55E] text-[#052E16]'
@@ -176,13 +196,64 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
           {/* Section 3: Meal Times */}
           <div className="bg-[#142A1D] rounded-2xl p-5 border border-[#2D5A3D]">
             <SectionHeader icon={Clock} title="Meal Times" />
-            <p className="text-[#6B7280] text-sm mb-4">When do you usually eat? This helps schedule meals around your classes.</p>
+            <p className="text-[#6B7280] text-sm mb-4">
+              {mealsPerDay < 3
+                ? `Pick which ${mealsPerDay === 1 ? 'meal' : 'meals'} you'd like, then set the time.`
+                : 'When do you usually eat? This helps schedule meals around your classes.'}
+            </p>
+
+            {/* Slot picker — shown when fewer than 3 meals */}
+            {mealsPerDay < 3 && (
+              <div className="flex gap-2 mb-4">
+                {([
+                  { key: 'breakfast' as const, label: 'Breakfast', icon: Sunrise, color: '#F59E0B' },
+                  { key: 'lunch' as const, label: 'Lunch', icon: Sun, color: '#22C55E' },
+                  { key: 'dinner' as const, label: 'Dinner', icon: Moon, color: '#8B5CF6' },
+                ]).map(({ key, label, icon: MealIcon, color }) => {
+                  const active = selectedMealSlots.has(key);
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => {
+                        setSelectedMealSlots(prev => {
+                          const next = new Set(prev);
+                          if (active) {
+                            if (next.size > 1) next.delete(key);
+                          } else {
+                            if (next.size < mealsPerDay) next.add(key);
+                            else {
+                              // Replace the first selected slot
+                              const first = [...next][0];
+                              next.delete(first);
+                              next.add(key);
+                            }
+                          }
+                          return next;
+                        });
+                      }}
+                      className={`flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl transition-all ${
+                        active
+                          ? 'bg-[#0A1F13] border-2 border-[#22C55E]'
+                          : 'bg-[#0A1F13] border border-[#2D5A3D] opacity-50 hover:opacity-75'
+                      }`}
+                    >
+                      <MealIcon className="w-4 h-4" style={{ color: active ? color : '#6B7280' }} />
+                      <span className={`text-xs font-medium ${active ? 'text-white' : 'text-[#6B7280]'}`}>{label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Time pickers for active slots */}
             <div className="space-y-3">
-              {[
+              {([
                 { key: 'breakfast' as const, label: 'Breakfast', icon: Sunrise, color: '#F59E0B' },
                 { key: 'lunch' as const, label: 'Lunch', icon: Sun, color: '#22C55E' },
                 { key: 'dinner' as const, label: 'Dinner', icon: Moon, color: '#8B5CF6' },
-              ].map(({ key, label, icon: MealIcon, color }) => (
+              ]).filter(({ key }) => mealsPerDay >= 3 || selectedMealSlots.has(key))
+                .slice(0, mealsPerDay >= 3 ? 3 : mealsPerDay)
+                .map(({ key, label, icon: MealIcon, color }) => (
                 <div key={key} className="flex items-center gap-3 p-3 bg-[#0A1F13] rounded-xl border border-[#2D5A3D]">
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${color}20` }}>
                     <MealIcon className="w-4 h-4" style={{ color }} />
@@ -203,7 +274,19 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
             </div>
             <div className="mt-4 p-3 bg-[#22C55E]/10 rounded-xl border border-[#22C55E]/20">
               <p className="text-sm text-[#22C55E]">
-                Meals scheduled at <strong>{formatTime12h(mealTimes.breakfast)}</strong>, <strong>{formatTime12h(mealTimes.lunch)}</strong>, and <strong>{formatTime12h(mealTimes.dinner)}</strong>
+                {(() => {
+                  const activeSlots = mealsPerDay >= 3
+                    ? (['breakfast', 'lunch', 'dinner'] as const)
+                    : (['breakfast', 'lunch', 'dinner'] as const).filter(k => selectedMealSlots.has(k));
+                  const times = activeSlots.map(k => <strong key={k}>{formatTime12h(mealTimes[k])}</strong>);
+                  return <>
+                    {times.length === 1 ? 'Meal' : 'Meals'} scheduled at{' '}
+                    {times.length === 1 && times[0]}
+                    {times.length === 2 && <>{times[0]} and {times[1]}</>}
+                    {times.length === 3 && <>{times[0]}, {times[1]}, and {times[2]}</>}
+                    {mealsPerDay === 4 && ' + snack'}
+                  </>;
+                })()}
               </p>
             </div>
           </div>

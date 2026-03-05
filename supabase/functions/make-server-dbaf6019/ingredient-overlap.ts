@@ -239,7 +239,7 @@ function rotateCategory(core: ScoredRecipe[], days: number): NewRecipe[] {
 
 export interface DayMeals {
   dayNumber: number;
-  meals: { recipe: NewRecipe; mealNumber: number }[];
+  meals: { recipe: NewRecipe; mealNumber: number; slot: string }[];
 }
 
 /**
@@ -249,36 +249,48 @@ export interface DayMeals {
 export function buildRotationSchedule(
   coreRecipes: { breakfast: ScoredRecipe[]; lunch: ScoredRecipe[]; dinner: ScoredRecipe[] },
   mealsPerDay: number,
-  cookingDays: number
+  cookingDays: number,
+  selectedMealSlots?: string[]
 ): DayMeals[] {
   const dinnerRotation = rotateCategory(coreRecipes.dinner, cookingDays);
   const lunchRotation = rotateCategory(coreRecipes.lunch, cookingDays);
   const breakfastRotation = rotateCategory(coreRecipes.breakfast, cookingDays);
 
+  // Map slot names to their rotation pools
+  const rotationMap: Record<string, NewRecipe[]> = {
+    breakfast: breakfastRotation,
+    lunch: lunchRotation,
+    dinner: dinnerRotation,
+  };
+
+  // Determine which slots to use in order
+  let slots: string[];
+  if (mealsPerDay >= 3) {
+    slots = ['breakfast', 'lunch', 'dinner'];
+  } else if (selectedMealSlots && selectedMealSlots.length > 0) {
+    // Use the user's chosen slots, in canonical order
+    const order = ['breakfast', 'lunch', 'dinner'];
+    slots = order.filter(s => selectedMealSlots.includes(s)).slice(0, mealsPerDay);
+  } else {
+    // Legacy fallback
+    slots = mealsPerDay === 1 ? ['dinner'] : ['breakfast', 'dinner'];
+  }
+
   const schedule: DayMeals[] = [];
 
   for (let d = 0; d < cookingDays; d++) {
-    const meals: { recipe: NewRecipe; mealNumber: number }[] = [];
+    const meals: { recipe: NewRecipe; mealNumber: number; slot: string }[] = [];
 
-    if (mealsPerDay === 1) {
-      // Dinner only
-      if (dinnerRotation[d]) meals.push({ recipe: dinnerRotation[d], mealNumber: 1 });
-    } else if (mealsPerDay === 2) {
-      // Breakfast + Dinner
-      if (breakfastRotation[d]) meals.push({ recipe: breakfastRotation[d], mealNumber: 1 });
-      if (dinnerRotation[d]) meals.push({ recipe: dinnerRotation[d], mealNumber: 2 });
-    } else {
-      // 3+ meals: Breakfast + Lunch + Dinner (+ extras from dinner pool)
-      if (breakfastRotation[d]) meals.push({ recipe: breakfastRotation[d], mealNumber: 1 });
-      if (lunchRotation[d]) meals.push({ recipe: lunchRotation[d], mealNumber: 2 });
-      if (dinnerRotation[d]) meals.push({ recipe: dinnerRotation[d], mealNumber: 3 });
+    for (let i = 0; i < slots.length; i++) {
+      const rotation = rotationMap[slots[i]] || dinnerRotation;
+      if (rotation[d]) meals.push({ recipe: rotation[d], mealNumber: i + 1, slot: slots[i] });
+    }
 
-      // Extra meals beyond 3 pull from dinner rotation (offset to avoid same recipe)
-      for (let extra = 3; extra < mealsPerDay; extra++) {
-        const offsetIdx = (d + extra) % dinnerRotation.length;
-        if (dinnerRotation[offsetIdx]) {
-          meals.push({ recipe: dinnerRotation[offsetIdx], mealNumber: extra + 1 });
-        }
+    // Extra meals beyond 3 pull from dinner rotation (offset to avoid same recipe)
+    for (let extra = slots.length; extra < mealsPerDay; extra++) {
+      const offsetIdx = (d + extra) % dinnerRotation.length;
+      if (dinnerRotation[offsetIdx]) {
+        meals.push({ recipe: dinnerRotation[offsetIdx], mealNumber: extra + 1, slot: 'dinner' });
       }
     }
 

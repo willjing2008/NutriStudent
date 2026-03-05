@@ -24,10 +24,17 @@ export interface SleepSchedule {
   lastMealBeforeBed: number; // minutes before bedtime, default 120
 }
 
+export interface MealTimeOverride {
+  dayOfWeek: number;          // 0=Sun..6=Sat
+  mealSlot: string;           // "breakfast" | "lunch" | "dinner"
+  time: string;               // "HH:MM" alternative time
+}
+
 export interface AcademicSchedule {
   classes: ClassEntry[];
   testingPeriods: TestingPeriod[];
   sleepSchedule: SleepSchedule;
+  mealTimeOverrides?: MealTimeOverride[];
   updatedAt: string;
 }
 

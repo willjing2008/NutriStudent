@@ -4,9 +4,11 @@ import type {
   AcademicSchedule,
   RecipeQueue,
   MealConflict,
+  MealTimeOverride,
   QueueWeekMealPlan,
   ShoppingIngredient,
 } from '../types/calendar';
+import type { MealTimes } from '../App';
 
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019`;
 
@@ -45,6 +47,7 @@ export function useAcademicCalendar() {
   const [currentWeekMealPlan, setCurrentWeekMealPlan] = useState<QueueWeekMealPlan | null>(null);
   const [isTestingPeriod, setIsTestingPeriod] = useState(false);
   const [mealConflicts, setMealConflicts] = useState<MealConflict[]>([]);
+  const [weekConflicts, setWeekConflicts] = useState<Map<number, MealConflict[]>>(new Map());
   const [queueShoppingList, setQueueShoppingList] = useState<ShoppingIngredient[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,25 +64,6 @@ export function useAcademicCalendar() {
     }
   }, []);
 
-  // Save academic schedule
-  const saveSchedule = useCallback(async (userId: string, newSchedule: Omit<AcademicSchedule, 'updatedAt'>) => {
-    try {
-      setIsLoading(true);
-      const data = await apiPost<{ schedule: AcademicSchedule }>('save-academic-schedule', {
-        userId,
-        ...newSchedule,
-      });
-      setSchedule(data.schedule);
-      setError(null);
-      return data.schedule;
-    } catch (err: any) {
-      setError(err.message);
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
   // Check testing period for today
   const checkTestingPeriod = useCallback(async (userId: string) => {
     try {
@@ -92,16 +76,100 @@ export function useAcademicCalendar() {
   }, []);
 
   // Load meal conflicts for today
-  const loadMealConflicts = useCallback(async (userId: string) => {
+  const loadMealConflicts = useCallback(async (userId: string, mealTimes?: MealTimes) => {
     try {
       const today = new Date().toISOString().split('T')[0];
-      const data = await apiPost<{ conflicts: MealConflict[] }>('get-meal-conflicts', { userId, date: today });
+      const data = await apiPost<{ conflicts: MealConflict[] }>('get-meal-conflicts', { userId, date: today, mealTimes });
       setMealConflicts(data.conflicts);
       return data.conflicts;
     } catch {
       return [];
     }
   }, []);
+
+  // Load conflicts for all 7 days of the week (keyed by dayOfWeek 0-6)
+  const loadWeekConflicts = useCallback(async (userId: string, mealTimes?: MealTimes): Promise<Map<number, MealConflict[]>> => {
+    const result = new Map<number, MealConflict[]>();
+    try {
+      const today = new Date();
+      const dow = today.getDay();
+      const promises = Array.from({ length: 7 }, (_, i) => {
+        const d = new Date(today);
+        d.setDate(today.getDate() + (i - dow));
+        const dateStr = d.toISOString().split('T')[0];
+        return apiPost<{ conflicts: MealConflict[] }>('get-meal-conflicts', { userId, date: dateStr, mealTimes })
+          .then(data => ({ day: i, conflicts: data.conflicts }));
+      });
+      const results = await Promise.all(promises);
+      for (const r of results) {
+        if (r.conflicts.length > 0) result.set(r.day, r.conflicts);
+      }
+    } catch {}
+    return result;
+  }, []);
+
+  // Refresh both today's and weekly conflicts, updating state
+  const refreshAllConflicts = useCallback(async (userId: string, mealTimes?: MealTimes) => {
+    await loadMealConflicts(userId, mealTimes);
+    const wc = await loadWeekConflicts(userId, mealTimes);
+    setWeekConflicts(wc);
+  }, [loadMealConflicts, loadWeekConflicts]);
+
+  // Save academic schedule (also refreshes week conflicts)
+  const saveSchedule = useCallback(async (userId: string, newSchedule: Omit<AcademicSchedule, 'updatedAt'>, mealTimes?: MealTimes) => {
+    try {
+      setIsLoading(true);
+      const data = await apiPost<{ schedule: AcademicSchedule }>('save-academic-schedule', {
+        userId,
+        ...newSchedule,
+      });
+      setSchedule(data.schedule);
+      setError(null);
+      await refreshAllConflicts(userId, mealTimes);
+      return data.schedule;
+    } catch (err: any) {
+      setError(err.message);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [refreshAllConflicts]);
+
+  // Save a meal time override for a specific day/slot, then refresh conflicts
+  const saveMealTimeOverride = useCallback(async (
+    userId: string,
+    override: MealTimeOverride,
+    mealTimes?: MealTimes,
+  ) => {
+    if (!schedule) return;
+    const existing = schedule.mealTimeOverrides || [];
+    const filtered = existing.filter(
+      o => !(o.dayOfWeek === override.dayOfWeek && o.mealSlot === override.mealSlot)
+    );
+    const newOverrides = [...filtered, override];
+    const updated = { ...schedule, mealTimeOverrides: newOverrides };
+    await apiPost('save-academic-schedule', { userId, ...updated });
+    setSchedule({ ...updated, updatedAt: new Date().toISOString() });
+    await refreshAllConflicts(userId, mealTimes);
+  }, [schedule, refreshAllConflicts]);
+
+  // Remove a meal time override
+  const removeMealTimeOverride = useCallback(async (
+    userId: string,
+    dayOfWeek: number,
+    mealSlot: string,
+    mealTimes?: MealTimes,
+  ) => {
+    if (!schedule) return;
+    const existing = schedule.mealTimeOverrides || [];
+    const newOverrides = existing.filter(
+      o => !(o.dayOfWeek === dayOfWeek && o.mealSlot === mealSlot)
+    );
+    const updated = { ...schedule, mealTimeOverrides: newOverrides };
+    await apiPost('save-academic-schedule', { userId, ...updated });
+    setSchedule({ ...updated, updatedAt: new Date().toISOString() });
+    await refreshAllConflicts(userId, mealTimes);
+  }, [schedule, refreshAllConflicts]);
 
   // Load recipe queue
   const loadQueue = useCallback(async (userId: string) => {
@@ -118,7 +186,7 @@ export function useAcademicCalendar() {
   // Generate recipe queue
   const generateQueue = useCallback(async (
     userId: string,
-    params: { mealsPerDay: number; goal: string; avoidIngredients?: string[]; maxCookingTime?: number; budget?: number }
+    params: { mealsPerDay: number; goal: string; avoidIngredients?: string[]; maxCookingTime?: number; budget?: number; selectedMealSlots?: string[] }
   ) => {
     try {
       setIsLoading(true);
@@ -231,15 +299,19 @@ export function useAcademicCalendar() {
   }, []);
 
   // Load all calendar data on init
-  const initCalendar = useCallback(async (userId: string) => {
+  const initCalendar = useCallback(async (userId: string, mealTimes?: MealTimes) => {
     setIsLoading(true);
     try {
       const [sched, testPeriod, conflicts, queueData] = await Promise.all([
         loadSchedule(userId),
         checkTestingPeriod(userId),
-        loadMealConflicts(userId),
+        loadMealConflicts(userId, mealTimes),
         loadQueue(userId),
       ]);
+
+      // Load week conflicts for calendar annotations
+      const wc = await loadWeekConflicts(userId, mealTimes);
+      setWeekConflicts(wc);
 
       // Load first week if queue exists
       if (queueData.queue) {
@@ -250,7 +322,7 @@ export function useAcademicCalendar() {
     } finally {
       setIsLoading(false);
     }
-  }, [loadSchedule, checkTestingPeriod, loadMealConflicts, loadQueue, loadQueueWeek]);
+  }, [loadSchedule, checkTestingPeriod, loadMealConflicts, loadWeekConflicts, loadQueue, loadQueueWeek]);
 
   return {
     // State
@@ -260,6 +332,7 @@ export function useAcademicCalendar() {
     currentWeekMealPlan,
     isTestingPeriod,
     mealConflicts,
+    weekConflicts,
     queueShoppingList,
     isLoading,
     error,
@@ -268,12 +341,15 @@ export function useAcademicCalendar() {
     saveSchedule,
     checkTestingPeriod,
     loadMealConflicts,
+    loadWeekConflicts,
     loadQueue,
     generateQueue,
     loadQueueWeek,
     swapQueueMeal,
     markMealConsumed,
     checkQueueTestingChange,
+    saveMealTimeOverride,
+    removeMealTimeOverride,
     initCalendar,
     setCurrentQueueWeek,
   };

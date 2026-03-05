@@ -1,5 +1,5 @@
 import { ShoppingCart, ArrowLeft, Loader2, X, Clock, ChefHat, Users, Flame, RefreshCw, Repeat2, MapPin, ArrowRight, Save, Check, Plus, Bell, ExternalLink, Play, Brain } from 'lucide-react';
-import { UserPreferences } from '../App';
+import { UserPreferences, MealTimes } from '../App';
 import { getNutritionTargets } from '../utils/nutritionTargets';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
@@ -16,7 +16,7 @@ import { MealReminderBanner } from './MealReminderBanner';
 import { WeeklyScheduleView } from './WeeklyScheduleView';
 import { AcademicScheduleEditor } from './AcademicScheduleEditor';
 import { useMealReminders } from '../hooks/useMealReminders';
-import type { AcademicSchedule, RecipeQueue, MealConflict, QueueWeekMealPlan } from '../types/calendar';
+import type { AcademicSchedule, RecipeQueue, MealConflict, MealTimeOverride, QueueWeekMealPlan } from '../types/calendar';
 
 interface RecommendationsStepProps {
   preferences: UserPreferences;
@@ -37,11 +37,14 @@ interface RecommendationsStepProps {
   isTestingPeriod?: boolean;
   mealConflicts?: MealConflict[];
   queueShoppingList?: any[];
-  onSaveSchedule?: (userId: string, schedule: Omit<AcademicSchedule, 'updatedAt'>) => Promise<any>;
+  weekConflicts?: Map<number, MealConflict[]>;
+  onSaveSchedule?: (userId: string, schedule: Omit<AcademicSchedule, 'updatedAt'>, mealTimes?: MealTimes) => Promise<any>;
   onGenerateQueue?: (userId: string, params: any) => Promise<any>;
   onSwapQueueMeal?: (userId: string, dayNumber: number, mealSlot: string, newRecipeId: string) => Promise<any>;
   onMarkMealConsumed?: (userId: string, dayNumber: number, mealSlot: string) => Promise<boolean>;
   onCheckQueueTestingChange?: (userId: string) => Promise<any>;
+  onSaveMealTimeOverride?: (userId: string, override: MealTimeOverride, mealTimes?: any) => Promise<void>;
+  onRemoveMealTimeOverride?: (userId: string, dayOfWeek: number, mealSlot: string, mealTimes?: any) => Promise<void>;
 }
 
 interface Ingredient {
@@ -117,9 +120,10 @@ export function RecommendationsStep({
   onNavigateHome, activeNavTab, onNavTabChange, savedMealPlan: initialSavedPlan,
   // Calendar + queue props
   academicSchedule, recipeQueue, currentWeekMealPlan,
-  isTestingPeriod = false, mealConflicts = [], queueShoppingList,
+  isTestingPeriod = false, mealConflicts = [], weekConflicts, queueShoppingList,
   onSaveSchedule, onGenerateQueue, onSwapQueueMeal,
   onMarkMealConsumed, onCheckQueueTestingChange,
+  onSaveMealTimeOverride, onRemoveMealTimeOverride,
 }: RecommendationsStepProps) {
   const [mealPlan, setMealPlan] = useState<MealPlan | null>(null);
   const [loading, setLoading] = useState(true);
@@ -448,7 +452,7 @@ export function RecommendationsStep({
     if (!user || !onSaveSchedule) return;
     setSavingSchedule(true);
     try {
-      await onSaveSchedule(user.id, newSchedule);
+      await onSaveSchedule(user.id, newSchedule, preferences.mealTimes);
       setShowScheduleEditor(false);
       // Check if testing period status changed and queue needs regeneration
       if (onCheckQueueTestingChange) {
@@ -460,6 +464,7 @@ export function RecommendationsStep({
             avoidIngredients: preferences.avoidIngredients,
             maxCookingTime: preferences.maxCookingTime,
             budget: preferences.budget,
+            selectedMealSlots: preferences.selectedMealSlots,
           });
         }
       }
@@ -492,6 +497,7 @@ export function RecommendationsStep({
             maxCookingTime: preferences.maxCookingTime,
             avoidIngredients: preferences.avoidIngredients || [],
             mealTimes: preferences.mealTimes,
+            selectedMealSlots: preferences.selectedMealSlots || ['breakfast', 'lunch', 'dinner'],
           }),
         }
       );
@@ -796,6 +802,8 @@ export function RecommendationsStep({
       date.setDate(start.getDate() + i);
       date.setHours(0, 0, 0, 0);
       const month = date.getMonth();
+      const dow = date.getDay();
+      const hasConflict = !!(weekConflicts?.has(dow) && weekConflicts.get(dow)!.length > 0);
       days.push({
         offset: i,
         date,
@@ -805,6 +813,7 @@ export function RecommendationsStep({
         showMonthLabel: month !== prevMonth,
         hasMeals: i >= 0 && i < daysWithMeals.length,
         isToday: date.getTime() === today.getTime(),
+        hasConflict,
       });
       prevMonth = month;
     }
@@ -986,6 +995,7 @@ export function RecommendationsStep({
           <WeeklyScheduleView
             schedule={academicSchedule || null}
             mealConflicts={mealConflicts}
+            weekConflicts={weekConflicts}
             isTestingPeriod={isTestingPeriod}
             onEditSchedule={(tab) => {
               setScheduleEditorTab(tab || 'classes');
@@ -994,6 +1004,12 @@ export function RecommendationsStep({
             onViewMeal={(_dayIdx, _slot) => {
               setPlanSubView('meals');
             }}
+            onSaveMealTimeOverride={user && onSaveMealTimeOverride ? (override) => {
+              onSaveMealTimeOverride(user.id, override, preferences.mealTimes);
+            } : undefined}
+            onRemoveMealTimeOverride={user && onRemoveMealTimeOverride ? (dayOfWeek, mealSlot) => {
+              onRemoveMealTimeOverride(user.id, dayOfWeek, mealSlot, preferences.mealTimes);
+            } : undefined}
             currentWeekMeals={mealPlan?.meals}
             mealTimes={preferences.mealTimes}
           />
@@ -1005,6 +1021,7 @@ export function RecommendationsStep({
               onClose={() => setShowScheduleEditor(false)}
               isSaving={savingSchedule}
               initialTab={scheduleEditorTab}
+              mealTimes={preferences.mealTimes}
             />
           )}
         </>
@@ -1036,15 +1053,23 @@ export function RecommendationsStep({
                 <button
                   key={day.offset}
                   onClick={() => setSelectedCalendarOffset(day.offset)}
-                  className={`flex-shrink-0 w-14 flex flex-col items-center justify-center py-2.5 rounded-2xl transition-all ${
+                  className={`relative flex-shrink-0 w-14 flex flex-col items-center justify-center py-2.5 rounded-2xl transition-all ${
                     isSelected
                       ? 'bg-[#22C55E]'
+                      : day.hasConflict
+                      ? 'bg-red-500/10 border border-red-500/30'
                       : day.isToday
                       ? 'bg-[#142A1D] border border-[#22C55E]/50'
                       : 'hover:bg-[#142A1D]'
                   }`}
                 >
-                  <span className={`text-[11px] font-medium mb-0.5 ${isSelected ? 'text-[#052E16]' : 'text-[#6B7280]'}`}>
+                  {/* Conflict indicator */}
+                  {day.hasConflict && (
+                    <span className={`absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold ${
+                      isSelected ? 'bg-red-500 text-white' : 'bg-red-500/80 text-white'
+                    }`}>!</span>
+                  )}
+                  <span className={`text-[11px] font-medium mb-0.5 ${isSelected ? 'text-[#052E16]' : day.hasConflict ? 'text-red-400' : 'text-[#6B7280]'}`}>
                     {day.dayLabel}
                   </span>
                   <span className={`text-lg font-bold leading-none ${isSelected ? 'text-[#052E16]' : 'text-white'}`}>

@@ -376,7 +376,7 @@ app.post("/make-server-dbaf6019/fetch-store-ingredients", async (c) => {
 // Endpoint to generate optimal meal plan
 app.post("/make-server-dbaf6019/generate-meal-plan", async (c) => {
   try {
-    const { storeName, mealsPerDay, budget, goal, shoppingDate, maxCookingTime, avoidIngredients } = await c.req.json();
+    const { storeName, mealsPerDay, budget, goal, shoppingDate, maxCookingTime, avoidIngredients, selectedMealSlots } = await c.req.json();
 
     if (!mealsPerDay || !budget || !goal) {
       return c.json({ error: "Missing required parameters" }, 400);
@@ -406,7 +406,8 @@ app.post("/make-server-dbaf6019/generate-meal-plan", async (c) => {
       goal,
       maxCookingTime,
       cookingDays,
-      avoidIngredients
+      avoidIngredients,
+      selectedMealSlots
     );
 
     return c.json({ mealPlan });
@@ -424,7 +425,8 @@ function generateMealPlanFromRecipes(
   goal: string,
   maxCookingTime?: number,
   cookingDays: number = 7,
-  avoidIngredients?: string[]
+  avoidIngredients?: string[],
+  selectedMealSlots?: string[]
 ) {
   const dailyBudget = weeklyBudget / 7;
   const totalMealsNeeded = cookingDays * mealsPerDay;
@@ -480,11 +482,11 @@ function generateMealPlanFromRecipes(
   console.log(`🔗 Core: breakfast=${coreRecipes.breakfast.length}, lunch=${coreRecipes.lunch.length}, dinner=${coreRecipes.dinner.length}`);
 
   // ── 4. Build 7-day rotation schedule ─────────────────────────────
-  const schedule = buildRotationSchedule(coreRecipes, mealsPerDay, cookingDays);
+  const schedule = buildRotationSchedule(coreRecipes, mealsPerDay, cookingDays, selectedMealSlots);
 
   // ── 5. Convert to frontend format ────────────────────────────────
   const meals = schedule.flatMap(day =>
-    day.meals.map(m => toMealPlanMeal(m.recipe, day.dayNumber, m.mealNumber))
+    day.meals.map(m => toMealPlanMeal(m.recipe, day.dayNumber, m.mealNumber, m.slot))
   );
 
   return {
@@ -1060,10 +1062,16 @@ function isInTestingPeriod(testingPeriods: any[], startDate: string, endDate: st
   );
 }
 
+// Helper: add 1 hour to "HH:MM"
+function addOneHour(time: string): string {
+  const [h, m] = time.split(":").map(Number);
+  return `${String(Math.min(h + 1, 23)).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
 // Get meal-time conflicts with classes for a given date
 app.post("/make-server-dbaf6019/get-meal-conflicts", async (c) => {
   try {
-    const { userId, date } = await c.req.json();
+    const { userId, date, mealTimes } = await c.req.json();
     if (!userId) return c.json({ error: "Missing userId" }, 400);
 
     const raw = await kv.get(`academic_schedule_${userId}`);
@@ -1077,29 +1085,41 @@ app.post("/make-server-dbaf6019/get-meal-conflicts", async (c) => {
       (cls: any) => cls.dayOfWeek === dayOfWeek
     );
 
-    // Meal time windows
+    // Use user-provided meal times (with overrides), falling back to defaults
+    const overrides: any[] = schedule.mealTimeOverrides || [];
+    const getTime = (slot: string, fallback: string) => {
+      const override = overrides.find((o: any) => o.dayOfWeek === dayOfWeek && o.mealSlot === slot);
+      if (override) return override.time;
+      if (mealTimes && mealTimes[slot]) return mealTimes[slot];
+      return fallback;
+    };
+
+    const bt = getTime("breakfast", "08:00");
+    const lt = getTime("lunch", "12:00");
+    const dt = getTime("dinner", "18:00");
+
     const mealWindows = [
-      { slot: "lunch", start: "11:00", end: "13:00" },
-      { slot: "dinner", start: "16:00", end: "18:00" },
+      { slot: "breakfast", start: bt, end: addOneHour(bt) },
+      { slot: "lunch", start: lt, end: addOneHour(lt) },
+      { slot: "dinner", start: dt, end: addOneHour(dt) },
     ];
 
     const conflicts: any[] = [];
     for (const cls of todayClasses) {
-      for (const window of mealWindows) {
-        // Check overlap: class overlaps with meal window
-        if (cls.startTime < window.end && cls.endTime > window.start) {
-          const eatBefore = cls.startTime <= window.start ? null : cls.startTime;
-          const eatAfter = cls.endTime >= window.end ? null : cls.endTime;
+      for (const w of mealWindows) {
+        if (cls.startTime < w.end && cls.endTime > w.start) {
+          const eatBefore = cls.startTime <= w.start ? null : cls.startTime;
+          const eatAfter = cls.endTime >= w.end ? null : cls.endTime;
           conflicts.push({
-            mealSlot: window.slot,
+            mealSlot: w.slot,
             className: cls.name,
             classStart: cls.startTime,
             classEnd: cls.endTime,
             suggestion: eatBefore
-              ? `Eat ${window.slot} before ${eatBefore}`
+              ? `Eat ${w.slot} before ${eatBefore}`
               : eatAfter
-              ? `Eat ${window.slot} after ${eatAfter}`
-              : `${cls.name} covers the full ${window.slot} window — plan to eat earlier or later`,
+              ? `Eat ${w.slot} after ${eatAfter}`
+              : `${cls.name} covers the full ${w.slot} window — plan to eat earlier or later`,
           });
         }
       }
@@ -1116,7 +1136,7 @@ app.post("/make-server-dbaf6019/get-meal-conflicts", async (c) => {
 // Generate a 28-day recipe queue for a user
 app.post("/make-server-dbaf6019/generate-recipe-queue", async (c) => {
   try {
-    const { userId, mealsPerDay, goal, avoidIngredients, maxCookingTime, budget } = await c.req.json();
+    const { userId, mealsPerDay, goal, avoidIngredients, maxCookingTime, budget, selectedMealSlots } = await c.req.json();
     if (!userId || !mealsPerDay || !goal) {
       return c.json({ error: "Missing required parameters: userId, mealsPerDay, goal" }, 400);
     }
@@ -1141,6 +1161,7 @@ app.post("/make-server-dbaf6019/generate-recipe-queue", async (c) => {
       avoidIngredients,
       maxCookingTime,
       preferSleepDinners,
+      selectedMealSlots,
     });
 
     await kv.set(`recipe_queue_${userId}`, JSON.stringify(queue));

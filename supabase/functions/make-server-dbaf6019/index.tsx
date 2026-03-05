@@ -373,7 +373,7 @@ app.post("/make-server-dbaf6019/fetch-store-ingredients", async (c) => {
 // Endpoint to generate optimal meal plan
 app.post("/make-server-dbaf6019/generate-meal-plan", async (c) => {
   try {
-    const { storeName, mealsPerDay, budget, goal, shoppingDate, maxCookingTime, avoidIngredients } = await c.req.json();
+    const { storeName, mealsPerDay, budget, goal, shoppingDate, maxCookingTime, avoidIngredients, selectedMealSlots } = await c.req.json();
 
     if (!mealsPerDay || !budget || !goal) {
       return c.json({ error: "Missing required parameters" }, 400);
@@ -413,7 +413,8 @@ app.post("/make-server-dbaf6019/generate-meal-plan", async (c) => {
       goal,
       maxCookingTime,
       cookingDays,
-      avoidIngredients
+      avoidIngredients,
+      selectedMealSlots
     );
 
     return c.json({ mealPlan });
@@ -431,7 +432,8 @@ function generateMealPlanFromRecipes(
   goal: string,
   maxCookingTime?: number,
   cookingDays: number = 7,
-  avoidIngredients?: string[]
+  avoidIngredients?: string[],
+  selectedMealSlots?: string[]
 ) {
   const dailyBudget = weeklyBudget / 7;
   const totalMealsNeeded = cookingDays * mealsPerDay;
@@ -471,24 +473,33 @@ function generateMealPlanFromRecipes(
   const lunchRecipes = shuffled.filter(r => ["Lunch", "Salad", "Sandwich", "Soup"].includes(r.recipe_category || ""));
   const dinnerRecipes = shuffled.filter(r => !["Breakfast", "Brunch", "Lunch", "Salad", "Sandwich", "Soup"].includes(r.recipe_category || ""));
 
+  // Determine which meal slots to use, respecting user's selection
+  let slots: string[];
+  if (mealsPerDay >= 3) {
+    slots = ['breakfast', 'lunch', 'dinner'];
+  } else if (selectedMealSlots && selectedMealSlots.length > 0) {
+    const order = ['breakfast', 'lunch', 'dinner'];
+    slots = order.filter(s => selectedMealSlots.includes(s)).slice(0, mealsPerDay);
+  } else {
+    slots = mealsPerDay === 1 ? ['dinner'] : ['breakfast', 'dinner'];
+  }
+
+  // Map slot names to recipe pools
+  const poolMap: Record<string, NewRecipe[]> = {
+    breakfast: breakfastRecipes.length > 0 ? breakfastRecipes : shuffled,
+    lunch: lunchRecipes.length > 0 ? lunchRecipes : shuffled,
+    dinner: dinnerRecipes.length > 0 ? dinnerRecipes : shuffled,
+  };
+
   // Select meals with variety per day
-  const selectedRecipes: NewRecipe[] = [];
+  const selectedMeals: { recipe: NewRecipe; slot: string }[] = [];
   const usedIds = new Set<number>();
 
   for (let day = 0; day < cookingDays; day++) {
     for (let mealNum = 0; mealNum < mealsPerDay; mealNum++) {
-      let candidates: NewRecipe[];
-
-      // Assign meal slots based on mealsPerDay
-      if (mealsPerDay >= 3) {
-        if (mealNum === 0) candidates = breakfastRecipes;
-        else if (mealNum === 1) candidates = lunchRecipes;
-        else candidates = dinnerRecipes;
-      } else if (mealsPerDay === 2) {
-        candidates = mealNum === 0 ? breakfastRecipes : dinnerRecipes;
-      } else {
-        candidates = dinnerRecipes;
-      }
+      // Use the slot for this meal number, or fall back to dinner for extras
+      const slot = mealNum < slots.length ? slots[mealNum] : 'dinner';
+      const candidates = poolMap[slot] || shuffled;
 
       let selected = candidates.find(r => !usedIds.has(r.id)) || null;
 
@@ -499,22 +510,22 @@ function generateMealPlanFromRecipes(
 
       // Last resort: allow repeat but avoid same-day duplicates
       if (!selected && shuffled.length > 0) {
-        const dayIds = new Set(selectedRecipes.slice(day * mealsPerDay).map(r => r.id));
+        const dayIds = new Set(selectedMeals.slice(day * mealsPerDay).map(m => m.recipe.id));
         selected = shuffled.find(r => !dayIds.has(r.id)) || shuffled[0];
       }
 
       if (selected) {
-        selectedRecipes.push(selected);
+        selectedMeals.push({ recipe: selected, slot });
         usedIds.add(selected.id);
       }
     }
   }
 
-  // Convert to frontend format using adapter
-  const meals = selectedRecipes.map((recipe, index) => {
+  // Convert to frontend format using adapter, passing the assigned slot
+  const meals = selectedMeals.map((m, index) => {
     const dayNumber = Math.floor(index / mealsPerDay) + 1;
     const mealNumber = (index % mealsPerDay) + 1;
-    return toMealPlanMeal(recipe, dayNumber, mealNumber);
+    return toMealPlanMeal(m.recipe, dayNumber, mealNumber, m.slot);
   });
 
   return {

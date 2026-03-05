@@ -48,6 +48,7 @@ export interface UserPreferences {
   maxCookingTime: number;
   avoidIngredients: string[];
   mealTimes: MealTimes;
+  selectedMealSlots: ('breakfast' | 'lunch' | 'dinner')[];
 }
 
 export default function App() {
@@ -88,6 +89,7 @@ export default function App() {
     maxCookingTime: 30,
     avoidIngredients: [],
     mealTimes: { breakfast: '08:00', lunch: '12:00', dinner: '18:00' },
+    selectedMealSlots: ['breakfast', 'lunch', 'dinner'],
   });
 
   // Shopping list ingredients (derived from meal plan)
@@ -117,7 +119,7 @@ export default function App() {
           setUser(session.user);
           setAccessToken(session.access_token);
           loadSavedMealPlan(session.user.id);
-          calendar.initCalendar(session.user.id);
+          calendar.initCalendar(session.user.id, preferences.mealTimes);
 
           // Restore gender from user_metadata if available
           if (session.user.user_metadata?.gender) {
@@ -359,7 +361,7 @@ export default function App() {
     setActiveNavTab('home');
     setIsOnboarding(false);
     loadSavedMealPlan(loggedInUser.id);
-    calendar.initCalendar(loggedInUser.id);
+    calendar.initCalendar(loggedInUser.id, preferences.mealTimes);
 
     // Restore gender from user_metadata if available
     if (loggedInUser.user_metadata?.gender) {
@@ -416,6 +418,7 @@ export default function App() {
       maxCookingTime: 30,
       avoidIngredients: [],
       mealTimes: { breakfast: '08:00', lunch: '12:00', dinner: '18:00' },
+      selectedMealSlots: ['breakfast', 'lunch', 'dinner'],
     });
   };
 
@@ -594,11 +597,14 @@ export default function App() {
           isTestingPeriod={calendar.isTestingPeriod}
           mealConflicts={calendar.mealConflicts}
           queueShoppingList={calendar.queueShoppingList}
+          weekConflicts={calendar.weekConflicts}
           onSaveSchedule={calendar.saveSchedule}
           onGenerateQueue={calendar.generateQueue}
           onSwapQueueMeal={calendar.swapQueueMeal}
           onMarkMealConsumed={calendar.markMealConsumed}
           onCheckQueueTestingChange={calendar.checkQueueTestingChange}
+          onSaveMealTimeOverride={calendar.saveMealTimeOverride}
+          onRemoveMealTimeOverride={calendar.removeMealTimeOverride}
         />
       )}
 

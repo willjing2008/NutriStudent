@@ -1,6 +1,15 @@
-import { useState } from 'react';
-import { X, Plus, Trash2, BookOpen, Calendar, Moon, Save, Loader2 } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { X, Plus, Trash2, BookOpen, Calendar, Moon, Save, Loader2, AlertTriangle } from 'lucide-react';
 import type { AcademicSchedule, ClassEntry, TestingPeriod, SleepSchedule } from '../types/calendar';
+import type { MealTimes } from '../App';
+
+interface ClassConflictWarning {
+  classId: string;
+  className: string;
+  mealSlot: string;
+  mealTime: string;
+  classTime: string;
+}
 
 interface AcademicScheduleEditorProps {
   schedule: AcademicSchedule | null;
@@ -8,6 +17,7 @@ interface AcademicScheduleEditorProps {
   onClose: () => void;
   isSaving?: boolean;
   initialTab?: 'classes' | 'exams' | 'sleep';
+  mealTimes?: MealTimes;
 }
 
 const DAY_OPTIONS = [
@@ -59,11 +69,52 @@ const DEFAULT_SLEEP: SleepSchedule = {
   lastMealBeforeBed: 120,
 };
 
-export function AcademicScheduleEditor({ schedule, onSave, onClose, isSaving, initialTab }: AcademicScheduleEditorProps) {
+function addOneHour(time: string): string {
+  const [h, m] = time.split(':').map(Number);
+  return `${String(Math.min(h + 1, 23)).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
+function formatTime12(time: string): string {
+  const [h, m] = time.split(':').map(Number);
+  const suffix = h >= 12 ? 'pm' : 'am';
+  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  return m === 0 ? `${h12}${suffix}` : `${h12}:${String(m).padStart(2, '0')}${suffix}`;
+}
+
+export function AcademicScheduleEditor({ schedule, onSave, onClose, isSaving, initialTab, mealTimes }: AcademicScheduleEditorProps) {
   const [classes, setClasses] = useState<ClassEntry[]>(schedule?.classes || []);
   const [testingPeriods, setTestingPeriods] = useState<TestingPeriod[]>(schedule?.testingPeriods || []);
   const [sleepSchedule, setSleepSchedule] = useState<SleepSchedule>(schedule?.sleepSchedule || DEFAULT_SLEEP);
   const [activeTab, setActiveTab] = useState<'classes' | 'exams' | 'sleep'>(initialTab || 'classes');
+
+  // Detect meal/class conflicts in real-time as classes are edited
+  const classConflictWarnings = useMemo<ClassConflictWarning[]>(() => {
+    const bt = mealTimes?.breakfast || '08:00';
+    const lt = mealTimes?.lunch || '12:00';
+    const dt = mealTimes?.dinner || '18:00';
+    const meals = [
+      { slot: 'breakfast', start: bt, end: addOneHour(bt) },
+      { slot: 'lunch', start: lt, end: addOneHour(lt) },
+      { slot: 'dinner', start: dt, end: addOneHour(dt) },
+    ];
+
+    const warnings: ClassConflictWarning[] = [];
+    for (const cls of classes) {
+      if (!cls.startTime || !cls.endTime) continue;
+      for (const meal of meals) {
+        if (cls.startTime < meal.end && cls.endTime > meal.start) {
+          warnings.push({
+            classId: cls.id,
+            className: cls.name || 'Untitled Class',
+            mealSlot: meal.slot,
+            mealTime: `${formatTime12(meal.start)} – ${formatTime12(meal.end)}`,
+            classTime: `${formatTime12(cls.startTime)} – ${formatTime12(cls.endTime)}`,
+          });
+        }
+      }
+    }
+    return warnings;
+  }, [classes, mealTimes]);
 
   const handleSave = async () => {
     await onSave({ classes, testingPeriods, sleepSchedule });
@@ -181,6 +232,27 @@ export function AcademicScheduleEditor({ schedule, onSave, onClose, isSaving, in
                   </div>
                 </div>
               ))}
+
+              {/* Meal/class conflict warnings */}
+              {classConflictWarnings.length > 0 && (
+                <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-3 space-y-2">
+                  <div className="flex items-center gap-2 text-red-400 text-xs font-semibold">
+                    <AlertTriangle className="w-3.5 h-3.5" />
+                    Meal Time Conflicts Detected
+                  </div>
+                  {classConflictWarnings.map((w, i) => (
+                    <div key={i} className="text-[11px] text-red-300/80 pl-5">
+                      <span className="font-medium text-red-300">{w.className}</span>
+                      {' '}({w.classTime}) overlaps with{' '}
+                      <span className="font-medium text-red-300">{w.mealSlot}</span>
+                      {' '}({w.mealTime})
+                    </div>
+                  ))}
+                  <div className="text-[10px] text-red-400/60 pl-5">
+                    You can adjust meal times for conflict days from the schedule view.
+                  </div>
+                </div>
+              )}
 
               <button
                 onClick={() => setClasses((prev) => [...prev, createEmptyClass()])}

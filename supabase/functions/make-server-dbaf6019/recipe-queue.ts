@@ -34,6 +34,7 @@ export interface GenerateQueueParams {
   maxCookingTime?: number;
   preferSleepDinners?: boolean;
   queueDays?: number;
+  selectedMealSlots?: string[];
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────
@@ -61,6 +62,7 @@ export async function generateRecipeQueue(params: GenerateQueueParams): Promise<
     maxCookingTime,
     preferSleepDinners = false,
     queueDays = 28,
+    selectedMealSlots,
   } = params;
 
   // 1. Fetch recipes based on focus mode
@@ -135,18 +137,18 @@ export async function generateRecipeQueue(params: GenerateQueueParams): Promise<
   );
 
   // 7. Build rotation schedule
-  const schedule = buildRotationSchedule(coreRecipes, mealsPerDay, queueDays);
+  const schedule = buildRotationSchedule(coreRecipes, mealsPerDay, queueDays, selectedMealSlots);
 
   // 8. Convert to QueuedMeal format
   const meals: QueuedMeal[] = [];
   for (const day of schedule) {
     for (const m of day.meals) {
-      const mealPlanMeal = toMealPlanMeal(m.recipe, day.dayNumber, m.mealNumber);
+      const mealPlanMeal = toMealPlanMeal(m.recipe, day.dayNumber, m.mealNumber, m.slot);
       meals.push({
         recipeId: String(m.recipe.id),
         recipe: mealPlanMeal,
         dayNumber: day.dayNumber,
-        mealSlot: getMealSlot(m.mealNumber, mealsPerDay),
+        mealSlot: (m.slot as "breakfast" | "lunch" | "dinner") || getMealSlot(m.mealNumber, mealsPerDay),
         mealNumber: m.mealNumber,
         isConsumed: false,
       });
