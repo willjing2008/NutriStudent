@@ -1652,11 +1652,11 @@ app.post("/make-server-dbaf6019/save-kitchen-inventory", async (c) => {
 
 // ========== MEAL PLAN STORAGE ENDPOINTS ==========
 
-// Save user's meal plan (now supports multiple plans)
+// Save user's meal plan (supports create & update)
 app.post("/make-server-dbaf6019/save-meal-plan", async (c) => {
   try {
-    const { userId, mealPlan, preferences, planName } = await c.req.json();
-    
+    const { userId, mealPlan, preferences, planName, planId: existingPlanId } = await c.req.json();
+
     if (!userId) {
       return c.json({ error: "User ID required" }, 400);
     }
@@ -1665,10 +1665,10 @@ app.post("/make-server-dbaf6019/save-meal-plan", async (c) => {
       return c.json({ error: "Meal plan required" }, 400);
     }
 
-    // Generate unique plan ID
-    const planId = `plan_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const timestamp = new Date().toISOString();
-    
+    const isUpdate = !!existingPlanId;
+    const planId = existingPlanId || `plan_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
     // Save individual meal plan
     const planKey = `meal_plan_${userId}_${planId}`;
     await kv.set(planKey, {
@@ -1683,30 +1683,44 @@ app.post("/make-server-dbaf6019/save-meal-plan", async (c) => {
     // Update user's plan list
     const listKey = `meal_plan_list_${userId}`;
     const existingList = await kv.get(listKey) || { plans: [] };
-    
-    existingList.plans.unshift({
-      planId,
-      planName: planName || `Meal Plan - ${new Date().toLocaleDateString('en-GB')}`,
-      savedAt: timestamp,
-      totalCost: mealPlan.totalCost,
-      mealCount: mealPlan.meals?.length || 0
-    });
-    
-    // Keep only last 10 plans
-    if (existingList.plans.length > 10) {
-      const removedPlan = existingList.plans.pop();
-      // Delete the old plan data
-      await kv.del(`meal_plan_${userId}_${removedPlan.planId}`);
+
+    if (isUpdate) {
+      // Update existing entry in the list
+      const idx = existingList.plans.findIndex((p: any) => p.planId === planId);
+      if (idx >= 0) {
+        existingList.plans[idx] = {
+          ...existingList.plans[idx],
+          planName: planName || existingList.plans[idx].planName,
+          savedAt: timestamp,
+          totalCost: mealPlan.totalCost,
+          mealCount: mealPlan.meals?.length || 0,
+        };
+      }
+    } else {
+      existingList.plans.unshift({
+        planId,
+        planName: planName || `Meal Plan - ${new Date().toLocaleDateString('en-GB')}`,
+        savedAt: timestamp,
+        totalCost: mealPlan.totalCost,
+        mealCount: mealPlan.meals?.length || 0
+      });
+
+      // Keep only last 10 plans
+      if (existingList.plans.length > 10) {
+        const removedPlan = existingList.plans.pop();
+        // Delete the old plan data
+        await kv.del(`meal_plan_${userId}_${removedPlan.planId}`);
+      }
     }
-    
+
     await kv.set(listKey, existingList);
 
-    console.log(`✅ Saved meal plan for user ${userId}: ${mealPlan.meals?.length || 0} meals (ID: ${planId})`);
+    console.log(`✅ ${isUpdate ? 'Updated' : 'Saved'} meal plan for user ${userId}: ${mealPlan.meals?.length || 0} meals (ID: ${planId})`);
 
-    return c.json({ 
+    return c.json({
       success: true,
       planId,
-      message: "Meal plan saved successfully"
+      message: `Meal plan ${isUpdate ? 'updated' : 'saved'} successfully`
     });
   } catch (error: any) {
     console.log(`Error saving meal plan: ${error.message}`);

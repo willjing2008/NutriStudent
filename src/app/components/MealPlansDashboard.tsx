@@ -43,6 +43,7 @@ interface MealPlansDashboardProps {
   activePlan?: MealPlan | null;
   savedPlans?: MealPlan[];
   onDeletePlan?: (planId: string) => Promise<void>;
+  onEditPlan?: () => void;
 }
 
 export function MealPlansDashboard({
@@ -56,6 +57,7 @@ export function MealPlansDashboard({
   savedPlans = [],
   onDeletePlan,
   onNavTabChange,
+  onEditPlan,
 }: MealPlansDashboardProps) {
   const { t } = useLanguage();
 
@@ -265,13 +267,24 @@ export function MealPlansDashboard({
                           <span className="text-[#9CA3AF] text-sm">{t("onTrackToday")}</span>
                         </div>
                       )}
-                      <button 
-                        onClick={() => onViewPlan(currentActivePlan.id)}
-                        className="flex items-center gap-1 bg-[#2D2D2D] hover:bg-[#3D3D3D] text-white text-sm font-medium px-4 py-2 rounded-full transition-colors"
-                      >
-                        View Details
-                        <ChevronRight className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center gap-2">
+                        {onEditPlan && (
+                          <button
+                            onClick={onEditPlan}
+                            className="flex items-center gap-1 bg-[#2D2D2D] hover:bg-[#3D3D3D] text-[#9CA3AF] text-sm font-medium px-4 py-2 rounded-full transition-colors"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                            Edit
+                          </button>
+                        )}
+                        <button
+                          onClick={() => onViewPlan(currentActivePlan.id)}
+                          className="flex items-center gap-1 bg-[#2D2D2D] hover:bg-[#3D3D3D] text-white text-sm font-medium px-4 py-2 rounded-full transition-colors"
+                        >
+                          View Details
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -333,11 +346,11 @@ export function MealPlansDashboard({
                      </div>
                    </button>
                    
-                   <button 
+                   <button
                      onClick={(e) => startEditing(plan.id, plan.name, e)}
-                     className="absolute top-2 right-2 p-1.5 bg-black/50 backdrop-blur-md rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+                     className="absolute top-2 right-2 p-2.5 bg-black/60 backdrop-blur-md rounded-full text-white shadow-lg hover:bg-black/80 hover:scale-110 transition-all"
                    >
-                     <Edit2 className="w-3 h-3" />
+                     <Edit2 className="w-4 h-4" />
                    </button>
 
                    {editingPlanId === plan.id && (

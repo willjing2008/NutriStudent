@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
-import { X, Plus, Trash2, BookOpen, Calendar, Moon, Save, Loader2, AlertTriangle } from 'lucide-react';
-import type { AcademicSchedule, ClassEntry, TestingPeriod, SleepSchedule } from '../types/calendar';
+import { X, Plus, Trash2, BookOpen, Clock, Save, Loader2, AlertTriangle, Sunrise, Sun, Moon } from 'lucide-react';
+import type { AcademicSchedule, ClassEntry, SleepSchedule } from '../types/calendar';
 import type { MealTimes } from '../App';
 
 interface ClassConflictWarning {
@@ -13,11 +13,13 @@ interface ClassConflictWarning {
 
 interface AcademicScheduleEditorProps {
   schedule: AcademicSchedule | null;
-  onSave: (schedule: Omit<AcademicSchedule, 'updatedAt'>) => Promise<any>;
+  onSave: (schedule: Omit<AcademicSchedule, 'updatedAt'>, mealTimes?: MealTimes, selectedMealSlots?: ('breakfast' | 'lunch' | 'dinner')[]) => Promise<any>;
   onClose: () => void;
   isSaving?: boolean;
-  initialTab?: 'classes' | 'exams' | 'sleep';
+  initialTab?: 'classes' | 'meals';
   mealTimes?: MealTimes;
+  mealsPerDay?: number;
+  selectedMealSlots?: ('breakfast' | 'lunch' | 'dinner')[];
 }
 
 const DAY_OPTIONS = [
@@ -28,13 +30,6 @@ const DAY_OPTIONS = [
   { value: 4, label: 'Thursday' },
   { value: 5, label: 'Friday' },
   { value: 6, label: 'Saturday' },
-];
-
-const PERIOD_TYPES = [
-  { value: 'midterm', label: 'Midterm' },
-  { value: 'final', label: 'Finals' },
-  { value: 'quiz', label: 'Quiz' },
-  { value: 'custom', label: 'Custom' },
 ];
 
 const COLOR_OPTIONS = ['#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#EF4444', '#06B6D4'];
@@ -48,18 +43,6 @@ function createEmptyClass(): ClassEntry {
     endTime: '10:00',
     location: '',
     color: COLOR_OPTIONS[Math.floor(Math.random() * COLOR_OPTIONS.length)],
-  };
-}
-
-function createEmptyPeriod(): TestingPeriod {
-  const today = new Date();
-  const twoWeeks = new Date(today.getTime() + 14 * 86400000);
-  return {
-    id: crypto.randomUUID(),
-    name: '',
-    startDate: today.toISOString().split('T')[0],
-    endDate: twoWeeks.toISOString().split('T')[0],
-    type: 'midterm',
   };
 }
 
@@ -81,22 +64,27 @@ function formatTime12(time: string): string {
   return m === 0 ? `${h12}${suffix}` : `${h12}:${String(m).padStart(2, '0')}${suffix}`;
 }
 
-export function AcademicScheduleEditor({ schedule, onSave, onClose, isSaving, initialTab, mealTimes }: AcademicScheduleEditorProps) {
+export function AcademicScheduleEditor({ schedule, onSave, onClose, isSaving, initialTab, mealTimes, mealsPerDay = 3, selectedMealSlots: initialSelectedSlots }: AcademicScheduleEditorProps) {
   const [classes, setClasses] = useState<ClassEntry[]>(schedule?.classes || []);
-  const [testingPeriods, setTestingPeriods] = useState<TestingPeriod[]>(schedule?.testingPeriods || []);
   const [sleepSchedule, setSleepSchedule] = useState<SleepSchedule>(schedule?.sleepSchedule || DEFAULT_SLEEP);
-  const [activeTab, setActiveTab] = useState<'classes' | 'exams' | 'sleep'>(initialTab || 'classes');
+  const [activeTab, setActiveTab] = useState<'classes' | 'meals'>(initialTab === 'classes' ? 'classes' : initialTab === 'meals' ? 'meals' : 'classes');
+  const [editedMealTimes, setEditedMealTimes] = useState<MealTimes>(
+    mealTimes || { breakfast: '08:00', lunch: '12:00', dinner: '18:00' }
+  );
+  const [editedMealSlots, setEditedMealSlots] = useState<Set<'breakfast' | 'lunch' | 'dinner'>>(
+    new Set(initialSelectedSlots || ['breakfast', 'lunch', 'dinner'])
+  );
 
   // Detect meal/class conflicts in real-time as classes are edited
   const classConflictWarnings = useMemo<ClassConflictWarning[]>(() => {
-    const bt = mealTimes?.breakfast || '08:00';
-    const lt = mealTimes?.lunch || '12:00';
-    const dt = mealTimes?.dinner || '18:00';
-    const meals = [
-      { slot: 'breakfast', start: bt, end: addOneHour(bt) },
-      { slot: 'lunch', start: lt, end: addOneHour(lt) },
-      { slot: 'dinner', start: dt, end: addOneHour(dt) },
-    ];
+    const activeSlots = mealsPerDay >= 3
+      ? (['breakfast', 'lunch', 'dinner'] as const)
+      : (['breakfast', 'lunch', 'dinner'] as const).filter(k => editedMealSlots.has(k));
+    const meals = activeSlots.map(slot => ({
+      slot,
+      start: editedMealTimes[slot],
+      end: addOneHour(editedMealTimes[slot]),
+    }));
 
     const warnings: ClassConflictWarning[] = [];
     for (const cls of classes) {
@@ -114,18 +102,21 @@ export function AcademicScheduleEditor({ schedule, onSave, onClose, isSaving, in
       }
     }
     return warnings;
-  }, [classes, mealTimes]);
+  }, [classes, editedMealTimes, editedMealSlots, mealsPerDay]);
 
   const handleSave = async () => {
-    await onSave({ classes, testingPeriods, sleepSchedule });
+    const activeSlots = mealsPerDay >= 3
+      ? (['breakfast', 'lunch', 'dinner'] as const)
+      : ([...editedMealSlots] as ('breakfast' | 'lunch' | 'dinner')[]);
+    await onSave(
+      { classes, testingPeriods: schedule?.testingPeriods || [], sleepSchedule },
+      editedMealTimes,
+      activeSlots,
+    );
   };
 
   const updateClass = (id: string, field: keyof ClassEntry, value: any) => {
     setClasses((prev) => prev.map((c) => (c.id === id ? { ...c, [field]: value } : c)));
-  };
-
-  const updatePeriod = (id: string, field: keyof TestingPeriod, value: any) => {
-    setTestingPeriods((prev) => prev.map((p) => (p.id === id ? { ...p, [field]: value } : p)));
   };
 
   return (
@@ -133,7 +124,7 @@ export function AcademicScheduleEditor({ schedule, onSave, onClose, isSaving, in
       <div className="bg-[#0A1F13] w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[90vh] flex flex-col border border-[#1E4029]">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-[#1E4029]">
-          <h2 className="text-lg font-bold text-white">Academic Schedule</h2>
+          <h2 className="text-lg font-bold text-white">Schedule Settings</h2>
           <button onClick={onClose} className="text-[#6B7280] hover:text-white transition-colors">
             <X className="w-5 h-5" />
           </button>
@@ -143,8 +134,7 @@ export function AcademicScheduleEditor({ schedule, onSave, onClose, isSaving, in
         <div className="flex border-b border-[#1E4029]">
           {[
             { id: 'classes' as const, label: 'Classes', icon: BookOpen },
-            { id: 'exams' as const, label: 'Exams', icon: Calendar },
-            { id: 'sleep' as const, label: 'Sleep', icon: Moon },
+            { id: 'meals' as const, label: 'Meal Times', icon: Clock },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -264,118 +254,100 @@ export function AcademicScheduleEditor({ schedule, onSave, onClose, isSaving, in
             </>
           )}
 
-          {/* Exams Tab */}
-          {activeTab === 'exams' && (
-            <>
-              {testingPeriods.map((period) => (
-                <div key={period.id} className="bg-[#142A1D] rounded-xl p-4 border border-[#1E4029] space-y-3">
-                  <div className="flex items-center justify-between">
-                    <input
-                      value={period.name}
-                      onChange={(e) => updatePeriod(period.id, 'name', e.target.value)}
-                      placeholder="Period name (e.g., Midterm Exams)"
-                      className="bg-transparent text-white text-sm font-medium focus:outline-none placeholder-[#6B7280] flex-1"
-                    />
-                    <button
-                      onClick={() => setTestingPeriods((prev) => prev.filter((p) => p.id !== period.id))}
-                      className="text-red-400/50 hover:text-red-400 transition-colors ml-2"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-2">
-                    <select
-                      value={period.type}
-                      onChange={(e) => updatePeriod(period.id, 'type', e.target.value)}
-                      className="bg-[#0A1F13] text-white text-xs rounded-lg px-2 py-2 border border-[#1E4029] focus:outline-none focus:border-[#22C55E]"
-                    >
-                      {PERIOD_TYPES.map((t) => (
-                        <option key={t.value} value={t.value}>{t.label}</option>
-                      ))}
-                    </select>
-                    <input
-                      type="date"
-                      value={period.startDate}
-                      onChange={(e) => updatePeriod(period.id, 'startDate', e.target.value)}
-                      className="bg-[#0A1F13] text-white text-xs rounded-lg px-2 py-2 border border-[#1E4029] focus:outline-none focus:border-[#22C55E]"
-                    />
-                    <input
-                      type="date"
-                      value={period.endDate}
-                      onChange={(e) => updatePeriod(period.id, 'endDate', e.target.value)}
-                      className="bg-[#0A1F13] text-white text-xs rounded-lg px-2 py-2 border border-[#1E4029] focus:outline-none focus:border-[#22C55E]"
-                    />
-                  </div>
-                </div>
-              ))}
-
-              <button
-                onClick={() => setTestingPeriods((prev) => [...prev, createEmptyPeriod()])}
-                className="w-full py-3 border-2 border-dashed border-[#1E4029] rounded-xl text-[#22C55E] text-sm font-medium hover:border-[#22C55E]/50 hover:bg-[#142A1D]/50 transition-all flex items-center justify-center gap-2"
-              >
-                <Plus className="w-4 h-4" />
-                Add Testing Period
-              </button>
-
-              {testingPeriods.length > 0 && (
-                <p className="text-[#6B7280] text-xs text-center">
-                  During testing periods, your meal plan will prioritize brain-boosting recipes.
-                </p>
-              )}
-            </>
-          )}
-
-          {/* Sleep Tab */}
-          {activeTab === 'sleep' && (
+          {/* Meal Times Tab */}
+          {activeTab === 'meals' && (
             <div className="space-y-4">
-              <div className="bg-[#142A1D] rounded-xl p-4 border border-[#1E4029] space-y-4">
-                <h3 className="text-white text-sm font-medium">Sleep Schedule</h3>
+              <p className="text-[#6B7280] text-sm">
+                {mealsPerDay < 3
+                  ? `Pick which ${mealsPerDay === 1 ? 'meal' : 'meals'} you'd like, then set the time.`
+                  : 'Set when you usually eat. This helps schedule meals around your classes.'}
+              </p>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[#6B7280] text-xs mb-1 block">Bedtime</label>
+              {/* Slot picker — shown when fewer than 3 meals */}
+              {mealsPerDay < 3 && (
+                <div className="flex gap-2">
+                  {([
+                    { key: 'breakfast' as const, label: 'Breakfast', icon: Sunrise, color: '#F59E0B' },
+                    { key: 'lunch' as const, label: 'Lunch', icon: Sun, color: '#22C55E' },
+                    { key: 'dinner' as const, label: 'Dinner', icon: Moon, color: '#8B5CF6' },
+                  ]).map(({ key, label, icon: MealIcon, color }) => {
+                    const active = editedMealSlots.has(key);
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => {
+                          setEditedMealSlots(prev => {
+                            const next = new Set(prev);
+                            if (active) {
+                              if (next.size > 1) next.delete(key);
+                            } else {
+                              if (next.size < mealsPerDay) next.add(key);
+                              else {
+                                const first = [...next][0];
+                                next.delete(first);
+                                next.add(key);
+                              }
+                            }
+                            return next;
+                          });
+                        }}
+                        className={`flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl transition-all ${
+                          active
+                            ? 'bg-[#0A1F13] border-2 border-[#22C55E]'
+                            : 'bg-[#0A1F13] border border-[#2D5A3D] opacity-50 hover:opacity-75'
+                        }`}
+                      >
+                        <MealIcon className="w-4 h-4" style={{ color: active ? color : '#6B7280' }} />
+                        <span className={`text-xs font-medium ${active ? 'text-white' : 'text-[#6B7280]'}`}>{label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Time pickers for active slots */}
+              <div className="space-y-3">
+                {([
+                  { key: 'breakfast' as const, label: 'Breakfast', icon: Sunrise, color: '#F59E0B' },
+                  { key: 'lunch' as const, label: 'Lunch', icon: Sun, color: '#22C55E' },
+                  { key: 'dinner' as const, label: 'Dinner', icon: Moon, color: '#8B5CF6' },
+                ]).filter(({ key }) => mealsPerDay >= 3 || editedMealSlots.has(key))
+                  .slice(0, mealsPerDay >= 3 ? 3 : mealsPerDay)
+                  .map(({ key, label, icon: MealIcon, color }) => (
+                  <div key={key} className="flex items-center gap-3 p-3 bg-[#142A1D] rounded-xl border border-[#1E4029]">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${color}20` }}>
+                      <MealIcon className="w-4 h-4" style={{ color }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-white text-sm font-medium">{label}</span>
+                    </div>
                     <input
                       type="time"
-                      value={sleepSchedule.bedtime}
-                      onChange={(e) => setSleepSchedule((s) => ({ ...s, bedtime: e.target.value }))}
-                      className="w-full bg-[#0A1F13] text-white text-sm rounded-lg px-3 py-2 border border-[#1E4029] focus:outline-none focus:border-[#22C55E] [color-scheme:dark]"
+                      value={editedMealTimes[key]}
+                      onChange={(e) => setEditedMealTimes(prev => ({ ...prev, [key]: e.target.value }))}
+                      className="bg-[#0A1F13] text-white text-sm rounded-lg px-4 py-2 border border-[#1E4029] focus:outline-none focus:border-[#22C55E] [color-scheme:dark] w-[140px]"
                     />
                   </div>
-                  <div>
-                    <label className="text-[#6B7280] text-xs mb-1 block">Wake Time</label>
-                    <input
-                      type="time"
-                      value={sleepSchedule.wakeTime}
-                      onChange={(e) => setSleepSchedule((s) => ({ ...s, wakeTime: e.target.value }))}
-                      className="w-full bg-[#0A1F13] text-white text-sm rounded-lg px-3 py-2 border border-[#1E4029] focus:outline-none focus:border-[#22C55E] [color-scheme:dark]"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-[#6B7280] text-xs mb-2 block">
-                    Last meal before bed: <span className="text-white">{sleepSchedule.lastMealBeforeBed} min</span>
-                  </label>
-                  <input
-                    type="range"
-                    min={30}
-                    max={240}
-                    step={15}
-                    value={sleepSchedule.lastMealBeforeBed}
-                    onChange={(e) => setSleepSchedule((s) => ({ ...s, lastMealBeforeBed: Number(e.target.value) }))}
-                    className="w-full accent-[#22C55E]"
-                  />
-                  <div className="flex justify-between text-[10px] text-[#6B7280]">
-                    <span>30 min</span>
-                    <span>4 hrs</span>
-                  </div>
-                </div>
+                ))}
               </div>
 
-              <p className="text-[#6B7280] text-xs text-center">
-                Evening meals will feature sleep-friendly recipes based on your bedtime.
-              </p>
+              {/* Conflict warnings with classes */}
+              {classConflictWarnings.length > 0 && (
+                <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-3 space-y-2">
+                  <div className="flex items-center gap-2 text-red-400 text-xs font-semibold">
+                    <AlertTriangle className="w-3.5 h-3.5" />
+                    Meal Time Conflicts Detected
+                  </div>
+                  {classConflictWarnings.map((w, i) => (
+                    <div key={i} className="text-[11px] text-red-300/80 pl-5">
+                      <span className="font-medium text-red-300">{w.className}</span>
+                      {' '}({w.classTime}) overlaps with{' '}
+                      <span className="font-medium text-red-300">{w.mealSlot}</span>
+                      {' '}({w.mealTime})
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -395,7 +367,7 @@ export function AcademicScheduleEditor({ schedule, onSave, onClose, isSaving, in
             ) : (
               <>
                 <Save className="w-4 h-4" />
-                Save Schedule
+                Save
               </>
             )}
           </button>

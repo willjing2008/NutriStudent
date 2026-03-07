@@ -4,9 +4,10 @@ interface PlanTabSubNavProps {
   activeView: 'meals' | 'schedule';
   onViewChange: (view: 'meals' | 'schedule') => void;
   isTestingPeriod?: boolean;
+  scheduleDisabled?: boolean;
 }
 
-export function PlanTabSubNav({ activeView, onViewChange, isTestingPeriod }: PlanTabSubNavProps) {
+export function PlanTabSubNav({ activeView, onViewChange, isTestingPeriod, scheduleDisabled }: PlanTabSubNavProps) {
   const { t } = useLanguage();
 
   return (
@@ -32,11 +33,14 @@ export function PlanTabSubNav({ activeView, onViewChange, isTestingPeriod }: Pla
           )}
         </button>
         <button
-          onClick={() => onViewChange('schedule')}
+          onClick={() => !scheduleDisabled && onViewChange('schedule')}
+          disabled={scheduleDisabled}
           className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
-            activeView === 'schedule'
-              ? 'bg-[#22C55E] text-[#052E16]'
-              : 'text-[#9CA3AF] hover:text-white'
+            scheduleDisabled
+              ? 'text-[#4B5563] cursor-not-allowed opacity-50'
+              : activeView === 'schedule'
+                ? 'bg-[#22C55E] text-[#052E16]'
+                : 'text-[#9CA3AF] hover:text-white'
           }`}
         >
           Schedule

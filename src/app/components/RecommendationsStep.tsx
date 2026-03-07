@@ -1,4 +1,4 @@
-import { ShoppingCart, ArrowLeft, Loader2, X, Clock, ChefHat, Users, Flame, RefreshCw, Repeat2, MapPin, ArrowRight, Save, Check, Plus, Bell, ExternalLink, Play, Brain } from 'lucide-react';
+import { ShoppingCart, ArrowLeft, Loader2, X, Clock, ChefHat, Users, Flame, RefreshCw, Repeat2, MapPin, ArrowRight, Save, Check, Plus, Bell, ExternalLink, Play, Trash2, AlertTriangle } from 'lucide-react';
 import { UserPreferences, MealTimes } from '../App';
 import { getNutritionTargets } from '../utils/nutritionTargets';
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -45,6 +45,8 @@ interface RecommendationsStepProps {
   onCheckQueueTestingChange?: (userId: string) => Promise<any>;
   onSaveMealTimeOverride?: (userId: string, override: MealTimeOverride, mealTimes?: any) => Promise<void>;
   onRemoveMealTimeOverride?: (userId: string, dayOfWeek: number, mealSlot: string, mealTimes?: any) => Promise<void>;
+  onDiscard?: () => void;
+  onUpdatePreferences?: (updates: Partial<import('../App').UserPreferences>) => void;
 }
 
 interface Ingredient {
@@ -124,6 +126,7 @@ export function RecommendationsStep({
   onSaveSchedule, onGenerateQueue, onSwapQueueMeal,
   onMarkMealConsumed, onCheckQueueTestingChange,
   onSaveMealTimeOverride, onRemoveMealTimeOverride,
+  onDiscard, onUpdatePreferences,
 }: RecommendationsStepProps) {
   const [mealPlan, setMealPlan] = useState<MealPlan | null>(null);
   const [loading, setLoading] = useState(true);
@@ -160,10 +163,16 @@ export function RecommendationsStep({
 
   const [showSavedPlansModal, setShowSavedPlansModal] = useState(false);
 
+  // Leave warning for unsaved new plans
+  const [showLeaveWarning, setShowLeaveWarning] = useState(false);
+  const [pendingNavAction, setPendingNavAction] = useState<(() => void) | null>(null);
+  // True when user is creating a new plan (onboarding) and hasn't saved yet
+  const isNewUnsavedPlan = !activeNavTab && !planSaved && !activePlanId;
+
   // Calendar + queue state
   const [planSubView, setPlanSubView] = useState<'meals' | 'schedule'>('meals');
   const [showScheduleEditor, setShowScheduleEditor] = useState(false);
-  const [scheduleEditorTab, setScheduleEditorTab] = useState<'classes' | 'exams' | 'sleep'>('classes');
+  const [scheduleEditorTab, setScheduleEditorTab] = useState<'classes' | 'meals'>('classes');
   const [savingSchedule, setSavingSchedule] = useState(false);
 
   // Whether we're operating in queue mode (queue exists and has meals)
@@ -448,11 +457,23 @@ export function RecommendationsStep({
   }, [selectedCalendarOffset]);
 
   // Schedule editor save
-  const handleSaveSchedule = async (newSchedule: Omit<AcademicSchedule, 'updatedAt'>) => {
+  const handleSaveSchedule = async (
+    newSchedule: Omit<AcademicSchedule, 'updatedAt'>,
+    newMealTimes?: import('../App').MealTimes,
+    newSelectedSlots?: ('breakfast' | 'lunch' | 'dinner')[],
+  ) => {
     if (!user || !onSaveSchedule) return;
     setSavingSchedule(true);
     try {
-      await onSaveSchedule(user.id, newSchedule, preferences.mealTimes);
+      const effectiveMealTimes = newMealTimes || preferences.mealTimes;
+      // Propagate meal time / slot changes to parent preferences
+      if (onUpdatePreferences) {
+        const updates: Partial<import('../App').UserPreferences> = {};
+        if (newMealTimes) updates.mealTimes = newMealTimes;
+        if (newSelectedSlots) updates.selectedMealSlots = newSelectedSlots;
+        if (Object.keys(updates).length) onUpdatePreferences(updates);
+      }
+      await onSaveSchedule(user.id, newSchedule, effectiveMealTimes);
       setShowScheduleEditor(false);
       // Check if testing period status changed and queue needs regeneration
       if (onCheckQueueTestingChange) {
@@ -464,7 +485,7 @@ export function RecommendationsStep({
             avoidIngredients: preferences.avoidIngredients,
             maxCookingTime: preferences.maxCookingTime,
             budget: preferences.budget,
-            selectedMealSlots: preferences.selectedMealSlots,
+            selectedMealSlots: newSelectedSlots || preferences.selectedMealSlots,
           });
         }
       }
@@ -972,17 +993,8 @@ export function RecommendationsStep({
         activeView={planSubView}
         onViewChange={setPlanSubView}
         isTestingPeriod={isTestingPeriod}
+        scheduleDisabled={isNewUnsavedPlan}
       />
-
-      {/* Testing Period Banner */}
-      {isTestingPeriod && planSubView === 'meals' && (
-        <div className="mx-5 mb-3 px-4 py-2.5 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center gap-2">
-          <Brain className="w-4 h-4 text-purple-300 flex-shrink-0" />
-          <span className="text-purple-300 text-sm font-medium">
-            Focus Mode Active — Brain-boosting meals prioritized
-          </span>
-        </div>
-      )}
 
       {/* Meal Reminder Banners */}
       {planSubView === 'meals' && (
@@ -1022,6 +1034,8 @@ export function RecommendationsStep({
               isSaving={savingSchedule}
               initialTab={scheduleEditorTab}
               mealTimes={preferences.mealTimes}
+              mealsPerDay={preferences.mealsPerDay}
+              selectedMealSlots={preferences.selectedMealSlots}
             />
           )}
         </>
@@ -1348,6 +1362,17 @@ export function RecommendationsStep({
               </button>
             )}
 
+        {/* Discard Plan Button - shown only for new unsaved plans */}
+        {isNewUnsavedPlan && onDiscard && (
+          <button
+            onClick={onDiscard}
+            className="w-full py-4 rounded-2xl font-medium flex items-center justify-center gap-2 transition-all bg-[#142A1D] border border-red-500/30 text-red-400 hover:border-red-500/50 hover:bg-red-500/10"
+          >
+            <Trash2 className="w-5 h-5" />
+            Discard Plan
+          </button>
+        )}
+
       </div>
 
       </>
@@ -1359,6 +1384,18 @@ export function RecommendationsStep({
         <BottomNavigation
           activeTab={activeNavTab || 'plan'}
           onTabChange={(tab) => {
+            if (isNewUnsavedPlan) {
+              const action = () => {
+                if (onNavTabChange) {
+                  onNavTabChange(tab);
+                } else if (tab === 'home' && onNavigateHome) {
+                  onNavigateHome();
+                }
+              };
+              setPendingNavAction(() => action);
+              setShowLeaveWarning(true);
+              return;
+            }
             if (onNavTabChange) {
               onNavTabChange(tab);
             } else if (tab === 'home' && onNavigateHome) {
@@ -1366,6 +1403,58 @@ export function RecommendationsStep({
             }
           }}
         />
+      )}
+
+      {/* Leave Warning Modal */}
+      {showLeaveWarning && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[70] p-6">
+          <div className="bg-[#142A1D] border border-[#1E4029] rounded-2xl p-6 max-w-sm w-full">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5 text-amber-400" />
+              </div>
+              <h3 className="text-white font-semibold text-lg">Unsaved Plan</h3>
+            </div>
+            <p className="text-[#9CA3AF] text-sm mb-6">
+              Your meal plan hasn't been saved yet. Please save or discard your plan before leaving.
+            </p>
+            <div className="space-y-3">
+              <button
+                onClick={() => {
+                  setShowLeaveWarning(false);
+                  handleSavePlan();
+                }}
+                disabled={savingPlan}
+                className="w-full py-3 bg-[#22C55E] text-[#052E16] rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-[#4ADE80] transition-all"
+              >
+                <Save className="w-4 h-4" />
+                Save Plan
+              </button>
+              {onDiscard && (
+                <button
+                  onClick={() => {
+                    setShowLeaveWarning(false);
+                    setPendingNavAction(null);
+                    onDiscard();
+                  }}
+                  className="w-full py-3 rounded-xl font-medium flex items-center justify-center gap-2 bg-[#1E4029] border border-red-500/30 text-red-400 hover:border-red-500/50 transition-all"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Discard Plan
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  setShowLeaveWarning(false);
+                  setPendingNavAction(null);
+                }}
+                className="w-full py-3 rounded-xl font-medium text-[#9CA3AF] hover:text-white transition-all"
+              >
+                Go Back
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Recipe Modal */}

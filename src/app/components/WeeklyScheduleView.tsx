@@ -9,7 +9,7 @@ interface WeeklyScheduleViewProps {
   weekConflicts?: Map<number, MealConflict[]>;
   isTestingPeriod: boolean;
   testingPeriodName?: string;
-  onEditSchedule: (tab?: 'classes' | 'exams' | 'sleep') => void;
+  onEditSchedule: (tab?: 'classes' | 'meals') => void;
   onViewMeal?: (dayIdx: number, mealSlot: string) => void;
   onSaveMealTimeOverride?: (override: MealTimeOverride) => void;
   onRemoveMealTimeOverride?: (dayOfWeek: number, mealSlot: string) => void;
@@ -149,19 +149,6 @@ export function WeeklyScheduleView({
 
   return (
     <div className="px-2 flex flex-col">
-      {/* Testing period banner — tappable */}
-      {isTestingPeriod && (
-        <button
-          onClick={() => onEditSchedule('exams')}
-          className="mx-3 mb-3 px-4 py-2 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-between hover:bg-purple-500/30 transition-colors text-left w-full"
-        >
-          <span className="text-purple-300 text-sm font-medium">
-            {testingPeriodName || 'Testing Period'} — Focus meals active
-          </span>
-          <ChevronRight className="w-4 h-4 text-purple-400 flex-shrink-0" />
-        </button>
-      )}
-
       {/* Edit button */}
       <div className="flex justify-end px-3 mb-2">
         <button

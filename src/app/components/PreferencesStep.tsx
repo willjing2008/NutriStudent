@@ -103,13 +103,6 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
     { time: 60, label: '60 min', name: 'Take Time' },
   ];
 
-  const formatTime12h = (time24: string) => {
-    const [h, m] = time24.split(':').map(Number);
-    const suffix = h >= 12 ? 'PM' : 'AM';
-    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
-    return `${h12}:${m.toString().padStart(2, '0')} ${suffix}`;
-  };
-
   // Section header component for consistency
   const SectionHeader = ({ icon: Icon, title, optional = false }: { icon: any; title: string; optional?: boolean }) => (
     <div className="flex items-center gap-3 mb-4">
@@ -193,18 +186,15 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
             </div>
           </div>
 
-          {/* Section 3: Meal Times */}
-          <div className="bg-[#142A1D] rounded-2xl p-5 border border-[#2D5A3D]">
-            <SectionHeader icon={Clock} title="Meal Times" />
-            <p className="text-[#6B7280] text-sm mb-4">
-              {mealsPerDay < 3
-                ? `Pick which ${mealsPerDay === 1 ? 'meal' : 'meals'} you'd like, then set the time.`
-                : 'When do you usually eat? This helps schedule meals around your classes.'}
-            </p>
+          {/* Section 3: Meal Type Selection — only shown when fewer than 3 meals */}
+          {mealsPerDay < 3 && (
+            <div className="bg-[#142A1D] rounded-2xl p-5 border border-[#2D5A3D]">
+              <SectionHeader icon={Clock} title="Which Meals?" />
+              <p className="text-[#6B7280] text-sm mb-4">
+                {`Pick which ${mealsPerDay === 1 ? 'meal' : 'meals'} you'd like to include.`}
+              </p>
 
-            {/* Slot picker — shown when fewer than 3 meals */}
-            {mealsPerDay < 3 && (
-              <div className="flex gap-2 mb-4">
+              <div className="flex gap-2">
                 {([
                   { key: 'breakfast' as const, label: 'Breakfast', icon: Sunrise, color: '#F59E0B' },
                   { key: 'lunch' as const, label: 'Lunch', icon: Sun, color: '#22C55E' },
@@ -222,7 +212,6 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
                           } else {
                             if (next.size < mealsPerDay) next.add(key);
                             else {
-                              // Replace the first selected slot
                               const first = [...next][0];
                               next.delete(first);
                               next.add(key);
@@ -243,53 +232,8 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
                   );
                 })}
               </div>
-            )}
-
-            {/* Time pickers for active slots */}
-            <div className="space-y-3">
-              {([
-                { key: 'breakfast' as const, label: 'Breakfast', icon: Sunrise, color: '#F59E0B' },
-                { key: 'lunch' as const, label: 'Lunch', icon: Sun, color: '#22C55E' },
-                { key: 'dinner' as const, label: 'Dinner', icon: Moon, color: '#8B5CF6' },
-              ]).filter(({ key }) => mealsPerDay >= 3 || selectedMealSlots.has(key))
-                .slice(0, mealsPerDay >= 3 ? 3 : mealsPerDay)
-                .map(({ key, label, icon: MealIcon, color }) => (
-                <div key={key} className="flex items-center gap-3 p-3 bg-[#0A1F13] rounded-xl border border-[#2D5A3D]">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${color}20` }}>
-                    <MealIcon className="w-4 h-4" style={{ color }} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-white text-sm font-medium">{label}</span>
-                  </div>
-                  <div className="relative">
-                    <input
-                      type="time"
-                      value={mealTimes[key]}
-                      onChange={(e) => setMealTimes(prev => ({ ...prev, [key]: e.target.value }))}
-                      className="bg-[#142A1D] text-white text-sm rounded-lg px-4 py-2 border border-[#2D5A3D] focus:outline-none focus:border-[#22C55E] transition-colors [color-scheme:dark] w-[140px]"
-                    />
-                  </div>
-                </div>
-              ))}
             </div>
-            <div className="mt-4 p-3 bg-[#22C55E]/10 rounded-xl border border-[#22C55E]/20">
-              <p className="text-sm text-[#22C55E]">
-                {(() => {
-                  const activeSlots = mealsPerDay >= 3
-                    ? (['breakfast', 'lunch', 'dinner'] as const)
-                    : (['breakfast', 'lunch', 'dinner'] as const).filter(k => selectedMealSlots.has(k));
-                  const times = activeSlots.map(k => <strong key={k}>{formatTime12h(mealTimes[k])}</strong>);
-                  return <>
-                    {times.length === 1 ? 'Meal' : 'Meals'} scheduled at{' '}
-                    {times.length === 1 && times[0]}
-                    {times.length === 2 && <>{times[0]} and {times[1]}</>}
-                    {times.length === 3 && <>{times[0]}, {times[1]}, and {times[2]}</>}
-                    {mealsPerDay === 4 && ' + snack'}
-                  </>;
-                })()}
-              </p>
-            </div>
-          </div>
+          )}
 
           {/* Section 4: Choose Your Goal */}
           <div className="bg-[#142A1D] rounded-2xl p-5 border border-[#2D5A3D]">

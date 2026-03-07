@@ -271,10 +271,15 @@ export default function App() {
     }
   };
 
-  const saveMealPlan = async (mealPlan: any, planName?: string) => {
+  const saveMealPlan = async (mealPlan: any, planName?: string, replacePlanId?: string | null) => {
     if (!user) return;
-    
+
     try {
+      // If replacing an existing plan, delete it first
+      if (replacePlanId) {
+        await deleteSavedMealPlanById(replacePlanId);
+      }
+
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/save-meal-plan`,
         {
@@ -283,11 +288,11 @@ export default function App() {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${publicAnonKey}`,
           },
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             userId: user.id,
             mealPlan,
             preferences,
-            planName: planName || `Meal Plan - ${new Date().toLocaleDateString('en-GB')}`
+            planName: planName || `Meal Plan - ${new Date().toLocaleDateString('en-GB')}`,
           }),
         }
       );
@@ -300,8 +305,7 @@ export default function App() {
         const newPlanId = data.planId || Date.now().toString();
         setActivePlanId(newPlanId);
 
-        // Add to saved plans history
-        const newSavedPlan = {
+        const planEntry = {
           id: newPlanId,
           name: planName || `Meal Plan - ${new Date().toLocaleDateString('en-GB')}`,
           createdAt: new Date().toISOString(),
@@ -312,8 +316,8 @@ export default function App() {
           goal: preferences.goal || 'Custom',
           mealsPerDay: preferences.mealsPerDay || 3,
         };
-        setSavedPlansHistory(prev => [newSavedPlan, ...prev]);
-        
+        setSavedPlansHistory(prev => [planEntry, ...prev]);
+
         return true;
       }
       return false;
@@ -427,7 +431,11 @@ export default function App() {
     setIsOnboarding(false);
   };
 
-  const startOnboarding = () => {
+  const startOnboarding = (createNew = false) => {
+    if (createNew) {
+      setActivePlanId(null);
+      setSavedMealPlan(null);
+    }
     setIsOnboarding(true);
     setOnboardingStep(2);
   };
@@ -519,7 +527,7 @@ export default function App() {
               setOnboardingStep(2);
             }}
             onSaveMealPlan={async (mealPlan) => {
-              const success = await saveMealPlan(mealPlan);
+              const success = await saveMealPlan(mealPlan, undefined, activePlanId);
               if (success) {
                 setIsOnboarding(false);
                 setActiveNavTab('home');
@@ -529,6 +537,10 @@ export default function App() {
             onDeletePlan={deleteSavedMealPlanById}
             activePlanId={activePlanId}
             onNavigateHome={() => {
+              setIsOnboarding(false);
+              setActiveNavTab('home');
+            }}
+            onDiscard={() => {
               setIsOnboarding(false);
               setActiveNavTab('home');
             }}
@@ -557,7 +569,7 @@ export default function App() {
         <MealPlansDashboard
           user={user}
           savedPlans={savedPlansHistory}
-          onCreateNew={startOnboarding}
+          onCreateNew={() => startOnboarding(true)}
           onViewPlan={() => setActiveNavTab('plan')}
           onNavigateHome={() => setActiveNavTab('home')}
           onNavigateGrocery={() => setActiveNavTab('shop')}
@@ -573,6 +585,7 @@ export default function App() {
             protein: savedMealPlan.meals?.reduce((sum: number, m: any) => sum + (m.nutrition?.protein || 0), 0) || 0,
             isActive: true,
           } : null}
+          onEditPlan={() => startOnboarding()}
         />
       )}
 
@@ -583,7 +596,7 @@ export default function App() {
           onBack={() => setActiveNavTab('home')}
           onNext={() => setActiveNavTab('shop')}
           onReset={startOnboarding}
-          onSaveMealPlan={saveMealPlan}
+          onSaveMealPlan={(mealPlan) => saveMealPlan(mealPlan, undefined, activePlanId)}
           onDeletePlan={deleteSavedMealPlanById}
           activePlanId={activePlanId}
           onNavigateHome={() => setActiveNavTab('home')}
@@ -605,6 +618,7 @@ export default function App() {
           onCheckQueueTestingChange={calendar.checkQueueTestingChange}
           onSaveMealTimeOverride={calendar.saveMealTimeOverride}
           onRemoveMealTimeOverride={calendar.removeMealTimeOverride}
+          onUpdatePreferences={updatePreferences}
         />
       )}
 
