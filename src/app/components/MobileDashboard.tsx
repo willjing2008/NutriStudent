@@ -340,12 +340,6 @@ export function MobileDashboard({
       <div className="px-5 mb-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-white font-semibold text-lg">Today's Meals</h3>
-          <button 
-            onClick={onViewFullPlan}
-            className="text-[#22C55E] text-sm font-medium hover:underline"
-          >
-            Edit Plan
-          </button>
         </div>
         
         <div className="space-y-3">

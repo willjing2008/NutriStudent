@@ -1228,12 +1228,6 @@ export function RecommendationsStep({
               </span>
             )}
           </div>
-          <button
-            onClick={onReset}
-            className="text-[#22C55E] text-sm font-medium hover:underline"
-          >
-            Edit Plan
-          </button>
                               </div>
 
         <div className="space-y-3">
