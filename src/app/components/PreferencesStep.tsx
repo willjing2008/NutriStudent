@@ -157,8 +157,8 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
           {/* Section 2: Meals Per Day */}
           <div className="bg-[#142A1D] rounded-2xl p-5 border border-[#2D5A3D]">
             <SectionHeader icon={Users} title="Meals Per Day" />
-            <div className="grid grid-cols-4 gap-3">
-              {[1, 2, 3, 4].map((num) => (
+            <div className="grid grid-cols-3 gap-3">
+              {[1, 2, 3].map((num) => (
                 <button
                   key={num}
                   onClick={() => {
