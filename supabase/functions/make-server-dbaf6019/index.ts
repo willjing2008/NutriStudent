@@ -2159,7 +2159,9 @@ app.post("/make-server-dbaf6019/user-stats", async (c) => {
     let plansCreated = 0;
     try {
       const planList = await kv.get(`meal_plan_list_${userId}`);
-      if (Array.isArray(planList)) {
+      if (planList && Array.isArray((planList as any).plans)) {
+        plansCreated = (planList as any).plans.length;
+      } else if (Array.isArray(planList)) {
         plansCreated = planList.length;
       }
     } catch { /* no plans yet */ }
