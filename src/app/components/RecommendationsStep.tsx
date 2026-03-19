@@ -869,12 +869,6 @@ export function RecommendationsStep({
   const caloriePercentage = Math.round((todayNutrition.calories / targetCalories) * 100);
   const cookedCount = currentDayMeals.filter(meal => cookedMeals.has(meal.id)).length;
 
-  // Check if the selected calendar day is today (only allow marking meals on today's date)
-  const isSelectedDayToday = (() => {
-    const selected = calendarDays.find(d => d.offset === selectedCalendarOffset);
-    return selected?.isToday ?? false;
-  })();
-
 
   // Prepare shopping list
   const allIngredients = mealPlan?.meals.flatMap(meal => 
@@ -1300,18 +1294,14 @@ export function RecommendationsStep({
                     </div>
                   </div>
 
-                  {/* Checkbox — only enabled on today's date */}
+                  {/* Checkbox */}
                                 <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (isSelectedDayToday) toggleMealCooked(meal.id);
+                      toggleMealCooked(meal.id);
                     }}
-                    disabled={!isSelectedDayToday}
-                    title={!isSelectedDayToday ? 'You can only mark meals on today\'s date' : undefined}
                     className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                      !isSelectedDayToday
-                        ? 'bg-[#1E4029]/50 text-[#4B4B4B] cursor-not-allowed'
-                        : isCooked
+                      isCooked
                         ? 'bg-[#22C55E] text-[#052E16] animate-pulse-glow'
                         : 'bg-[#1E4029] text-[#6B7280] hover:bg-[#2D5A3D]'
                     }`}
