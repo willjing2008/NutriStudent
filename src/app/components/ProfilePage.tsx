@@ -161,12 +161,12 @@ export function ProfilePage({ user, onLogout, onOpenAdmin, onUserUpdate, activeT
             <div className="flex-1">
               <div className="flex items-baseline gap-2">
                 <span className="text-3xl font-bold text-white">
-                  {loadingStats ? '...' : stats?.currentStreak ?? 0}
+                  {loadingStats ? '...' : stats?.totalCookingDays ?? 0}
                 </span>
-                <span className="text-[#6B7280] text-sm">day streak</span>
+                <span className="text-[#6B7280] text-sm">days cooked</span>
               </div>
               <p className="text-[#6B7280] text-xs mt-0.5">
-                Best: {loadingStats ? '...' : stats?.longestStreak ?? 0} days
+                Best streak: {loadingStats ? '...' : stats?.longestStreak ?? 0} days
               </p>
             </div>
           </div>

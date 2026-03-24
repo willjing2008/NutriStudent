@@ -204,7 +204,7 @@ export function RecommendationsStep({
     icon?: string;
   } | null>(null);
   const [totalCookedEver, setTotalCookedEver] = useState<number>(0);
-  const [currentStreak, setCurrentStreak] = useState<number>(0);
+  const [totalCookingDays, setTotalCookingDays] = useState<number>(0);
 
   useEffect(() => {
     requestAnimationFrame(() => {
@@ -409,7 +409,7 @@ export function RecommendationsStep({
       .then(res => res.json())
       .then(data => {
         setTotalCookedEver(data.mealsLogged || 0);
-        setCurrentStreak(data.currentStreak || 0);
+        setTotalCookingDays(data.totalCookingDays || 0);
       })
       .catch(err => console.error('Failed to load user stats:', err));
   }, [user]);
@@ -1222,9 +1222,9 @@ export function RecommendationsStep({
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <h3 className="text-white font-semibold text-lg">Today's Meals</h3>
-            {currentStreak > 0 && (
+            {totalCookingDays > 0 && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-500/20 border border-orange-500/30 text-orange-400 text-xs font-medium">
-                {'\u{1F525}'} {currentStreak} day streak
+                {'\u{1F525}'} {totalCookingDays} days cooked
               </span>
             )}
           </div>

@@ -2298,7 +2298,7 @@ app.post("/make-server-dbaf6019/user-stats", async (c) => {
   }
 });
 
-// Get school leaderboard ranked by current cooking day streak
+// Get school leaderboard ranked by best (longest) cooking day streak
 app.post("/make-server-dbaf6019/leaderboard", async (c) => {
   try {
     const { schoolId } = await c.req.json();
@@ -2322,37 +2322,38 @@ app.post("/make-server-dbaf6019/leaderboard", async (c) => {
       (u: any) => u.user_metadata?.school_id === schoolId
     );
 
-    // Compute current streak for each school user
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const formatDate = (d: Date) => d.toISOString().split('T')[0];
-
+    // Compute longest (best) streak for each school user
     const leaderboard = await Promise.all(
       schoolUsers.map(async (u: any) => {
         const entries = await getByPrefixWithKeys(`cooked_${u.id}_`);
-        const cookingDates = new Set(entries.map((e: any) => e.value?.date).filter(Boolean));
+        const cookingDates = [...new Set(entries.map((e: any) => e.value?.date).filter(Boolean))].sort();
 
-        let currentStreak = 0;
-        let checkDate = new Date(today);
-        if (!cookingDates.has(formatDate(checkDate))) {
-          checkDate = new Date(yesterday);
-        }
-        while (cookingDates.has(formatDate(checkDate))) {
-          currentStreak++;
-          checkDate.setDate(checkDate.getDate() - 1);
+        let longestStreak = 0;
+        if (cookingDates.length > 0) {
+          let streak = 1;
+          for (let i = 1; i < cookingDates.length; i++) {
+            const prev = new Date(cookingDates[i - 1]);
+            const curr = new Date(cookingDates[i]);
+            const diffDays = Math.round((curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24));
+            if (diffDays === 1) {
+              streak++;
+            } else {
+              longestStreak = Math.max(longestStreak, streak);
+              streak = 1;
+            }
+          }
+          longestStreak = Math.max(longestStreak, streak);
         }
 
         return {
           userId: u.id,
           name: u.user_metadata?.name || 'Anonymous',
-          currentStreak,
+          currentStreak: longestStreak,
         };
       })
     );
 
-    // Sort by streak descending, then name ascending for ties
+    // Sort by best streak descending, then name ascending for ties
     leaderboard.sort((a, b) => {
       if (b.currentStreak !== a.currentStreak) return b.currentStreak - a.currentStreak;
       return a.name.localeCompare(b.name);
