@@ -9,6 +9,7 @@ import type {
   ShoppingIngredient,
 } from '../types/calendar';
 import type { MealTimes } from '../App';
+import { getLocalTodayISO, toLocalISODate } from '../utils/dateUtils';
 
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019`;
 
@@ -78,7 +79,7 @@ export function useAcademicCalendar() {
   // Load meal conflicts for today
   const loadMealConflicts = useCallback(async (userId: string, mealTimes?: MealTimes) => {
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getLocalTodayISO();
       const data = await apiPost<{ conflicts: MealConflict[] }>('get-meal-conflicts', { userId, date: today, mealTimes });
       setMealConflicts(data.conflicts);
       return data.conflicts;
@@ -96,7 +97,7 @@ export function useAcademicCalendar() {
       const promises = Array.from({ length: 7 }, (_, i) => {
         const d = new Date(today);
         d.setDate(today.getDate() + (i - dow));
-        const dateStr = d.toISOString().split('T')[0];
+        const dateStr = toLocalISODate(d);
         return apiPost<{ conflicts: MealConflict[] }>('get-meal-conflicts', { userId, date: dateStr, mealTimes })
           .then(data => ({ day: i, conflicts: data.conflicts }));
       });

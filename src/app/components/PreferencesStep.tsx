@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowRight, ArrowLeft, X, Calendar, Users, Target, Clock, AlertCircle, Sunrise, Sun, Moon } from 'lucide-react';
 import { UserPreferences, MealTimes } from '../App';
+import { getLocalTodayISO } from '../utils/dateUtils';
 
 // Common ingredients for autocomplete
 const COMMON_INGREDIENTS = [
@@ -18,7 +19,13 @@ interface PreferencesStepProps {
 }
 
 export function PreferencesStep({ preferences, updatePreferences, onNext, onBack }: PreferencesStepProps) {
-  const [shoppingDate, setShoppingDate] = useState(preferences.shoppingDate);
+  // Default the shopping date to today; never start it in the past (a stale
+  // saved value could otherwise anchor the whole plan to a past week).
+  const [shoppingDate, setShoppingDate] = useState(
+    preferences.shoppingDate && preferences.shoppingDate >= getLocalTodayISO()
+      ? preferences.shoppingDate
+      : getLocalTodayISO(),
+  );
   const [mealsPerDay, setMealsPerDay] = useState(preferences.mealsPerDay);
   const [goal, setGoal] = useState(preferences.goal);
   const [maxCookingTime, setMaxCookingTime] = useState(preferences.maxCookingTime);
@@ -142,7 +149,7 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
                 type="date"
                 value={shoppingDate}
                 onChange={(e) => setShoppingDate(e.target.value)}
-                min={new Date().toISOString().split('T')[0]}
+                min={getLocalTodayISO()}
                 className="w-full px-4 py-4 bg-[#0A1F13] border border-[#2D5A3D] rounded-xl text-white focus:outline-none focus:border-[#22C55E] transition-colors [color-scheme:dark] appearance-none"
                 placeholder="dd/mm/yyyy"
               />

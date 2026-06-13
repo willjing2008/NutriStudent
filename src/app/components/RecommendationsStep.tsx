@@ -1,6 +1,7 @@
 import { ShoppingCart, ArrowLeft, Loader2, X, Clock, ChefHat, Users, Flame, RefreshCw, Repeat2, MapPin, ArrowRight, Save, Check, Plus, Bell, ExternalLink, Play, Trash2, AlertTriangle } from 'lucide-react';
 import { UserPreferences, MealTimes } from '../App';
 import { getNutritionTargets } from '../utils/nutritionTargets';
+import { getLocalTodayISO, parseLocalDate, initialPlanOffset } from '../utils/dateUtils';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
 import { ShoppingMode } from './ShoppingMode';
@@ -383,7 +384,7 @@ export function RecommendationsStep({
   // Load persisted cooked meals and stats when user is available
   useEffect(() => {
     if (!user) return;
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalTodayISO();
 
     // Load today's cooked meals
     fetch(`https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/cooked-meals`, {
@@ -426,9 +427,18 @@ export function RecommendationsStep({
   // Uses 'instant' so there is no visible slide-in animation on page open.
   useEffect(() => {
     if (!mealPlan || !calendarScrollRef.current) return;
+    // Select the day for "today" within the plan, clamped to a real plan day so
+    // the meals always display (a stale/past shopping date previously pushed the
+    // index past the plan end, leaving "Today's Meals" empty).
+    const targetOffset = initialPlanOffset(
+      preferences.shoppingDate,
+      getLocalTodayISO(),
+      daysWithMeals.length,
+    );
+    setSelectedCalendarOffset(targetOffset);
     const container = calendarScrollRef.current;
     requestAnimationFrame(() => {
-      const idx = calendarDays.findIndex(d => d.offset === selectedCalendarOffset);
+      const idx = calendarDays.findIndex(d => d.offset === targetOffset);
       if (idx < 0) return;
       const DAY_W = 64;
       container.scrollTo({
@@ -727,7 +737,7 @@ export function RecommendationsStep({
     });
 
     const meal = currentDayMeals.find(m => m.id === mealId);
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalTodayISO();
 
     // Increment/decrement timesCooked for user-created recipes
     if (meal && meal.timesCooked !== undefined && mealPlan) {
@@ -804,7 +814,7 @@ export function RecommendationsStep({
   // Parse the plan start date from preferences (shoppingDate is 'YYYY-MM-DD' from date input)
   const planStartDate: Date | null = (() => {
     if (!preferences.shoppingDate) return null;
-    const d = new Date(preferences.shoppingDate + 'T00:00:00');
+    const d = parseLocalDate(preferences.shoppingDate);
     return isNaN(d.getTime()) ? null : d;
   })();
 
