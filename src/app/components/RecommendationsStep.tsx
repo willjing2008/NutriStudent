@@ -223,7 +223,6 @@ export function RecommendationsStep({
     (meal: MealPlanMeal): string[] => {
       const urls = [
         mealImages[meal.id],
-        isRenderableImageUrl(meal.imageUrl) ? meal.imageUrl : undefined,
         isRenderableImageUrl(meal.image) ? meal.image : undefined,
         LOCAL_IMAGE_FALLBACK,
       ].filter((url): url is string => isRenderableImageUrl(url));
@@ -354,7 +353,7 @@ export function RecommendationsStep({
       setMealPlan(enriched);
       setLoading(false);
       setPlanSaved(true);
-      setSavedMealPlanSnapshot(JSON.stringify(enriched.meals.map(m => m.id).sort()));
+      setSavedMealPlanSnapshot(JSON.stringify(enriched.meals.map((m: MealPlanMeal) => m.id).sort()));
       fetchMealImages(enriched.meals);
     } else if (hasRequiredPreferences) {
       fetchMealPlan();
@@ -1648,7 +1647,7 @@ export function RecommendationsStep({
       {showMealSwapModal && selectedMealForSwap && (
         <MealSwapModal
           currentMeal={selectedMealForSwap}
-          goal={preferences.goal}
+          goal={preferences.goal || 'Custom'}
           currentMealIds={mealPlan.meals.map(m => m.id)}
           maxCookingTime={preferences.maxCookingTime}
           projectId={projectId}

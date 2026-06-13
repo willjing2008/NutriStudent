@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { projectId, publicAnonKey } from '../../utils/supabase/info';
+import { projectId, publicAnonKey } from '../../../utils/supabase/info';
 
 interface UseRecipeImageOptions {
   recipeId: string;

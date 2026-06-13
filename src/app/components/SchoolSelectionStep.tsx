@@ -28,7 +28,7 @@ export function SchoolSelectionStep({ userId, onComplete }: SchoolSelectionStepP
   const [showAddSchool, setShowAddSchool] = useState(false);
   const [addingSchool, setAddingSchool] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const searchSchools = useCallback(async (query: string) => {
     setSearching(true);

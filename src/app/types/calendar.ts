@@ -84,3 +84,11 @@ export interface QueueWeekMealPlan {
   weekNumber: number;
   totalWeeks: number;
 }
+
+export interface ShoppingIngredient {
+  name: string;
+  amount: string;
+  category: 'dairy' | 'produce' | 'meat' | 'pantry' | 'frozen' | 'bakery';
+  estimatedPrice: number;
+  checked: boolean;
+}

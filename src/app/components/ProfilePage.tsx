@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../hooks/useLanguage';
 import { useSubscription } from '../hooks/useSubscription';
 import { LogOut, Settings, Bell, Shield, HelpCircle, ChevronRight, Moon, Globe, Crown, Pencil, Search, GraduationCap, Check, Loader2, X, Plus, User } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { BottomNavigation, NavTab } from './BottomNavigation';
 import { ACHIEVEMENTS } from '../constants/achievements';
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
@@ -70,7 +71,14 @@ export function ProfilePage({ user, onLogout, onOpenAdmin, onUserUpdate, activeT
       .finally(() => setLoadingStats(false));
   }, [user?.id]);
 
-  const settingsGroups = [
+  interface SettingsItem {
+    icon: LucideIcon;
+    label: string;
+    value?: string;
+    action: () => void;
+  }
+
+  const settingsGroups: { title: string; items: SettingsItem[] }[] = [
     {
       title: 'Preferences',
       items: [
@@ -320,7 +328,7 @@ function EditProfileModal({ user, onClose, onSave }: { user: any; onClose: () =>
   const [addingSchool, setAddingSchool] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const debounceRef = React.useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const searchSchools = React.useCallback(async (query: string) => {
     setSearching(true);

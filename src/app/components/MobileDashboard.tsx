@@ -3,6 +3,9 @@ import { ChevronRight, Check, RefreshCw, Plus, Home, Calendar, ShoppingCart, Use
 import { UserPreferences } from '../App';
 import { getRecipeImage } from '../utils/recipeImages';
 
+const LOCAL_IMAGE_FALLBACK =
+  'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjI0MCIgdmlld0JveD0iMCAwIDMyMCAyNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjMyMCIgaGVpZ2h0PSIyNDAiIGZpbGw9IiMxNDJBMUQiLz48Y2lyY2xlIGN4PSIxNjAiIGN5PSIxMDAiIHI9IjQwIiBmaWxsPSIjMUU0MDI5Ii8+PHJlY3QgeD0iNzIiIHk9IjE2MiIgd2lkdGg9IjE3NiIgaGVpZ2h0PSIxMiIgcng9IjYiIGZpbGw9IiMyMkM1NUUiIG9wYWNpdHk9IjAuNzUiLz48L3N2Zz4=';
+
 interface Ingredient {
   name: string;
   category: 'dairy' | 'produce' | 'meat' | 'pantry' | 'frozen' | 'bakery';
@@ -360,14 +363,14 @@ export function MobileDashboard({
                   {/* Meal Image */}
                   <div className="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
                     <img
-                      src={meal.imageUrl || getRecipeImage(meal.id, meal.image)}
+                      src={meal.image || getRecipeImage(meal.id, meal.image) || LOCAL_IMAGE_FALLBACK}
                       alt={meal.name}
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
                         if (!target.dataset.fallback) {
                           target.dataset.fallback = '1';
-                          target.src = getRecipeImage(meal.id);
+                          target.src = getRecipeImage(meal.id) || LOCAL_IMAGE_FALLBACK;
                         }
                       }}
                     />
