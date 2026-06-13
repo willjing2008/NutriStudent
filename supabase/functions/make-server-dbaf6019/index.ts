@@ -150,7 +150,7 @@ app.post("/make-server-dbaf6019/nearby-stores", async (c) => {
   try {
     const { latitude, longitude } = await c.req.json();
     
-    if (!latitude || !longitude) {
+    if (typeof latitude !== "number" || typeof longitude !== "number" || Number.isNaN(latitude) || Number.isNaN(longitude)) {
       return c.json({ error: "Latitude and longitude are required" }, 400);
     }
 
@@ -661,17 +661,20 @@ app.post("/make-server-dbaf6019/classify-recipes", async (c) => {
 app.get("/make-server-dbaf6019/admin/keys/:prefix", async (c) => {
   try {
     const prefix = c.req.param('prefix');
-    const data = await kv.getByPrefix(prefix);
-    
-    return c.json({ 
+    const data = await getByPrefixWithKeys(prefix);
+
+    return c.json({
       prefix,
       count: data.length,
       keys: data.map(item => item.key),
-      data: data.map(item => ({
-        key: item.key,
-        value: item.value,
-        preview: item.value.substring(0, 100) + '...'
-      }))
+      data: data.map(item => {
+        const valueStr = typeof item.value === 'string' ? item.value : JSON.stringify(item.value);
+        return {
+          key: item.key,
+          value: item.value,
+          preview: valueStr.substring(0, 100) + '...'
+        };
+      })
     });
   } catch (error: any) {
     console.log(`Error fetching keys: ${error.message}`);

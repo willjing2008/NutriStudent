@@ -53,16 +53,18 @@ export function RecipeImage({
       {/* Image */}
       {!imageLoadError ? (
         <>
-          <img
-            src={imageUrl}
-            alt={recipeName}
-            className={`w-full h-full object-cover transition-opacity duration-300 ${
-              isImageLoading ? 'opacity-0' : 'opacity-100'
-            }`}
-            onLoad={handleImageLoad}
-            onError={handleImageError}
-            loading="lazy"
-          />
+          {imageUrl && (
+            <img
+              src={imageUrl}
+              alt={recipeName}
+              className={`w-full h-full object-cover transition-opacity duration-300 ${
+                isImageLoading ? 'opacity-0' : 'opacity-100'
+              }`}
+              onLoad={handleImageLoad}
+              onError={handleImageError}
+              loading="lazy"
+            />
+          )}
           
           {/* Loading skeleton */}
           {(isLoading || isImageLoading) && (

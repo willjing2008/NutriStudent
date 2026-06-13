@@ -312,10 +312,11 @@ export function MealSwapModal({
         throw new Error(data.error || 'Failed to load swap options');
       }
 
-      setSwapOptions(data.swapOptions);
+      const options = data.swapOptions || [];
+      setSwapOptions(options);
 
       const imageMap: Record<string, string> = {};
-      for (const option of data.swapOptions) {
+      for (const option of options) {
         imageMap[option.id] = option.imageUrl || option.image || LOCAL_IMAGE_FALLBACK;
       }
       setOptionImages(imageMap);
