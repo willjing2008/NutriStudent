@@ -3,7 +3,7 @@ import { UserPreferences, MealTimes } from '../App';
 import { getNutritionTargets } from '../utils/nutritionTargets';
 import { getLocalTodayISO, parseLocalDate, initialPlanOffset } from '../utils/dateUtils';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { projectId, publicAnonKey } from '../../../utils/supabase/info';
+import { authedPost, publicPost } from '../utils/apiClient';
 import { ShoppingMode } from './ShoppingMode';
 import { getRecipeImageWithCache } from '../utils/recipeImages';
 import { MealSwapModal } from './MealSwapModal';
@@ -312,23 +312,10 @@ export function RecommendationsStep({
     setShowSavedPlansModal(false);
     
     try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/load-meal-plan-by-id`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-          body: JSON.stringify({ userId: user.id, planId }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to load plan');
-      }
+      const data = await authedPost<{ mealPlan?: any }>('load-meal-plan-by-id', {
+        userId: user.id,
+        planId,
+      });
 
       setMealPlan((data.mealPlan));
 
@@ -387,12 +374,7 @@ export function RecommendationsStep({
     const today = getLocalTodayISO();
 
     // Load today's cooked meals
-    fetch(`https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/cooked-meals`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${publicAnonKey}` },
-      body: JSON.stringify({ userId: user.id, date: today }),
-    })
-      .then(res => res.json())
+    authedPost<{ mealIds?: string[] }>('cooked-meals', { userId: user.id, date: today })
       .then(data => {
         if (data.mealIds?.length) {
           setCookedMeals(new Set(data.mealIds));
@@ -401,12 +383,7 @@ export function RecommendationsStep({
       .catch(err => console.error('Failed to load cooked meals:', err));
 
     // Load user stats for streak and total cooked count
-    fetch(`https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/user-stats`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${publicAnonKey}` },
-      body: JSON.stringify({ userId: user.id }),
-    })
-      .then(res => res.json())
+    authedPost<{ mealsLogged?: number; totalCookingDays?: number }>('user-stats', { userId: user.id })
       .then(data => {
         setTotalCookedEver(data.mealsLogged || 0);
         setTotalCookingDays(data.totalCookingDays || 0);
@@ -510,33 +487,17 @@ export function RecommendationsStep({
     setError(null);
 
     try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/generate-meal-plan`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-          body: JSON.stringify({
-            storeName: 'Generic UK Supermarket',
-            mealsPerDay: preferences.mealsPerDay,
-            budget: preferences.budget,
-            goal: preferences.goal,
-            shoppingDate: preferences.shoppingDate,
-            maxCookingTime: preferences.maxCookingTime,
-            avoidIngredients: preferences.avoidIngredients || [],
-            mealTimes: preferences.mealTimes,
-            selectedMealSlots: preferences.selectedMealSlots || ['breakfast', 'lunch', 'dinner'],
-          }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to generate meal plan');
-      }
+      const data = await publicPost<{ mealPlan?: any }>('generate-meal-plan', {
+        storeName: 'Generic UK Supermarket',
+        mealsPerDay: preferences.mealsPerDay,
+        budget: preferences.budget,
+        goal: preferences.goal,
+        shoppingDate: preferences.shoppingDate,
+        maxCookingTime: preferences.maxCookingTime,
+        avoidIngredients: preferences.avoidIngredients || [],
+        mealTimes: preferences.mealTimes,
+        selectedMealSlots: preferences.selectedMealSlots || ['breakfast', 'lunch', 'dinner'],
+      });
 
       setMealPlan((data.mealPlan));
 
@@ -589,31 +550,15 @@ export function RecommendationsStep({
 
     try {
       const currentMealIds = mealPlan.meals.map(m => m.id);
-      
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/shuffle-recipe`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-          body: JSON.stringify({
-            currentRecipeId: mealId,
-            goal: preferences.goal,
-            currentMealIds: currentMealIds,
-            maxCookingTime: preferences.maxCookingTime,
-          }),
-        }
-      );
 
-      const data = await response.json();
+      const data = await publicPost<{ replacementMeal: any }>('shuffle-recipe', {
+        currentRecipeId: mealId,
+        goal: preferences.goal,
+        currentMealIds: currentMealIds,
+        maxCookingTime: preferences.maxCookingTime,
+      });
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to find alternative recipe');
-      }
-
-      const updatedMeals = mealPlan.meals.map(meal => 
+      const updatedMeals = mealPlan.meals.map(meal =>
         meal.id === mealId ? data.replacementMeal : meal
       );
 
@@ -752,19 +697,15 @@ export function RecommendationsStep({
     }
 
     // Persist to backend
-    fetch(`https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/track-meal-cooked`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${publicAnonKey}` },
-      body: JSON.stringify({
-        userId: user.id,
-        mealId,
-        date: today,
-        recipeId: meal?.id || mealId,
-        recipeName: meal?.name || '',
-        mealCost: meal?.totalCost || 0,
-        category: meal?.category || '',
-        isCooked: !wasCooked,
-      }),
+    authedPost('track-meal-cooked', {
+      userId: user.id,
+      mealId,
+      date: today,
+      recipeId: meal?.id || mealId,
+      recipeName: meal?.name || '',
+      mealCost: meal?.totalCost || 0,
+      category: meal?.category || '',
+      isCooked: !wasCooked,
     }).catch(err => {
       console.error('Failed to persist cooked meal:', err);
       // Revert on failure
@@ -1660,8 +1601,6 @@ export function RecommendationsStep({
           goal={preferences.goal || 'Custom'}
           currentMealIds={mealPlan.meals.map(m => m.id)}
           maxCookingTime={preferences.maxCookingTime}
-          projectId={projectId}
-          publicAnonKey={publicAnonKey}
           onSwap={handleMealSwap}
           onClose={() => setShowMealSwapModal(false)}
         />

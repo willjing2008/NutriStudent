@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { projectId, publicAnonKey } from '../../../utils/supabase/info';
+import { authedFetch } from '../utils/apiClient';
 import type {
   AcademicSchedule,
   RecipeQueue,
@@ -11,17 +11,9 @@ import type {
 import type { MealTimes } from '../App';
 import { getLocalTodayISO, toLocalISODate } from '../utils/dateUtils';
 
-const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019`;
-
-const apiHeaders = {
-  'Content-Type': 'application/json',
-  'Authorization': `Bearer ${publicAnonKey}`,
-};
-
 async function apiPost<T>(endpoint: string, body: object): Promise<T> {
-  const res = await fetch(`${API_BASE}/${endpoint}`, {
+  const res = await authedFetch(endpoint, {
     method: 'POST',
-    headers: apiHeaders,
     body: JSON.stringify(body),
   });
   const data = await res.json();

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { GraduationCap, Search, Plus, Loader2, ArrowRight, Check } from 'lucide-react';
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
+import { authedPost } from '../utils/apiClient';
 
 interface SchoolSelectionStepProps {
   userId: string;
@@ -13,6 +14,8 @@ interface School {
 }
 
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019`;
+// Anon-key headers, used only for the genuinely public schools/search endpoint.
+// Authenticated calls go through authedPost (session JWT).
 const HEADERS = {
   'Content-Type': 'application/json',
   'Authorization': `Bearer ${publicAnonKey}`,
@@ -64,13 +67,7 @@ export function SchoolSelectionStep({ userId, onComplete }: SchoolSelectionStepP
     setAddingSchool(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE}/schools`, {
-        method: 'POST',
-        headers: HEADERS,
-        body: JSON.stringify({ name: newSchoolName.trim() }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to add school');
+      const data = await authedPost<{ school: School }>('schools', { name: newSchoolName.trim() });
       setSelectedSchool(data.school);
       setNewSchoolName('');
       setShowAddSchool(false);
@@ -87,17 +84,11 @@ export function SchoolSelectionStep({ userId, onComplete }: SchoolSelectionStepP
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE}/schools/select`, {
-        method: 'POST',
-        headers: HEADERS,
-        body: JSON.stringify({
-          userId,
-          schoolId: selectedSchool.id,
-          schoolName: selectedSchool.name,
-        }),
+      await authedPost<{ success?: boolean }>('schools/select', {
+        userId,
+        schoolId: selectedSchool.id,
+        schoolName: selectedSchool.name,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to save school');
       onComplete();
     } catch (err: any) {
       setError(err.message);

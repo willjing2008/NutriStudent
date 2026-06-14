@@ -1,6 +1,6 @@
 import { X, Calendar, ShoppingCart, Loader2, Trash2, Eye, ChefHat } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { projectId, publicAnonKey } from '../../../utils/supabase/info';
+import { authedPost } from '../utils/apiClient';
 
 interface SavedPlan {
   planId: string;
@@ -31,24 +31,7 @@ export function SavedPlansModal({ userId, onClose, onLoadPlan }: SavedPlansModal
     setError(null);
 
     try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/get-meal-plans`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-          body: JSON.stringify({ userId }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to load saved plans');
-      }
-
+      const data = await authedPost<{ plans?: SavedPlan[] }>('get-meal-plans', { userId });
       setPlans(data.plans || []);
     } catch (err: any) {
       console.error('Error fetching saved plans:', err);
@@ -66,23 +49,7 @@ export function SavedPlansModal({ userId, onClose, onLoadPlan }: SavedPlansModal
     setDeletingPlanId(planId);
 
     try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/delete-meal-plan-by-id`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-          body: JSON.stringify({ userId, planId }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to delete plan');
-      }
+      await authedPost<{ success?: boolean }>('delete-meal-plan-by-id', { userId, planId });
 
       // Remove from local state
       setPlans(plans.filter(p => p.planId !== planId));

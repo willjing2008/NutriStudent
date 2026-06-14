@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '../hooks/useLanguage';
 import { Trophy, Flame, RefreshCw, GraduationCap, ChefHat, Loader2, Heart, Clock, X, Users } from 'lucide-react';
 import { BottomNavigation, NavTab } from './BottomNavigation';
-import { projectId, publicAnonKey } from '../../../utils/supabase/info';
+import { authedPost } from '../utils/apiClient';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 
 interface LeaderboardEntry {
@@ -37,12 +37,6 @@ interface LeaderboardPageProps {
   onTabChange: (tab: NavTab) => void;
 }
 
-const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019`;
-const API_HEADERS = {
-  'Content-Type': 'application/json',
-  'Authorization': `Bearer ${publicAnonKey}`,
-};
-
 export function LeaderboardPage({ user, activeTab, onTabChange }: LeaderboardPageProps) {
   const { t } = useLanguage();
   const [view, setView] = useState<'streaks' | 'recipes'>('streaks');
@@ -76,12 +70,7 @@ export function LeaderboardPage({ user, activeTab, onTabChange }: LeaderboardPag
     else setLoading(true);
 
     try {
-      const res = await fetch(`${API_BASE}/leaderboard`, {
-        method: 'POST',
-        headers: API_HEADERS,
-        body: JSON.stringify({ schoolId }),
-      });
-      const data = await res.json();
+      const data = await authedPost<{ leaderboard?: LeaderboardEntry[] }>('leaderboard', { schoolId });
       if (data.leaderboard) {
         setLeaderboard(data.leaderboard);
       }
@@ -112,17 +101,16 @@ export function LeaderboardPage({ user, activeTab, onTabChange }: LeaderboardPag
 
     try {
       const offset = loadMore ? recipeLeaderboard.length : 0;
-      const res = await fetch(`${API_BASE}/recipe-leaderboard`, {
-        method: 'POST',
-        headers: API_HEADERS,
-        body: JSON.stringify({ schoolId, userId: currentUserId, limit: PAGE_SIZE, offset }),
-      });
-      const data = await res.json();
+      const data = await authedPost<{ recipes?: RecipeLeaderboardEntry[]; hasMore: boolean; total: number }>(
+        'recipe-leaderboard',
+        { schoolId, userId: currentUserId, limit: PAGE_SIZE, offset },
+      );
       if (data.recipes) {
+        const newRecipes = data.recipes;
         if (loadMore) {
-          setRecipeLeaderboard(prev => [...prev, ...data.recipes]);
+          setRecipeLeaderboard(prev => [...prev, ...newRecipes]);
         } else {
-          setRecipeLeaderboard(data.recipes);
+          setRecipeLeaderboard(newRecipes);
         }
         setRecipesHasMore(data.hasMore);
         setRecipesTotal(data.total);
@@ -159,12 +147,10 @@ export function LeaderboardPage({ user, activeTab, onTabChange }: LeaderboardPag
     setTogglingLike(recipeId);
 
     try {
-      const res = await fetch(`${API_BASE}/toggle-community-like`, {
-        method: 'POST',
-        headers: API_HEADERS,
-        body: JSON.stringify({ userId: currentUserId, recipeId }),
-      });
-      const data = await res.json();
+      const data = await authedPost<{ success: boolean; liked: boolean; likesCount: number }>(
+        'toggle-community-like',
+        { userId: currentUserId, recipeId },
+      );
       if (data.success) {
         setRecipeLeaderboard(prev =>
           prev.map(r =>

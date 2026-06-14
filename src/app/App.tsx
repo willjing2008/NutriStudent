@@ -12,7 +12,7 @@ import { LeaderboardPage } from './components/LeaderboardPage';
 import { SubscriptionPage } from './components/SubscriptionPage';
 import { NavTab } from './components/BottomNavigation';
 import { supabase } from '../utils/supabaseClient';
-import { projectId, publicAnonKey } from '../../utils/supabase/info';
+import { authedPost } from './utils/apiClient';
 import { useSubscription } from './hooks/useSubscription';
 import { useAcademicCalendar } from './hooks/useAcademicCalendar';
 import { Apple, LogOut } from 'lucide-react';
@@ -185,39 +185,17 @@ export default function App() {
   useEffect(() => {
     if (!user?.id || preferences.gender === null) return;
 
-    fetch(
-      `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/auth/update-profile`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${publicAnonKey}`,
-        },
-        body: JSON.stringify({
-          userId: user.id,
-          gender: preferences.gender,
-        }),
-      }
-    ).catch(err => console.error('Failed to persist gender:', err));
+    authedPost('auth/update-profile', {
+      userId: user.id,
+      gender: preferences.gender,
+    }).catch(err => console.error('Failed to persist gender:', err));
   }, [preferences.gender, user?.id]);
 
   const loadSavedMealPlan = async (userId: string) => {
     setLoadingSavedPlan(true);
     try {
       // Step 1: get the list to find the most recent plan ID
-      const listResponse = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/get-meal-plans`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-          body: JSON.stringify({ userId }),
-        }
-      );
-
-      const listData = await listResponse.json();
+      const listData = await authedPost<{ plans?: any[] }>('get-meal-plans', { userId });
 
       if (!listData.plans?.length) {
         console.log('No saved meal plans found');
@@ -239,19 +217,10 @@ export default function App() {
       // Step 2: load the most recent plan by its ID
       const latestPlanId = listData.plans[0].planId;
       setActivePlanId(latestPlanId);
-      const planResponse = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/load-meal-plan-by-id`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-          body: JSON.stringify({ userId, planId: latestPlanId }),
-        }
+      const planData = await authedPost<{ mealPlan?: any; preferences?: any }>(
+        'load-meal-plan-by-id',
+        { userId, planId: latestPlanId },
       );
-
-      const planData = await planResponse.json();
 
       if (planData.mealPlan) {
         console.log('Found saved meal plan');
@@ -280,24 +249,12 @@ export default function App() {
         await deleteSavedMealPlanById(replacePlanId);
       }
 
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/save-meal-plan`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-          body: JSON.stringify({
-            userId: user.id,
-            mealPlan,
-            preferences,
-            planName: planName || `Meal Plan - ${new Date().toLocaleDateString('en-GB')}`,
-          }),
-        }
-      );
-
-      const data = await response.json();
+      const data = await authedPost<{ success?: boolean; planId?: string }>('save-meal-plan', {
+        userId: user.id,
+        mealPlan,
+        preferences,
+        planName: planName || `Meal Plan - ${new Date().toLocaleDateString('en-GB')}`,
+      });
 
       if (data.success) {
         console.log('Meal plan saved successfully');
@@ -331,19 +288,10 @@ export default function App() {
     if (!user) return;
 
     try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/delete-meal-plan-by-id`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-          body: JSON.stringify({ userId: user.id, planId }),
-        }
-      );
-
-      const data = await response.json();
+      const data = await authedPost<{ success?: boolean }>('delete-meal-plan-by-id', {
+        userId: user.id,
+        planId,
+      });
 
       if (data.success) {
         console.log('Meal plan deleted successfully:', planId);

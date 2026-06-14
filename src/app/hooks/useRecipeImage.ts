@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
+import { authedPost } from '../utils/apiClient';
 
 interface UseRecipeImageOptions {
   recipeId: string;
@@ -43,27 +44,10 @@ export function useRecipeImage({
     setError(null);
 
     try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/generate-recipe-image`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-          body: JSON.stringify({
-            imageQuery,
-            recipeId,
-            cuisine
-          }),
-        }
+      const data = await authedPost<{ success?: boolean; imageUrl?: string; cached?: boolean }>(
+        'generate-recipe-image',
+        { imageQuery, recipeId, cuisine },
       );
-
-      if (!response.ok) {
-        throw new Error('Failed to generate and store image');
-      }
-
-      const data = await response.json();
 
       if (data.success && data.imageUrl) {
         setImageUrl(data.imageUrl);

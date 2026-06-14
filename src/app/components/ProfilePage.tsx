@@ -6,6 +6,7 @@ import type { LucideIcon } from 'lucide-react';
 import { BottomNavigation, NavTab } from './BottomNavigation';
 import { ACHIEVEMENTS } from '../constants/achievements';
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
+import { authedPost } from '../utils/apiClient';
 import { Gender } from '../utils/nutritionTargets';
 
 interface ProfilePageProps {
@@ -34,6 +35,8 @@ interface School {
 }
 
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019`;
+// Anon-key headers, used only for the genuinely public schools/search endpoint.
+// Authenticated calls go through authedPost (session JWT).
 const API_HEADERS = {
   'Content-Type': 'application/json',
   'Authorization': `Bearer ${publicAnonKey}`,
@@ -49,6 +52,7 @@ export function ProfilePage({ user, onLogout, onOpenAdmin, onUserUpdate, activeT
 
   const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'Student';
   const userEmail = user?.email || 'student@university.ac.uk';
+  const isAdmin = user?.app_metadata?.role === 'admin';
 
   useEffect(() => {
     if (!user?.id) {
@@ -56,12 +60,7 @@ export function ProfilePage({ user, onLogout, onOpenAdmin, onUserUpdate, activeT
       return;
     }
 
-    fetch(`https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/user-stats`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${publicAnonKey}` },
-      body: JSON.stringify({ userId: user.id }),
-    })
-      .then(res => res.json())
+    authedPost<UserStats>('user-stats', { userId: user.id })
       .then(data => {
         setStats(data);
       })
@@ -92,7 +91,9 @@ export function ProfilePage({ user, onLogout, onOpenAdmin, onUserUpdate, activeT
       items: [
         { icon: Crown, label: 'Billing', action: showCustomerCenter },
         { icon: Shield, label: 'Privacy & Security', action: () => {} },
-        { icon: Settings, label: 'Admin Dashboard', action: onOpenAdmin },
+        // Admin Dashboard entry is only shown to admins. This is cosmetic —
+        // the backend remains the real authorization gate.
+        ...(isAdmin ? [{ icon: Settings, label: 'Admin Dashboard', action: onOpenAdmin }] : []),
         { icon: HelpCircle, label: 'Help & Support', action: () => {} },
       ],
     },
@@ -358,13 +359,7 @@ function EditProfileModal({ user, onClose, onSave }: { user: any; onClose: () =>
     setAddingSchool(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE}/schools`, {
-        method: 'POST',
-        headers: API_HEADERS,
-        body: JSON.stringify({ name: newSchoolName.trim() }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to add school');
+      const data = await authedPost<{ school: School }>('schools', { name: newSchoolName.trim() });
       setSelectedSchool(data.school);
       setNewSchoolName('');
       setShowAddSchool(false);
@@ -399,13 +394,7 @@ function EditProfileModal({ user, onClose, onSave }: { user: any; onClose: () =>
 
       body.userId = user.id;
 
-      const res = await fetch(`${API_BASE}/auth/update-profile`, {
-        method: 'POST',
-        headers: API_HEADERS,
-        body: JSON.stringify(body),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to update profile');
+      await authedPost<{ success?: boolean }>('auth/update-profile', body);
 
       // Merge updated metadata back into user object
       const updatedUser = {

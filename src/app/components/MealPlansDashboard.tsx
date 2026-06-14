@@ -2,13 +2,7 @@ import { useLanguage } from '../hooks/useLanguage';
 import React, { useState, useEffect, useCallback } from 'react';
 import { Edit2, Search, Plus, ChevronRight, Check, Calendar, Sparkles, ChefHat, Flame } from 'lucide-react';
 import { BottomNavigation, NavTab } from './BottomNavigation';
-import { projectId, publicAnonKey } from '../../../utils/supabase/info';
-
-const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019`;
-const API_HEADERS = {
-  'Content-Type': 'application/json',
-  'Authorization': `Bearer ${publicAnonKey}`,
-};
+import { authedPost } from '../utils/apiClient';
 
 interface MyRecipe {
   recipeId: string;
@@ -85,12 +79,7 @@ export function MealPlansDashboard({
     if (!user?.id) return;
     setMyRecipesLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/my-recipes`, {
-        method: 'POST',
-        headers: API_HEADERS,
-        body: JSON.stringify({ userId: user.id }),
-      });
-      const data = await res.json();
+      const data = await authedPost<{ recipes?: MyRecipe[] }>('my-recipes', { userId: user.id });
       if (data.recipes) setMyRecipes(data.recipes);
     } catch (err) {
       console.error('Failed to fetch my recipes:', err);

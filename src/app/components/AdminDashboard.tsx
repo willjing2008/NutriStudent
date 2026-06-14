@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Plus, Edit2, Trash2, RefreshCw, Database, ChefHat, X, Save, Loader2, ImageIcon, Upload, Trash, ExternalLink, Calculator } from 'lucide-react';
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
+import { authedPost, authedFetch, publicPost } from '../utils/apiClient';
 import { ImageStorageInfo } from './ImageStorageInfo';
 
 const LOCAL_IMAGE_FALLBACK =
@@ -68,6 +69,8 @@ export function AdminDashboard() {
   const [nutritionDetails, setNutritionDetails] = useState<any[] | null>(null);
 
   const baseUrl = `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019`;
+  // Anon-key headers, used only for the genuinely public admin/recipe GET.
+  // Admin actions go through authedPost/authedFetch (session JWT).
   const headers = {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${publicAnonKey}`,
@@ -80,9 +83,9 @@ export function AdminDashboard() {
   const fetchAllRecipes = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${baseUrl}/admin/all-recipes`, { headers });
+      const response = await authedFetch('admin/all-recipes', { method: 'GET' });
       const data = await response.json();
-      
+
       // Check for errors in response
       if (data.error) {
         console.error('Error from server:', data.error);
@@ -108,18 +111,7 @@ export function AdminDashboard() {
 
     setLoading(true);
     try {
-      const response = await fetch(`${baseUrl}/init-recipes`, {
-        method: 'POST',
-        headers,
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        showMessage('error', `Server error: ${response.status} - ${errorText}`);
-        return;
-      }
-
-      const data = await response.json();
+      const data = await authedPost<any>('init-recipes');
 
       if (data.error) {
         showMessage('error', `Failed to initialize recipes: ${data.error}`);
@@ -165,12 +157,7 @@ export function AdminDashboard() {
 
     setLoading(true);
     try {
-      const response = await fetch(`${baseUrl}/admin/recipe`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(editedRecipe),
-      });
-      const data = await response.json();
+      await authedPost('admin/recipe', editedRecipe);
       showMessage('success', 'Recipe saved successfully!');
       setEditMode(false);
       setSelectedRecipe(editedRecipe);
@@ -195,10 +182,7 @@ export function AdminDashboard() {
       const mealType = parts[1];
       const recipeId = parts[2];
 
-      const response = await fetch(`${baseUrl}/admin/recipe/${mealType}/${recipeId}`, {
-        method: 'DELETE',
-        headers,
-      });
+      await authedFetch(`admin/recipe/${mealType}/${recipeId}`, { method: 'DELETE' });
       showMessage('success', 'Recipe deleted successfully!');
       setSelectedRecipe(null);
       setSelectedRecipeKey(null);
@@ -219,13 +203,8 @@ export function AdminDashboard() {
 
     setLoading(true);
     try {
-      const response = await fetch(`${baseUrl}/admin/search-recipes`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ query: searchQuery }),
-      });
-      const data = await response.json();
-      
+      const data = await publicPost<any>('admin/search-recipes', { query: searchQuery });
+
       // Check if there's an error in the response
       if (data.error) {
         console.error('Search error from server:', data.error);
@@ -306,17 +285,16 @@ export function AdminDashboard() {
       formData.append('image', imageFile);
       formData.append('recipeId', editedRecipe.id);
       formData.append('cuisine', editedRecipe.cuisine);
-      
-      const response = await fetch(`${baseUrl}/upload-recipe-image`, {
+
+      // FormData upload: authedFetch sends the session JWT and does NOT set
+      // Content-Type, so the browser supplies the multipart boundary.
+      const response = await authedFetch('upload-recipe-image', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${publicAnonKey}`,
-        },
         body: formData,
       });
-      
+
       const data = await response.json();
-      
+
       if (data.error) {
         showMessage('error', `Upload failed: ${data.error}`);
         return;
@@ -409,15 +387,14 @@ export function AdminDashboard() {
         formData.append('image', newRecipeImageFile);
         formData.append('recipeId', newRecipe.id);
         formData.append('cuisine', newRecipe.cuisine);
-        
-        const uploadResponse = await fetch(`${baseUrl}/upload-recipe-image`, {
+
+        // FormData upload: authedFetch sends the session JWT and does NOT set
+        // Content-Type, so the browser supplies the multipart boundary.
+        const uploadResponse = await authedFetch('upload-recipe-image', {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
           body: formData,
         });
-        
+
         const uploadData = await uploadResponse.json();
         if (uploadData.imageUrl) {
           imageUrl = uploadData.imageUrl;
@@ -426,19 +403,14 @@ export function AdminDashboard() {
       
       // Create the recipe with the uploaded image URL
       const recipeWithImage = imageUrl ? { ...newRecipe, imageUrl } : newRecipe;
-      
-      const response = await fetch(`${baseUrl}/admin/recipe`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(recipeWithImage),
-      });
-      const data = await response.json();
-      
+
+      const data = await authedPost<any>('admin/recipe', recipeWithImage);
+
       if (data.error) {
         showMessage('error', `Failed to create recipe: ${data.error}`);
         return;
       }
-      
+
       showMessage('success', 'Recipe created successfully!');
       setShowAddRecipe(false);
       // Reset form
@@ -545,26 +517,14 @@ export function AdminDashboard() {
     setLoading(true);
     try {
       showMessage('success', 'Started generating images... This may take a few minutes.');
-      
-      const response = await fetch(`${baseUrl}/generate-all-recipe-images`, {
-        method: 'POST',
-        headers,
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Server error:', errorText);
-        showMessage('error', `Server error (${response.status}): Failed to generate images. Check console for details.`);
-        return;
-      }
-      
-      const data = await response.json();
-      
+
+      const data = await authedPost<any>('generate-all-recipe-images');
+
       if (data.error) {
         showMessage('error', `Failed to generate images: ${data.error}`);
         return;
       }
-      
+
       showMessage('success', `Successfully generated ${data.successCount} images! ${data.skippedCount} already existed, ${data.errorCount} errors.`);
     } catch (error: any) {
       console.error('Error generating images:', error);
@@ -586,19 +546,13 @@ export function AdminDashboard() {
     setCalculatingNutrition(true);
     setNutritionDetails(null);
     try {
-      const response = await fetch(`${baseUrl}/admin/calculate-nutrition`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          ingredients: recipe.ingredients.map((ing: any) => ({
-            name: ing.name,
-            amount: ing.amount,
-          })),
-          servings: recipe.servings || 1,
-        }),
+      const data = await authedPost<any>('admin/calculate-nutrition', {
+        ingredients: recipe.ingredients.map((ing: any) => ({
+          name: ing.name,
+          amount: ing.amount,
+        })),
+        servings: recipe.servings || 1,
       });
-
-      const data = await response.json();
 
       if (data.error) {
         showMessage('error', `Nutrition calculation failed: ${data.error}`);
@@ -654,12 +608,7 @@ export function AdminDashboard() {
     setLoading(true);
     showMessage('success', 'Validating all recipes... This will take a few minutes.');
     try {
-      const response = await fetch(`${baseUrl}/admin/validate-nutrition`, {
-        method: 'POST',
-        headers,
-      });
-
-      const data = await response.json();
+      const data = await authedPost<any>('admin/validate-nutrition');
 
       if (data.error) {
         showMessage('error', `Validation failed: ${data.error}`);
