@@ -1,6 +1,7 @@
 import { Check, ChevronLeft, ShoppingCart, Star } from 'lucide-react';
 import { useState } from 'react';
 import { BottomNavigation, NavTab } from './BottomNavigation';
+import { categorizeIngredient } from '../utils/ingredientCategory';
 
 interface ShoppingIngredient {
   name: string;
@@ -96,11 +97,14 @@ export function ShoppingMode({ ingredients, storeName, onBack, missingEssentials
   // Deduplicate first, then organize by category
   const dedupedIngredients = deduplicateIngredients(ingredients);
 
+  // Categorize by ingredient name — the backend tags every ingredient 'pantry',
+  // which would collapse the whole list into one section.
   const organizedIngredients = dedupedIngredients.reduce((acc, ingredient) => {
-    if (!acc[ingredient.category]) {
-      acc[ingredient.category] = [];
+    const category = categorizeIngredient(ingredient.name);
+    if (!acc[category]) {
+      acc[category] = [];
     }
-    acc[ingredient.category].push(ingredient);
+    acc[category].push(ingredient);
     return acc;
   }, {} as Record<string, ShoppingIngredient[]>);
 
