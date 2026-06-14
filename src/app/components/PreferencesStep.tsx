@@ -42,7 +42,9 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
   );
 
   // Dietary restrictions state
-  const [dietaryRestrictions, setDietaryRestrictions] = useState<string[]>([]);
+  const [dietaryRestrictions, setDietaryRestrictions] = useState<string[]>(
+    preferences.dietaryRestrictions || []
+  );
 
   const filteredSuggestions = COMMON_INGREDIENTS.filter(
     ingredient =>
@@ -81,6 +83,7 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
       goal,
       maxCookingTime,
       avoidIngredients,
+      dietaryRestrictions,
       mealTimes,
       selectedMealSlots: activeSlots,
     });

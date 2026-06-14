@@ -377,7 +377,7 @@ app.post("/make-server-dbaf6019/fetch-store-ingredients", async (c) => {
 // Endpoint to generate optimal meal plan
 app.post("/make-server-dbaf6019/generate-meal-plan", async (c) => {
   try {
-    const { storeName, mealsPerDay, budget, goal, shoppingDate, maxCookingTime, avoidIngredients, selectedMealSlots } = await c.req.json();
+    const { storeName, mealsPerDay, budget, goal, shoppingDate, maxCookingTime, avoidIngredients, dietaryRestrictions, selectedMealSlots } = await c.req.json();
 
     if (!mealsPerDay || !budget || !goal) {
       return c.json({ error: "Missing required parameters" }, 400);
@@ -408,7 +408,8 @@ app.post("/make-server-dbaf6019/generate-meal-plan", async (c) => {
       maxCookingTime,
       cookingDays,
       avoidIngredients,
-      selectedMealSlots
+      selectedMealSlots,
+      dietaryRestrictions
     );
 
     return c.json({ mealPlan });
@@ -417,6 +418,33 @@ app.post("/make-server-dbaf6019/generate-meal-plan", async (c) => {
     return c.json({ error: error.message || "Failed to generate meal plan" }, 500);
   }
 });
+
+// Ingredient keywords forbidden by each dietary restriction. Keyword/substring
+// matching is intentionally cautious (better to over-exclude than serve a
+// forbidden food); curated to avoid the worst false positives (e.g. nut names
+// rather than bare "nut", which would catch coconut/butternut).
+const MEAT_KEYWORDS = ['chicken', 'beef', 'pork', 'lamb', 'turkey', 'bacon', 'ham', 'sausage', 'steak', 'mince', 'prosciutto', 'salami', 'duck', 'veal', 'gelatin', 'gelatine'];
+const FISH_KEYWORDS = ['fish', 'salmon', 'tuna', 'cod', 'prawn', 'shrimp', 'crab', 'lobster', 'anchovy', 'mackerel', 'sardine', 'squid', 'oyster', 'mussel'];
+const DAIRY_EGG_KEYWORDS = ['milk', 'cheese', 'butter', 'cream', 'yogurt', 'yoghurt', 'egg', 'honey', 'ghee', 'custard'];
+const GLUTEN_KEYWORDS = ['wheat', 'bread', 'pasta', 'flour', 'barley', 'rye', 'couscous', 'noodle', 'cracker', 'breadcrumb', 'tortilla', 'pita', 'bagel', 'pastry'];
+const NUT_KEYWORDS = ['almond', 'peanut', 'cashew', 'walnut', 'hazelnut', 'pecan', 'pistachio', 'macadamia', 'pine nut', 'brazil nut'];
+const KETO_KEYWORDS = ['rice', 'pasta', 'bread', 'potato', 'sugar', 'oats', 'flour', 'noodle', 'corn', 'banana', 'tortilla'];
+
+const DIETARY_KEYWORDS: Record<string, string[]> = {
+  vegetarian: [...MEAT_KEYWORDS, ...FISH_KEYWORDS],
+  vegan: [...MEAT_KEYWORDS, ...FISH_KEYWORDS, ...DAIRY_EGG_KEYWORDS],
+  'gluten-free': GLUTEN_KEYWORDS,
+  'nut-free': NUT_KEYWORDS,
+  keto: KETO_KEYWORDS,
+};
+
+function dietaryForbiddenKeywords(restrictions: string[]): string[] {
+  const set = new Set<string>();
+  for (const r of restrictions) {
+    for (const word of DIETARY_KEYWORDS[r.toLowerCase()] ?? []) set.add(word);
+  }
+  return [...set];
+}
 
 // Helper to generate meal plan from NewRecipe[] fetched from kv_store
 function generateMealPlanFromRecipes(
@@ -427,7 +455,8 @@ function generateMealPlanFromRecipes(
   maxCookingTime?: number,
   cookingDays: number = 7,
   avoidIngredients?: string[],
-  selectedMealSlots?: string[]
+  selectedMealSlots?: string[],
+  dietaryRestrictions?: string[]
 ) {
   const dailyBudget = weeklyBudget / 7;
   const totalMealsNeeded = cookingDays * mealsPerDay;
@@ -443,6 +472,21 @@ function generateMealPlanFromRecipes(
       return !hasAvoided;
     });
     console.log(`🚫 Filtered by avoided ingredients: ${filteredRecipes.length}/${recipes.length} remaining`);
+  }
+
+  // Filter by dietary restrictions (keyword-based; over-restricts rather than
+  // risk serving a forbidden food — the empty-result fallback below recovers).
+  if (dietaryRestrictions && dietaryRestrictions.length > 0) {
+    const forbidden = dietaryForbiddenKeywords(dietaryRestrictions);
+    if (forbidden.length > 0) {
+      const beforeCount = filteredRecipes.length;
+      filteredRecipes = filteredRecipes.filter(recipe =>
+        !forbidden.some(word =>
+          recipe.ingredients.some(ing => ing.toLowerCase().includes(word))
+        )
+      );
+      console.log(`🥗 Filtered by dietary restrictions [${dietaryRestrictions.join(', ')}]: ${filteredRecipes.length}/${beforeCount} remaining`);
+    }
   }
 
   if (maxCookingTime && maxCookingTime > 0) {

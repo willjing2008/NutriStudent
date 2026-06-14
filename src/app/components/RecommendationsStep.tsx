@@ -495,6 +495,7 @@ export function RecommendationsStep({
         shoppingDate: preferences.shoppingDate,
         maxCookingTime: preferences.maxCookingTime,
         avoidIngredients: preferences.avoidIngredients || [],
+        dietaryRestrictions: preferences.dietaryRestrictions || [],
         mealTimes: preferences.mealTimes,
         selectedMealSlots: preferences.selectedMealSlots || ['breakfast', 'lunch', 'dinner'],
       });

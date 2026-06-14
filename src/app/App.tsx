@@ -47,6 +47,7 @@ export interface UserPreferences {
   goal: 'study' | 'work' | 'fitness' | null;
   maxCookingTime: number;
   avoidIngredients: string[];
+  dietaryRestrictions: string[];
   mealTimes: MealTimes;
   selectedMealSlots: ('breakfast' | 'lunch' | 'dinner')[];
 }
@@ -88,6 +89,7 @@ export default function App() {
     goal: null,
     maxCookingTime: 30,
     avoidIngredients: [],
+    dietaryRestrictions: [],
     mealTimes: { breakfast: '08:00', lunch: '12:00', dinner: '18:00' },
     selectedMealSlots: ['breakfast', 'lunch', 'dinner'],
   });
@@ -369,6 +371,7 @@ export default function App() {
       goal: null,
       maxCookingTime: 30,
       avoidIngredients: [],
+      dietaryRestrictions: [],
       mealTimes: { breakfast: '08:00', lunch: '12:00', dinner: '18:00' },
       selectedMealSlots: ['breakfast', 'lunch', 'dinner'],
     });
