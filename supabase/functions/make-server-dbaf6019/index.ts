@@ -2,6 +2,7 @@ import { Hono } from "npm:hono";
 import { cors } from "npm:hono/cors";
 import { logger } from "npm:hono/logger";
 import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
+import { requireAuth, requireAdmin, getUserId, isUuid } from "./auth-middleware.ts";
 import * as kv from "./kv_store.tsx";
 import { ALL_RECIPES, NewRecipe } from "./recipe-data.ts";
 import { toMealPlanMeal, toSwapOption, getRecipesByMealType, getAllRecipesFromDB, getRecipesByFocusType, getSleepFriendlyRecipes } from "./recipe-adapter.ts";
@@ -24,7 +25,7 @@ async function getByPrefixWithKeys(prefix: string): Promise<Array<{key: string, 
   const { data, error } = await supabase
     .from("kv_store_dbaf6019")
     .select("key, value")
-    .like("key", prefix + "%");
+    .like("key", kv.escapeLikePrefix(prefix) + "%");
   
   if (error) {
     throw new Error(error.message);
@@ -535,7 +536,7 @@ const REMOVED_RECIPE_IDS = new Set([
 ]);
 
 // Initialize all recipes from recipe-data.ts into kv_store
-app.post("/make-server-dbaf6019/init-recipes", async (c) => {
+app.post("/make-server-dbaf6019/init-recipes", requireAuth, requireAdmin, async (c) => {
   try {
     const recipes = ALL_RECIPES.filter(r => !REMOVED_RECIPE_IDS.has(r.id));
     const removedCount = ALL_RECIPES.length - recipes.length;
@@ -618,7 +619,7 @@ app.post("/make-server-dbaf6019/init-recipes", async (c) => {
 // ========== RECIPE CLASSIFICATION ==========
 
 // One-time migration: classify all recipes for focus/sleep properties
-app.post("/make-server-dbaf6019/classify-recipes", async (c) => {
+app.post("/make-server-dbaf6019/classify-recipes", requireAuth, requireAdmin, async (c) => {
   try {
     const allRecipes = await getAllRecipesFromDB();
     let focusCount = 0;
@@ -657,10 +658,26 @@ app.post("/make-server-dbaf6019/classify-recipes", async (c) => {
 
 // ========== DATABASE ADMIN ENDPOINTS ==========
 
+// Allowlist of prefixes the admin key-enumeration endpoint may query.
+// Restricts this enumeration tool to known-safe namespaces so it can't be
+// used to dump arbitrary keys (e.g. by guessing other prefixes).
+const ADMIN_KEYS_ALLOWED_PREFIXES = [
+  'recipe:',
+  'meal_plan_',
+  'community_',
+  'school:',
+  'user_',
+];
+
 // Get all keys with a specific prefix (for debugging)
-app.get("/make-server-dbaf6019/admin/keys/:prefix", async (c) => {
+app.get("/make-server-dbaf6019/admin/keys/:prefix", requireAuth, requireAdmin, async (c) => {
   try {
     const prefix = c.req.param('prefix');
+
+    if (!ADMIN_KEYS_ALLOWED_PREFIXES.includes(prefix)) {
+      return c.json({ error: "Prefix not allowed", allowed: ADMIN_KEYS_ALLOWED_PREFIXES }, 400);
+    }
+
     const data = await getByPrefixWithKeys(prefix);
 
     return c.json({
@@ -683,7 +700,7 @@ app.get("/make-server-dbaf6019/admin/keys/:prefix", async (c) => {
 });
 
 // Get all recipes from database
-app.get("/make-server-dbaf6019/admin/all-recipes", async (c) => {
+app.get("/make-server-dbaf6019/admin/all-recipes", requireAuth, requireAdmin, async (c) => {
   try {
     const data = await getByPrefixWithKeys('recipe:');
 
@@ -734,7 +751,7 @@ app.get("/make-server-dbaf6019/admin/recipe/:mealType/:recipeId", async (c) => {
 });
 
 // Add or update a recipe
-app.post("/make-server-dbaf6019/admin/recipe", async (c) => {
+app.post("/make-server-dbaf6019/admin/recipe", requireAuth, requireAdmin, async (c) => {
   try {
     const recipe = await c.req.json();
 
@@ -757,7 +774,7 @@ app.post("/make-server-dbaf6019/admin/recipe", async (c) => {
 });
 
 // Update a specific recipe field
-app.patch("/make-server-dbaf6019/admin/recipe/:mealType/:recipeId", async (c) => {
+app.patch("/make-server-dbaf6019/admin/recipe/:mealType/:recipeId", requireAuth, requireAdmin, async (c) => {
   try {
     const mealType = c.req.param('mealType');
     const recipeId = c.req.param('recipeId');
@@ -785,7 +802,7 @@ app.patch("/make-server-dbaf6019/admin/recipe/:mealType/:recipeId", async (c) =>
 });
 
 // Delete a recipe
-app.delete("/make-server-dbaf6019/admin/recipe/:mealType/:recipeId", async (c) => {
+app.delete("/make-server-dbaf6019/admin/recipe/:mealType/:recipeId", requireAuth, requireAdmin, async (c) => {
   try {
     const mealType = c.req.param('mealType');
     const recipeId = c.req.param('recipeId');
@@ -804,7 +821,7 @@ app.delete("/make-server-dbaf6019/admin/recipe/:mealType/:recipeId", async (c) =
 });
 
 // Clear all recipe data (use with caution!)
-app.delete("/make-server-dbaf6019/admin/clear-all-recipes", async (c) => {
+app.delete("/make-server-dbaf6019/admin/clear-all-recipes", requireAuth, requireAdmin, async (c) => {
   try {
     const data = await getByPrefixWithKeys('recipe:');
     const keys = data.map(item => item.key);
@@ -999,10 +1016,10 @@ app.post("/make-server-dbaf6019/get-swap-options", async (c) => {
 // ========== ACADEMIC CALENDAR ENDPOINTS ==========
 
 // Save/update academic schedule (classes, testing periods, sleep schedule)
-app.post("/make-server-dbaf6019/save-academic-schedule", async (c) => {
+app.post("/make-server-dbaf6019/save-academic-schedule", requireAuth, async (c) => {
   try {
-    const { userId, classes, testingPeriods, sleepSchedule } = await c.req.json();
-    if (!userId) return c.json({ error: "Missing userId" }, 400);
+    const { classes, testingPeriods, sleepSchedule } = await c.req.json();
+    const userId = getUserId(c);
 
     const schedule = {
       classes: classes || [],
@@ -1019,10 +1036,9 @@ app.post("/make-server-dbaf6019/save-academic-schedule", async (c) => {
 });
 
 // Get academic schedule
-app.post("/make-server-dbaf6019/get-academic-schedule", async (c) => {
+app.post("/make-server-dbaf6019/get-academic-schedule", requireAuth, async (c) => {
   try {
-    const { userId } = await c.req.json();
-    if (!userId) return c.json({ error: "Missing userId" }, 400);
+    const userId = getUserId(c);
 
     const raw = await kv.get(`academic_schedule_${userId}`);
     if (!raw) return c.json({ schedule: null });
@@ -1035,10 +1051,10 @@ app.post("/make-server-dbaf6019/get-academic-schedule", async (c) => {
 });
 
 // Check if a date falls within a testing period
-app.post("/make-server-dbaf6019/check-testing-period", async (c) => {
+app.post("/make-server-dbaf6019/check-testing-period", requireAuth, async (c) => {
   try {
-    const { userId, date } = await c.req.json();
-    if (!userId) return c.json({ error: "Missing userId" }, 400);
+    const { date } = await c.req.json();
+    const userId = getUserId(c);
 
     const checkDate = date || new Date().toISOString().split("T")[0];
     const raw = await kv.get(`academic_schedule_${userId}`);
@@ -1072,10 +1088,10 @@ function addOneHour(time: string): string {
 }
 
 // Get meal-time conflicts with classes for a given date
-app.post("/make-server-dbaf6019/get-meal-conflicts", async (c) => {
+app.post("/make-server-dbaf6019/get-meal-conflicts", requireAuth, async (c) => {
   try {
-    const { userId, date, mealTimes } = await c.req.json();
-    if (!userId) return c.json({ error: "Missing userId" }, 400);
+    const { date, mealTimes } = await c.req.json();
+    const userId = getUserId(c);
 
     const raw = await kv.get(`academic_schedule_${userId}`);
     if (!raw) return c.json({ conflicts: [] });
@@ -1137,11 +1153,12 @@ app.post("/make-server-dbaf6019/get-meal-conflicts", async (c) => {
 // ========== RECIPE QUEUE ENDPOINTS ==========
 
 // Generate a 28-day recipe queue for a user
-app.post("/make-server-dbaf6019/generate-recipe-queue", async (c) => {
+app.post("/make-server-dbaf6019/generate-recipe-queue", requireAuth, async (c) => {
   try {
-    const { userId, mealsPerDay, goal, avoidIngredients, maxCookingTime, budget, selectedMealSlots } = await c.req.json();
-    if (!userId || !mealsPerDay || !goal) {
-      return c.json({ error: "Missing required parameters: userId, mealsPerDay, goal" }, 400);
+    const { mealsPerDay, goal, avoidIngredients, maxCookingTime, budget, selectedMealSlots } = await c.req.json();
+    const userId = getUserId(c);
+    if (!mealsPerDay || !goal) {
+      return c.json({ error: "Missing required parameters: mealsPerDay, goal" }, 400);
     }
 
     // Check testing period status
@@ -1177,10 +1194,9 @@ app.post("/make-server-dbaf6019/generate-recipe-queue", async (c) => {
 });
 
 // Get user's current recipe queue
-app.post("/make-server-dbaf6019/get-recipe-queue", async (c) => {
+app.post("/make-server-dbaf6019/get-recipe-queue", requireAuth, async (c) => {
   try {
-    const { userId } = await c.req.json();
-    if (!userId) return c.json({ error: "Missing userId" }, 400);
+    const userId = getUserId(c);
 
     const raw = await kv.get(`recipe_queue_${userId}`);
     if (!raw) return c.json({ queue: null, needsRefresh: true });
@@ -1195,10 +1211,10 @@ app.post("/make-server-dbaf6019/get-recipe-queue", async (c) => {
 });
 
 // Get a specific week from the queue as a MealPlan-shaped object
-app.post("/make-server-dbaf6019/get-queue-week", async (c) => {
+app.post("/make-server-dbaf6019/get-queue-week", requireAuth, async (c) => {
   try {
-    const { userId, weekNumber, budget } = await c.req.json();
-    if (!userId) return c.json({ error: "Missing userId" }, 400);
+    const { weekNumber, budget } = await c.req.json();
+    const userId = getUserId(c);
 
     const raw = await kv.get(`recipe_queue_${userId}`);
     if (!raw) return c.json({ error: "No queue found. Generate one first." }, 404);
@@ -1214,10 +1230,11 @@ app.post("/make-server-dbaf6019/get-queue-week", async (c) => {
 });
 
 // Swap a meal in the queue
-app.post("/make-server-dbaf6019/queue-swap-meal", async (c) => {
+app.post("/make-server-dbaf6019/queue-swap-meal", requireAuth, async (c) => {
   try {
-    const { userId, dayNumber, mealSlot, newRecipeId } = await c.req.json();
-    if (!userId || !dayNumber || !mealSlot || !newRecipeId) {
+    const { dayNumber, mealSlot, newRecipeId } = await c.req.json();
+    const userId = getUserId(c);
+    if (!dayNumber || !mealSlot || !newRecipeId) {
       return c.json({ error: "Missing required parameters" }, 400);
     }
 
@@ -1247,10 +1264,11 @@ app.post("/make-server-dbaf6019/queue-swap-meal", async (c) => {
 });
 
 // Mark a queue meal as consumed
-app.post("/make-server-dbaf6019/mark-queue-meal-consumed", async (c) => {
+app.post("/make-server-dbaf6019/mark-queue-meal-consumed", requireAuth, async (c) => {
   try {
-    const { userId, dayNumber, mealSlot } = await c.req.json();
-    if (!userId || !dayNumber || !mealSlot) {
+    const { dayNumber, mealSlot } = await c.req.json();
+    const userId = getUserId(c);
+    if (!dayNumber || !mealSlot) {
       return c.json({ error: "Missing required parameters" }, 400);
     }
 
@@ -1284,10 +1302,10 @@ app.post("/make-server-dbaf6019/mark-queue-meal-consumed", async (c) => {
 });
 
 // Get shopping list for a specific queue week
-app.post("/make-server-dbaf6019/get-queue-shopping-list", async (c) => {
+app.post("/make-server-dbaf6019/get-queue-shopping-list", requireAuth, async (c) => {
   try {
-    const { userId, weekNumber } = await c.req.json();
-    if (!userId) return c.json({ error: "Missing userId" }, 400);
+    const { weekNumber } = await c.req.json();
+    const userId = getUserId(c);
 
     const raw = await kv.get(`recipe_queue_${userId}`);
     if (!raw) return c.json({ error: "No queue found" }, 404);
@@ -1302,10 +1320,9 @@ app.post("/make-server-dbaf6019/get-queue-shopping-list", async (c) => {
 });
 
 // Check if queue's focus mode matches current testing period status
-app.post("/make-server-dbaf6019/check-queue-testing-change", async (c) => {
+app.post("/make-server-dbaf6019/check-queue-testing-change", requireAuth, async (c) => {
   try {
-    const { userId } = await c.req.json();
-    if (!userId) return c.json({ error: "Missing userId" }, 400);
+    const userId = getUserId(c);
 
     const queueRaw = await kv.get(`recipe_queue_${userId}`);
     if (!queueRaw) return c.json({ shouldRegenerate: false, reason: "no_queue" });
@@ -1382,31 +1399,16 @@ app.post("/make-server-dbaf6019/auth/signup", async (c) => {
 });
 
 // Get user profile (requires authentication)
-app.get("/make-server-dbaf6019/auth/profile", async (c) => {
+app.get("/make-server-dbaf6019/auth/profile", requireAuth, async (c) => {
   try {
-    const accessToken = c.req.header('Authorization')?.split(' ')[1];
-    
-    if (!accessToken) {
-      return c.json({ error: "No authorization token provided" }, 401);
-    }
+    // requireAuth has already verified the JWT and attached the user to the context.
+    const user = c.get('user');
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-    );
-
-    const { data: { user }, error } = await supabase.auth.getUser(accessToken);
-    
-    if (error || !user) {
-      return c.json({ error: "Invalid or expired token" }, 401);
-    }
-
-    return c.json({ 
+    return c.json({
       user: {
-        id: user.id,
+        id: getUserId(c),
         email: user.email,
         name: user.user_metadata?.name,
-        created_at: user.created_at
       }
     });
   } catch (error: any) {
@@ -1416,7 +1418,7 @@ app.get("/make-server-dbaf6019/auth/profile", async (c) => {
 });
 
 // Generate and store recipe image permanently
-app.post("/make-server-dbaf6019/generate-recipe-image", async (c) => {
+app.post("/make-server-dbaf6019/generate-recipe-image", requireAuth, async (c) => {
   try {
     const body = await c.req.json();
     const { imageQuery, recipeId, cuisine = 'base' } = body;
@@ -1462,17 +1464,22 @@ app.post("/make-server-dbaf6019/generate-recipe-image", async (c) => {
 });
 
 // Upload custom image for a recipe
-app.post("/make-server-dbaf6019/upload-recipe-image", async (c) => {
+app.post("/make-server-dbaf6019/upload-recipe-image", requireAuth, async (c) => {
   try {
     const formData = await c.req.formData();
     const imageFile = formData.get('image') as File;
     const recipeId = formData.get('recipeId') as string;
     const cuisine = formData.get('cuisine') as string || 'base';
-    
+
     if (!imageFile || !recipeId) {
       return c.json({ error: "Missing image file or recipeId" }, 400);
     }
-    
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
     console.log(`Uploading custom image for recipe: ${recipeId}`);
     
     // Ensure bucket exists
@@ -1536,7 +1543,7 @@ app.post("/make-server-dbaf6019/upload-recipe-image", async (c) => {
 });
 
 // Batch generate and store images for all recipes (new recipes already have image URLs)
-app.post("/make-server-dbaf6019/generate-all-recipe-images", async (c) => {
+app.post("/make-server-dbaf6019/generate-all-recipe-images", requireAuth, requireAdmin, async (c) => {
   try {
     console.log('=== Caching Recipe Image URLs ===');
 
@@ -1601,13 +1608,9 @@ app.get("/make-server-dbaf6019/recipe-image/:recipeId", async (c) => {
 // ========== KITCHEN INVENTORY ENDPOINTS ==========
 
 // Check if user has completed kitchen inventory wizard
-app.post("/make-server-dbaf6019/check-kitchen-inventory", async (c) => {
+app.post("/make-server-dbaf6019/check-kitchen-inventory", requireAuth, async (c) => {
   try {
-    const { userId } = await c.req.json();
-    
-    if (!userId) {
-      return c.json({ error: "User ID required" }, 400);
-    }
+    const userId = getUserId(c);
 
     // Check if wizard completion is stored in KV
     const key = `kitchen_inventory_${userId}`;
@@ -1628,13 +1631,10 @@ app.post("/make-server-dbaf6019/check-kitchen-inventory", async (c) => {
 });
 
 // Save user's kitchen inventory completion
-app.post("/make-server-dbaf6019/save-kitchen-inventory", async (c) => {
+app.post("/make-server-dbaf6019/save-kitchen-inventory", requireAuth, async (c) => {
   try {
-    const { userId, missingEssentials } = await c.req.json();
-    
-    if (!userId) {
-      return c.json({ error: "User ID required" }, 400);
-    }
+    const { missingEssentials } = await c.req.json();
+    const userId = getUserId(c);
 
     // Save completion status and missing essentials to KV
     const key = `kitchen_inventory_${userId}`;
@@ -1656,13 +1656,10 @@ app.post("/make-server-dbaf6019/save-kitchen-inventory", async (c) => {
 // ========== MEAL PLAN STORAGE ENDPOINTS ==========
 
 // Save user's meal plan (supports create & update)
-app.post("/make-server-dbaf6019/save-meal-plan", async (c) => {
+app.post("/make-server-dbaf6019/save-meal-plan", requireAuth, async (c) => {
   try {
-    const { userId, mealPlan, preferences, planName, planId: existingPlanId } = await c.req.json();
-
-    if (!userId) {
-      return c.json({ error: "User ID required" }, 400);
-    }
+    const { mealPlan, preferences, planName, planId: existingPlanId } = await c.req.json();
+    const userId = getUserId(c);
 
     if (!mealPlan) {
       return c.json({ error: "Meal plan required" }, 400);
@@ -1732,13 +1729,9 @@ app.post("/make-server-dbaf6019/save-meal-plan", async (c) => {
 });
 
 // Get all saved meal plans for a user
-app.post("/make-server-dbaf6019/get-meal-plans", async (c) => {
+app.post("/make-server-dbaf6019/get-meal-plans", requireAuth, async (c) => {
   try {
-    const { userId } = await c.req.json();
-    
-    if (!userId) {
-      return c.json({ error: "User ID required" }, 400);
-    }
+    const userId = getUserId(c);
 
     const listKey = `meal_plan_list_${userId}`;
     const data = await kv.get(listKey);
@@ -1761,12 +1754,13 @@ app.post("/make-server-dbaf6019/get-meal-plans", async (c) => {
 });
 
 // Load a specific meal plan by ID
-app.post("/make-server-dbaf6019/load-meal-plan-by-id", async (c) => {
+app.post("/make-server-dbaf6019/load-meal-plan-by-id", requireAuth, async (c) => {
   try {
-    const { userId, planId } = await c.req.json();
-    
-    if (!userId || !planId) {
-      return c.json({ error: "User ID and Plan ID required" }, 400);
+    const { planId } = await c.req.json();
+    const userId = getUserId(c);
+
+    if (!planId) {
+      return c.json({ error: "Plan ID required" }, 400);
     }
 
     const planKey = `meal_plan_${userId}_${planId}`;
@@ -1792,12 +1786,13 @@ app.post("/make-server-dbaf6019/load-meal-plan-by-id", async (c) => {
 });
 
 // Delete a specific meal plan
-app.post("/make-server-dbaf6019/delete-meal-plan-by-id", async (c) => {
+app.post("/make-server-dbaf6019/delete-meal-plan-by-id", requireAuth, async (c) => {
   try {
-    const { userId, planId } = await c.req.json();
-    
-    if (!userId || !planId) {
-      return c.json({ error: "User ID and Plan ID required" }, 400);
+    const { planId } = await c.req.json();
+    const userId = getUserId(c);
+
+    if (!planId) {
+      return c.json({ error: "Plan ID required" }, 400);
     }
 
     // Delete the plan data
@@ -1826,13 +1821,9 @@ app.post("/make-server-dbaf6019/delete-meal-plan-by-id", async (c) => {
 });
 
 // Load user's saved meal plan
-app.post("/make-server-dbaf6019/load-meal-plan", async (c) => {
+app.post("/make-server-dbaf6019/load-meal-plan", requireAuth, async (c) => {
   try {
-    const { userId } = await c.req.json();
-    
-    if (!userId) {
-      return c.json({ error: "User ID required" }, 400);
-    }
+    const userId = getUserId(c);
 
     // Retrieve meal plan from KV
     const key = `meal_plan_${userId}`;
@@ -1859,13 +1850,9 @@ app.post("/make-server-dbaf6019/load-meal-plan", async (c) => {
 });
 
 // Delete user's saved meal plan
-app.post("/make-server-dbaf6019/delete-meal-plan", async (c) => {
+app.post("/make-server-dbaf6019/delete-meal-plan", requireAuth, async (c) => {
   try {
-    const { userId } = await c.req.json();
-    
-    if (!userId) {
-      return c.json({ error: "User ID required" }, 400);
-    }
+    const userId = getUserId(c);
 
     // Delete meal plan from KV
     const key = `meal_plan_${userId}`;
@@ -1928,7 +1915,7 @@ app.post("/make-server-dbaf6019/get-recipe-image-with-cache", async (c) => {
 });
 
 // Calculate nutrition for a recipe's ingredients using CalorieNinjas API
-app.post("/make-server-dbaf6019/admin/calculate-nutrition", async (c) => {
+app.post("/make-server-dbaf6019/admin/calculate-nutrition", requireAuth, requireAdmin, async (c) => {
   try {
     const apiKey = Deno.env.get("CALORIE_NINJAS_API_KEY");
     if (!apiKey) {
@@ -1970,7 +1957,7 @@ app.post("/make-server-dbaf6019/admin/calculate-nutrition", async (c) => {
 });
 
 // Validate nutrition for all recipes by comparing stored vs calculated values
-app.post("/make-server-dbaf6019/admin/validate-nutrition", async (c) => {
+app.post("/make-server-dbaf6019/admin/validate-nutrition", requireAuth, requireAdmin, async (c) => {
   try {
     const apiKey = Deno.env.get("CALORIE_NINJAS_API_KEY");
     if (!apiKey) {
@@ -2084,12 +2071,13 @@ app.post("/make-server-dbaf6019/admin/validate-nutrition", async (c) => {
 // ===== Retention Feature Endpoints =====
 
 // Track a meal as cooked or uncooked
-app.post("/make-server-dbaf6019/track-meal-cooked", async (c) => {
+app.post("/make-server-dbaf6019/track-meal-cooked", requireAuth, async (c) => {
   try {
-    const { userId, mealId, date, recipeId, recipeName, mealCost, category, isCooked } = await c.req.json();
+    const { mealId, date, recipeId, recipeName, mealCost, category, isCooked } = await c.req.json();
+    const userId = getUserId(c);
 
-    if (!userId || !mealId || !date) {
-      return c.json({ error: "userId, mealId, and date are required" }, 400);
+    if (!mealId || !date) {
+      return c.json({ error: "mealId and date are required" }, 400);
     }
 
     const key = `cooked_${userId}_${date}_${mealId}`;
@@ -2125,12 +2113,13 @@ app.post("/make-server-dbaf6019/track-meal-cooked", async (c) => {
 });
 
 // Get cooked meals for a specific date
-app.post("/make-server-dbaf6019/cooked-meals", async (c) => {
+app.post("/make-server-dbaf6019/cooked-meals", requireAuth, async (c) => {
   try {
-    const { userId, date } = await c.req.json();
+    const { date } = await c.req.json();
+    const userId = getUserId(c);
 
-    if (!userId || !date) {
-      return c.json({ error: "userId and date are required" }, 400);
+    if (!date) {
+      return c.json({ error: "date is required" }, 400);
     }
 
     const prefix = `cooked_${userId}_${date}_`;
@@ -2147,13 +2136,9 @@ app.post("/make-server-dbaf6019/cooked-meals", async (c) => {
 });
 
 // Get comprehensive user stats
-app.post("/make-server-dbaf6019/user-stats", async (c) => {
+app.post("/make-server-dbaf6019/user-stats", requireAuth, async (c) => {
   try {
-    const { userId } = await c.req.json();
-
-    if (!userId) {
-      return c.json({ error: "userId is required" }, 400);
-    }
+    const userId = getUserId(c);
 
     // Fetch all cooked meal entries for this user
     const allCookedEntries = await getByPrefixWithKeys(`cooked_${userId}_`);
@@ -2302,7 +2287,7 @@ app.post("/make-server-dbaf6019/user-stats", async (c) => {
 });
 
 // Get school leaderboard ranked by best (longest) cooking day streak
-app.post("/make-server-dbaf6019/leaderboard", async (c) => {
+app.post("/make-server-dbaf6019/leaderboard", requireAuth, async (c) => {
   try {
     const { schoolId } = await c.req.json();
 
@@ -2373,9 +2358,12 @@ app.post("/make-server-dbaf6019/leaderboard", async (c) => {
 });
 
 // Get recipe leaderboard ranked by times cooked (school-scoped, paginated)
-app.post("/make-server-dbaf6019/recipe-leaderboard", async (c) => {
+app.post("/make-server-dbaf6019/recipe-leaderboard", requireAuth, async (c) => {
   try {
-    const { schoolId, userId, limit = 10, offset = 0 } = await c.req.json();
+    const { schoolId, limit = 10, offset = 0 } = await c.req.json();
+    // The viewer's own id (for "liked by me" enrichment) comes from the token,
+    // never the body.
+    const userId = getUserId(c);
 
     if (!schoolId) {
       return c.json({ error: "schoolId is required" }, 400);
@@ -2482,13 +2470,9 @@ app.post("/make-server-dbaf6019/recipe-leaderboard", async (c) => {
 });
 
 // Get current user's custom (user-created) recipes
-app.post("/make-server-dbaf6019/my-recipes", async (c) => {
+app.post("/make-server-dbaf6019/my-recipes", requireAuth, async (c) => {
   try {
-    const { userId } = await c.req.json();
-
-    if (!userId) {
-      return c.json({ error: "userId is required" }, 400);
-    }
+    const userId = getUserId(c);
 
     const allCooked = await getByPrefixWithKeys(`cooked_${userId}_`);
 
@@ -2548,12 +2532,13 @@ app.post("/make-server-dbaf6019/my-recipes", async (c) => {
 // ===== Community Recipes Endpoints =====
 
 // Save a recipe to the community
-app.post("/make-server-dbaf6019/save-community-recipe", async (c) => {
+app.post("/make-server-dbaf6019/save-community-recipe", requireAuth, async (c) => {
   try {
-    const { userId, creatorName, recipe } = await c.req.json();
+    const { creatorName, recipe } = await c.req.json();
+    const userId = getUserId(c);
 
-    if (!userId || !recipe || !recipe.id) {
-      return c.json({ error: "userId and recipe are required" }, 400);
+    if (!recipe || !recipe.id) {
+      return c.json({ error: "recipe is required" }, 400);
     }
 
     const communityRecipe = {
@@ -2576,13 +2561,9 @@ app.post("/make-server-dbaf6019/save-community-recipe", async (c) => {
 });
 
 // List community recipes
-app.post("/make-server-dbaf6019/list-community-recipes", async (c) => {
+app.post("/make-server-dbaf6019/list-community-recipes", requireAuth, async (c) => {
   try {
-    const { userId } = await c.req.json();
-
-    if (!userId) {
-      return c.json({ error: "userId is required" }, 400);
-    }
+    const userId = getUserId(c);
 
     const recipeEntries = await getByPrefixWithKeys("community_recipe_");
     const likeEntries = await getByPrefixWithKeys(`community_like_${userId}_`);
@@ -2605,12 +2586,13 @@ app.post("/make-server-dbaf6019/list-community-recipes", async (c) => {
 });
 
 // Toggle like on a community recipe
-app.post("/make-server-dbaf6019/toggle-community-like", async (c) => {
+app.post("/make-server-dbaf6019/toggle-community-like", requireAuth, async (c) => {
   try {
-    const { userId, recipeId } = await c.req.json();
+    const { recipeId } = await c.req.json();
+    const userId = getUserId(c);
 
-    if (!userId || !recipeId) {
-      return c.json({ error: "userId and recipeId are required" }, 400);
+    if (!recipeId) {
+      return c.json({ error: "recipeId is required" }, 400);
     }
 
     const likeKey = `community_like_${userId}_${recipeId}`;
@@ -2666,7 +2648,7 @@ app.get("/make-server-dbaf6019/schools/search", async (c) => {
 });
 
 // Create a new school
-app.post("/make-server-dbaf6019/schools", async (c) => {
+app.post("/make-server-dbaf6019/schools", requireAuth, async (c) => {
   try {
     const { name } = await c.req.json();
 
@@ -2688,12 +2670,13 @@ app.post("/make-server-dbaf6019/schools", async (c) => {
 });
 
 // Select/assign school to user (sets school_id and school_name in user_metadata)
-app.post("/make-server-dbaf6019/schools/select", async (c) => {
+app.post("/make-server-dbaf6019/schools/select", requireAuth, async (c) => {
   try {
-    const { userId, schoolId, schoolName } = await c.req.json();
+    const { schoolId, schoolName } = await c.req.json();
+    const userId = getUserId(c);
 
-    if (!userId || !schoolId) {
-      return c.json({ error: "userId and schoolId are required" }, 400);
+    if (!schoolId) {
+      return c.json({ error: "schoolId is required" }, 400);
     }
 
     const supabase = createClient(
@@ -2717,14 +2700,11 @@ app.post("/make-server-dbaf6019/schools/select", async (c) => {
 });
 
 // Update user profile (name, school, etc.)
-app.post("/make-server-dbaf6019/auth/update-profile", async (c) => {
+app.post("/make-server-dbaf6019/auth/update-profile", requireAuth, async (c) => {
   try {
     const body = await c.req.json();
-    const { userId, name, school_id, school_name, gender } = body;
-
-    if (!userId) {
-      return c.json({ error: "userId is required" }, 400);
-    }
+    const { name, school_id, school_name, gender } = body;
+    const userId = getUserId(c);
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
