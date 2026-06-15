@@ -2,6 +2,7 @@ import { ShoppingCart, ArrowLeft, Loader2, X, Clock, ChefHat, Users, Flame, Refr
 import { UserPreferences, MealTimes } from '../App';
 import { getNutritionTargets } from '../utils/nutritionTargets';
 import { getLocalTodayISO, parseLocalDate, initialPlanOffset } from '../utils/dateUtils';
+import { toast } from 'sonner';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { authedPost, publicPost } from '../utils/apiClient';
 import { ShoppingMode } from './ShoppingMode';
@@ -325,7 +326,7 @@ export function RecommendationsStep({
 
     } catch (err: any) {
       console.error('Error loading plan:', err);
-      alert(err.message || 'Failed to load plan');
+      toast.error(err.message || 'Failed to load plan');
     } finally {
       setLoadingPlan(false);
     }

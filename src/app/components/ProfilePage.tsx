@@ -44,7 +44,7 @@ const API_HEADERS = {
 
 export function ProfilePage({ user, onLogout, onOpenAdmin, onUserUpdate, activeTab, onTabChange }: ProfilePageProps) {
   const { language, setLanguage, t } = useLanguage();
-  const { showCustomerCenter } = useSubscription();
+  const { showCustomerCenter, isPro } = useSubscription();
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [stats, setStats] = useState<UserStats | null>(null);
@@ -79,22 +79,22 @@ export function ProfilePage({ user, onLogout, onOpenAdmin, onUserUpdate, activeT
 
   const settingsGroups: { title: string; items: SettingsItem[] }[] = [
     {
-      title: 'Preferences',
+      title: t('preferences'),
       items: [
-        { icon: Bell, label: 'Notifications', value: 'On', action: () => {} },
+        { icon: Bell, label: t('notifications'), value: 'On', action: () => {} },
         { icon: Globe, label: t('language'), value: language === 'zh-CN' ? '中文' : 'English', action: () => setShowLanguageModal(true) },
-        { icon: Moon, label: 'Dark Mode', value: 'On', action: () => {} },
+        { icon: Moon, label: t('darkMode'), value: 'On', action: () => {} },
       ],
     },
     {
-      title: 'Account',
+      title: t('account'),
       items: [
-        { icon: Crown, label: 'Billing', action: showCustomerCenter },
-        { icon: Shield, label: 'Privacy & Security', action: () => {} },
+        { icon: Crown, label: t('billing'), action: showCustomerCenter },
+        { icon: Shield, label: t('privacySecurity'), action: () => {} },
         // Admin Dashboard entry is only shown to admins. This is cosmetic —
         // the backend remains the real authorization gate.
-        ...(isAdmin ? [{ icon: Settings, label: 'Admin Dashboard', action: onOpenAdmin }] : []),
-        { icon: HelpCircle, label: 'Help & Support', action: () => {} },
+        ...(isAdmin ? [{ icon: Settings, label: t('adminDashboard'), action: onOpenAdmin }] : []),
+        { icon: HelpCircle, label: t('helpSupport'), action: () => {} },
       ],
     },
   ];
@@ -118,10 +118,12 @@ export function ProfilePage({ user, onLogout, onOpenAdmin, onUserUpdate, activeT
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <h2 className="text-xl font-bold text-white">{userName}</h2>
-                <span className="px-2 py-0.5 bg-[#22C55E]/20 border border-[#22C55E]/50 rounded-full text-[10px] font-bold text-[#22C55E] uppercase flex items-center gap-1">
-                  <Crown className="w-3 h-3" />
-                  Pro
-                </span>
+                {isPro && (
+                  <span className="px-2 py-0.5 bg-[#22C55E]/20 border border-[#22C55E]/50 rounded-full text-[10px] font-bold text-[#22C55E] uppercase flex items-center gap-1">
+                    <Crown className="w-3 h-3" />
+                    Pro
+                  </span>
+                )}
               </div>
               <p className="text-[#6B7280] text-sm">{userEmail}</p>
               {user?.user_metadata?.school_name && (
@@ -172,10 +174,12 @@ export function ProfilePage({ user, onLogout, onOpenAdmin, onUserUpdate, activeT
                 <span className="text-3xl font-bold text-white">
                   {loadingStats ? '...' : stats?.totalCookingDays ?? 0}
                 </span>
-                <span className="text-[#6B7280] text-sm">days cooked</span>
+                <span className="text-[#6B7280] text-sm">
+                  {(stats?.totalCookingDays ?? 0) === 1 ? 'day' : 'days'} cooked
+                </span>
               </div>
               <p className="text-[#6B7280] text-xs mt-0.5">
-                Best streak: {loadingStats ? '...' : stats?.longestStreak ?? 0} days
+                Best streak: {loadingStats ? '...' : stats?.longestStreak ?? 0} {(stats?.longestStreak ?? 0) === 1 ? 'day' : 'days'}
               </p>
             </div>
           </div>
@@ -250,7 +254,7 @@ export function ProfilePage({ user, onLogout, onOpenAdmin, onUserUpdate, activeT
           className="w-full flex items-center justify-center gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-2xl text-red-400 font-medium hover:bg-red-500/20 transition-colors"
         >
           <LogOut className="w-5 h-5" />
-          Sign Out
+          {t('signOut')}
         </button>
 
         {/* App Version */}

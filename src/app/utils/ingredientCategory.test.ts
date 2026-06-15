@@ -40,6 +40,16 @@ describe('categorizeIngredient', () => {
     expect(categorizeIngredient('Eggplant')).toBe('produce')
   })
 
+  it('routes spice/powder forms to pantry, not produce', () => {
+    for (const n of ['Garlic Powder', 'Onion Powder', 'Black Pepper', 'Salt And Ground Black Pepper To Taste', 'Dried Oregano'])
+      expect(categorizeIngredient(n)).toBe('pantry')
+  })
+
+  it('still treats fresh forms as produce', () => {
+    for (const n of ['Garlic', 'Onion', 'Spring Onion', 'Green And/Or Red Peppers'])
+      expect(categorizeIngredient(n)).toBe('produce')
+  })
+
   it('is case-insensitive and trims', () => {
     expect(categorizeIngredient('  CHICKEN  ')).toBe('meat')
   })

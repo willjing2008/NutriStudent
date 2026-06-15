@@ -1,5 +1,6 @@
 import { X, Calendar, ShoppingCart, Loader2, Trash2, Eye, ChefHat } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { authedPost } from '../utils/apiClient';
 
 interface SavedPlan {
@@ -57,7 +58,7 @@ export function SavedPlansModal({ userId, onClose, onLoadPlan }: SavedPlansModal
       console.log('✅ Plan deleted successfully');
     } catch (err: any) {
       console.error('Error deleting plan:', err);
-      alert(err.message || 'Failed to delete plan');
+      toast.error(err.message || 'Failed to delete plan');
     } finally {
       setDeletingPlanId(null);
     }

@@ -21,6 +21,12 @@ const RULES: Array<{ category: IngredientCategory; keywords: string[] }> = [
     keywords: ['chicken', 'beef', 'pork', 'lamb', 'turkey', 'bacon', 'ham', 'sausage', 'steak', 'mince', 'salami', 'prosciutto', 'duck', 'veal', 'fish', 'salmon', 'tuna', 'cod', 'prawn', 'shrimp', 'crab', 'lobster', 'anchovy', 'mackerel', 'sardine'],
   },
   {
+    // Spice/seasoning/dry forms — checked BEFORE produce so "Garlic Powder",
+    // "Black Pepper", "Dried Oregano" etc. don't get pulled in by garlic/pepper.
+    category: 'pantry',
+    keywords: ['powder', 'ground', 'to taste', 'dried', 'seasoning', 'black pepper', 'peppercorn', 'baking soda', 'baking powder', 'extract', 'bouillon', 'stock cube'],
+  },
+  {
     category: 'produce',
     keywords: ['lettuce', 'spinach', 'kale', 'arugula', 'rocket', 'tomato', 'onion', 'garlic', 'pepper', 'carrot', 'celery', 'cucumber', 'broccoli', 'cauliflower', 'zucchini', 'courgette', 'eggplant', 'aubergine', 'butternut', 'squash', 'potato', 'mushroom', 'apple', 'banana', 'berry', 'berries', 'grape', 'lemon', 'lime', 'orange', 'avocado', 'basil', 'cilantro', 'coriander', 'parsley', 'ginger', 'cabbage', 'beet', 'corn', 'scallion', 'leek', 'radish', 'lentil', 'chickpea', 'cucumber', 'fruit', 'vegetable', 'greens', 'salad'],
   },
