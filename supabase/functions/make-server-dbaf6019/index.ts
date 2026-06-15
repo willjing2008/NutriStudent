@@ -3,6 +3,8 @@ import { cors } from "npm:hono/cors";
 import { logger } from "npm:hono/logger";
 import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
 import { requireAuth, requireAdmin, getUserId, isUuid } from "./auth-middleware.ts";
+import { rateLimit } from "./rate-limit.ts";
+import { vStr, vNum, vStrArr, vArr } from "./validate.ts";
 import * as kv from "./kv_store.tsx";
 import { ALL_RECIPES, NewRecipe } from "./recipe-data.ts";
 import { toMealPlanMeal, toSwapOption, getRecipesByMealType, getAllRecipesFromDB, getRecipesByFocusType, getSleepFriendlyRecipes } from "./recipe-adapter.ts";
@@ -147,7 +149,7 @@ app.get("/make-server-dbaf6019/health", (c) => {
 });
 
 // Find nearby grocery stores using Google Places API
-app.post("/make-server-dbaf6019/nearby-stores", async (c) => {
+app.post("/make-server-dbaf6019/nearby-stores", rateLimit({ name: "nearby-stores", max: 30, windowSec: 60 }), async (c) => {
   try {
     const { latitude, longitude } = await c.req.json();
     
@@ -199,7 +201,7 @@ app.post("/make-server-dbaf6019/nearby-stores", async (c) => {
 });
 
 // Geocode an address to get coordinates
-app.post("/make-server-dbaf6019/geocode-address", async (c) => {
+app.post("/make-server-dbaf6019/geocode-address", rateLimit({ name: "geocode", max: 30, windowSec: 60 }), async (c) => {
   try {
     const { address } = await c.req.json();
     
@@ -241,7 +243,7 @@ app.post("/make-server-dbaf6019/geocode-address", async (c) => {
 });
 
 // Autocomplete address suggestions
-app.post("/make-server-dbaf6019/autocomplete-address", async (c) => {
+app.post("/make-server-dbaf6019/autocomplete-address", rateLimit({ name: "autocomplete", max: 60, windowSec: 60 }), async (c) => {
   try {
     const { input } = await c.req.json();
     
@@ -375,7 +377,7 @@ app.post("/make-server-dbaf6019/fetch-store-ingredients", async (c) => {
 });
 
 // Endpoint to generate optimal meal plan
-app.post("/make-server-dbaf6019/generate-meal-plan", async (c) => {
+app.post("/make-server-dbaf6019/generate-meal-plan", rateLimit({ name: "generate-meal-plan", max: 15, windowSec: 60 }), async (c) => {
   try {
     const { storeName, mealsPerDay, budget, goal, shoppingDate, maxCookingTime, avoidIngredients, dietaryRestrictions, selectedMealSlots } = await c.req.json();
 
@@ -383,11 +385,19 @@ app.post("/make-server-dbaf6019/generate-meal-plan", async (c) => {
       return c.json({ error: "Missing required parameters" }, 400);
     }
 
+    // Bound untrusted inputs (prevents CPU/memory amplification + .toLowerCase crashes).
+    const safeMealsPerDay = vNum(mealsPerDay, 1, 6, 3);
+    const safeBudget = vNum(budget, 1, 100000, 100);
+    const safeMaxCookingTime = vNum(maxCookingTime, 0, 240, 0);
+    const safeAvoid = vStrArr(avoidIngredients, 50, 100);
+    const safeSlots = vStrArr(selectedMealSlots, 10, 30);
+    const safeDietary = vStrArr(dietaryRestrictions, 10, 30);
+
     // Always a full week starting from the shopping date
     const cookingDays = 7;
 
-    const totalMealsNeeded = cookingDays * mealsPerDay;
-    const weeklyBudget = budget;
+    const totalMealsNeeded = cookingDays * safeMealsPerDay;
+    const weeklyBudget = safeBudget;
 
     // Fetch recipes from database by meal_type
     const mealTypeMap: Record<string, string> = { study: 'study', work: 'work', fitness: 'fitness' };
@@ -398,18 +408,18 @@ app.post("/make-server-dbaf6019/generate-meal-plan", async (c) => {
       return c.json({ error: "No recipes found for this goal. Please run /init-recipes first." }, 400);
     }
 
-    console.log(`🍽️ Generating meal plan: ${cookingDays} days × ${mealsPerDay} meals/day = ${totalMealsNeeded} meals from ${suitableRecipes.length} ${mealType} recipes`);
+    console.log(`🍽️ Generating meal plan: ${cookingDays} days × ${safeMealsPerDay} meals/day = ${totalMealsNeeded} meals from ${suitableRecipes.length} ${mealType} recipes`);
 
     const mealPlan = generateMealPlanFromRecipes(
       suitableRecipes,
-      mealsPerDay,
+      safeMealsPerDay,
       weeklyBudget,
       goal,
-      maxCookingTime,
+      safeMaxCookingTime,
       cookingDays,
-      avoidIngredients,
-      selectedMealSlots,
-      dietaryRestrictions
+      safeAvoid,
+      safeSlots,
+      safeDietary
     );
 
     return c.json({ mealPlan });
@@ -917,7 +927,7 @@ app.post("/make-server-dbaf6019/admin/search-recipes", async (c) => {
 // ========== SHUFFLE/REPLACE RECIPE ENDPOINT ==========
 
 // Smart recipe replacement - find similar recipe by nutrition
-app.post("/make-server-dbaf6019/shuffle-recipe", async (c) => {
+app.post("/make-server-dbaf6019/shuffle-recipe", rateLimit({ name: "shuffle-recipe", max: 30, windowSec: 60 }), async (c) => {
   try {
     const { currentRecipeId, goal, currentMealIds, maxCookingTime } = await c.req.json();
 
@@ -987,7 +997,7 @@ app.post("/make-server-dbaf6019/shuffle-recipe", async (c) => {
 });
 
 // Get multiple meal swap options for user to choose from
-app.post("/make-server-dbaf6019/get-swap-options", async (c) => {
+app.post("/make-server-dbaf6019/get-swap-options", rateLimit({ name: "get-swap-options", max: 30, windowSec: 60 }), async (c) => {
   try {
     const { currentRecipeId, goal, currentMealIds, maxCookingTime, limit = 6 } = await c.req.json();
 
@@ -1197,13 +1207,16 @@ app.post("/make-server-dbaf6019/get-meal-conflicts", requireAuth, async (c) => {
 // ========== RECIPE QUEUE ENDPOINTS ==========
 
 // Generate a 28-day recipe queue for a user
-app.post("/make-server-dbaf6019/generate-recipe-queue", requireAuth, async (c) => {
+app.post("/make-server-dbaf6019/generate-recipe-queue", requireAuth, rateLimit({ name: "generate-recipe-queue", max: 10, windowSec: 60 }), async (c) => {
   try {
     const { mealsPerDay, goal, avoidIngredients, maxCookingTime, budget, selectedMealSlots } = await c.req.json();
     const userId = getUserId(c);
     if (!mealsPerDay || !goal) {
       return c.json({ error: "Missing required parameters: mealsPerDay, goal" }, 400);
     }
+    // Bound untrusted numeric inputs.
+    const safeMealsPerDay = vNum(mealsPerDay, 1, 6, 3);
+    const safeMaxCookingTime = vNum(maxCookingTime, 0, 240, 0);
 
     // Check testing period status
     const schedRaw = await kv.get(`academic_schedule_${userId}`);
@@ -1219,13 +1232,13 @@ app.post("/make-server-dbaf6019/generate-recipe-queue", requireAuth, async (c) =
 
     const queue = await generateRecipeQueue({
       userId,
-      mealsPerDay,
+      mealsPerDay: safeMealsPerDay,
       goal,
       focusMode,
-      avoidIngredients,
-      maxCookingTime,
+      avoidIngredients: vStrArr(avoidIngredients, 50, 100),
+      maxCookingTime: safeMaxCookingTime,
       preferSleepDinners,
-      selectedMealSlots,
+      selectedMealSlots: vStrArr(selectedMealSlots, 10, 30),
     });
 
     await kv.set(`recipe_queue_${userId}`, JSON.stringify(queue));
@@ -2623,21 +2636,49 @@ app.post("/make-server-dbaf6019/save-community-recipe", requireAuth, async (c) =
     const { creatorName, recipe } = await c.req.json();
     const userId = getUserId(c);
 
-    if (!recipe || !recipe.id) {
+    if (!recipe || typeof recipe !== "object") {
       return c.json({ error: "recipe is required" }, 400);
     }
 
+    // Sanitise the recipe id used in the KV key (alphanumeric/dash, bounded).
+    const recipeId = vStr(recipe.id, 100).replace(/[^A-Za-z0-9_-]/g, "");
+    if (!recipeId) {
+      return c.json({ error: "valid recipe id is required" }, 400);
+    }
+    const n = recipe.nutrition || {};
+
+    // Build the stored record from whitelisted, bounded fields rather than
+    // spreading the raw client object (prevents storage abuse / junk keys).
     const communityRecipe = {
-      ...recipe,
+      id: recipeId,
+      name: vStr(recipe.name, 150),
+      description: vStr(recipe.description, 2000),
+      image: vStr(recipe.image, 600),
+      imageUrl: vStr(recipe.imageUrl, 600) || null,
+      category: vStr(recipe.category, 50),
+      cuisine: vStr(recipe.cuisine, 50),
+      difficulty: vStr(recipe.difficulty, 30),
+      cookingTime: vNum(recipe.cookingTime, 0, 1440, 0),
+      servings: vNum(recipe.servings, 1, 50, 1),
+      totalCost: vNum(recipe.totalCost, 0, 100000, 0),
+      ingredients: vArr(recipe.ingredients, 100),
+      ingredientNames: vStrArr(recipe.ingredientNames, 100, 200),
+      instructions: vStrArr(recipe.instructions, 100, 2000),
+      nutrition: {
+        calories: vNum(n.calories, 0, 100000, 0),
+        protein: vNum(n.protein, 0, 10000, 0),
+        carbs: vNum(n.carbs, 0, 10000, 0),
+        fats: vNum(n.fats, 0, 10000, 0),
+      },
+      tags: [...vStrArr(recipe.tags, 20, 40), 'community'],
       creatorId: userId,
-      creatorName: creatorName || 'Anonymous',
+      creatorName: vStr(creatorName, 60) || 'Anonymous',
       createdAt: new Date().toISOString(),
       timesCooked: 0,
       likesCount: 0,
-      tags: [...(recipe.tags || []), 'community'],
     };
 
-    await kv.set(`community_recipe_${recipe.id}`, communityRecipe);
+    await kv.set(`community_recipe_${recipeId}`, communityRecipe);
 
     return c.json({ success: true });
   } catch (error: any) {
