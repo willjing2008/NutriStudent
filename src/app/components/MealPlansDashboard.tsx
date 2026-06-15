@@ -104,10 +104,20 @@ export function MealPlansDashboard({
   const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
 
-  const handleRename = (id: string, e: React.MouseEvent) => {
+  const handleRename = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setSavedPlansState(prev => prev.map(p => p.id === id ? { ...p, name: renameValue } : p));
+    const newName = renameValue.trim();
+    if (!newName) return;
+    const previous = savedPlansState;
+    // Optimistic update, then persist; revert if the request fails.
+    setSavedPlansState(prev => prev.map(p => p.id === id ? { ...p, name: newName } : p));
     setEditingPlanId(null);
+    try {
+      await authedPost('rename-meal-plan', { planId: id, planName: newName });
+    } catch (err) {
+      console.error('Failed to rename plan:', err);
+      setSavedPlansState(previous);
+    }
   };
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {

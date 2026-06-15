@@ -1772,6 +1772,48 @@ app.post("/make-server-dbaf6019/save-meal-plan", requireAuth, async (c) => {
   }
 });
 
+// Rename a saved meal plan (name only — never touches the stored meals)
+app.post("/make-server-dbaf6019/rename-meal-plan", requireAuth, async (c) => {
+  try {
+    const { planId, planName } = await c.req.json();
+    const userId = getUserId(c);
+
+    const trimmed = typeof planName === "string" ? planName.trim() : "";
+    if (!planId || !trimmed) {
+      return c.json({ error: "planId and a non-empty planName are required" }, 400);
+    }
+    if (trimmed.length > 100) {
+      return c.json({ error: "planName too long" }, 400);
+    }
+
+    // User-scoped key — a user can only rename their own plans.
+    const planKey = `meal_plan_${userId}_${planId}`;
+    const plan = await kv.get(planKey);
+    if (!plan) {
+      return c.json({ error: "Plan not found" }, 404);
+    }
+
+    // Update the plan record's name, preserving mealPlan/meals.
+    await kv.set(planKey, { ...plan, planName: trimmed });
+
+    // Update the name in the user's plan list too.
+    const listKey = `meal_plan_list_${userId}`;
+    const list = await kv.get(listKey);
+    if (list?.plans) {
+      const idx = list.plans.findIndex((p: any) => p.planId === planId);
+      if (idx >= 0) {
+        list.plans[idx] = { ...list.plans[idx], planName: trimmed };
+        await kv.set(listKey, list);
+      }
+    }
+
+    return c.json({ success: true, planId, planName: trimmed });
+  } catch (error: any) {
+    console.log(`Error renaming meal plan: ${error.message}`);
+    return c.json({ error: error.message || "Failed to rename meal plan" }, 500);
+  }
+});
+
 // Get all saved meal plans for a user
 app.post("/make-server-dbaf6019/get-meal-plans", requireAuth, async (c) => {
   try {
