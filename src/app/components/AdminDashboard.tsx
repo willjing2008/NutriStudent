@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Search, Plus, Edit2, Trash2, RefreshCw, Database, ChefHat, X, Save, Loader2, ImageIcon, Upload, Trash, ExternalLink, Calculator } from 'lucide-react';
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
 import { authedPost, authedFetch, publicPost } from '../utils/apiClient';
+import { useConfirm } from '../hooks/useConfirm';
 import { ImageStorageInfo } from './ImageStorageInfo';
 
 const LOCAL_IMAGE_FALLBACK =
@@ -31,6 +32,7 @@ interface Recipe {
 }
 
 export function AdminDashboard() {
+  const confirm = useConfirm();
   const [recipes, setRecipes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -105,7 +107,7 @@ export function AdminDashboard() {
   };
 
   const initializeRecipes = async () => {
-    if (!confirm('This will clear all existing recipes and re-initialize the full recipe database (breakfast, lunch & dinner). Continue?')) {
+    if (!(await confirm({ title: 'Re-initialize recipe database?', description: 'This clears all existing recipes and re-initializes the full database (breakfast, lunch & dinner).', confirmText: 'Continue', destructive: true }))) {
       return;
     }
 
@@ -173,7 +175,7 @@ export function AdminDashboard() {
   };
 
   const deleteRecipe = async (recipeKey: string) => {
-    if (!confirm('Are you sure you want to delete this recipe?')) return;
+    if (!(await confirm({ title: 'Delete recipe?', description: 'This permanently removes the recipe.', confirmText: 'Delete', destructive: true }))) return;
 
     setLoading(true);
     try {
@@ -510,7 +512,7 @@ export function AdminDashboard() {
 
   // Generate and store all recipe images
   const generateAllImages = async () => {
-    if (!confirm('This will generate and permanently store images for all recipes. This may take several minutes. Continue?')) {
+    if (!(await confirm({ title: 'Generate all images?', description: 'This generates and permanently stores images for all recipes. It may take several minutes.', confirmText: 'Continue' }))) {
       return;
     }
 
@@ -601,7 +603,7 @@ export function AdminDashboard() {
   };
 
   const validateAllNutrition = async () => {
-    if (!confirm('This will validate nutrition for all recipes against CalorieNinjas API. This may take several minutes. Continue?')) {
+    if (!(await confirm({ title: 'Validate all nutrition?', description: 'This validates nutrition for all recipes against the CalorieNinjas API. It may take several minutes.', confirmText: 'Continue' }))) {
       return;
     }
 

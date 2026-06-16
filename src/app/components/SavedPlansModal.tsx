@@ -2,6 +2,7 @@ import { X, Calendar, ShoppingCart, Loader2, Trash2, Eye, ChefHat } from 'lucide
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { authedPost } from '../utils/apiClient';
+import { useConfirm } from '../hooks/useConfirm';
 
 interface SavedPlan {
   planId: string;
@@ -22,6 +23,7 @@ export function SavedPlansModal({ userId, onClose, onLoadPlan }: SavedPlansModal
   const [loading, setLoading] = useState(true);
   const [deletingPlanId, setDeletingPlanId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const confirm = useConfirm();
 
   useEffect(() => {
     fetchSavedPlans();
@@ -43,9 +45,13 @@ export function SavedPlansModal({ userId, onClose, onLoadPlan }: SavedPlansModal
   };
 
   const handleDeletePlan = async (planId: string) => {
-    if (!confirm('Are you sure you want to delete this meal plan?')) {
-      return;
-    }
+    const ok = await confirm({
+      title: 'Delete meal plan?',
+      description: 'This permanently removes the saved plan.',
+      confirmText: 'Delete',
+      destructive: true,
+    });
+    if (!ok) return;
 
     setDeletingPlanId(planId);
 
