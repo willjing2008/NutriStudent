@@ -60,6 +60,16 @@ describe('toMealPlanMeal', () => {
     expect(meal.ingredients[0].category).toBe('pantry')
   })
 
+  it('strips leading conjunctions and preparation adjectives from messy names', () => {
+    const meal = toMealPlanMeal(
+      makeRecipe({ ingredients: ['and chilled, cooked chicken meat', 'finely chopped fresh parsley'] }),
+      1,
+      1,
+      'dinner',
+    )
+    expect(meal.ingredients.map((i) => i.name)).toEqual(['Chicken Meat', 'Parsley'])
+  })
+
   it('infers difficulty from total cooking time', () => {
     expect(toMealPlanMeal(makeRecipe({ total_time_minutes: null }), 1, 1).difficulty).toBe('easy')
     expect(toMealPlanMeal(makeRecipe({ total_time_minutes: 15 }), 1, 1).difficulty).toBe('easy')

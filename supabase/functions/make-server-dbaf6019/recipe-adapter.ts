@@ -18,6 +18,19 @@ const MEASUREMENT_WORDS = new Set([
   "packed","heaping","level","rounded",
 ]);
 
+// Leading conjunctions / preparation adjectives to drop from the front of an
+// ingredient so display names read cleanly
+// (e.g. "and chilled, cooked chicken meat" -> "Chicken Meat").
+// Note: meaning-bearing words like "raw"/"ripe" are intentionally excluded so
+// names like "raw honey" / "ripe plantains" keep their descriptor.
+const DESCRIPTOR_WORDS = new Set([
+  "and","or","plus",
+  "cooked","uncooked","chilled","warmed","frozen","canned","drained",
+  "rinsed","peeled","seeded","trimmed","halved","quartered","boneless",
+  "skinless","melted","softened","prepared","finely","roughly",
+  "thinly","freshly","lightly","optional",
+]);
+
 function stripMeasurement(raw: string): string {
   // Remove parenthetical notes like "(about 1 lb)" or "(optional)"
   let s = raw.replace(/\(.*?\)/g, "").trim();
@@ -33,6 +46,8 @@ function stripMeasurement(raw: string): string {
     if (t === "of") { i++; continue; }
     // Skip measurement words
     if (MEASUREMENT_WORDS.has(t)) { i++; continue; }
+    // Skip leading conjunctions / preparation adjectives
+    if (DESCRIPTOR_WORDS.has(t)) { i++; continue; }
     break;
   }
   const name = tokens.slice(i).join(" ").replace(/[,;]+$/, "").trim();
