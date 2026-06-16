@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // kv_store loads `jsr:@supabase/supabase-js` and reads Deno.env at module top
 // level — neither resolves under Node/Vitest. The functions under test
@@ -15,7 +15,15 @@ vi.mock('../kv_store.tsx', () => ({
   getByPrefix: vi.fn(),
 }))
 
-import { toMealPlanMeal, toSwapOption } from '../recipe-adapter.ts'
+import {
+  toMealPlanMeal,
+  toSwapOption,
+  getRecipesByMealType,
+  getAllRecipesFromDB,
+  getRecipesByFocusType,
+  getSleepFriendlyRecipes,
+} from '../recipe-adapter.ts'
+import * as kv from '../kv_store.tsx'
 import { makeRecipe } from './factory.ts'
 
 describe('toMealPlanMeal', () => {
@@ -88,5 +96,68 @@ describe('toSwapOption', () => {
   it('strips ingredient names the same way as the meal-plan adapter', () => {
     const option = toSwapOption(makeRecipe({ ingredients: ['3 cloves garlic'] }))
     expect(option.ingredients[0].name).toBe('Garlic')
+  })
+})
+
+describe('kv-backed recipe fetchers', () => {
+  beforeEach(() => {
+    vi.mocked(kv.getByPrefix).mockReset()
+  })
+
+  it('getRecipesByMealType parses JSON strings and passes objects through', async () => {
+    vi.mocked(kv.getByPrefix).mockResolvedValue([makeRecipe({ id: 1 }), JSON.stringify(makeRecipe({ id: 2 }))])
+    const result = await getRecipesByMealType('study')
+    expect(result.map((r) => r.id)).toEqual([1, 2])
+    expect(kv.getByPrefix).toHaveBeenCalledWith('recipe:study:')
+  })
+
+  it('getAllRecipesFromDB drops nullish and metadata entries', async () => {
+    vi.mocked(kv.getByPrefix).mockResolvedValue([
+      makeRecipe({ id: 1 }),
+      null,
+      undefined,
+      JSON.stringify(makeRecipe({ id: 2 })),
+      { schemaVersion: 3 }, // metadata: no id
+    ])
+    const result = await getAllRecipesFromDB()
+    expect(result.map((r) => r.id)).toEqual([1, 2])
+  })
+
+  it('getRecipesByFocusType returns everything when focus mode is off', async () => {
+    vi.mocked(kv.getByPrefix).mockResolvedValue([makeRecipe({ id: 1 }), makeRecipe({ id: 2 })])
+    expect(await getRecipesByFocusType('study', false)).toHaveLength(2)
+  })
+
+  it('getRecipesByFocusType filters to focus-promoting recipes when plenty exist', async () => {
+    const focus = Array.from({ length: 15 }, (_, i) =>
+      makeRecipe({ id: i + 1, ingredients: ['2 fillets salmon', '1 cup spinach'] }),
+    )
+    const nonFocus = [
+      makeRecipe({ id: 100, ingredients: ['1 cup flour'] }),
+      makeRecipe({ id: 101, ingredients: ['1 cup flour'] }),
+    ]
+    vi.mocked(kv.getByPrefix).mockResolvedValue([...focus, ...nonFocus])
+    const result = await getRecipesByFocusType('study', true)
+    expect(result).toHaveLength(15)
+    expect(result.every((r) => r.id < 100)).toBe(true)
+  })
+
+  it('getRecipesByFocusType supplements by focus score when too few qualify', async () => {
+    vi.mocked(kv.getByPrefix).mockResolvedValue([
+      makeRecipe({ id: 1, ingredients: ['2 fillets salmon', '1 cup spinach'] }), // focus
+      makeRecipe({ id: 2, ingredients: ['1 cup flour'] }), // not
+    ])
+    const result = await getRecipesByFocusType('study', true)
+    expect(result).toHaveLength(2)
+    expect(result[0].id).toBe(1) // focus recipe ranked first
+  })
+
+  it('getSleepFriendlyRecipes prioritises sleep-promoting recipes', async () => {
+    vi.mocked(kv.getByPrefix).mockResolvedValue([
+      makeRecipe({ id: 1, ingredients: ['1 cup milk', '2 bananas'] }), // sleep
+      makeRecipe({ id: 2, ingredients: ['1 cup flour'] }), // not
+    ])
+    const result = await getSleepFriendlyRecipes('study')
+    expect(result[0].id).toBe(1)
   })
 })

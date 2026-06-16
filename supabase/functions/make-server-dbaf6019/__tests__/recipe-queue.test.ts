@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // recipe-queue imports recipe-adapter, which imports kv_store (jsr: + Deno.env).
 // Replace kv_store so the import graph loads under Node/Vitest.
@@ -13,8 +13,16 @@ vi.mock('../kv_store.tsx', () => ({
   getByPrefix: vi.fn(),
 }))
 
-import { toMealPlanMeal } from '../recipe-adapter.ts'
+// Keep the real pure transforms (toMealPlanMeal) but stub the kv-backed
+// fetchers so generateRecipeQueue can be driven with fixture recipes.
+vi.mock('../recipe-adapter.ts', async (importActual) => {
+  const actual = await importActual<typeof import('../recipe-adapter.ts')>()
+  return { ...actual, getRecipesByFocusType: vi.fn(), getSleepFriendlyRecipes: vi.fn() }
+})
+
+import { toMealPlanMeal, getRecipesByFocusType } from '../recipe-adapter.ts'
 import {
+  generateRecipeQueue,
   getQueueWeekAsMealPlan,
   getQueueWeekShoppingList,
   swapQueueMeal,
@@ -129,5 +137,92 @@ describe('swapQueueMeal', () => {
     const result = swapQueueMeal(queue, 99, 'dinner', replacement)
     expect(result.meals[0].recipeId).toBe('1')
     expect(result.meals.some((m) => m.recipeId === '999')).toBe(false)
+  })
+})
+
+describe('generateRecipeQueue', () => {
+  const recipePool = () => [
+    ...Array.from({ length: 4 }, (_, i) =>
+      makeRecipe({ id: i + 1, recipe_category: 'Breakfast', ingredients: ['1 cup oats', '1 banana'] }),
+    ),
+    ...Array.from({ length: 5 }, (_, i) =>
+      makeRecipe({ id: i + 10, recipe_category: 'Lunch', ingredients: ['1 cup rice', '1 onion'] }),
+    ),
+    ...Array.from({ length: 6 }, (_, i) =>
+      makeRecipe({ id: i + 20, recipe_category: 'Dinner', ingredients: ['1 cup pasta', '2 cloves garlic'] }),
+    ),
+  ]
+
+  beforeEach(() => {
+    vi.mocked(getRecipesByFocusType).mockReset()
+  })
+
+  it('builds a queue with one meal per slot per cooking day', async () => {
+    vi.mocked(getRecipesByFocusType).mockResolvedValue(recipePool())
+    const queue = await generateRecipeQueue({
+      userId: 'u1',
+      mealsPerDay: 3,
+      goal: 'study',
+      focusMode: false,
+      queueDays: 7,
+      selectedMealSlots: ['breakfast', 'lunch', 'dinner'],
+    })
+    expect(queue.userId).toBe('u1')
+    expect(queue.queueId).toBeTruthy()
+    expect(queue.meals).toHaveLength(21) // 7 days × 3 meals
+    expect(queue.meals.every((m) => m.dayNumber >= 1 && m.dayNumber <= 7)).toBe(true)
+  })
+
+  it('throws when no recipes are available', async () => {
+    vi.mocked(getRecipesByFocusType).mockResolvedValue([])
+    await expect(
+      generateRecipeQueue({ userId: 'u1', mealsPerDay: 3, goal: 'study', focusMode: false, queueDays: 7 }),
+    ).rejects.toThrow(/No recipes found/)
+  })
+
+  it('excludes avoided ingredients from the generated meals', async () => {
+    vi.mocked(getRecipesByFocusType).mockResolvedValue([
+      ...recipePool(),
+      makeRecipe({ id: 99, recipe_category: 'Dinner', ingredients: ['2 fillets salmon'] }),
+    ])
+    const queue = await generateRecipeQueue({
+      userId: 'u1',
+      mealsPerDay: 3,
+      goal: 'study',
+      focusMode: false,
+      queueDays: 7,
+      avoidIngredients: ['salmon'],
+      selectedMealSlots: ['breakfast', 'lunch', 'dinner'],
+    })
+    const allIngredients = queue.meals.flatMap((m) => m.recipe.ingredientNames)
+    expect(allIngredients.some((i) => i.toLowerCase().includes('salmon'))).toBe(false)
+  })
+
+  it('uses larger cluster sizes for a 28-day queue', async () => {
+    vi.mocked(getRecipesByFocusType).mockResolvedValue(recipePool())
+    const queue = await generateRecipeQueue({
+      userId: 'u1',
+      mealsPerDay: 1,
+      goal: 'study',
+      focusMode: false,
+      queueDays: 28,
+    })
+    expect(queue.meals).toHaveLength(28) // 28 days × 1 dinner
+  })
+
+  it('handles preferSleepDinners and maxCookingTime without error', async () => {
+    vi.mocked(getRecipesByFocusType).mockResolvedValue(recipePool())
+    const queue = await generateRecipeQueue({
+      userId: 'u1',
+      mealsPerDay: 2,
+      goal: 'fitness',
+      focusMode: true,
+      queueDays: 7,
+      preferSleepDinners: true,
+      maxCookingTime: 60,
+      selectedMealSlots: ['breakfast', 'dinner'],
+    })
+    expect(queue.meals.length).toBeGreaterThan(0)
+    expect(queue.mealsPerDay).toBe(2)
   })
 })
