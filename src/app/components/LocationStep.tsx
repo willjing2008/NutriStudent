@@ -279,8 +279,8 @@ export function LocationStep({ preferences, updatePreferences, onNext, onBack }:
               <MapPin className="w-6 h-6 text-[#22C55E]" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">Choose a Nearby Shop</h2>
-              <p className="text-[#6B7280] text-sm">Find grocery stores near you</p>
+              <h2 className="text-xl font-bold text-white">Where do you shop? <span className="text-[#6B7280] text-sm font-normal">(optional)</span></h2>
+              <p className="text-[#6B7280] text-sm">Pick a nearby store for directions and your shopping list — this won't change your meal plan.</p>
             </div>
           </div>
 
@@ -536,10 +536,9 @@ export function LocationStep({ preferences, updatePreferences, onNext, onBack }:
             </button>
             <button
               onClick={onNext}
-              disabled={!canProceed}
-              className="flex-1 flex items-center justify-center gap-2 bg-[#22C55E] text-[#052E16] px-6 py-3 rounded-xl font-semibold hover:bg-[#4ADE80] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="flex-1 flex items-center justify-center gap-2 bg-[#22C55E] text-[#052E16] px-6 py-3 rounded-xl font-semibold hover:bg-[#4ADE80] transition-all"
             >
-              Next
+              {canProceed ? 'Next' : 'Skip for now'}
               <ArrowRight className="w-5 h-5" />
             </button>
           </div>

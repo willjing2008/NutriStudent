@@ -59,4 +59,23 @@ describe('PreferencesStep — dietary restrictions', () => {
       expect.objectContaining({ dietaryRestrictions: ['vegan'] }),
     )
   })
+
+  it('persists the selected weekly budget', () => {
+    const updatePreferences = vi.fn()
+    render(
+      <PreferencesStep
+        preferences={basePrefs()}
+        updatePreferences={updatePreferences}
+        onNext={vi.fn()}
+        onBack={vi.fn()}
+      />,
+    )
+
+    fireEvent.click(screen.getByText('£80'))
+    fireEvent.click(screen.getByText('Continue'))
+
+    expect(updatePreferences).toHaveBeenCalledWith(
+      expect.objectContaining({ budget: 80 }),
+    )
+  })
 })

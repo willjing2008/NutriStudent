@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowRight, ArrowLeft, X, Calendar, Users, Target, Clock, AlertCircle, Sunrise, Sun, Moon } from 'lucide-react';
+import { ArrowRight, ArrowLeft, X, Calendar, Users, Target, Clock, AlertCircle, Sunrise, Sun, Moon, Wallet } from 'lucide-react';
 import { UserPreferences, MealTimes } from '../App';
 import { getLocalTodayISO } from '../utils/dateUtils';
 
@@ -29,6 +29,7 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
   const [mealsPerDay, setMealsPerDay] = useState(preferences.mealsPerDay);
   const [goal, setGoal] = useState(preferences.goal);
   const [maxCookingTime, setMaxCookingTime] = useState(preferences.maxCookingTime);
+  const [budget, setBudget] = useState(preferences.budget || 60);
   const [avoidIngredients, setAvoidIngredients] = useState<string[]>(
     preferences.avoidIngredients || []
   );
@@ -82,6 +83,7 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
       mealsPerDay,
       goal,
       maxCookingTime,
+      budget,
       avoidIngredients,
       dietaryRestrictions,
       mealTimes,
@@ -307,7 +309,33 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
             </div>
           </div>
 
-          {/* Section 6: Dietary Restrictions */}
+          {/* Section 6: Weekly Budget */}
+          <div className="bg-[#142A1D] rounded-2xl p-5 border border-[#2D5A3D]">
+            <SectionHeader icon={Wallet} title="Weekly Budget" />
+            <div className="grid grid-cols-4 gap-3">
+              {[40, 60, 80, 100].map((amount) => (
+                <button
+                  key={amount}
+                  onClick={() => setBudget(amount)}
+                  aria-pressed={budget === amount}
+                  className={`py-4 rounded-xl font-semibold text-base transition-all ${
+                    budget === amount
+                      ? 'bg-[#22C55E] text-[#052E16]'
+                      : 'bg-[#0A1F13] text-white border border-[#2D5A3D] hover:border-[#22C55E]'
+                  }`}
+                >
+                  £{amount}
+                </button>
+              ))}
+            </div>
+            <div className="mt-4 p-3 bg-[#22C55E]/10 rounded-xl border border-[#22C55E]/20">
+              <p className="text-sm text-[#22C55E]">
+                We'll keep your week's groceries around <strong>£{budget}</strong>.
+              </p>
+            </div>
+          </div>
+
+          {/* Section 7: Dietary Restrictions */}
           <div className="bg-[#142A1D] rounded-2xl p-5 border border-[#2D5A3D]">
             <SectionHeader icon={AlertCircle} title="Dietary Restrictions" optional />
             <div className="flex flex-wrap gap-3">
