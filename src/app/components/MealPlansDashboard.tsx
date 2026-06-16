@@ -1,6 +1,6 @@
 import { useLanguage } from '../hooks/useLanguage';
 import React, { useState, useEffect, useCallback } from 'react';
-import { Edit2, Search, Plus, ChevronRight, Check, Calendar, Sparkles, ChefHat, Flame } from 'lucide-react';
+import { Edit2, Plus, ChevronRight, Check, Calendar, Sparkles, ChefHat, Flame } from 'lucide-react';
 import { BottomNavigation, NavTab } from './BottomNavigation';
 import { authedPost } from '../utils/apiClient';
 
@@ -163,19 +163,21 @@ export function MealPlansDashboard({
       <div className="px-5 pt-6 pb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center overflow-hidden">
+            <button
+              type="button"
+              onClick={onNavigateProfile}
+              aria-label="Open profile"
+              className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#22C55E]"
+            >
               <img
                 src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`}
                 alt={userName}
                 className="w-10 h-10 rounded-full"
               />
-            </div>
+            </button>
             <h1 className="text-xl font-bold text-white">{t("yourMealPlans")}</h1>
           </div>
           <div className="flex items-center gap-3">
-            <button aria-label="Search plans" className="p-2 hover:bg-[#1A1A1A] rounded-full transition-colors">
-              <Search className="w-5 h-5 text-white" />
-            </button>
             <button
               onClick={onCreateNew}
               aria-label="Create new plan"

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../hooks/useLanguage';
 import { useSubscription } from '../hooks/useSubscription';
-import { LogOut, Settings, Bell, Shield, HelpCircle, ChevronRight, Moon, Globe, Crown, Pencil, Search, GraduationCap, Check, Loader2, X, Plus, User } from 'lucide-react';
+import { LogOut, Settings, ChevronRight, Globe, Crown, Pencil, Search, GraduationCap, Check, Loader2, X, Plus, User } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { BottomNavigation, NavTab } from './BottomNavigation';
 import { ACHIEVEMENTS } from '../constants/achievements';
@@ -81,20 +81,16 @@ export function ProfilePage({ user, onLogout, onOpenAdmin, onUserUpdate, activeT
     {
       title: t('preferences'),
       items: [
-        { icon: Bell, label: t('notifications'), value: 'On', action: () => {} },
         { icon: Globe, label: t('language'), value: language === 'zh-CN' ? '中文' : 'English', action: () => setShowLanguageModal(true) },
-        { icon: Moon, label: t('darkMode'), value: 'On', action: () => {} },
       ],
     },
     {
       title: t('account'),
       items: [
         { icon: Crown, label: t('billing'), action: showCustomerCenter },
-        { icon: Shield, label: t('privacySecurity'), action: () => {} },
         // Admin Dashboard entry is only shown to admins. This is cosmetic —
         // the backend remains the real authorization gate.
         ...(isAdmin ? [{ icon: Settings, label: t('adminDashboard'), action: onOpenAdmin }] : []),
-        { icon: HelpCircle, label: t('helpSupport'), action: () => {} },
       ],
     },
   ];
