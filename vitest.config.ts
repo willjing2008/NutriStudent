@@ -1,13 +1,18 @@
 import { defineConfig } from 'vitest/config'
 import path from 'path'
-import react from '@vitejs/plugin-react'
 
+// No @vitejs/plugin-react here: vitest transforms JSX via esbuild (automatic
+// runtime, per tsconfig jsx: react-jsx). Including the plugin spun up a
+// dev-server instance that kept the process alive after tests ("close timed
+// out"). esbuild covers our component tests fine.
 export default defineConfig({
-  plugins: [react()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
+  },
+  esbuild: {
+    jsx: 'automatic',
   },
   test: {
     environment: 'jsdom',
