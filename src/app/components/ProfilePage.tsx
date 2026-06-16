@@ -132,6 +132,7 @@ export function ProfilePage({ user, onLogout, onOpenAdmin, onUserUpdate, activeT
             </div>
             <button
               onClick={() => setShowEditProfile(true)}
+              aria-label="Edit profile"
               className="p-2 bg-[#2D2D2D] rounded-full hover:bg-[#3D3D3D] transition-colors"
             >
               <Pencil className="w-5 h-5 text-[#9CA3AF]" />
@@ -424,7 +425,7 @@ function EditProfileModal({ user, onClose, onSave }: { user: any; onClose: () =>
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-white font-bold text-lg">Edit Profile</h3>
-          <button onClick={onClose} className="p-1 text-[#9CA3AF] hover:text-white transition-colors">
+          <button onClick={onClose} aria-label="Close" className="p-1 text-[#9CA3AF] hover:text-white transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>

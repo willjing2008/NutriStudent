@@ -124,6 +124,7 @@ export function ShoppingMode({ ingredients, storeName, onBack, missingEssentials
           <div className="flex items-center justify-between mb-4">
             <button
               onClick={onBack}
+              aria-label="Back"
               className="p-2 -ml-2 hover:bg-[#1E1E1E] rounded-full transition-colors"
             >
               <ChevronLeft className="w-6 h-6 text-white" />
@@ -147,7 +148,14 @@ export function ShoppingMode({ ingredients, storeName, onBack, missingEssentials
                 {Math.round(progress)}%
               </span>
             </div>
-            <div className="h-1.5 bg-[#1E1E1E] rounded-full overflow-hidden">
+            <div
+              className="h-1.5 bg-[#1E1E1E] rounded-full overflow-hidden"
+              role="progressbar"
+              aria-valuenow={Math.round(progress)}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label="Items collected"
+            >
               <div
                 className="h-full bg-[#22C55E] transition-all duration-300 ease-out rounded-full"
                 style={{ width: `${progress}%` }}
@@ -186,6 +194,8 @@ export function ShoppingMode({ ingredients, storeName, onBack, missingEssentials
                 <button
                   key={essential.id}
                   onClick={() => toggleItem(`essential:${essential.name}`)}
+                  aria-pressed={isChecked}
+                  aria-label={`${essential.name}, mark as collected`}
                   className="w-full text-left px-4 py-3 rounded-xl bg-[#141414] border border-[#1E1E1E] transition-all hover:border-[#2D2D2D] active:scale-[0.99]"
                 >
                   <div className="flex items-center gap-3">
@@ -246,6 +256,8 @@ export function ShoppingMode({ ingredients, storeName, onBack, missingEssentials
                   <button
                     key={ingredient.name}
                     onClick={() => toggleItem(`ing:${ingredient.name}`)}
+                    aria-pressed={isChecked}
+                    aria-label={`${ingredient.name}, mark as collected`}
                     className="w-full text-left px-4 py-3 rounded-xl bg-[#141414] border border-[#1E1E1E] transition-all hover:border-[#2D2D2D] active:scale-[0.99]"
                   >
                     <div className="flex items-center gap-3">

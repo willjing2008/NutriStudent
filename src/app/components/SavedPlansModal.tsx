@@ -98,6 +98,7 @@ export function SavedPlansModal({ userId, onClose, onLoadPlan }: SavedPlansModal
           </div>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="p-2 hover:bg-white/20 rounded-lg transition-colors"
           >
             <X className="w-6 h-6" />
@@ -172,6 +173,7 @@ export function SavedPlansModal({ userId, onClose, onLoadPlan }: SavedPlansModal
                       <button
                         onClick={() => handleDeletePlan(plan.planId)}
                         disabled={deletingPlanId === plan.planId}
+                        aria-label={`Delete plan ${plan.planName}`}
                         className={`px-4 py-3 rounded-lg transition-all font-medium flex items-center justify-center ${
                           deletingPlanId === plan.planId
                             ? 'bg-gray-300 cursor-not-allowed'

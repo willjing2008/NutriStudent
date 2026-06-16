@@ -173,11 +173,12 @@ export function MealPlansDashboard({
             <h1 className="text-xl font-bold text-white">{t("yourMealPlans")}</h1>
           </div>
           <div className="flex items-center gap-3">
-            <button className="p-2 hover:bg-[#1A1A1A] rounded-full transition-colors">
+            <button aria-label="Search plans" className="p-2 hover:bg-[#1A1A1A] rounded-full transition-colors">
               <Search className="w-5 h-5 text-white" />
             </button>
-            <button 
+            <button
               onClick={onCreateNew}
+              aria-label="Create new plan"
               className="p-2 hover:bg-[#1A1A1A] rounded-full transition-colors"
             >
               <Plus className="w-5 h-5 text-white" />
@@ -347,6 +348,7 @@ export function MealPlansDashboard({
                    
                    <button
                      onClick={(e) => startEditing(plan.id, plan.name, e)}
+                     aria-label={`Edit name of ${plan.name}`}
                      className="absolute top-2 right-2 p-2.5 bg-black/60 backdrop-blur-md rounded-full text-white shadow-lg hover:bg-black/80 hover:scale-110 transition-all"
                    >
                      <Edit2 className="w-4 h-4" />

@@ -934,7 +934,7 @@ export function RecommendationsStep({
               <h1 className="text-xl font-bold text-white">{userName}</h1>
           </div>
         </div>
-          <button className="w-10 h-10 rounded-full bg-[#142A1D] flex items-center justify-center border border-[#1E4029]">
+          <button aria-label="Notifications" className="w-10 h-10 rounded-full bg-[#142A1D] flex items-center justify-center border border-[#1E4029]">
             <Bell className="w-5 h-5 text-[#9CA3AF]" />
             </button>
           </div>
@@ -1116,8 +1116,15 @@ export function RecommendationsStep({
                 <span className="text-[#9CA3AF]">Protein</span>
                 <span className="text-white">{todayNutrition.protein}g/{targetProtein}g</span>
               </div>
-              <div className="h-2 bg-[#1E4029] rounded-full overflow-hidden">
-                <div 
+              <div
+                className="h-2 bg-[#1E4029] rounded-full overflow-hidden"
+                role="progressbar"
+                aria-label="Protein"
+                aria-valuenow={Math.round(Math.min((todayNutrition.protein / targetProtein) * 100, 100))}
+                aria-valuemin={0}
+                aria-valuemax={100}
+              >
+                <div
                   className="h-full bg-[#22C55E] rounded-full transition-all"
                   style={{ width: `${Math.min((todayNutrition.protein / targetProtein) * 100, 100)}%` }}
                 />
@@ -1130,8 +1137,15 @@ export function RecommendationsStep({
                 <span className="text-[#9CA3AF]">Carbs</span>
                 <span className="text-white">{todayNutrition.carbs}g/{targetCarbs}g</span>
               </div>
-              <div className="h-2 bg-[#1E4029] rounded-full overflow-hidden">
-                <div 
+              <div
+                className="h-2 bg-[#1E4029] rounded-full overflow-hidden"
+                role="progressbar"
+                aria-label="Carbs"
+                aria-valuenow={Math.round(Math.min((todayNutrition.carbs / targetCarbs) * 100, 100))}
+                aria-valuemin={0}
+                aria-valuemax={100}
+              >
+                <div
                   className="h-full bg-[#4ADE80] rounded-full transition-all"
                   style={{ width: `${Math.min((todayNutrition.carbs / targetCarbs) * 100, 100)}%` }}
                 />
@@ -1144,7 +1158,14 @@ export function RecommendationsStep({
                 <span className="text-[#9CA3AF]">Fats</span>
                 <span className="text-white">{todayNutrition.fats}g/{targetFats}g</span>
                                   </div>
-              <div className="h-2 bg-[#1E4029] rounded-full overflow-hidden">
+              <div
+                className="h-2 bg-[#1E4029] rounded-full overflow-hidden"
+                role="progressbar"
+                aria-label="Fats"
+                aria-valuenow={Math.round(Math.min((todayNutrition.fats / targetFats) * 100, 100))}
+                aria-valuemin={0}
+                aria-valuemax={100}
+              >
                 <div
                   className="h-full bg-[#86EFAC] rounded-full transition-all"
                   style={{ width: `${Math.min((todayNutrition.fats / targetFats) * 100, 100)}%` }}
@@ -1158,7 +1179,14 @@ export function RecommendationsStep({
                 <span className="text-[#9CA3AF]">Fiber</span>
                 <span className="text-white">{todayNutrition.fiber}g/{targetFiber}g</span>
               </div>
-              <div className="h-2 bg-[#1E4029] rounded-full overflow-hidden">
+              <div
+                className="h-2 bg-[#1E4029] rounded-full overflow-hidden"
+                role="progressbar"
+                aria-label="Fiber"
+                aria-valuenow={Math.round(Math.min((todayNutrition.fiber / targetFiber) * 100, 100))}
+                aria-valuemin={0}
+                aria-valuemax={100}
+              >
                 <div
                   className="h-full bg-[#BBF7D0] rounded-full transition-all"
                   style={{ width: `${Math.min((todayNutrition.fiber / targetFiber) * 100, 100)}%` }}
@@ -1252,6 +1280,8 @@ export function RecommendationsStep({
                       e.stopPropagation();
                       toggleMealCooked(meal.id);
                     }}
+                    aria-pressed={isCooked}
+                    aria-label={isCooked ? `Mark ${mealType} as not cooked` : `Mark ${mealType} as cooked`}
                     className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
                       isCooked
                         ? 'bg-[#22C55E] text-[#052E16] animate-pulse-glow'
@@ -1411,6 +1441,7 @@ export function RecommendationsStep({
               <h3 className="text-white font-semibold">{selectedMeal.name}</h3>
               <button
                 onClick={() => setShowRecipeModal(false)}
+                aria-label="Close"
                 className="p-2 hover:bg-[#142A1D] rounded-full transition-colors"
               >
                 <X className="w-5 h-5 text-[#9CA3AF]" />

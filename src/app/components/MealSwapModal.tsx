@@ -442,6 +442,7 @@ export function MealSwapModal({
           </div>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="p-2 hover:bg-[#142A1D] rounded-lg transition-colors"
           >
             <X className="w-6 h-6 text-[#9CA3AF]" />
@@ -715,8 +716,11 @@ export function MealSwapModal({
                         </div>
 
                         {/* Like Button */}
-                        <div
+                        <button
+                          type="button"
                           className="absolute top-2 right-2"
+                          aria-label={recipe.likedByMe ? `Unlike ${recipe.name}` : `Like ${recipe.name}`}
+                          aria-pressed={recipe.likedByMe}
                           onClick={(e) => {
                             e.stopPropagation();
                             handleToggleLike(recipe.id);
@@ -730,7 +734,7 @@ export function MealSwapModal({
                             <Heart className={`w-3.5 h-3.5 ${recipe.likedByMe ? 'fill-current' : ''} ${togglingLike === recipe.id ? 'animate-pulse' : ''}`} />
                             <span>{recipe.likesCount}</span>
                           </div>
-                        </div>
+                        </button>
 
                         {/* Selected Checkmark */}
                         {isSelected && (
