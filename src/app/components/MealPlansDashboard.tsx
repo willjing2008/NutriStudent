@@ -2,6 +2,7 @@ import { useLanguage } from '../hooks/useLanguage';
 import React, { useState, useEffect, useCallback } from 'react';
 import { Edit2, Plus, ChevronRight, Check, Calendar, Sparkles, ChefHat, Flame } from 'lucide-react';
 import { BottomNavigation, NavTab } from './BottomNavigation';
+import { ImageWithFallback } from './figma/ImageWithFallback';
 import { authedPost } from '../utils/apiClient';
 
 interface MyRecipe {
@@ -292,7 +293,7 @@ export function MealPlansDashboard({
 
                   {/* Plan Image */}
                   <div className="absolute top-5 right-5 w-28 h-28 rounded-xl overflow-hidden shadow-lg shadow-black/20 rotate-3 border-2 border-[#2D5A3D]/20">
-                    <img
+                    <ImageWithFallback
                       src={currentActivePlan.image}
                       alt={currentActivePlan.name}
                       className="w-full h-full object-cover"
@@ -332,7 +333,7 @@ export function MealPlansDashboard({
                 <div key={plan.id} className="relative flex-shrink-0 w-48 group">
                    <button onClick={() => onViewPlan(plan.id)} className="w-full text-left">
                      <div className="w-48 h-32 rounded-2xl overflow-hidden mb-3 relative">
-                       <img src={plan.image} alt={plan.name} className="w-full h-full object-cover" />
+                       <ImageWithFallback src={plan.image} alt={plan.name} className="w-full h-full object-cover" />
                        <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-all" />
                      </div>
                      <h4 className="text-white font-semibold text-sm mb-1">{plan.name}</h4>

@@ -5,10 +5,7 @@ const ERROR_IMG_SRC =
 
 export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElement>) {
   const [didError, setDidError] = useState(false)
-
-  const handleError = () => {
-    setDidError(true)
-  }
+  const [loaded, setLoaded] = useState(false)
 
   const { src, alt, style, className, ...rest } = props
 
@@ -22,6 +19,16 @@ export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElemen
       </div>
     </div>
   ) : (
-    <img src={src} alt={alt} className={className} style={style} {...rest} onError={handleError} />
+    <img
+      src={src}
+      alt={alt}
+      // While the image is loading, show a pulsing skeleton in its own box;
+      // once it loads the placeholder classes are dropped.
+      className={`${className ?? ''} ${loaded ? '' : 'animate-pulse bg-gray-200 dark:bg-gray-700'}`}
+      style={style}
+      {...rest}
+      onLoad={() => setLoaded(true)}
+      onError={() => setDidError(true)}
+    />
   )
 }

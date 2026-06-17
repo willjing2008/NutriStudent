@@ -690,10 +690,19 @@ export function MealSwapModal({
                   const isSelected = selectedCommunityRecipe?.id === recipe.id;
 
                   return (
-                    <button
+                    <div
                       key={recipe.id}
+                      role="button"
+                      tabIndex={0}
+                      aria-pressed={isSelected}
                       onClick={() => setSelectedCommunityRecipe(recipe)}
-                      className={`text-left bg-[#142A1D] rounded-2xl overflow-hidden border-2 transition-all hover:shadow-lg ${
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setSelectedCommunityRecipe(recipe);
+                        }
+                      }}
+                      className={`cursor-pointer text-left bg-[#142A1D] rounded-2xl overflow-hidden border-2 transition-all hover:shadow-lg ${
                         isSelected
                           ? 'border-[#22C55E] shadow-lg shadow-green-900/30 scale-[1.02]'
                           : 'border-[#1E4029] hover:border-[#2D5A3D]'
@@ -779,7 +788,7 @@ export function MealSwapModal({
                           </div>
                         </div>
                       </div>
-                    </button>
+                    </div>
                   );
                 })}
               </div>
