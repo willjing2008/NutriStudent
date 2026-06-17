@@ -44,6 +44,22 @@ npm install
 npm run dev
 ```
 
+Quality gates:
+
+```bash
+npm run typecheck
+npm test
+npm run build
+```
+
+End-to-end smoke tests:
+
+```bash
+npm run test:e2e
+```
+
+Install the Playwright browser once on a new machine with `npx playwright install chromium`.
+
 To build for production:
 
 ```bash
@@ -61,6 +77,10 @@ npx cap open ios
 
 ## Environment
 
-The app connects to a Supabase project for auth, database, and edge functions. Project credentials are configured in `utils/supabase/info.ts`.
+The app connects to a Supabase project for auth, database, and edge functions. Project credentials are configured in `utils/supabase/info.tsx`; deployment and secret placeholders are documented in `.env.example`.
 
 RevenueCat is configured for subscription management — see `src/app/services/revenuecat.ts` for SDK setup.
+
+## Deployment
+
+See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the Supabase Edge Function deploy command, smoke checks, iOS build notes, and App Store launch blockers.
