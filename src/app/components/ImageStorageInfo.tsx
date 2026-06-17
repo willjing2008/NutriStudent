@@ -2,6 +2,18 @@ import React, { useState } from 'react';
 import { ImageIcon, CheckCircle, AlertCircle, Info, Download } from 'lucide-react';
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+const getErrorMessage = (error: unknown): string => {
+  const message = error instanceof Error
+    ? error.message
+    : isRecord(error)
+      ? error.message
+      : undefined;
+  return typeof message === 'string' && message.trim() ? message : 'Unknown error';
+};
+
 /**
  * Component to show image storage system status and provide manual controls
  */
@@ -61,9 +73,9 @@ export function ImageStorageInfo() {
         setStatus('error');
         setMessage(`Endpoint error (${imageResponse.status}). Check server logs for details.`);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       setStatus('error');
-      setMessage(`❌ Cannot connect to image storage endpoints. Error: ${error.message}. Images will use temporary URLs.`);
+      setMessage(`❌ Cannot connect to image storage endpoints. Error: ${getErrorMessage(error)}. Images will use temporary URLs.`);
     } finally {
       setIsChecking(false);
     }
