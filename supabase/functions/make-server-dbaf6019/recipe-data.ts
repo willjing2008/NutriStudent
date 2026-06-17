@@ -283,6 +283,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 25.0,
       "protein_g": 21.0,
       "sodium_mg": 195,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 1.0,
       "unsaturated_fat_g": 0.0
     },
@@ -322,6 +323,9 @@ export const ALL_RECIPES: NewRecipe[] = [
     "nutrition_per_serving": {
       "calories": 279,
       "total_fat_g": 20.0,
+      "carbohydrates_g": 0,
+      "fiber_g": 0,
+      "sugar_g": 0,
       "protein_g": 23.0,
       "sodium_mg": 871,
       "cholesterol_mg": 94,
@@ -421,6 +425,7 @@ export const ALL_RECIPES: NewRecipe[] = [
     "rating": 4.6,
     "review_count": 346,
     "recipe_category": "Dinner",
+    "cuisine": "",
     "meal_type": "fitness"
   },
   {
@@ -455,6 +460,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "total_fat_g": 18.0,
       "carbohydrates_g": 6.0,
       "fiber_g": 3.0,
+      "sugar_g": 0,
       "protein_g": 21.0,
       "sodium_mg": 1017,
       "cholesterol_mg": 56,
@@ -496,6 +502,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "calories": 232,
       "total_fat_g": 16.0,
       "carbohydrates_g": 1.0,
+      "fiber_g": 0,
       "sugar_g": 1.0,
       "protein_g": 20.0,
       "sodium_mg": 331,
@@ -721,6 +728,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 2.0,
       "protein_g": 10.0,
       "sodium_mg": 11,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 1.0,
       "unsaturated_fat_g": 0.0
     },
@@ -1176,6 +1184,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "calories": 521,
       "total_fat_g": 34.0,
       "carbohydrates_g": 33.0,
+      "fiber_g": 0,
       "sugar_g": 33.0,
       "protein_g": 22.0,
       "sodium_mg": 1648,
@@ -1219,6 +1228,9 @@ export const ALL_RECIPES: NewRecipe[] = [
     "nutrition_per_serving": {
       "calories": 461,
       "total_fat_g": 37.0,
+      "carbohydrates_g": 0,
+      "fiber_g": 0,
+      "sugar_g": 0,
       "protein_g": 27.0,
       "sodium_mg": 1025,
       "cholesterol_mg": 94,
@@ -1457,6 +1469,7 @@ export const ALL_RECIPES: NewRecipe[] = [
     "rating": 4.1,
     "review_count": 56,
     "recipe_category": "Dinner",
+    "cuisine": "",
     "meal_type": "work"
   },
   {
@@ -1503,6 +1516,7 @@ export const ALL_RECIPES: NewRecipe[] = [
     "rating": 4.6,
     "review_count": 52,
     "cuisine": "Mediterranean Inspired",
+    "recipe_category": "",
     "meal_type": "fitness"
   },
   {
@@ -1679,6 +1693,7 @@ export const ALL_RECIPES: NewRecipe[] = [
     "rating": 4.5,
     "review_count": 19,
     "recipe_category": "Lunch",
+    "cuisine": "",
     "meal_type": "study"
   },
   {
@@ -1760,6 +1775,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "total_fat_g": 18.0,
       "carbohydrates_g": 58.0,
       "fiber_g": 3.0,
+      "sugar_g": 0,
       "protein_g": 45.0,
       "sodium_mg": 1655,
       "cholesterol_mg": 101,
@@ -2089,6 +2105,7 @@ export const ALL_RECIPES: NewRecipe[] = [
     "rating": 4.5,
     "review_count": 22,
     "recipe_category": "Dinner",
+    "cuisine": "",
     "meal_type": "fitness"
   },
   {
@@ -2407,6 +2424,8 @@ export const ALL_RECIPES: NewRecipe[] = [
       "calories": 260,
       "total_fat_g": 9.0,
       "carbohydrates_g": 1.0,
+      "fiber_g": 0,
+      "sugar_g": 0,
       "protein_g": 41.0,
       "sodium_mg": 148,
       "cholesterol_mg": 107,
@@ -2512,6 +2531,7 @@ export const ALL_RECIPES: NewRecipe[] = [
     "rating": 5.0,
     "review_count": 1,
     "recipe_category": "Dinner",
+    "cuisine": "",
     "meal_type": "work"
   },
   {
@@ -2549,6 +2569,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "total_fat_g": 15.0,
       "carbohydrates_g": 10.0,
       "fiber_g": 1.0,
+      "sugar_g": 0,
       "protein_g": 35.0,
       "sodium_mg": 407,
       "cholesterol_mg": 189,
@@ -2646,6 +2667,7 @@ export const ALL_RECIPES: NewRecipe[] = [
     "rating": 4.7,
     "review_count": 3,
     "recipe_category": "Dinner",
+    "cuisine": "",
     "meal_type": "work"
   },
   {
@@ -2733,6 +2755,7 @@ export const ALL_RECIPES: NewRecipe[] = [
     "rating": 4.3,
     "review_count": 33,
     "cuisine": "Italian Inspired",
+    "recipe_category": "",
     "meal_type": "work"
   },
   {
@@ -3008,6 +3031,7 @@ export const ALL_RECIPES: NewRecipe[] = [
     "rating": 4.4,
     "review_count": 650,
     "recipe_category": "Dinner",
+    "cuisine": "",
     "meal_type": "fitness"
   },
   {
@@ -3056,6 +3080,7 @@ export const ALL_RECIPES: NewRecipe[] = [
     "rating": 4.8,
     "review_count": 40,
     "cuisine": "Italian Inspired",
+    "recipe_category": "",
     "meal_type": "fitness"
   },
   {
@@ -3229,6 +3254,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "total_fat_g": 22.0,
       "carbohydrates_g": 46.0,
       "fiber_g": 2.0,
+      "sugar_g": 0,
       "protein_g": 22.0,
       "sodium_mg": 356,
       "cholesterol_mg": 66,
@@ -3276,6 +3302,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "calories": 404,
       "total_fat_g": 14.0,
       "carbohydrates_g": 21.0,
+      "fiber_g": 0,
       "sugar_g": 0.0,
       "protein_g": 51.0,
       "sodium_mg": 591,
@@ -3475,6 +3502,8 @@ export const ALL_RECIPES: NewRecipe[] = [
     },
     "rating": 4.8,
     "review_count": 13,
+    "recipe_category": "",
+    "cuisine": "",
     "meal_type": "fitness"
   },
   {
@@ -3607,6 +3636,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "total_fat_g": 25.0,
       "carbohydrates_g": 2.0,
       "fiber_g": 1.0,
+      "sugar_g": 0,
       "protein_g": 34.0,
       "sodium_mg": 300,
       "cholesterol_mg": 99,
@@ -3663,6 +3693,7 @@ export const ALL_RECIPES: NewRecipe[] = [
     "rating": 4.3,
     "review_count": 3,
     "recipe_category": "Dinner",
+    "cuisine": "",
     "meal_type": "work"
   },
   {
@@ -3844,6 +3875,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "total_fat_g": 16.0,
       "carbohydrates_g": 1.0,
       "fiber_g": 1.0,
+      "sugar_g": 0,
       "protein_g": 34.0,
       "sodium_mg": 174,
       "cholesterol_mg": 108,
@@ -4022,6 +4054,9 @@ export const ALL_RECIPES: NewRecipe[] = [
     "nutrition_per_serving": {
       "calories": 241,
       "total_fat_g": 19.0,
+      "carbohydrates_g": 0,
+      "fiber_g": 0,
+      "sugar_g": 0,
       "protein_g": 18.0,
       "sodium_mg": 195,
       "cholesterol_mg": 38,
@@ -5215,6 +5250,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "total_fat_g": 44.0,
       "carbohydrates_g": 20.0,
       "fiber_g": 3.0,
+      "sugar_g": 0,
       "protein_g": 25.0,
       "sodium_mg": 653,
       "cholesterol_mg": 75,
@@ -5312,6 +5348,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "total_fat_g": 33.0,
       "carbohydrates_g": 8.0,
       "fiber_g": 1.0,
+      "sugar_g": 0,
       "protein_g": 30.0,
       "sodium_mg": 634,
       "cholesterol_mg": 114,
@@ -5740,6 +5777,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 0.0,
       "protein_g": 24.0,
       "sodium_mg": 59,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 2.0,
       "unsaturated_fat_g": 0.0
     },
@@ -5966,6 +6004,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "total_fat_g": 7.0,
       "carbohydrates_g": 45.0,
       "fiber_g": 9.0,
+      "sugar_g": 0,
       "protein_g": 15.0,
       "sodium_mg": 1726,
       "cholesterol_mg": 22,
@@ -5974,6 +6013,8 @@ export const ALL_RECIPES: NewRecipe[] = [
     },
     "rating": 4.8,
     "review_count": 5,
+    "recipe_category": "",
+    "cuisine": "",
     "meal_type": "work"
   },
   {
@@ -6013,6 +6054,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 2.0,
       "protein_g": 14.0,
       "sodium_mg": 48,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 3.0,
       "unsaturated_fat_g": 0.0
     },
@@ -6115,6 +6157,7 @@ export const ALL_RECIPES: NewRecipe[] = [
     "rating": 4.2,
     "review_count": 18,
     "recipe_category": "Dinner",
+    "cuisine": "",
     "meal_type": "fitness"
   },
   {
@@ -6163,6 +6206,7 @@ export const ALL_RECIPES: NewRecipe[] = [
     "rating": 4.7,
     "review_count": 188,
     "recipe_category": "Dinner",
+    "cuisine": "",
     "meal_type": "fitness"
   },
   {
@@ -6740,6 +6784,7 @@ export const ALL_RECIPES: NewRecipe[] = [
     "rating": 4.2,
     "review_count": 26,
     "recipe_category": "Dinner",
+    "cuisine": "",
     "meal_type": "work"
   },
   {
@@ -6824,6 +6869,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 10.0,
       "protein_g": 7.0,
       "sodium_mg": 3,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 8.0,
       "unsaturated_fat_g": 0.0
     },
@@ -6971,6 +7017,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "total_fat_g": 16.0,
       "carbohydrates_g": 48.0,
       "fiber_g": 7.0,
+      "sugar_g": 0,
       "protein_g": 24.0,
       "sodium_mg": 2198,
       "cholesterol_mg": 52,
@@ -6979,6 +7026,8 @@ export const ALL_RECIPES: NewRecipe[] = [
     },
     "rating": 4.5,
     "review_count": 4,
+    "recipe_category": "",
+    "cuisine": "",
     "meal_type": "fitness"
   },
   {
@@ -7676,6 +7725,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "total_fat_g": 11.0,
       "carbohydrates_g": 0.0,
       "fiber_g": 0.0,
+      "sugar_g": 0,
       "protein_g": 32.0,
       "sodium_mg": 358,
       "cholesterol_mg": 90,
@@ -7979,6 +8029,7 @@ export const ALL_RECIPES: NewRecipe[] = [
     "rating": 4.6,
     "review_count": 2309,
     "recipe_category": "Dinner",
+    "cuisine": "",
     "meal_type": "fitness"
   },
   {
@@ -8064,6 +8115,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "total_fat_g": 34.0,
       "carbohydrates_g": 97.0,
       "fiber_g": 5.0,
+      "sugar_g": 0,
       "protein_g": 41.0,
       "sodium_mg": 3513,
       "cholesterol_mg": 105,
@@ -8073,6 +8125,7 @@ export const ALL_RECIPES: NewRecipe[] = [
     "rating": 5.0,
     "review_count": 2,
     "recipe_category": "Dinner",
+    "cuisine": "",
     "meal_type": "fitness"
   },
   {
@@ -8118,6 +8171,7 @@ export const ALL_RECIPES: NewRecipe[] = [
     "rating": 5.0,
     "review_count": 2,
     "recipe_category": "Dinner",
+    "cuisine": "",
     "meal_type": "fitness"
   },
   {
@@ -8155,6 +8209,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "total_fat_g": 73.0,
       "carbohydrates_g": 56.0,
       "fiber_g": 0.0,
+      "sugar_g": 0,
       "protein_g": 21.0,
       "sodium_mg": 1208,
       "cholesterol_mg": 223,
@@ -9039,6 +9094,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "total_fat_g": 2.0,
       "carbohydrates_g": 54.0,
       "fiber_g": 3.0,
+      "sugar_g": 0,
       "protein_g": 11.0,
       "sodium_mg": 548,
       "cholesterol_mg": 50,
@@ -9295,6 +9351,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 4.0,
       "protein_g": 6.0,
       "sodium_mg": 1206,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 4.0,
       "unsaturated_fat_g": 0.0
     },
@@ -9444,6 +9501,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 6.0,
       "protein_g": 6.0,
       "sodium_mg": 41,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 3.0,
       "unsaturated_fat_g": 0.0
     },
@@ -9597,6 +9655,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 7.0,
       "protein_g": 4.0,
       "sodium_mg": 36,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 1.0,
       "unsaturated_fat_g": 0.0
     },
@@ -9747,6 +9806,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 23.0,
       "protein_g": 5.0,
       "sodium_mg": 113,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 3.0,
       "unsaturated_fat_g": 0.0
     },
@@ -10305,6 +10365,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "total_fat_g": 15.0,
       "carbohydrates_g": 57.0,
       "fiber_g": 1.0,
+      "sugar_g": 0,
       "protein_g": 5.0,
       "sodium_mg": 746,
       "cholesterol_mg": 1,
@@ -10402,6 +10463,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "calories": 236,
       "total_fat_g": 19.0,
       "carbohydrates_g": 3.0,
+      "fiber_g": 0,
       "sugar_g": 3.0,
       "protein_g": 14.0,
       "sodium_mg": 651,
@@ -10504,6 +10566,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 9.0,
       "protein_g": 6.0,
       "sodium_mg": 4,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 1.0,
       "unsaturated_fat_g": 0.0
     },
@@ -10761,6 +10824,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 22.0,
       "protein_g": 5.0,
       "sodium_mg": 47,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 2.0,
       "unsaturated_fat_g": 0.0
     },
@@ -11010,6 +11074,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 15.0,
       "protein_g": 6.0,
       "sodium_mg": 21,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 5.0,
       "unsaturated_fat_g": 0.0
     },
@@ -11317,6 +11382,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 77.0,
       "protein_g": 2.0,
       "sodium_mg": 8,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 0.0,
       "unsaturated_fat_g": 0.0
     },
@@ -11363,6 +11429,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 16.0,
       "protein_g": 5.0,
       "sodium_mg": 84,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 2.0,
       "unsaturated_fat_g": 0.0
     },
@@ -12424,6 +12491,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 31.0,
       "protein_g": 9.0,
       "sodium_mg": 9,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 8.0,
       "unsaturated_fat_g": 0.0
     },
@@ -12475,6 +12543,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 33.0,
       "protein_g": 4.0,
       "sodium_mg": 509,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 4.0,
       "unsaturated_fat_g": 0.0
     },
@@ -12522,6 +12591,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 2.0,
       "protein_g": 5.0,
       "sodium_mg": 430,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 2.0,
       "unsaturated_fat_g": 0.0
     },
@@ -12662,6 +12732,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "total_fat_g": 10.0,
       "carbohydrates_g": 51.0,
       "fiber_g": 4.0,
+      "sugar_g": 0,
       "protein_g": 6.0,
       "sodium_mg": 35,
       "cholesterol_mg": 8,
@@ -13010,6 +13081,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "total_fat_g": 15.0,
       "carbohydrates_g": 40.0,
       "fiber_g": 3.0,
+      "sugar_g": 0,
       "protein_g": 7.0,
       "sodium_mg": 498,
       "cholesterol_mg": 124,
@@ -13592,6 +13664,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 16.0,
       "protein_g": 6.0,
       "sodium_mg": 406,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 2.0,
       "unsaturated_fat_g": 0.0
     },
@@ -13690,6 +13763,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 3.0,
       "protein_g": 13.0,
       "sodium_mg": 481,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 2.0,
       "unsaturated_fat_g": 0.0
     },
@@ -13847,6 +13921,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 15.0,
       "protein_g": 5.0,
       "sodium_mg": 3,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 2.0,
       "unsaturated_fat_g": 0.0
     },
@@ -14190,6 +14265,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 9.0,
       "protein_g": 5.0,
       "sodium_mg": 717,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 1.0,
       "unsaturated_fat_g": 0.0
     },
@@ -14236,6 +14312,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "calories": 498,
       "total_fat_g": 29.0,
       "carbohydrates_g": 51.0,
+      "fiber_g": 0,
       "sugar_g": 32.0,
       "protein_g": 8.0,
       "sodium_mg": 582,
@@ -14537,6 +14614,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 17.0,
       "protein_g": 2.0,
       "sodium_mg": 12,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 2.0,
       "unsaturated_fat_g": 0.0
     },
@@ -14833,6 +14911,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 21.0,
       "protein_g": 5.0,
       "sodium_mg": 121,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 2.0,
       "unsaturated_fat_g": 0.0
     },
@@ -14879,6 +14958,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 25.0,
       "protein_g": 4.0,
       "sodium_mg": 83,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 2.0,
       "unsaturated_fat_g": 0.0
     },
@@ -15478,6 +15558,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "total_fat_g": 5.0,
       "carbohydrates_g": 31.0,
       "fiber_g": 1.0,
+      "sugar_g": 0,
       "protein_g": 7.0,
       "sodium_mg": 529,
       "cholesterol_mg": 11,
@@ -16023,6 +16104,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "total_fat_g": 10.0,
       "carbohydrates_g": 43.0,
       "fiber_g": 5.0,
+      "sugar_g": 0,
       "protein_g": 8.0,
       "sodium_mg": 42,
       "cholesterol_mg": 74,
@@ -16075,6 +16157,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 7.0,
       "protein_g": 4.0,
       "sodium_mg": 1415,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 3.0,
       "unsaturated_fat_g": 0.0
     },
@@ -16120,6 +16203,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 20.0,
       "protein_g": 2.0,
       "sodium_mg": 16,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 0.0,
       "unsaturated_fat_g": 0.0
     },
@@ -16449,6 +16533,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "calories": 222,
       "total_fat_g": 10.0,
       "carbohydrates_g": 24.0,
+      "fiber_g": 0,
       "sugar_g": 1.0,
       "protein_g": 9.0,
       "sodium_mg": 70,
@@ -16596,6 +16681,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 8.0,
       "protein_g": 3.0,
       "sodium_mg": 76,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 1.0,
       "unsaturated_fat_g": 0.0
     },
@@ -16756,6 +16842,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 18.0,
       "protein_g": 7.0,
       "sodium_mg": 14,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 1.0,
       "unsaturated_fat_g": 0.0
     },
@@ -16800,6 +16887,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "total_fat_g": 36.0,
       "carbohydrates_g": 101.0,
       "fiber_g": 3.0,
+      "sugar_g": 0,
       "protein_g": 55.0,
       "sodium_mg": 2660,
       "cholesterol_mg": 105,
@@ -17013,6 +17101,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 12.0,
       "protein_g": 5.0,
       "sodium_mg": 371,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 14.0,
       "unsaturated_fat_g": 0.0
     },
@@ -17103,8 +17192,10 @@ export const ALL_RECIPES: NewRecipe[] = [
       "total_fat_g": 4.0,
       "carbohydrates_g": 21.0,
       "fiber_g": 3.0,
+      "sugar_g": 0,
       "protein_g": 7.0,
       "sodium_mg": 63,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 1.0,
       "unsaturated_fat_g": 0.0
     },
@@ -17404,6 +17495,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 26.0,
       "protein_g": 8.0,
       "sodium_mg": 20,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 1.0,
       "unsaturated_fat_g": 0.0
     },
@@ -17788,6 +17880,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "total_fat_g": 37.0,
       "carbohydrates_g": 71.0,
       "fiber_g": 27.0,
+      "sugar_g": 0,
       "protein_g": 59.0,
       "sodium_mg": 2305,
       "cholesterol_mg": 114,
@@ -17837,6 +17930,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "total_fat_g": 39.0,
       "carbohydrates_g": 56.0,
       "fiber_g": 3.0,
+      "sugar_g": 0,
       "protein_g": 39.0,
       "sodium_mg": 1353,
       "cholesterol_mg": 387,
@@ -18320,6 +18414,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "total_fat_g": 1.0,
       "carbohydrates_g": 31.0,
       "fiber_g": 2.0,
+      "sugar_g": 0,
       "protein_g": 5.0,
       "sodium_mg": 222,
       "cholesterol_mg": 2,
@@ -18411,6 +18506,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 5.0,
       "protein_g": 5.0,
       "sodium_mg": 297,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 1.0,
       "unsaturated_fat_g": 0.0
     },
@@ -18552,6 +18648,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "total_fat_g": 7.0,
       "carbohydrates_g": 37.0,
       "fiber_g": 1.0,
+      "sugar_g": 0,
       "protein_g": 9.0,
       "sodium_mg": 805,
       "cholesterol_mg": 58,
@@ -18799,6 +18896,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 21.0,
       "protein_g": 12.0,
       "sodium_mg": 110,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 1.0,
       "unsaturated_fat_g": 0.0
     },
@@ -18941,6 +19039,8 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 13.0,
       "protein_g": 4.0,
       "sodium_mg": 90,
+      "cholesterol_mg": 0,
+      "saturated_fat_g": 0,
       "unsaturated_fat_g": 0.0
     },
     "rating": 4.2,
@@ -19394,6 +19494,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 15.0,
       "protein_g": 8.0,
       "sodium_mg": 124,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 1.0,
       "unsaturated_fat_g": 0.0
     },
@@ -19494,6 +19595,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 8.0,
       "protein_g": 17.0,
       "sodium_mg": 268,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 0.0,
       "unsaturated_fat_g": 0.0
     },
@@ -19540,6 +19642,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 14.0,
       "protein_g": 14.0,
       "sodium_mg": 151,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 3.0,
       "unsaturated_fat_g": 0.0
     },
@@ -19942,6 +20045,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 10.0,
       "protein_g": 3.0,
       "sodium_mg": 132,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 0.0,
       "unsaturated_fat_g": 0.0
     },
@@ -19985,6 +20089,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "calories": 198,
       "total_fat_g": 14.0,
       "carbohydrates_g": 2.0,
+      "fiber_g": 0,
       "sugar_g": 1.0,
       "protein_g": 15.0,
       "sodium_mg": 376,
@@ -20495,6 +20600,7 @@ export const ALL_RECIPES: NewRecipe[] = [
       "sugar_g": 25.0,
       "protein_g": 8.0,
       "sodium_mg": 180,
+      "cholesterol_mg": 0,
       "saturated_fat_g": 2.0,
       "unsaturated_fat_g": 0.0
     },
@@ -20599,6 +20705,8 @@ export const ALL_RECIPES: NewRecipe[] = [
     },
     "recipe_category": "Breakfast",
     "cuisine": "American",
+    "rating": 0,
+    "review_count": 0,
     "meal_type": "work"
   },
   {
@@ -20645,6 +20753,8 @@ export const ALL_RECIPES: NewRecipe[] = [
     },
     "recipe_category": "Breakfast",
     "cuisine": "American",
+    "rating": 0,
+    "review_count": 0,
     "meal_type": "fitness"
   },
   {
@@ -20696,6 +20806,8 @@ export const ALL_RECIPES: NewRecipe[] = [
     },
     "recipe_category": "Lunch",
     "cuisine": "Asian Inspired",
+    "rating": 0,
+    "review_count": 0,
     "meal_type": "fitness"
   },
   {
@@ -20750,6 +20862,8 @@ export const ALL_RECIPES: NewRecipe[] = [
     },
     "recipe_category": "Breakfast",
     "cuisine": "American",
+    "rating": 0,
+    "review_count": 0,
     "meal_type": "work"
   },
   {
@@ -20801,6 +20915,8 @@ export const ALL_RECIPES: NewRecipe[] = [
     },
     "recipe_category": "Breakfast",
     "cuisine": "Israeli",
+    "rating": 0,
+    "review_count": 0,
     "meal_type": "study"
   },
   {
@@ -20841,6 +20957,8 @@ export const ALL_RECIPES: NewRecipe[] = [
       "unsaturated_fat_g": 0.0
     },
     "recipe_category": "Breakfast",
+    "rating": 0,
+    "review_count": 0,
     "meal_type": "fitness",
     "cuisine": "American"
   },
@@ -20892,6 +21010,8 @@ export const ALL_RECIPES: NewRecipe[] = [
       "unsaturated_fat_g": 0.0
     },
     "recipe_category": "Breakfast",
+    "rating": 0,
+    "review_count": 0,
     "meal_type": "work",
     "cuisine": "American"
   },
@@ -20938,6 +21058,8 @@ export const ALL_RECIPES: NewRecipe[] = [
       "unsaturated_fat_g": 0.0
     },
     "recipe_category": "Lunch",
+    "rating": 0,
+    "review_count": 0,
     "meal_type": "fitness",
     "cuisine": "American"
   },
@@ -20983,6 +21105,8 @@ export const ALL_RECIPES: NewRecipe[] = [
     },
     "recipe_category": "Breakfast",
     "cuisine": "Jewish",
+    "rating": 0,
+    "review_count": 0,
     "meal_type": "work"
   },
   {
@@ -21033,6 +21157,8 @@ export const ALL_RECIPES: NewRecipe[] = [
     },
     "recipe_category": "Lunch",
     "cuisine": "Mexican Inspired",
+    "rating": 0,
+    "review_count": 0,
     "meal_type": "work"
   },
   {
@@ -21087,6 +21213,8 @@ export const ALL_RECIPES: NewRecipe[] = [
     },
     "recipe_category": "Breakfast",
     "cuisine": "American",
+    "rating": 0,
+    "review_count": 0,
     "meal_type": "work"
   }
 ];
