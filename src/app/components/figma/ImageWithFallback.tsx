@@ -7,7 +7,27 @@ export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElemen
   const [didError, setDidError] = useState(false)
   const [loaded, setLoaded] = useState(false)
 
-  const { src, alt, style, className, ...rest } = props
+  const {
+    src,
+    alt,
+    style,
+    className,
+    loading = 'lazy',
+    decoding = 'async',
+    onLoad,
+    onError,
+    ...rest
+  } = props
+
+  const handleLoad: React.ReactEventHandler<HTMLImageElement> = (event) => {
+    setLoaded(true)
+    onLoad?.(event)
+  }
+
+  const handleError: React.ReactEventHandler<HTMLImageElement> = (event) => {
+    setDidError(true)
+    onError?.(event)
+  }
 
   return didError ? (
     <div
@@ -15,20 +35,29 @@ export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElemen
       style={style}
     >
       <div className="flex items-center justify-center w-full h-full">
-        <img src={ERROR_IMG_SRC} alt="Error loading image" {...rest} data-original-url={src} />
+        <img
+          src={ERROR_IMG_SRC}
+          alt="Error loading image"
+          loading={loading}
+          decoding={decoding}
+          {...rest}
+          data-original-url={src}
+        />
       </div>
     </div>
   ) : (
     <img
       src={src}
       alt={alt}
+      loading={loading}
+      decoding={decoding}
       // While the image is loading, show a pulsing skeleton in its own box;
       // once it loads the placeholder classes are dropped.
       className={`${className ?? ''} ${loaded ? '' : 'animate-pulse bg-gray-200 dark:bg-gray-700'}`}
       style={style}
       {...rest}
-      onLoad={() => setLoaded(true)}
-      onError={() => setDidError(true)}
+      onLoad={handleLoad}
+      onError={handleError}
     />
   )
 }

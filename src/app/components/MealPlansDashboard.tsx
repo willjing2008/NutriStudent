@@ -298,6 +298,7 @@ export function MealPlansDashboard({
                     <ImageWithFallback
                       src={currentActivePlan.image}
                       alt={currentActivePlan.name}
+                      loading="eager"
                       className="w-full h-full object-cover"
                     />
                   </div>
