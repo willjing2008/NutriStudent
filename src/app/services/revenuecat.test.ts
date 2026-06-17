@@ -51,6 +51,7 @@ vi.mock('@revenuecat/purchases-capacitor', () => ({
     NETWORK_ERROR: '10',
   },
   PACKAGE_TYPE: { ANNUAL: 'ANNUAL', MONTHLY: 'MONTHLY' },
+  VERIFICATION_RESULT: { NOT_REQUESTED: 'NOT_REQUESTED' },
 }));
 
 vi.mock('@revenuecat/purchases-capacitor-ui', () => ({
@@ -366,6 +367,15 @@ describe('native platform — error handling', () => {
     expect(result).toEqual({ success: false, error: 'Purchase failed' });
   });
 
+  it('purchasePackage handles null SDK rejections without throwing', async () => {
+    const rc = await loadModule(true);
+    purchasesMock.purchasePackage.mockRejectedValue(null);
+
+    const result = await rc.purchasePackage({} as PurchasesPackage);
+
+    expect(result).toEqual({ success: false, error: 'Purchase failed' });
+  });
+
   it('restorePurchases reports failure with the error message', async () => {
     const rc = await loadModule(true);
     purchasesMock.restorePurchases.mockRejectedValue({ message: 'Restore exploded' });
@@ -379,6 +389,16 @@ describe('native platform — error handling', () => {
   it('restorePurchases falls back to a generic message', async () => {
     const rc = await loadModule(true);
     purchasesMock.restorePurchases.mockRejectedValue({});
+
+    await expect(rc.restorePurchases()).resolves.toEqual({
+      success: false,
+      error: 'Restore failed',
+    });
+  });
+
+  it('restorePurchases handles null SDK rejections without throwing', async () => {
+    const rc = await loadModule(true);
+    purchasesMock.restorePurchases.mockRejectedValue(null);
 
     await expect(rc.restorePurchases()).resolves.toEqual({
       success: false,
