@@ -16,7 +16,11 @@ vi.mock('../hooks/useLanguage', () => ({
 // authedPost is fired on mount (fetchMyRecipes) and on rename. We control it so
 // the unit never hits the network.
 const { authedPost } = vi.hoisted(() => ({ authedPost: vi.fn() }));
-vi.mock('../utils/apiClient', () => ({ authedPost }));
+vi.mock('../utils/apiClient', () => ({
+  authedPost,
+  getUserFacingApiErrorMessage: (error: unknown) =>
+    error instanceof Error ? error.message : 'Network request failed',
+}));
 
 // ImageWithFallback pulls in figma image helpers / network; stub to a plain img.
 vi.mock('./figma/ImageWithFallback', () => ({
@@ -210,5 +214,35 @@ describe('MealPlansDashboard — inline rename editor', () => {
     // Optimistic update renames the card and the editor closes.
     expect(screen.getByText('Maintenance Week')).toBeInTheDocument();
     expect(screen.queryByText('save')).not.toBeInTheDocument();
+  });
+});
+
+describe('MealPlansDashboard — custom recipes network states', () => {
+  it('shows a retry state when custom recipes fail to load', async () => {
+    authedPost
+      .mockRejectedValueOnce(new Error("You're offline. Connect to the internet and try again."))
+      .mockResolvedValueOnce({
+        recipes: [
+          {
+            recipeId: 'recipe-1',
+            name: 'Exam Day Porridge',
+            category: 'breakfast',
+            timesCooked: 2,
+            lastCooked: '2026-06-17T08:00:00.000Z',
+          },
+        ],
+      });
+
+    renderDashboard();
+
+    expect(await screen.findByText("Couldn't load your recipes")).toBeInTheDocument();
+    expect(
+      screen.getByText("You're offline. Connect to the internet and try again."),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+
+    expect(await screen.findByText('Exam Day Porridge')).toBeInTheDocument();
+    expect(screen.queryByText("Couldn't load your recipes")).not.toBeInTheDocument();
   });
 });

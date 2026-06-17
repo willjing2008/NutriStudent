@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Edit2, Plus, ChevronRight, Check, Calendar, Sparkles, ChefHat, Flame } from 'lucide-react';
 import { BottomNavigation, NavTab } from './BottomNavigation';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-import { authedPost } from '../utils/apiClient';
+import { authedPost, getUserFacingApiErrorMessage } from '../utils/apiClient';
 
 interface MyRecipe {
   recipeId: string;
@@ -75,15 +75,17 @@ export function MealPlansDashboard({
 
   const [myRecipes, setMyRecipes] = useState<MyRecipe[]>([]);
   const [myRecipesLoading, setMyRecipesLoading] = useState(false);
+  const [myRecipesError, setMyRecipesError] = useState<string | null>(null);
 
   const fetchMyRecipes = useCallback(async () => {
     if (!user?.id) return;
     setMyRecipesLoading(true);
+    setMyRecipesError(null);
     try {
       const data = await authedPost<{ recipes?: MyRecipe[] }>('my-recipes', { userId: user.id });
-      if (data.recipes) setMyRecipes(data.recipes);
+      setMyRecipes(data.recipes ?? []);
     } catch (err) {
-      console.error('Failed to fetch my recipes:', err);
+      setMyRecipesError(getUserFacingApiErrorMessage(err));
     } finally {
       setMyRecipesLoading(false);
     }
@@ -397,6 +399,19 @@ export function MealPlansDashboard({
                 {Array.from({ length: 2 }).map((_, i) => (
                   <div key={i} className="h-16 rounded-2xl bg-[#1A1A1A] animate-pulse" />
                 ))}
+              </div>
+            ) : myRecipesError ? (
+              <div className="rounded-2xl border border-amber-400/20 bg-amber-400/10 py-6 px-4 text-center">
+                <ChefHat className="w-8 h-8 text-amber-300 mx-auto mb-2.5" />
+                <p className="text-amber-100 text-sm font-semibold mb-1">Couldn't load your recipes</p>
+                <p className="text-amber-100/70 text-xs leading-5 mb-4">{myRecipesError}</p>
+                <button
+                  type="button"
+                  onClick={fetchMyRecipes}
+                  className="px-4 py-2 rounded-full bg-amber-300 text-[#1F1300] text-xs font-bold hover:bg-amber-200 transition-colors"
+                >
+                  Try again
+                </button>
               </div>
             ) : myRecipes.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-[#2D2D2D] bg-[#111111] py-8 px-4 text-center">

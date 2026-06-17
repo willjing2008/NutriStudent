@@ -18,6 +18,8 @@ import {
   authedGet,
   publicPost,
   API_BASE,
+  NETWORK_ERROR_MESSAGE,
+  OFFLINE_ERROR_MESSAGE,
 } from './apiClient';
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
 
@@ -47,9 +49,17 @@ const jsonResponse = (
 const getFetchMock = (): ReturnType<typeof vi.fn> =>
   global.fetch as unknown as ReturnType<typeof vi.fn>;
 
+const setNavigatorOnline = (isOnline: boolean) => {
+  Object.defineProperty(window.navigator, 'onLine', {
+    configurable: true,
+    value: isOnline,
+  });
+};
+
 beforeEach(() => {
   getSession.mockReset();
   getSession.mockResolvedValue(loggedOut());
+  setNavigatorOnline(true);
   vi.stubGlobal('fetch', vi.fn());
 });
 
@@ -185,6 +195,13 @@ describe('authedPost', () => {
 
     await expect(authedPost('plans', {})).rejects.toThrow('API error: 500');
   });
+
+  it('throws a user-facing network message when fetch rejects', async () => {
+    getSession.mockResolvedValue(loggedIn('jwt'));
+    getFetchMock().mockRejectedValue(new TypeError('Failed to fetch'));
+
+    await expect(authedPost('plans', {})).rejects.toThrow(NETWORK_ERROR_MESSAGE);
+  });
 });
 
 describe('authedGet', () => {
@@ -253,5 +270,12 @@ describe('publicPost', () => {
     );
 
     await expect(publicPost('signup', {})).rejects.toThrow('API error: 502');
+  });
+
+  it('prefers the offline message when the browser reports no connection', async () => {
+    setNavigatorOnline(false);
+    getFetchMock().mockRejectedValue(new TypeError('Load failed'));
+
+    await expect(publicPost('signup', {})).rejects.toThrow(OFFLINE_ERROR_MESSAGE);
   });
 });

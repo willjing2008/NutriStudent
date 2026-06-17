@@ -10,6 +10,7 @@ import { ShoppingMode } from './components/ShoppingMode';
 import { ProfilePage } from './components/ProfilePage';
 import { LeaderboardPage } from './components/LeaderboardPage';
 import { SubscriptionPage } from './components/SubscriptionPage';
+import { NetworkStatusBanner } from './components/NetworkStatusBanner';
 import { NavTab } from './components/BottomNavigation';
 import { supabase } from '../utils/supabaseClient';
 import { authedPost } from './utils/apiClient';
@@ -394,31 +395,45 @@ export default function App() {
   // Loading State
   if (checkingAuth) {
     return (
-      <div className="min-h-screen bg-[#0A1F13] flex items-center justify-center">
-        <div className="text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Apple className="w-10 h-10 text-[#22C55E] animate-pulse" />
+      <>
+        <NetworkStatusBanner />
+        <div className="min-h-screen bg-[#0A1F13] flex items-center justify-center">
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <Apple className="w-10 h-10 text-[#22C55E] animate-pulse" />
+            </div>
+            <div className="text-[#9CA3AF]">Loading...</div>
           </div>
-          <div className="text-[#9CA3AF]">Loading...</div>
         </div>
-      </div>
+      </>
     );
   }
 
   // Login Page
   if (!isAuthenticated) {
-    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+    return (
+      <>
+        <NetworkStatusBanner />
+        <LoginPage onLoginSuccess={handleLoginSuccess} />
+      </>
+    );
   }
 
   // Mandatory Paywall — non-Pro authenticated users
   if (isAuthenticated && isReady && !isPro) {
-    return <SubscriptionPage mandatory onLogout={handleLogout} />;
+    return (
+      <>
+        <NetworkStatusBanner />
+        <SubscriptionPage mandatory onLogout={handleLogout} />
+      </>
+    );
   }
 
   // Admin Dashboard
   if (showAdminDashboard) {
     return (
       <div className="min-h-screen bg-[#0A1F13]">
+        <NetworkStatusBanner />
         <div className="container mx-auto px-4 py-6">
           <div className="mb-6 flex items-center justify-between bg-[#142A1D] rounded-2xl p-4 border border-[#1E4029]">
             <div className="flex items-center gap-3">
@@ -448,6 +463,7 @@ export default function App() {
   if (isOnboarding) {
     return (
       <div className="min-h-screen bg-[#0A1F13]">
+        <NetworkStatusBanner />
         {onboardingStep === 1 && (
           <WelcomeStep 
             onNext={() => setOnboardingStep(2)} 
@@ -515,6 +531,7 @@ export default function App() {
   // Main App with Tab Navigation
   return (
     <>
+      <NetworkStatusBanner />
       {/* Home Tab - Meal Plans Dashboard */}
       {activeNavTab === 'home' && (
         <MealPlansDashboard
