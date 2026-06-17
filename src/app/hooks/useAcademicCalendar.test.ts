@@ -443,6 +443,113 @@ describe('useAcademicCalendar — apiPost error handling', () => {
   });
 });
 
+// ── null rejection handling: unknown-safe error fallback ────────────────
+
+describe('useAcademicCalendar — unknown error handling', () => {
+  it('saveSchedule stores a fallback error when the request rejects null', async () => {
+    authedFetch.mockImplementation((endpoint: string) => {
+      if (endpoint === 'save-academic-schedule') {
+        return Promise.reject(null);
+      }
+      return Promise.resolve(fakeResponse(routeDefault(endpoint)));
+    });
+
+    const { result } = renderHook(() => useAcademicCalendar());
+
+    let saved: unknown;
+    await act(async () => {
+      saved = await result.current.saveSchedule('user-1', {
+        classes: [],
+        testingPeriods: [],
+        sleepSchedule: { bedtime: '23:00', wakeTime: '07:00', lastMealBeforeBed: 120 },
+      });
+    });
+
+    expect(saved).toBeNull();
+    expect(result.current.error).toBe('Failed to save academic schedule');
+  });
+
+  it('generateQueue stores a fallback error when queue generation rejects null', async () => {
+    authedFetch.mockImplementation((endpoint: string) => {
+      if (endpoint === 'generate-recipe-queue') {
+        return Promise.reject(null);
+      }
+      return Promise.resolve(fakeResponse(routeDefault(endpoint)));
+    });
+
+    const { result } = renderHook(() => useAcademicCalendar());
+
+    let queue: RecipeQueue | null | undefined;
+    await act(async () => {
+      queue = await result.current.generateQueue('user-1', {
+        mealsPerDay: 3,
+        goal: 'study',
+      });
+    });
+
+    expect(queue).toBeNull();
+    expect(result.current.error).toBe('Failed to generate recipe queue');
+  });
+
+  it('generateQueue preserves an Error-like object message', async () => {
+    authedFetch.mockImplementation((endpoint: string) => {
+      if (endpoint === 'generate-recipe-queue') {
+        return Promise.reject({ message: 'Queue API unavailable' });
+      }
+      return Promise.resolve(fakeResponse(routeDefault(endpoint)));
+    });
+
+    const { result } = renderHook(() => useAcademicCalendar());
+
+    await act(async () => {
+      await result.current.generateQueue('user-1', {
+        mealsPerDay: 3,
+        goal: 'study',
+      });
+    });
+
+    expect(result.current.error).toBe('Queue API unavailable');
+  });
+
+  it('loadQueueWeek stores a fallback error when the week request rejects null', async () => {
+    authedFetch.mockImplementation((endpoint: string) => {
+      if (endpoint === 'get-queue-week') {
+        return Promise.reject(null);
+      }
+      return Promise.resolve(fakeResponse(routeDefault(endpoint)));
+    });
+
+    const { result } = renderHook(() => useAcademicCalendar());
+
+    let week: unknown;
+    await act(async () => {
+      week = await result.current.loadQueueWeek('user-1', 2);
+    });
+
+    expect(week).toBeNull();
+    expect(result.current.error).toBe('Failed to load queue week');
+  });
+
+  it('swapQueueMeal stores a fallback error when the swap request rejects null', async () => {
+    authedFetch.mockImplementation((endpoint: string) => {
+      if (endpoint === 'queue-swap-meal') {
+        return Promise.reject(null);
+      }
+      return Promise.resolve(fakeResponse(routeDefault(endpoint)));
+    });
+
+    const { result } = renderHook(() => useAcademicCalendar());
+
+    let mealPlan: unknown;
+    await act(async () => {
+      mealPlan = await result.current.swapQueueMeal('user-1', 1, 'breakfast', 'r-new');
+    });
+
+    expect(mealPlan).toBeNull();
+    expect(result.current.error).toBe('Failed to swap queue meal');
+  });
+});
+
 // ── markMealConsumed: immutable local queue update ──────────────────────
 
 describe('useAcademicCalendar — markMealConsumed local state update', () => {
