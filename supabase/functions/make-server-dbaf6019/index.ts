@@ -15,6 +15,15 @@ import { calculateRecipeNutrition } from "./calorie-ninjas.ts";
 import { ACHIEVEMENTS } from "./achievements.ts";
 import { computeIngredientKeywords, selectAllCoreRecipes, buildRotationSchedule, ScoredRecipe } from "./ingredient-overlap.ts";
 
+// Debug-gated logger: emits only when DEBUG is set, so production logs stay
+// quiet (avoids unconditional console.log per project style). console.error
+// is kept for genuine failures.
+const DEBUG = Deno.env.get("DEBUG") === "true";
+const consoleLog = console.log.bind(console);
+const log = (...args: unknown[]): void => {
+  if (DEBUG) consoleLog(...args);
+};
+
 const app = new Hono();
 
 // Helper function to properly fetch data with prefix including both key and value
@@ -48,7 +57,7 @@ async function ensureRecipeImagesBucket(): Promise<void> {
   const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
   
   if (!bucketExists) {
-    console.log('Creating recipe images bucket...');
+    log('Creating recipe images bucket...');
     await supabase.storage.createBucket(bucketName, {
       public: true, // Make images publicly accessible
       fileSizeLimit: 5242880, // 5MB limit
@@ -73,7 +82,7 @@ async function storeRecipeImage(imageQuery: string, recipeId: string, cuisine: s
     // Download image from Unsplash
     const unsplashKey = Deno.env.get("UNSPLASH_ACCESS_KEY");
     if (!unsplashKey) {
-      console.log('UNSPLASH_ACCESS_KEY not set, skipping image generation');
+      log('UNSPLASH_ACCESS_KEY not set, skipping image generation');
       return null;
     }
     const searchQuery = imageQuery.split(',').slice(0, 2).join(' ').trim();
@@ -85,11 +94,11 @@ async function storeRecipeImage(imageQuery: string, recipeId: string, cuisine: s
     const searchData = await searchResponse.json();
     if (!searchData.results?.length) return null;
     const imageUrl = searchData.results[0].urls.regular;
-    console.log(`Downloading image from: ${imageUrl}`);
+    log(`Downloading image from: ${imageUrl}`);
     
     const imageResponse = await fetch(imageUrl);
     if (!imageResponse.ok) {
-      console.log(`Failed to download image: ${imageResponse.status}`);
+      log(`Failed to download image: ${imageResponse.status}`);
       return null;
     }
     
@@ -102,7 +111,7 @@ async function storeRecipeImage(imageQuery: string, recipeId: string, cuisine: s
     const bucketName = 'make-dbaf6019-recipe-images';
     
     // Upload to Supabase Storage
-    console.log(`Uploading image to bucket: ${bucketName}/${filename}`);
+    log(`Uploading image to bucket: ${bucketName}/${filename}`);
     const { data, error } = await supabase.storage
       .from(bucketName)
       .upload(filename, imageBuffer, {
@@ -111,7 +120,7 @@ async function storeRecipeImage(imageQuery: string, recipeId: string, cuisine: s
       });
     
     if (error) {
-      console.log(`Error uploading image: ${error.message}`);
+      log(`Error uploading image: ${error.message}`);
       return null;
     }
     
@@ -120,16 +129,16 @@ async function storeRecipeImage(imageQuery: string, recipeId: string, cuisine: s
       .from(bucketName)
       .getPublicUrl(filename);
     
-    console.log(`Image stored successfully: ${urlData.publicUrl}`);
+    log(`Image stored successfully: ${urlData.publicUrl}`);
     return urlData.publicUrl;
   } catch (error: any) {
-    console.log(`Error in storeRecipeImage: ${error.message}`);
+    log(`Error in storeRecipeImage: ${error.message}`);
     return null;
   }
 }
 
 // Enable logger
-app.use('*', logger(console.log));
+app.use('*', logger(log));
 
 // Enable CORS for all routes and methods
 app.use(
@@ -159,7 +168,7 @@ app.post("/make-server-dbaf6019/nearby-stores", rateLimit({ name: "nearby-stores
 
     const apiKey = Deno.env.get("GOOGLE_PLACES_API_KEY");
     if (!apiKey) {
-      console.log("Error: GOOGLE_PLACES_API_KEY environment variable not set");
+      log("Error: GOOGLE_PLACES_API_KEY environment variable not set");
       return c.json({ error: "API key not configured" }, 500);
     }
 
@@ -172,7 +181,7 @@ app.post("/make-server-dbaf6019/nearby-stores", rateLimit({ name: "nearby-stores
     const data = await response.json();
 
     if (data.status !== "OK" && data.status !== "ZERO_RESULTS") {
-      console.log(`Google Places API error: ${data.status} - ${data.error_message || 'No error message'}`);
+      log(`Google Places API error: ${data.status} - ${data.error_message || 'No error message'}`);
       return c.json({ error: `Places API error: ${data.status}` }, 500);
     }
 
@@ -195,7 +204,7 @@ app.post("/make-server-dbaf6019/nearby-stores", rateLimit({ name: "nearby-stores
 
     return c.json({ stores });
   } catch (error: any) {
-    console.log(`Error in /nearby-stores endpoint: ${error.message}`);
+    log(`Error in /nearby-stores endpoint: ${error.message}`);
     return c.json({ error: error.message || "Failed to fetch nearby stores" }, 500);
   }
 });
@@ -211,7 +220,7 @@ app.post("/make-server-dbaf6019/geocode-address", rateLimit({ name: "geocode", m
 
     const apiKey = Deno.env.get("GOOGLE_PLACES_API_KEY");
     if (!apiKey) {
-      console.log("Error: GOOGLE_PLACES_API_KEY environment variable not set");
+      log("Error: GOOGLE_PLACES_API_KEY environment variable not set");
       return c.json({ error: "API key not configured" }, 500);
     }
 
@@ -222,7 +231,7 @@ app.post("/make-server-dbaf6019/geocode-address", rateLimit({ name: "geocode", m
     const data = await response.json();
 
     if (data.status !== "OK") {
-      console.log(`Google Geocoding API error: ${data.status} - ${data.error_message || 'No error message'}`);
+      log(`Google Geocoding API error: ${data.status} - ${data.error_message || 'No error message'}`);
       return c.json({ error: `Could not find location for this address` }, 400);
     }
 
@@ -237,7 +246,7 @@ app.post("/make-server-dbaf6019/geocode-address", rateLimit({ name: "geocode", m
       formattedAddress: data.results[0].formatted_address 
     });
   } catch (error: any) {
-    console.log(`Error in /geocode-address endpoint: ${error.message}`);
+    log(`Error in /geocode-address endpoint: ${error.message}`);
     return c.json({ error: error.message || "Failed to geocode address" }, 500);
   }
 });
@@ -253,7 +262,7 @@ app.post("/make-server-dbaf6019/autocomplete-address", rateLimit({ name: "autoco
 
     const apiKey = Deno.env.get("GOOGLE_PLACES_API_KEY");
     if (!apiKey) {
-      console.log("Error: GOOGLE_PLACES_API_KEY environment variable not set");
+      log("Error: GOOGLE_PLACES_API_KEY environment variable not set");
       return c.json({ error: "API key not configured" }, 500);
     }
 
@@ -264,7 +273,7 @@ app.post("/make-server-dbaf6019/autocomplete-address", rateLimit({ name: "autoco
     const data = await response.json();
 
     if (data.status !== "OK" && data.status !== "ZERO_RESULTS") {
-      console.log(`Google Autocomplete API error: ${data.status} - ${data.error_message || 'No error message'}`);
+      log(`Google Autocomplete API error: ${data.status} - ${data.error_message || 'No error message'}`);
       return c.json({ predictions: [] });
     }
 
@@ -277,7 +286,7 @@ app.post("/make-server-dbaf6019/autocomplete-address", rateLimit({ name: "autoco
 
     return c.json({ predictions });
   } catch (error: any) {
-    console.log(`Error in /autocomplete-address endpoint: ${error.message}`);
+    log(`Error in /autocomplete-address endpoint: ${error.message}`);
     return c.json({ predictions: [] });
   }
 });
@@ -357,7 +366,7 @@ mockIngredients['asda'] = mockIngredients['tesco'];
 mockIngredients['morrisons'] = mockIngredients['tesco'];
 
 // Endpoint to fetch available ingredients from selected store
-app.post("/make-server-dbaf6019/fetch-store-ingredients", async (c) => {
+app.post("/make-server-dbaf6019/fetch-store-ingredients", requireAuth, async (c) => {
   try {
     const { storeName } = await c.req.json();
     
@@ -371,7 +380,7 @@ app.post("/make-server-dbaf6019/fetch-store-ingredients", async (c) => {
 
     return c.json({ ingredients });
   } catch (error: any) {
-    console.log(`Error in /fetch-store-ingredients endpoint: ${error.message}`);
+    log(`Error in /fetch-store-ingredients endpoint: ${error.message}`);
     return c.json({ error: error.message || "Failed to fetch ingredients" }, 500);
   }
 });
@@ -408,7 +417,7 @@ app.post("/make-server-dbaf6019/generate-meal-plan", rateLimit({ name: "generate
       return c.json({ error: "No recipes found for this goal. Please run /init-recipes first." }, 400);
     }
 
-    console.log(`🍽️ Generating meal plan: ${cookingDays} days × ${safeMealsPerDay} meals/day = ${totalMealsNeeded} meals from ${suitableRecipes.length} ${mealType} recipes`);
+    log(`🍽️ Generating meal plan: ${cookingDays} days × ${safeMealsPerDay} meals/day = ${totalMealsNeeded} meals from ${suitableRecipes.length} ${mealType} recipes`);
 
     const mealPlan = generateMealPlanFromRecipes(
       suitableRecipes,
@@ -424,7 +433,7 @@ app.post("/make-server-dbaf6019/generate-meal-plan", rateLimit({ name: "generate
 
     return c.json({ mealPlan });
   } catch (error: any) {
-    console.log(`Error in /generate-meal-plan endpoint: ${error.message}`);
+    log(`Error in /generate-meal-plan endpoint: ${error.message}`);
     return c.json({ error: error.message || "Failed to generate meal plan" }, 500);
   }
 });
@@ -481,7 +490,7 @@ function generateMealPlanFromRecipes(
       );
       return !hasAvoided;
     });
-    console.log(`🚫 Filtered by avoided ingredients: ${filteredRecipes.length}/${recipes.length} remaining`);
+    log(`🚫 Filtered by avoided ingredients: ${filteredRecipes.length}/${recipes.length} remaining`);
   }
 
   // Filter by dietary restrictions (keyword-based; over-restricts rather than
@@ -495,7 +504,7 @@ function generateMealPlanFromRecipes(
           recipe.ingredients.some(ing => ing.toLowerCase().includes(word))
         )
       );
-      console.log(`🥗 Filtered by dietary restrictions [${dietaryRestrictions.join(', ')}]: ${filteredRecipes.length}/${beforeCount} remaining`);
+      log(`🥗 Filtered by dietary restrictions [${dietaryRestrictions.join(', ')}]: ${filteredRecipes.length}/${beforeCount} remaining`);
     }
   }
 
@@ -525,7 +534,7 @@ function generateMealPlanFromRecipes(
   const allScored = filteredRecipes.map(toScored);
   const ensurePool = (pool: ScoredRecipe[]) => pool.length > 0 ? pool : allScored;
 
-  console.log(`📊 Pools: breakfast=${breakfastPool.length}, lunch=${lunchPool.length}, dinner=${dinnerPool.length}`);
+  log(`📊 Pools: breakfast=${breakfastPool.length}, lunch=${lunchPool.length}, dinner=${dinnerPool.length}`);
 
   // ── 3. Select core clusters with maximum ingredient overlap ──────
   const coreRecipes = selectAllCoreRecipes(
@@ -534,7 +543,7 @@ function generateMealPlanFromRecipes(
     ensurePool(dinnerPool)
   );
 
-  console.log(`🔗 Core: breakfast=${coreRecipes.breakfast.length}, lunch=${coreRecipes.lunch.length}, dinner=${coreRecipes.dinner.length}`);
+  log(`🔗 Core: breakfast=${coreRecipes.breakfast.length}, lunch=${coreRecipes.lunch.length}, dinner=${coreRecipes.dinner.length}`);
 
   // ── 4. Build 7-day rotation schedule ─────────────────────────────
   const schedule = buildRotationSchedule(coreRecipes, mealsPerDay, cookingDays, selectedMealSlots);
@@ -594,25 +603,25 @@ app.post("/make-server-dbaf6019/init-recipes", requireAuth, requireAdmin, async 
   try {
     const recipes = ALL_RECIPES.filter(r => !REMOVED_RECIPE_IDS.has(r.id));
     const removedCount = ALL_RECIPES.length - recipes.length;
-    console.log('=== Recipe Database Initialization Started ===');
-    console.log(`Total recipes in source: ${ALL_RECIPES.length}, removed: ${removedCount}, to process: ${recipes.length}`);
+    log('=== Recipe Database Initialization Started ===');
+    log(`Total recipes in source: ${ALL_RECIPES.length}, removed: ${removedCount}, to process: ${recipes.length}`);
 
     // Clear existing recipe keys
     const existingRecipes = await getByPrefixWithKeys('recipe:');
     if (existingRecipes.length > 0) {
       await kv.mdel(existingRecipes.map(e => e.key));
-      console.log(`Cleared ${existingRecipes.length} existing recipe keys`);
+      log(`Cleared ${existingRecipes.length} existing recipe keys`);
     }
     // Also clear old-format keys
     const oldCuisine = await getByPrefixWithKeys('cuisine:');
     if (oldCuisine.length > 0) {
       await kv.mdel(oldCuisine.map(e => e.key));
-      console.log(`Cleared ${oldCuisine.length} old cuisine keys`);
+      log(`Cleared ${oldCuisine.length} old cuisine keys`);
     }
     const oldBase = await getByPrefixWithKeys('base-recipe:');
     if (oldBase.length > 0) {
       await kv.mdel(oldBase.map(e => e.key));
-      console.log(`Cleared ${oldBase.length} old base-recipe keys`);
+      log(`Cleared ${oldBase.length} old base-recipe keys`);
     }
 
     let successCount = 0;
@@ -652,8 +661,8 @@ app.post("/make-server-dbaf6019/init-recipes", requireAuth, requireAdmin, async 
       initialized: new Date().toISOString()
     }));
 
-    console.log(`=== Initialization Complete: ${successCount} success, ${errorCount} errors, ${removedCount} removed ===`);
-    console.log(`By category: ${JSON.stringify(byCategory)}`);
+    log(`=== Initialization Complete: ${successCount} success, ${errorCount} errors, ${removedCount} removed ===`);
+    log(`By category: ${JSON.stringify(byCategory)}`);
 
     return c.json({
       message: "Recipe database initialized successfully",
@@ -665,7 +674,7 @@ app.post("/make-server-dbaf6019/init-recipes", requireAuth, requireAdmin, async 
       byCategory
     });
   } catch (error: any) {
-    console.log(`Error initializing cuisine database: ${error.message}`);
+    log(`Error initializing cuisine database: ${error.message}`);
     return c.json({ error: error.message || "Failed to initialize recipes" }, 500);
   }
 });
@@ -748,7 +757,7 @@ app.get("/make-server-dbaf6019/admin/keys/:prefix", requireAuth, requireAdmin, a
       })
     });
   } catch (error: any) {
-    console.log(`Error fetching keys: ${error.message}`);
+    log(`Error fetching keys: ${error.message}`);
     return c.json({ error: error.message || "Failed to fetch keys" }, 500);
   }
 });
@@ -779,13 +788,13 @@ app.get("/make-server-dbaf6019/admin/all-recipes", requireAuth, requireAdmin, as
       recipes
     });
   } catch (error: any) {
-    console.log(`Error fetching all recipes: ${error.message}`);
+    log(`Error fetching all recipes: ${error.message}`);
     return c.json({ error: error.message || "Failed to fetch recipes" }, 500);
   }
 });
 
 // Get a specific recipe by meal_type and id
-app.get("/make-server-dbaf6019/admin/recipe/:mealType/:recipeId", async (c) => {
+app.get("/make-server-dbaf6019/admin/recipe/:mealType/:recipeId", requireAuth, requireAdmin, async (c) => {
   try {
     const mealType = c.req.param('mealType');
     const recipeId = c.req.param('recipeId');
@@ -799,7 +808,7 @@ app.get("/make-server-dbaf6019/admin/recipe/:mealType/:recipeId", async (c) => {
     const recipe = typeof value === 'string' ? JSON.parse(value) : value;
     return c.json({ key, recipe });
   } catch (error: any) {
-    console.log(`Error fetching recipe: ${error.message}`);
+    log(`Error fetching recipe: ${error.message}`);
     return c.json({ error: error.message || "Failed to fetch recipe" }, 500);
   }
 });
@@ -822,7 +831,7 @@ app.post("/make-server-dbaf6019/admin/recipe", requireAuth, requireAdmin, async 
       recipe
     });
   } catch (error: any) {
-    console.log(`Error saving recipe: ${error.message}`);
+    log(`Error saving recipe: ${error.message}`);
     return c.json({ error: error.message || "Failed to save recipe" }, 500);
   }
 });
@@ -850,7 +859,7 @@ app.patch("/make-server-dbaf6019/admin/recipe/:mealType/:recipeId", requireAuth,
       recipe: updatedRecipe
     });
   } catch (error: any) {
-    console.log(`Error updating recipe: ${error.message}`);
+    log(`Error updating recipe: ${error.message}`);
     return c.json({ error: error.message || "Failed to update recipe" }, 500);
   }
 });
@@ -869,7 +878,7 @@ app.delete("/make-server-dbaf6019/admin/recipe/:mealType/:recipeId", requireAuth
       key
     });
   } catch (error: any) {
-    console.log(`Error deleting recipe: ${error.message}`);
+    log(`Error deleting recipe: ${error.message}`);
     return c.json({ error: error.message || "Failed to delete recipe" }, 500);
   }
 });
@@ -889,13 +898,13 @@ app.delete("/make-server-dbaf6019/admin/clear-all-recipes", requireAuth, require
       deletedCount: keys.length
     });
   } catch (error: any) {
-    console.log(`Error clearing recipe data: ${error.message}`);
+    log(`Error clearing recipe data: ${error.message}`);
     return c.json({ error: error.message || "Failed to clear data" }, 500);
   }
 });
 
 // Search recipes by name or ingredient
-app.post("/make-server-dbaf6019/admin/search-recipes", async (c) => {
+app.post("/make-server-dbaf6019/admin/search-recipes", requireAuth, requireAdmin, async (c) => {
   try {
     const { query } = await c.req.json();
 
@@ -919,7 +928,7 @@ app.post("/make-server-dbaf6019/admin/search-recipes", async (c) => {
       recipes: matched
     });
   } catch (error: any) {
-    console.log(`Error searching recipes: ${error.message}`);
+    log(`Error searching recipes: ${error.message}`);
     return c.json({ error: error.message || "Failed to search recipes" }, 500);
   }
 });
@@ -991,7 +1000,7 @@ app.post("/make-server-dbaf6019/shuffle-recipe", rateLimit({ name: "shuffle-reci
       message: `Found great alternative! Similar nutrition profile.`
     });
   } catch (error: any) {
-    console.log(`Error shuffling recipe: ${error.message}`);
+    log(`Error shuffling recipe: ${error.message}`);
     return c.json({ error: error.message || "Failed to find replacement recipe" }, 500);
   }
 });
@@ -1062,7 +1071,7 @@ app.post("/make-server-dbaf6019/get-swap-options", rateLimit({ name: "get-swap-o
       }
     });
   } catch (error: any) {
-    console.log(`Error getting swap options: ${error.message}`);
+    log(`Error getting swap options: ${error.message}`);
     return c.json({ error: error.message || "Failed to get swap options" }, 500);
   }
 });
@@ -1243,7 +1252,7 @@ app.post("/make-server-dbaf6019/generate-recipe-queue", requireAuth, rateLimit({
 
     await kv.set(`recipe_queue_${userId}`, JSON.stringify(queue));
 
-    console.log(`📋 Generated ${queue.meals.length}-meal queue for user ${userId} (focus=${focusMode})`);
+    log(`📋 Generated ${queue.meals.length}-meal queue for user ${userId} (focus=${focusMode})`);
     return c.json({ queue });
   } catch (error: any) {
     return c.json({ error: error.message || "Failed to generate recipe queue" }, 500);
@@ -1437,7 +1446,7 @@ app.post("/make-server-dbaf6019/auth/signup", async (c) => {
     });
 
     if (error) {
-      console.log(`Sign up error: ${error.message}`);
+      log(`Sign up error: ${error.message}`);
       return c.json({ error: error.message || "Failed to create user" }, 400);
     }
 
@@ -1450,7 +1459,7 @@ app.post("/make-server-dbaf6019/auth/signup", async (c) => {
       }
     });
   } catch (error: any) {
-    console.log(`Error in signup endpoint: ${error.message}`);
+    log(`Error in signup endpoint: ${error.message}`);
     return c.json({ error: error.message || "Failed to sign up" }, 500);
   }
 });
@@ -1469,7 +1478,7 @@ app.get("/make-server-dbaf6019/auth/profile", requireAuth, async (c) => {
       }
     });
   } catch (error: any) {
-    console.log(`Error in profile endpoint: ${error.message}`);
+    log(`Error in profile endpoint: ${error.message}`);
     return c.json({ error: error.message || "Failed to get profile" }, 500);
   }
 });
@@ -1484,14 +1493,14 @@ app.post("/make-server-dbaf6019/generate-recipe-image", requireAuth, async (c) =
       return c.json({ error: "Missing imageQuery or recipeId" }, 400);
     }
     
-    console.log(`Generating and storing image for recipe: ${recipeId}`);
+    log(`Generating and storing image for recipe: ${recipeId}`);
     
     // Check if image already exists in storage
     const existingImageKey = `recipe-image:${recipeId}`;
     const existingImage = await kv.get(existingImageKey);
     
     if (existingImage) {
-      console.log(`Image already exists for recipe ${recipeId}`);
+      log(`Image already exists for recipe ${recipeId}`);
       return c.json({ 
         success: true, 
         imageUrl: existingImage,
@@ -1515,7 +1524,7 @@ app.post("/make-server-dbaf6019/generate-recipe-image", requireAuth, async (c) =
       cached: false 
     });
   } catch (error: any) {
-    console.log(`Error generating recipe image: ${error.message}`);
+    log(`Error generating recipe image: ${error.message}`);
     return c.json({ error: error.message || "Failed to generate image" }, 500);
   }
 });
@@ -1537,7 +1546,7 @@ app.post("/make-server-dbaf6019/upload-recipe-image", requireAuth, async (c) => 
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    console.log(`Uploading custom image for recipe: ${recipeId}`);
+    log(`Uploading custom image for recipe: ${recipeId}`);
     
     // Ensure bucket exists
     await ensureRecipeImagesBucket();
@@ -1562,7 +1571,7 @@ app.post("/make-server-dbaf6019/upload-recipe-image", requireAuth, async (c) => 
         .from('make-dbaf6019-recipe-images')
         .remove([fileName]);
     } catch (deleteError) {
-      console.log('No existing image to delete or error deleting:', deleteError);
+      log('No existing image to delete or error deleting:', deleteError);
     }
     
     // Upload to Supabase Storage
@@ -1574,7 +1583,7 @@ app.post("/make-server-dbaf6019/upload-recipe-image", requireAuth, async (c) => 
       });
     
     if (uploadError) {
-      console.log('Upload error:', uploadError);
+      log('Upload error:', uploadError);
       return c.json({ error: `Failed to upload image: ${uploadError.message}` }, 500);
     }
     
@@ -1583,7 +1592,7 @@ app.post("/make-server-dbaf6019/upload-recipe-image", requireAuth, async (c) => 
       .from('make-dbaf6019-recipe-images')
       .getPublicUrl(fileName);
     
-    console.log(`Image uploaded successfully: ${publicUrl}`);
+    log(`Image uploaded successfully: ${publicUrl}`);
     
     // Cache the image URL in KV store
     const imageKey = `recipe-image:${recipeId}`;
@@ -1594,7 +1603,7 @@ app.post("/make-server-dbaf6019/upload-recipe-image", requireAuth, async (c) => 
       imageUrl: publicUrl 
     });
   } catch (error: any) {
-    console.log(`Error uploading custom image: ${error.message}`);
+    log(`Error uploading custom image: ${error.message}`);
     return c.json({ error: error.message || "Failed to upload image" }, 500);
   }
 });
@@ -1602,7 +1611,7 @@ app.post("/make-server-dbaf6019/upload-recipe-image", requireAuth, async (c) => 
 // Batch generate and store images for all recipes (new recipes already have image URLs)
 app.post("/make-server-dbaf6019/generate-all-recipe-images", requireAuth, requireAdmin, async (c) => {
   try {
-    console.log('=== Caching Recipe Image URLs ===');
+    log('=== Caching Recipe Image URLs ===');
 
     const allRecipes = await getAllRecipesFromDB();
     let cachedCount = 0;
@@ -1631,7 +1640,7 @@ app.post("/make-server-dbaf6019/generate-all-recipe-images", requireAuth, requir
       skippedCount
     });
   } catch (error: any) {
-    console.log(`Error caching recipe images: ${error.message}`);
+    log(`Error caching recipe images: ${error.message}`);
     return c.json({ error: error.message || "Failed to cache images" }, 500);
   }
 });
@@ -1657,7 +1666,7 @@ app.get("/make-server-dbaf6019/recipe-image/:recipeId", async (c) => {
       imageUrl 
     });
   } catch (error: any) {
-    console.log(`Error fetching recipe image: ${error.message}`);
+    log(`Error fetching recipe image: ${error.message}`);
     return c.json({ error: error.message || "Failed to fetch image" }, 500);
   }
 });
@@ -1682,7 +1691,7 @@ app.post("/make-server-dbaf6019/check-kitchen-inventory", requireAuth, async (c)
 
     return c.json({ completed: false });
   } catch (error: any) {
-    console.log(`Error checking kitchen inventory: ${error.message}`);
+    log(`Error checking kitchen inventory: ${error.message}`);
     return c.json({ error: error.message || "Failed to check kitchen inventory" }, 500);
   }
 });
@@ -1701,11 +1710,11 @@ app.post("/make-server-dbaf6019/save-kitchen-inventory", requireAuth, async (c) 
       completedAt: new Date().toISOString()
     });
 
-    console.log(`✅ Saved kitchen inventory for user ${userId}: ${missingEssentials.length} missing items`);
+    log(`✅ Saved kitchen inventory for user ${userId}: ${missingEssentials.length} missing items`);
 
     return c.json({ success: true });
   } catch (error: any) {
-    console.log(`Error saving kitchen inventory: ${error.message}`);
+    log(`Error saving kitchen inventory: ${error.message}`);
     return c.json({ error: error.message || "Failed to save kitchen inventory" }, 500);
   }
 });
@@ -1772,7 +1781,7 @@ app.post("/make-server-dbaf6019/save-meal-plan", requireAuth, async (c) => {
 
     await kv.set(listKey, existingList);
 
-    console.log(`✅ ${isUpdate ? 'Updated' : 'Saved'} meal plan for user ${userId}: ${mealPlan.meals?.length || 0} meals (ID: ${planId})`);
+    log(`✅ ${isUpdate ? 'Updated' : 'Saved'} meal plan for user ${userId}: ${mealPlan.meals?.length || 0} meals (ID: ${planId})`);
 
     return c.json({
       success: true,
@@ -1780,7 +1789,7 @@ app.post("/make-server-dbaf6019/save-meal-plan", requireAuth, async (c) => {
       message: `Meal plan ${isUpdate ? 'updated' : 'saved'} successfully`
     });
   } catch (error: any) {
-    console.log(`Error saving meal plan: ${error.message}`);
+    log(`Error saving meal plan: ${error.message}`);
     return c.json({ error: error.message || "Failed to save meal plan" }, 500);
   }
 });
@@ -1822,7 +1831,7 @@ app.post("/make-server-dbaf6019/rename-meal-plan", requireAuth, async (c) => {
 
     return c.json({ success: true, planId, planName: trimmed });
   } catch (error: any) {
-    console.log(`Error renaming meal plan: ${error.message}`);
+    log(`Error renaming meal plan: ${error.message}`);
     return c.json({ error: error.message || "Failed to rename meal plan" }, 500);
   }
 });
@@ -1841,13 +1850,13 @@ app.post("/make-server-dbaf6019/get-meal-plans", requireAuth, async (c) => {
       });
     }
 
-    console.log(`✅ Retrieved ${data.plans.length} meal plans for user ${userId}`);
+    log(`✅ Retrieved ${data.plans.length} meal plans for user ${userId}`);
 
     return c.json({ 
       plans: data.plans
     });
   } catch (error: any) {
-    console.log(`Error getting meal plans: ${error.message}`);
+    log(`Error getting meal plans: ${error.message}`);
     return c.json({ error: error.message || "Failed to get meal plans" }, 500);
   }
 });
@@ -1869,7 +1878,7 @@ app.post("/make-server-dbaf6019/load-meal-plan-by-id", requireAuth, async (c) =>
       return c.json({ error: "Meal plan not found" }, 404);
     }
 
-    console.log(`✅ Loaded meal plan ${planId} for user ${userId}`);
+    log(`✅ Loaded meal plan ${planId} for user ${userId}`);
 
     return c.json({ 
       success: true,
@@ -1879,7 +1888,7 @@ app.post("/make-server-dbaf6019/load-meal-plan-by-id", requireAuth, async (c) =>
       savedAt: data.savedAt
     });
   } catch (error: any) {
-    console.log(`Error loading meal plan: ${error.message}`);
+    log(`Error loading meal plan: ${error.message}`);
     return c.json({ error: error.message || "Failed to load meal plan" }, 500);
   }
 });
@@ -1907,14 +1916,14 @@ app.post("/make-server-dbaf6019/delete-meal-plan-by-id", requireAuth, async (c) 
       await kv.set(listKey, data);
     }
 
-    console.log(`✅ Deleted meal plan ${planId} for user ${userId}`);
+    log(`✅ Deleted meal plan ${planId} for user ${userId}`);
 
     return c.json({ 
       success: true,
       message: "Meal plan deleted successfully"
     });
   } catch (error: any) {
-    console.log(`Error deleting meal plan: ${error.message}`);
+    log(`Error deleting meal plan: ${error.message}`);
     return c.json({ error: error.message || "Failed to delete meal plan" }, 500);
   }
 });
@@ -1934,7 +1943,7 @@ app.post("/make-server-dbaf6019/load-meal-plan", requireAuth, async (c) => {
       });
     }
 
-    console.log(`✅ Loaded meal plan for user ${userId}`);
+    log(`✅ Loaded meal plan for user ${userId}`);
 
     return c.json({ 
       hasSavedPlan: true,
@@ -1943,7 +1952,7 @@ app.post("/make-server-dbaf6019/load-meal-plan", requireAuth, async (c) => {
       savedAt: data.savedAt
     });
   } catch (error: any) {
-    console.log(`Error loading meal plan: ${error.message}`);
+    log(`Error loading meal plan: ${error.message}`);
     return c.json({ error: error.message || "Failed to load meal plan" }, 500);
   }
 });
@@ -1957,14 +1966,14 @@ app.post("/make-server-dbaf6019/delete-meal-plan", requireAuth, async (c) => {
     const key = `meal_plan_${userId}`;
     await kv.del(key);
 
-    console.log(`✅ Deleted meal plan for user ${userId}`);
+    log(`✅ Deleted meal plan for user ${userId}`);
 
     return c.json({ 
       success: true,
       message: "Meal plan deleted successfully"
     });
   } catch (error: any) {
-    console.log(`Error deleting meal plan: ${error.message}`);
+    log(`Error deleting meal plan: ${error.message}`);
     return c.json({ error: error.message || "Failed to delete meal plan" }, 500);
   }
 });
@@ -1983,7 +1992,7 @@ app.post("/make-server-dbaf6019/get-recipe-image-with-cache", async (c) => {
     const cachedImage = await kv.get(imageKey);
     
     if (cachedImage) {
-      console.log(`✓ Using cached image for ${recipeId}`);
+      log(`✓ Using cached image for ${recipeId}`);
       return c.json({ 
         success: true, 
         imageUrl: cachedImage,
@@ -1992,7 +2001,7 @@ app.post("/make-server-dbaf6019/get-recipe-image-with-cache", async (c) => {
     }
     
     // If not cached, generate and store new image
-    console.log(`✗ No cached image found for ${recipeId}, generating...`);
+    log(`✗ No cached image found for ${recipeId}, generating...`);
     const imageUrl = await storeRecipeImage(imageQuery, recipeId, cuisine);
     
     if (!imageUrl) {
@@ -2008,7 +2017,7 @@ app.post("/make-server-dbaf6019/get-recipe-image-with-cache", async (c) => {
       cached: false 
     });
   } catch (error: any) {
-    console.log(`Error getting recipe image with cache: ${error.message}`);
+    log(`Error getting recipe image with cache: ${error.message}`);
     return c.json({ error: error.message || "Failed to get image" }, 500);
   }
 });
@@ -2050,7 +2059,7 @@ app.post("/make-server-dbaf6019/admin/calculate-nutrition", requireAuth, require
       servings: effectiveServings,
     });
   } catch (error: any) {
-    console.log(`Error calculating nutrition: ${error.message}`);
+    log(`Error calculating nutrition: ${error.message}`);
     return c.json({ error: error.message || "Failed to calculate nutrition" }, 500);
   }
 });
@@ -2162,7 +2171,7 @@ app.post("/make-server-dbaf6019/admin/validate-nutrition", requireAuth, requireA
       report,
     });
   } catch (error: any) {
-    console.log(`Error validating nutrition: ${error.message}`);
+    log(`Error validating nutrition: ${error.message}`);
     return c.json({ error: error.message || "Failed to validate nutrition" }, 500);
   }
 });
@@ -2206,7 +2215,7 @@ app.post("/make-server-dbaf6019/track-meal-cooked", requireAuth, async (c) => {
 
     return c.json({ success: true, action: 'added' });
   } catch (error: any) {
-    console.log(`Error in /track-meal-cooked: ${error.message}`);
+    log(`Error in /track-meal-cooked: ${error.message}`);
     return c.json({ error: error.message || "Failed to track meal" }, 500);
   }
 });
@@ -2229,7 +2238,7 @@ app.post("/make-server-dbaf6019/cooked-meals", requireAuth, async (c) => {
 
     return c.json({ date, cookedMeals, mealIds });
   } catch (error: any) {
-    console.log(`Error in /cooked-meals: ${error.message}`);
+    log(`Error in /cooked-meals: ${error.message}`);
     return c.json({ error: error.message || "Failed to fetch cooked meals" }, 500);
   }
 });
@@ -2380,7 +2389,7 @@ app.post("/make-server-dbaf6019/user-stats", requireAuth, async (c) => {
       totalCookingDays,
     });
   } catch (error: any) {
-    console.log(`Error in /user-stats: ${error.message}`);
+    log(`Error in /user-stats: ${error.message}`);
     return c.json({ error: error.message || "Failed to fetch user stats" }, 500);
   }
 });
@@ -2451,7 +2460,7 @@ app.post("/make-server-dbaf6019/leaderboard", requireAuth, async (c) => {
 
     return c.json({ leaderboard: ranked });
   } catch (error: any) {
-    console.log(`Error in /leaderboard: ${error.message}`);
+    log(`Error in /leaderboard: ${error.message}`);
     return c.json({ error: error.message || "Failed to fetch leaderboard" }, 500);
   }
 });
@@ -2563,7 +2572,7 @@ app.post("/make-server-dbaf6019/recipe-leaderboard", requireAuth, async (c) => {
 
     return c.json({ recipes, total, hasMore: offset + limit < total });
   } catch (error: any) {
-    console.log(`Error in /recipe-leaderboard: ${error.message}`);
+    log(`Error in /recipe-leaderboard: ${error.message}`);
     return c.json({ error: error.message || "Failed to fetch recipe leaderboard" }, 500);
   }
 });
@@ -2623,7 +2632,7 @@ app.post("/make-server-dbaf6019/my-recipes", requireAuth, async (c) => {
 
     return c.json({ recipes });
   } catch (error: any) {
-    console.log(`Error in /my-recipes: ${error.message}`);
+    log(`Error in /my-recipes: ${error.message}`);
     return c.json({ error: error.message || "Failed to fetch recipes" }, 500);
   }
 });
@@ -2682,7 +2691,7 @@ app.post("/make-server-dbaf6019/save-community-recipe", requireAuth, async (c) =
 
     return c.json({ success: true });
   } catch (error: any) {
-    console.log(`Error in /save-community-recipe: ${error.message}`);
+    log(`Error in /save-community-recipe: ${error.message}`);
     return c.json({ error: error.message || "Failed to save community recipe" }, 500);
   }
 });
@@ -2707,7 +2716,7 @@ app.post("/make-server-dbaf6019/list-community-recipes", requireAuth, async (c) 
 
     return c.json({ recipes });
   } catch (error: any) {
-    console.log(`Error in /list-community-recipes: ${error.message}`);
+    log(`Error in /list-community-recipes: ${error.message}`);
     return c.json({ error: error.message || "Failed to list community recipes" }, 500);
   }
 });
@@ -2748,7 +2757,7 @@ app.post("/make-server-dbaf6019/toggle-community-like", requireAuth, async (c) =
 
     return c.json({ success: true, liked, likesCount: communityRecipe.likesCount });
   } catch (error: any) {
-    console.log(`Error in /toggle-community-like: ${error.message}`);
+    log(`Error in /toggle-community-like: ${error.message}`);
     return c.json({ error: error.message || "Failed to toggle like" }, 500);
   }
 });
@@ -2769,7 +2778,7 @@ app.get("/make-server-dbaf6019/schools/search", async (c) => {
 
     return c.json({ schools });
   } catch (error: any) {
-    console.log(`Error in /schools/search: ${error.message}`);
+    log(`Error in /schools/search: ${error.message}`);
     return c.json({ error: error.message || "Failed to search schools" }, 500);
   }
 });
@@ -2791,7 +2800,7 @@ app.post("/make-server-dbaf6019/schools", requireAuth, async (c) => {
 
     return c.json({ school });
   } catch (error: any) {
-    console.log(`Error in POST /schools: ${error.message}`);
+    log(`Error in POST /schools: ${error.message}`);
     return c.json({ error: error.message || "Failed to create school" }, 500);
   }
 });
@@ -2821,7 +2830,7 @@ app.post("/make-server-dbaf6019/schools/select", requireAuth, async (c) => {
 
     return c.json({ success: true });
   } catch (error: any) {
-    console.log(`Error in /schools/select: ${error.message}`);
+    log(`Error in /schools/select: ${error.message}`);
     return c.json({ error: error.message || "Failed to select school" }, 500);
   }
 });
@@ -2854,7 +2863,7 @@ app.post("/make-server-dbaf6019/auth/update-profile", requireAuth, async (c) => 
 
     return c.json({ success: true, updated: metadata });
   } catch (error: any) {
-    console.log(`Error in /auth/update-profile: ${error.message}`);
+    log(`Error in /auth/update-profile: ${error.message}`);
     return c.json({ error: error.message || "Failed to update profile" }, 500);
   }
 });

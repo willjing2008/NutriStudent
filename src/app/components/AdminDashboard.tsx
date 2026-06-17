@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Search, Plus, Edit2, Trash2, RefreshCw, Database, ChefHat, X, Save, Loader2, ImageIcon, Upload, Trash, ExternalLink, Calculator } from 'lucide-react';
-import { projectId, publicAnonKey } from '../../../utils/supabase/info';
-import { authedPost, authedFetch, publicPost } from '../utils/apiClient';
+import { authedPost, authedFetch } from '../utils/apiClient';
 import { useConfirm } from '../hooks/useConfirm';
 import { ImageStorageInfo } from './ImageStorageInfo';
 
@@ -70,13 +69,6 @@ export function AdminDashboard() {
   const [calculatingNutrition, setCalculatingNutrition] = useState(false);
   const [nutritionDetails, setNutritionDetails] = useState<any[] | null>(null);
 
-  const baseUrl = `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019`;
-  // Anon-key headers, used only for the genuinely public admin/recipe GET.
-  // Admin actions go through authedPost/authedFetch (session JWT).
-  const headers = {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${publicAnonKey}`,
-  };
 
   useEffect(() => {
     fetchAllRecipes();
@@ -139,7 +131,7 @@ export function AdminDashboard() {
       const mealType = parts[1];
       const recipeId = parts[2];
 
-      const response = await fetch(`${baseUrl}/admin/recipe/${mealType}/${recipeId}`, { headers });
+      const response = await authedFetch(`admin/recipe/${mealType}/${recipeId}`);
       const data = await response.json();
       setSelectedRecipe(data.recipe);
       setSelectedRecipeKey(recipeKey);
@@ -205,7 +197,7 @@ export function AdminDashboard() {
 
     setLoading(true);
     try {
-      const data = await publicPost<any>('admin/search-recipes', { query: searchQuery });
+      const data = await authedPost<any>('admin/search-recipes', { query: searchQuery });
 
       // Check if there's an error in the response
       if (data.error) {
