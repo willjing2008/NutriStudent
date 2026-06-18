@@ -6,6 +6,7 @@ import { RecommendationsStep } from './components/RecommendationsStep';
 import { LoginPage } from './components/LoginPage';
 import { AdminDashboard } from './components/AdminDashboard';
 import { MealPlansDashboard } from './components/MealPlansDashboard';
+import { DEFAULT_PLAN_IMAGE, firstMealImage } from './utils/planImage';
 import { ShoppingMode } from './components/ShoppingMode';
 import { ProfilePage } from './components/ProfilePage';
 import { LeaderboardPage } from './components/LeaderboardPage';
@@ -211,7 +212,7 @@ export default function App() {
         name: p.planName,
         createdAt: p.savedAt,
         description: 'Saved meal plan',
-        image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400',
+        image: p.image || DEFAULT_PLAN_IMAGE,
         calories: 0,
         protein: 0,
       }));
@@ -270,7 +271,7 @@ export default function App() {
           name: planName || `Meal Plan - ${new Date().toLocaleDateString('en-GB')}`,
           createdAt: new Date().toISOString(),
           description: `${preferences.goal || 'Custom'} plan`,
-          image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400',
+          image: firstMealImage(mealPlan.meals),
           calories: mealPlan.meals?.reduce((sum: number, m: any) => sum + (m.nutrition?.calories || 0), 0) || 2000,
           protein: mealPlan.meals?.reduce((sum: number, m: any) => sum + (m.nutrition?.protein || 0), 0) || 100,
           goal: preferences.goal || 'Custom',
@@ -548,7 +549,7 @@ export default function App() {
             id: activePlanId || 'active-plan',
             name: savedPlansHistory[0]?.name || 'Your Current Plan',
             description: `${preferences.goal === 'study' ? 'Study focus' : preferences.goal === 'work' ? 'Work efficiency' : 'Fitness'} meal plan`,
-            image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400',
+            image: firstMealImage(savedMealPlan.meals),
             calories: savedMealPlan.meals?.reduce((sum: number, m: any) => sum + (m.nutrition?.calories || 0), 0) || 0,
             protein: savedMealPlan.meals?.reduce((sum: number, m: any) => sum + (m.nutrition?.protein || 0), 0) || 0,
             isActive: true,

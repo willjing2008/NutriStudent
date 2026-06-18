@@ -1852,8 +1852,25 @@ app.post("/make-server-dbaf6019/get-meal-plans", requireAuth, async (c) => {
 
     log(`✅ Retrieved ${data.plans.length} meal plans for user ${userId}`);
 
-    return c.json({ 
-      plans: data.plans
+    // Attach a cover image (first meal with a recipe image) to each plan so the
+    // home screen shows the plan's own food rather than a shared placeholder.
+    const plansWithImage = await Promise.all(
+      data.plans.map(async (p: any) => {
+        const full = await kv.get(`meal_plan_${userId}_${p.planId}`);
+        const meals = full?.mealPlan?.meals;
+        let image = "";
+        if (Array.isArray(meals)) {
+          for (const m of meals) {
+            const img = m?.image || m?.imageUrl;
+            if (img) { image = img; break; }
+          }
+        }
+        return { ...p, image };
+      })
+    );
+
+    return c.json({
+      plans: plansWithImage
     });
   } catch (error: any) {
     log(`Error getting meal plans: ${error.message}`);
