@@ -15,6 +15,7 @@ import { calculateRecipeNutrition } from "./calorie-ninjas.ts";
 import { ACHIEVEMENTS } from "./achievements.ts";
 import { computeIngredientKeywords, selectAllCoreRecipes, buildRotationSchedule, ScoredRecipe } from "./ingredient-overlap.ts";
 import { filterRecipes } from "./meal-filter.ts";
+import { buildGoalBias } from "./recipe-score.ts";
 
 // Debug-gated logger: emits only when DEBUG is set, so production logs stay
 // quiet (avoids unconditional console.log per project style). console.error
@@ -425,7 +426,7 @@ app.post("/make-server-dbaf6019/generate-meal-plan", rateLimit({ name: "generate
       suitableRecipes,
       safeMealsPerDay,
       weeklyBudget,
-      goal,
+      mealType, // canonical goal token, so the selection bias matches the fetched pool
       safeMaxCookingTime,
       cookingDays,
       safeAvoid,
@@ -490,10 +491,14 @@ function generateMealPlanFromRecipes(
   log(`📊 Pools: breakfast=${breakfastPool.length}, lunch=${lunchPool.length}, dinner=${dinnerPool.length}`);
 
   // ── 3. Select core clusters with maximum ingredient overlap ──────
+  // Bias selection toward the user's goal (study/work → brain-food focus,
+  // fitness → protein) while keeping ingredient overlap the dominant signal.
   const coreRecipes = selectAllCoreRecipes(
     ensurePool(breakfastPool),
     ensurePool(lunchPool),
-    ensurePool(dinnerPool)
+    ensurePool(dinnerPool),
+    undefined,
+    buildGoalBias(goal)
   );
 
   log(`🔗 Core: breakfast=${coreRecipes.breakfast.length}, lunch=${coreRecipes.lunch.length}, dinner=${coreRecipes.dinner.length}`);

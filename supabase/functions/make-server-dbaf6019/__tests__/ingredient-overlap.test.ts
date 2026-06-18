@@ -8,12 +8,18 @@ import {
   buildRotationSchedule,
   TRIVIAL_ITEMS,
   type ScoredRecipe,
+  type RecipeBias,
 } from '../ingredient-overlap.ts'
 import { makeRecipe } from './factory.ts'
 
 const scored = (id: number, keywords: string[]): ScoredRecipe => ({
   recipe: makeRecipe({ id, name: `Recipe ${id}` }),
   keywords: new Set(keywords),
+})
+
+const biasFrom = (scores: Record<number, number>, weight = 2): RecipeBias => ({
+  scoreFn: r => scores[r.id] ?? 0,
+  weight,
 })
 
 describe('extractBaseIngredient', () => {
@@ -119,6 +125,28 @@ describe('selectOverlapCluster', () => {
     const candidates = [hub, scored(2, ['a']), scored(3, ['b']), scored(4, ['q'])]
     const result = selectOverlapCluster(candidates, 2, [])
     expect(result.map((r) => r.recipe.id)).toContain(1)
+  })
+
+  it('a zero bias leaves selection identical to no bias (regression guard)', () => {
+    const candidates = [scored(1, ['x']), scored(2, ['x']), scored(3, ['y']), scored(4, ['x'])]
+    const without = selectOverlapCluster(candidates, 2, []).map((r) => r.recipe.id)
+    const zeroBias = selectOverlapCluster(candidates, 2, [], { scoreFn: () => 0, weight: 5 }).map((r) => r.recipe.id)
+    expect(zeroBias).toEqual(without)
+  })
+
+  it('biases the seed toward the higher goal score when overlap ties', () => {
+    // All four share keyword 'x' so pairwise overlap is identical — the bias decides.
+    const candidates = [scored(1, ['x']), scored(2, ['x']), scored(3, ['x']), scored(4, ['x'])]
+    const result = selectOverlapCluster(candidates, 2, [], biasFrom({ 1: 0.1, 2: 0.2, 3: 0.9, 4: 0.3 }))
+    expect(result[0].recipe.id).toBe(3)
+  })
+
+  it('lets strong ingredient overlap outweigh the goal nudge (overlap stays dominant)', () => {
+    // id1 shares ingredients with two others (high mean overlap); id4 is isolated
+    // but has max goal score. At the default 0.5 weight, overlap still seats id1.
+    const candidates = [scored(1, ['a', 'b']), scored(2, ['a']), scored(3, ['b']), scored(4, ['z'])]
+    const result = selectOverlapCluster(candidates, 2, [], biasFrom({ 1: 0, 2: 0, 3: 0, 4: 1 }, 0.5))
+    expect(result[0].recipe.id).toBe(1)
   })
 })
 

@@ -129,6 +129,9 @@ export async function generateRecipeQueue(params: GenerateQueueParams): Promise<
     ? { breakfast: 3, lunch: 4, dinner: 4 }
     : { breakfast: 6, lunch: 8, dinner: 8 };
 
+  // No goal bias here (5th arg omitted): the queue already applies its own
+  // focus/sleep steering upstream (focusMode pre-filter + preferSleepDinners).
+  // Unifying onto the shared recipe-score bias is a deliberate follow-up.
   const coreRecipes = selectAllCoreRecipes(
     ensurePool(breakfastPool),
     ensurePool(lunchPool),

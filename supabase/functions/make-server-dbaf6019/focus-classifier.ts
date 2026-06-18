@@ -109,23 +109,28 @@ function hasSleepDisruptors(ingredients: string[]): boolean {
 // ── Main classifier ──────────────────────────────────────────────────
 
 export function classifyRecipe(recipe: NewRecipe): RecipeClassification {
+  // Tolerate recipes with missing nutrition (treat as zeroed) so classification
+  // never throws on malformed data — also protects the existing focus/sleep callers.
   const n = recipe.nutrition_per_serving;
+  const protein = n?.protein_g ?? 0;
+  const fiber = n?.fiber_g ?? 0;
+  const sugar = n?.sugar_g ?? 0;
 
   // Focus classification
   const focusIngredients = findMatchingIngredients(recipe.ingredients, FOCUS_INGREDIENTS);
   const meetsNutrition =
-    n.protein_g >= FOCUS_NUTRITION.minProtein &&
-    n.fiber_g >= FOCUS_NUTRITION.minFiber &&
-    n.sugar_g <= FOCUS_NUTRITION.maxSugar;
+    protein >= FOCUS_NUTRITION.minProtein &&
+    fiber >= FOCUS_NUTRITION.minFiber &&
+    sugar <= FOCUS_NUTRITION.maxSugar;
 
   const focusIngredientCount = focusIngredients.length;
   const promotes_focus = focusIngredientCount >= 2 && meetsNutrition;
 
   // Focus score: 0-10 based on ingredient matches + nutrition quality
   const focusNutritionBonus =
-    (n.protein_g >= FOCUS_NUTRITION.minProtein ? 1 : 0) +
-    (n.fiber_g >= FOCUS_NUTRITION.minFiber ? 1 : 0) +
-    (n.sugar_g <= FOCUS_NUTRITION.maxSugar ? 1 : 0);
+    (protein >= FOCUS_NUTRITION.minProtein ? 1 : 0) +
+    (fiber >= FOCUS_NUTRITION.minFiber ? 1 : 0) +
+    (sugar <= FOCUS_NUTRITION.maxSugar ? 1 : 0);
   const focus_score = Math.min(10, Math.round(focusIngredientCount * 2 + focusNutritionBonus));
 
   // Sleep classification
