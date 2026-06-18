@@ -32,6 +32,9 @@ export interface NewRecipe {
   recipe_category: string;
   cuisine: string;
   meal_type: "work" | "fitness" | "study";
+  // Added at cost-estimation time (recipe-cost.ts); absent until the backfill runs.
+  cost_per_serving_gbp?: number;
+  priced_ingredients?: { name: string; gbp: number }[];
 }
 
 export const ALL_RECIPES: NewRecipe[] = [

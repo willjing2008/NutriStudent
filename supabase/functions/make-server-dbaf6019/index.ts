@@ -16,6 +16,7 @@ import { ACHIEVEMENTS } from "./achievements.ts";
 import { computeIngredientKeywords, selectAllCoreRecipes, buildRotationSchedule, ScoredRecipe } from "./ingredient-overlap.ts";
 import { filterRecipes } from "./meal-filter.ts";
 import { buildGoalBias } from "./recipe-score.ts";
+import { estimateMissingCosts } from "./recipe-cost.ts";
 
 // Debug-gated logger: emits only when DEBUG is set, so production logs stay
 // quiet (avoids unconditional console.log per project style). console.error
@@ -511,12 +512,20 @@ function generateMealPlanFromRecipes(
     day.meals.map(m => toMealPlanMeal(m.recipe, day.dayNumber, m.mealNumber, m.slot))
   );
 
+  // Report-only budget: sum the per-meal costs (each meal carries the recipe's
+  // per-serving cost, flat fallback until the Gemini backfill prices it). Summed
+  // from the meals array so it matches the frontend's recompute after a swap.
+  // Never gates selection.
+  const totalCost = Math.round(
+    meals.reduce((sum, m) => sum + m.totalCost, 0) * 100,
+  ) / 100;
+
   return {
     meals,
-    totalCost: 0,
+    totalCost,
     dailyBudget,
     weeklyBudget,
-    withinBudget: true,
+    withinBudget: totalCost <= weeklyBudget,
     cookingDays,
     totalMealsNeeded,
     mealsPerDay,
@@ -674,6 +683,38 @@ app.post("/make-server-dbaf6019/classify-recipes", requireAuth, requireAdmin, as
     });
   } catch (error: any) {
     return c.json({ error: error.message || "Failed to classify recipes" }, 500);
+  }
+});
+
+// Estimate a per-serving GBP cost for recipes that lack one, via Gemini
+// (gemini-2.5-flash-lite). Resumable + throttled: only recipes missing
+// cost_per_serving_gbp are priced, so re-running continues where a tight
+// free-tier daily quota left off. Pass { maxBatches } to price in chunks.
+app.post("/make-server-dbaf6019/admin/estimate-recipe-costs", requireAuth, requireAdmin, async (c) => {
+  try {
+    const apiKey = Deno.env.get("GEMINI_API_KEY");
+    if (!apiKey) {
+      return c.json({ error: "GEMINI_API_KEY is not configured" }, 500);
+    }
+    const body = await c.req.json().catch(() => ({}));
+    // Small default chunk (~60 recipes) so one run stays well under the edge
+    // timeout and free-tier quota; pass a larger maxBatches to do more at once.
+    const maxBatches = vNum(body.maxBatches, 1, 1000, 5);
+    const allRecipes = await getAllRecipesFromDB();
+
+    // Persist each batch as it's priced, so a timeout never loses finished work.
+    const { summary } = await estimateMissingCosts(allRecipes, apiKey, {
+      maxBatches,
+      onPriced: async (recipes) => {
+        for (const recipe of recipes) {
+          await kv.set(`recipe:${recipe.meal_type}:${recipe.id}`, JSON.stringify(recipe));
+        }
+      },
+    });
+
+    return c.json({ message: "Recipe cost estimation complete", ...summary });
+  } catch (error: any) {
+    return c.json({ error: error.message || "Failed to estimate recipe costs" }, 500);
   }
 });
 

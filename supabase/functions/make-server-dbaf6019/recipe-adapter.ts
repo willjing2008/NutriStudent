@@ -1,6 +1,7 @@
 import { NewRecipe } from "./recipe-data.ts";
 import * as kv from "./kv_store.tsx";
 import { classifyRecipe } from "./focus-classifier.ts";
+import { recipeCostPerServing } from "./recipe-cost.ts";
 
 // Strip leading quantity and measurement units from an ingredient string.
 // e.g. "2 cups vanilla yogurt" → "Vanilla Yogurt"
@@ -132,8 +133,8 @@ export function toMealPlanMeal(
     })),
     ingredientNames: recipe.ingredients,
     instructions: recipe.instructions,
-    cost: 0,
-    totalCost: 0,
+    cost: recipeCostPerServing(recipe),
+    totalCost: recipeCostPerServing(recipe),
     nutrition: {
       calories: recipe.nutrition_per_serving.calories,
       protein: recipe.nutrition_per_serving.protein_g,
@@ -188,8 +189,8 @@ export function toSwapOption(recipe: NewRecipe) {
     })),
     ingredientNames: recipe.ingredients,
     instructions: recipe.instructions,
-    cost: 0,
-    totalCost: 0,
+    cost: recipeCostPerServing(recipe),
+    totalCost: recipeCostPerServing(recipe),
     nutrition: {
       calories: recipe.nutrition_per_serving.calories,
       protein: recipe.nutrition_per_serving.protein_g,
