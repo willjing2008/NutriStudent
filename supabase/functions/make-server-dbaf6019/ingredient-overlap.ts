@@ -85,6 +85,14 @@ export function computeIngredientKeywords(recipe: NewRecipe): Set<string> {
 // ── 1b. Overlap scoring ────────────────────────────────────────────
 
 /** Count overlapping ingredients between two keyword sets. Partial credit for substring matches. */
+// Partial credit only when two keywords share a whole word, so multi-word
+// ingredients still overlap ("chicken breast" / "chicken thigh") but raw
+// substrings no longer false-match ("egg" / "eggplant", "pea" / "peanut").
+function sharesWord(a: string, b: string): boolean {
+  const wordsB = new Set(b.split(/\s+/).filter(Boolean));
+  return a.split(/\s+/).filter(Boolean).some(w => wordsB.has(w));
+}
+
 export function overlapScore(
   keywordsA: Set<string>,
   keywordsB: Set<string>
@@ -94,7 +102,7 @@ export function overlapScore(
     for (const b of keywordsB) {
       if (a === b) {
         score += 1;
-      } else if (a.includes(b) || b.includes(a)) {
+      } else if (sharesWord(a, b)) {
         score += 0.5;
       }
     }

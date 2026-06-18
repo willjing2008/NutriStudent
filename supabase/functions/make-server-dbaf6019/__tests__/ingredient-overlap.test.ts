@@ -85,8 +85,14 @@ describe('overlapScore', () => {
     expect(overlapScore(a, b)).toBe(2)
   })
 
-  it('gives partial credit for substring matches', () => {
+  it('gives partial credit when a whole word is shared', () => {
     expect(overlapScore(new Set(['cheese']), new Set(['cream cheese']))).toBe(0.5)
+    expect(overlapScore(new Set(['chicken breast']), new Set(['chicken thigh']))).toBe(0.5)
+  })
+
+  it('does not false-match on raw substrings', () => {
+    expect(overlapScore(new Set(['egg']), new Set(['eggplant']))).toBe(0)
+    expect(overlapScore(new Set(['pea']), new Set(['peanut']))).toBe(0)
   })
 
   it('returns 0 for disjoint sets and for empty sets', () => {

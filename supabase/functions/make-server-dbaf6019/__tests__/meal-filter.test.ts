@@ -42,6 +42,16 @@ describe('filterRecipes', () => {
     expect(out.map(r => r.id)).toEqual([2])
   })
 
+  it('excludes high-carb legumes for keto but keeps keto-friendly greens', () => {
+    const pool = [
+      recipe(1, ['red lentil', 'stock']),
+      recipe(2, ['kidney bean', 'tomato']),
+      recipe(3, ['green beans', 'olive oil']),
+    ]
+    const out = filterRecipes(pool, { dietaryRestrictions: ['keto'] })
+    expect(out.map(r => r.id)).toEqual([3])
+  })
+
   // The launch-blocking safety regression: when every recipe in the goal-pool
   // violates the diet, the result MUST be empty — never the forbidden recipes.
   it('returns [] (never forbidden food) when no recipe satisfies the diet', () => {

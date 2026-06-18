@@ -9,7 +9,9 @@ const FISH_KEYWORDS = ['fish', 'salmon', 'tuna', 'cod', 'prawn', 'shrimp', 'crab
 const DAIRY_EGG_KEYWORDS = ['milk', 'cheese', 'butter', 'cream', 'yogurt', 'yoghurt', 'egg', 'honey', 'ghee', 'custard'];
 const GLUTEN_KEYWORDS = ['wheat', 'bread', 'pasta', 'flour', 'barley', 'rye', 'couscous', 'noodle', 'cracker', 'breadcrumb', 'tortilla', 'pita', 'bagel', 'pastry'];
 const NUT_KEYWORDS = ['almond', 'peanut', 'cashew', 'walnut', 'hazelnut', 'pecan', 'pistachio', 'macadamia', 'pine nut', 'brazil nut'];
-const KETO_KEYWORDS = ['rice', 'pasta', 'bread', 'potato', 'sugar', 'oats', 'flour', 'noodle', 'corn', 'banana', 'tortilla'];
+// High-carb legumes named specifically (like NUT_KEYWORDS) so keto excludes
+// lentils/chickpeas/starchy beans without catching keto-friendly green beans.
+const KETO_KEYWORDS = ['rice', 'pasta', 'bread', 'potato', 'sugar', 'oats', 'flour', 'noodle', 'corn', 'banana', 'tortilla', 'lentil', 'chickpea', 'kidney bean', 'black bean', 'baked bean'];
 
 const DIETARY_KEYWORDS: Record<string, string[]> = {
   vegetarian: [...MEAT_KEYWORDS, ...FISH_KEYWORDS],

@@ -411,7 +411,8 @@ app.post("/make-server-dbaf6019/generate-meal-plan", rateLimit({ name: "generate
 
     // Fetch recipes from database by meal_type
     const mealTypeMap: Record<string, string> = { study: 'study', work: 'work', fitness: 'fitness' };
-    const mealType = mealTypeMap[goal] || 'fitness';
+    // Default to 'study' to match the recipe-queue path (recipe-queue.ts).
+    const mealType = mealTypeMap[goal] || 'study';
     const suitableRecipes = await getRecipesByMealType(mealType);
 
     if (suitableRecipes.length === 0) {
