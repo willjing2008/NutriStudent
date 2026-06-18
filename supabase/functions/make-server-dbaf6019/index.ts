@@ -14,6 +14,7 @@ import { generateImageQuery, enhanceImageQuery } from "./image-query-helper.ts";
 import { calculateRecipeNutrition } from "./calorie-ninjas.ts";
 import { ACHIEVEMENTS } from "./achievements.ts";
 import { computeIngredientKeywords, selectAllCoreRecipes, buildRotationSchedule, ScoredRecipe } from "./ingredient-overlap.ts";
+import { filterRecipes } from "./meal-filter.ts";
 
 // Debug-gated logger: emits only when DEBUG is set, so production logs stay
 // quiet (avoids unconditional console.log per project style). console.error
@@ -431,39 +432,18 @@ app.post("/make-server-dbaf6019/generate-meal-plan", rateLimit({ name: "generate
       safeDietary
     );
 
+    // No compliant recipe survived the dietary/avoid filters — tell the user
+    // honestly rather than fall back to serving a forbidden food.
+    if (mealPlan.meals.length === 0) {
+      return c.json({ error: "No recipes match your dietary restrictions. Try removing some restrictions, or check back as we add more recipes." }, 400);
+    }
+
     return c.json({ mealPlan });
   } catch (error: any) {
     log(`Error in /generate-meal-plan endpoint: ${error.message}`);
     return c.json({ error: error.message || "Failed to generate meal plan" }, 500);
   }
 });
-
-// Ingredient keywords forbidden by each dietary restriction. Keyword/substring
-// matching is intentionally cautious (better to over-exclude than serve a
-// forbidden food); curated to avoid the worst false positives (e.g. nut names
-// rather than bare "nut", which would catch coconut/butternut).
-const MEAT_KEYWORDS = ['chicken', 'beef', 'pork', 'lamb', 'turkey', 'bacon', 'ham', 'sausage', 'steak', 'mince', 'prosciutto', 'salami', 'duck', 'veal', 'gelatin', 'gelatine'];
-const FISH_KEYWORDS = ['fish', 'salmon', 'tuna', 'cod', 'prawn', 'shrimp', 'crab', 'lobster', 'anchovy', 'mackerel', 'sardine', 'squid', 'oyster', 'mussel'];
-const DAIRY_EGG_KEYWORDS = ['milk', 'cheese', 'butter', 'cream', 'yogurt', 'yoghurt', 'egg', 'honey', 'ghee', 'custard'];
-const GLUTEN_KEYWORDS = ['wheat', 'bread', 'pasta', 'flour', 'barley', 'rye', 'couscous', 'noodle', 'cracker', 'breadcrumb', 'tortilla', 'pita', 'bagel', 'pastry'];
-const NUT_KEYWORDS = ['almond', 'peanut', 'cashew', 'walnut', 'hazelnut', 'pecan', 'pistachio', 'macadamia', 'pine nut', 'brazil nut'];
-const KETO_KEYWORDS = ['rice', 'pasta', 'bread', 'potato', 'sugar', 'oats', 'flour', 'noodle', 'corn', 'banana', 'tortilla'];
-
-const DIETARY_KEYWORDS: Record<string, string[]> = {
-  vegetarian: [...MEAT_KEYWORDS, ...FISH_KEYWORDS],
-  vegan: [...MEAT_KEYWORDS, ...FISH_KEYWORDS, ...DAIRY_EGG_KEYWORDS],
-  'gluten-free': GLUTEN_KEYWORDS,
-  'nut-free': NUT_KEYWORDS,
-  keto: KETO_KEYWORDS,
-};
-
-function dietaryForbiddenKeywords(restrictions: string[]): string[] {
-  const set = new Set<string>();
-  for (const r of restrictions) {
-    for (const word of DIETARY_KEYWORDS[r.toLowerCase()] ?? []) set.add(word);
-  }
-  return [...set];
-}
 
 // Helper to generate meal plan from NewRecipe[] fetched from kv_store
 function generateMealPlanFromRecipes(
@@ -481,41 +461,13 @@ function generateMealPlanFromRecipes(
   const totalMealsNeeded = cookingDays * mealsPerDay;
 
   // ── 1. Filter ────────────────────────────────────────────────────
-  let filteredRecipes = recipes;
-  if (avoidIngredients && avoidIngredients.length > 0) {
-    const avoidLowercase = avoidIngredients.map(i => i.toLowerCase());
-    filteredRecipes = recipes.filter(recipe => {
-      const hasAvoided = avoidLowercase.some(avoid =>
-        recipe.ingredients.some(ing => ing.toLowerCase().includes(avoid))
-      );
-      return !hasAvoided;
-    });
-    log(`🚫 Filtered by avoided ingredients: ${filteredRecipes.length}/${recipes.length} remaining`);
-  }
-
-  // Filter by dietary restrictions (keyword-based; over-restricts rather than
-  // risk serving a forbidden food — the empty-result fallback below recovers).
-  if (dietaryRestrictions && dietaryRestrictions.length > 0) {
-    const forbidden = dietaryForbiddenKeywords(dietaryRestrictions);
-    if (forbidden.length > 0) {
-      const beforeCount = filteredRecipes.length;
-      filteredRecipes = filteredRecipes.filter(recipe =>
-        !forbidden.some(word =>
-          recipe.ingredients.some(ing => ing.toLowerCase().includes(word))
-        )
-      );
-      log(`🥗 Filtered by dietary restrictions [${dietaryRestrictions.join(', ')}]: ${filteredRecipes.length}/${beforeCount} remaining`);
-    }
-  }
-
-  if (maxCookingTime && maxCookingTime > 0) {
-    filteredRecipes = filteredRecipes.filter(r => (r.total_time_minutes ?? r.cook_time_minutes ?? 0) <= maxCookingTime);
-  }
-
-  // Fallback if filters removed everything
-  if (filteredRecipes.length === 0) {
-    filteredRecipes = recipes;
-  }
+  // Dietary restrictions + avoided ingredients are hard safety filters (never
+  // relaxed); maxCookingTime is relaxed only if it would empty the pool. An
+  // empty result means no compliant recipe exists — we do NOT fall back to the
+  // unfiltered pool, so the schedule below comes back empty and the caller
+  // surfaces a clear error instead of serving a forbidden food.
+  const filteredRecipes = filterRecipes(recipes, { avoidIngredients, dietaryRestrictions, maxCookingTime });
+  log(`🥗 Filtered ${filteredRecipes.length}/${recipes.length} recipes by avoid/dietary/time`);
 
   // ── 2. Categorize into pools with ingredient keywords ────────────
   const toScored = (r: NewRecipe): ScoredRecipe => ({ recipe: r, keywords: computeIngredientKeywords(r) });
