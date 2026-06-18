@@ -68,6 +68,7 @@ export function AdminDashboard() {
   const [newRecipeAiImageLoadError, setNewRecipeAiImageLoadError] = useState(false);
   const [calculatingNutrition, setCalculatingNutrition] = useState(false);
   const [nutritionDetails, setNutritionDetails] = useState<any[] | null>(null);
+  const [estimatingCosts, setEstimatingCosts] = useState(false);
 
 
   useEffect(() => {
@@ -240,6 +241,38 @@ export function AdminDashboard() {
   const showMessage = (type: 'success' | 'error', text: string) => {
     setMessage({ type, text });
     setTimeout(() => setMessage(null), 3000);
+  };
+
+  // Price unpriced recipes via Gemini, a resumable chunk per click (the backend
+  // defaults to ~60 recipes/run). Re-run until `remaining` reaches 0.
+  const estimateRecipeCosts = async () => {
+    if (!(await confirm({
+      title: 'Estimate recipe costs?',
+      description: 'Prices recipes that have no cost yet, using Gemini. Runs a chunk per click — re-run until none remain.',
+      confirmText: 'Run',
+    }))) {
+      return;
+    }
+
+    setEstimatingCosts(true);
+    showMessage('success', 'Estimating recipe costs…');
+    try {
+      const data = await authedPost<any>('admin/estimate-recipe-costs', {});
+      if (data.error) {
+        showMessage('error', `Cost estimation failed: ${data.error}`);
+        return;
+      }
+      showMessage(
+        'success',
+        `Priced ${data.priced} recipes${data.failed ? `, ${data.failed} failed` : ''}. ${data.remaining} remaining${data.remaining ? ' — run again to continue.' : ' ✓'}`,
+      );
+      await fetchAllRecipes();
+    } catch (error) {
+      console.error('Error estimating recipe costs:', error);
+      showMessage('error', 'Failed to estimate recipe costs');
+    } finally {
+      setEstimatingCosts(false);
+    }
   };
 
   // Handle image file selection
@@ -739,6 +772,15 @@ export function AdminDashboard() {
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Calculator className="w-5 h-5" />}
             Validate All Nutrition
+          </button>
+
+          <button
+            onClick={estimateRecipeCosts}
+            disabled={estimatingCosts}
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-xl hover:from-amber-600 hover:to-yellow-600 transition-all shadow-md disabled:opacity-50"
+          >
+            {estimatingCosts ? <Loader2 className="w-5 h-5 animate-spin" /> : <Calculator className="w-5 h-5" />}
+            💷 Estimate Recipe Costs
           </button>
 
           <button
