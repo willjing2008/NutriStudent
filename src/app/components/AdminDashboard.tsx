@@ -240,7 +240,11 @@ export function AdminDashboard() {
 
   const showMessage = (type: 'success' | 'error', text: string) => {
     setMessage({ type, text });
-    setTimeout(() => setMessage(null), 3000);
+    // Errors stay until the next action so they can actually be read; success
+    // messages clear on their own after a longer, readable delay.
+    if (type === 'success') {
+      setTimeout(() => setMessage(null), 6000);
+    }
   };
 
   // Price unpriced recipes via Gemini, a resumable chunk per click (the backend
@@ -262,10 +266,17 @@ export function AdminDashboard() {
         showMessage('error', `Cost estimation failed: ${data.error}`);
         return;
       }
-      showMessage(
-        'success',
-        `Priced ${data.priced} recipes${data.failed ? `, ${data.failed} failed` : ''}. ${data.remaining} remaining${data.remaining ? ' — run again to continue.' : ' ✓'}`,
-      );
+      if (data.priced === 0 && data.failed > 0) {
+        showMessage(
+          'error',
+          `All ${data.failed} failed — none priced. Reason: ${data.firstError || 'unknown error'}`,
+        );
+      } else {
+        showMessage(
+          'success',
+          `Priced ${data.priced} recipes${data.failed ? `, ${data.failed} failed (${data.firstError || 'see logs'})` : ''}. ${data.remaining} remaining${data.remaining ? ' — run again to continue.' : ' ✓'}`,
+        );
+      }
       await fetchAllRecipes();
     } catch (error) {
       console.error('Error estimating recipe costs:', error);
@@ -782,6 +793,21 @@ export function AdminDashboard() {
             {estimatingCosts ? <Loader2 className="w-5 h-5 animate-spin" /> : <Calculator className="w-5 h-5" />}
             💷 Estimate Recipe Costs
           </button>
+
+          {recipes.length > 0 && (() => {
+            const priced = recipes.filter((r) => r?.cost_per_serving_gbp != null).length;
+            const pct = Math.round((priced / recipes.length) * 100);
+            return (
+              <div className="flex items-center gap-3 px-4 py-3 bg-amber-50 border-2 border-amber-200 rounded-xl">
+                <span className="text-sm font-semibold text-amber-800 whitespace-nowrap">
+                  Priced: {priced} / {recipes.length} ({pct}%)
+                </span>
+                <div className="w-32 h-2 bg-amber-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-amber-500 transition-all" style={{ width: `${pct}%` }} />
+                </div>
+              </div>
+            );
+          })()}
 
           <button
             onClick={fetchAllRecipes}

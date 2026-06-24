@@ -151,6 +151,9 @@ export interface BackfillSummary {
   alreadyPriced: number;
   failed: number;
   remaining: number;
+  // The first batch error message, surfaced so a silent all-failed run is debuggable
+  // (e.g. a Gemini auth/quota/schema error) instead of just reporting "0 priced".
+  firstError?: string;
 }
 
 /**
@@ -179,6 +182,7 @@ export async function estimateMissingCosts(
 
   const pricedRecipes: NewRecipe[] = [];
   let failed = 0;
+  let firstError: string | undefined;
 
   for (let b = 0; b < cap; b++) {
     const batch = batches[b];
@@ -191,13 +195,17 @@ export async function estimateMissingCosts(
         break;
       } catch (error) {
         const status = (error as Error & { status?: number }).status;
-        if (status === 429 && attempt < 3) {
+        // Retry transient server-side conditions with exponential backoff: 429
+        // (rate limit) and 5xx (e.g. 503 "model overloaded", common with Gemini).
+        const transient = status === 429 || (status !== undefined && status >= 500);
+        if (transient && attempt < 4) {
           await sleep(throttleMs * 2 ** (attempt + 1));
           continue;
         }
         // Genuine failure (schema 400, malformed JSON, auth, network) — surface it
         // so a hand-run backfill is debuggable, then move on to the next batch.
         console.error(`Recipe cost batch ${b} failed:`, (error as Error).message);
+        if (!firstError) firstError = (error as Error).message;
         failed += batch.length;
         break;
       }
@@ -212,6 +220,7 @@ export async function estimateMissingCosts(
       alreadyPriced: allRecipes.length - todo.length,
       failed,
       remaining: Math.max(0, todo.length - pricedRecipes.length - failed),
+      firstError,
     },
   };
 }
