@@ -195,11 +195,14 @@ export async function estimateMissingCosts(
         break;
       } catch (error) {
         const status = (error as Error & { status?: number }).status;
-        // Retry transient server-side conditions with exponential backoff: 429
-        // (rate limit) and 5xx (e.g. 503 "model overloaded", common with Gemini).
+        // Retry transient server-side conditions: 429 (rate limit) and 5xx (e.g.
+        // 503 "model overloaded", common with Gemini). Keep retries short and
+        // capped: the whole run shares one edge-function time budget, so a long
+        // backoff would time out the request and lose the not-yet-persisted work.
+        // Failures stay queued and the run is resumable, so re-running continues.
         const transient = status === 429 || (status !== undefined && status >= 500);
-        if (transient && attempt < 4) {
-          await sleep(throttleMs * 2 ** (attempt + 1));
+        if (transient && attempt < 2) {
+          await sleep(Math.min(throttleMs * 2 ** (attempt + 1), 4000));
           continue;
         }
         // Genuine failure (schema 400, malformed JSON, auth, network) — surface it
