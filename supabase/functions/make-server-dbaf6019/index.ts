@@ -2,9 +2,9 @@ import { Hono } from "npm:hono";
 import { cors } from "npm:hono/cors";
 import { logger } from "npm:hono/logger";
 import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
-import { requireAuth, requireAdmin, getUserId, isUuid } from "./auth-middleware.ts";
+import { requireAuth, requireAdmin, getUserId, isUuid, grantAdminByEmail } from "./auth-middleware.ts";
 import { rateLimit } from "./rate-limit.ts";
-import { vStr, vNum, vStrArr, vArr } from "./validate.ts";
+import { vStr, vNum, vStrArr, vArr, timingSafeEqual } from "./validate.ts";
 import * as kv from "./kv_store.tsx";
 import { ALL_RECIPES, NewRecipe } from "./recipe-data.ts";
 import { toMealPlanMeal, toSwapOption, getRecipesByMealType, getAllRecipesFromDB, getRecipesByFocusType, getSleepFriendlyRecipes } from "./recipe-adapter.ts";
@@ -685,6 +685,44 @@ app.post("/make-server-dbaf6019/classify-recipes", requireAuth, requireAdmin, as
     return c.json({ error: error.message || "Failed to classify recipes" }, 500);
   }
 });
+
+// One-time bootstrap to grant the FIRST admin. The admin role lives in
+// app_metadata and is service-role-settable only (auth-middleware.ts), so until
+// someone is promoted there is NO way to reach any admin tool. This endpoint is
+// gated by the ADMIN_BOOTSTRAP_SECRET env var and is first-admin-only
+// (grantAdminByEmail returns 409 once any admin exists), so a leaked secret
+// can't escalate a second account. Rate-limited to slow brute-forcing. Rotate or
+// unset ADMIN_BOOTSTRAP_SECRET after bootstrapping.
+app.post(
+  "/make-server-dbaf6019/admin/bootstrap",
+  rateLimit({ name: "admin-bootstrap", max: 5, windowSec: 60 }),
+  async (c) => {
+    try {
+      const expected = Deno.env.get("ADMIN_BOOTSTRAP_SECRET");
+      if (!expected) {
+        return c.json({ error: "Bootstrap is not configured" }, 503);
+      }
+      const { secret, email } = await c.req.json().catch(() => ({}));
+      if (typeof secret !== "string" || !timingSafeEqual(secret, expected)) {
+        return c.json({ error: "Unauthorized" }, 401);
+      }
+      const targetEmail = vStr(email, 320);
+      if (!targetEmail) {
+        return c.json({ error: "email is required" }, 400);
+      }
+
+      const result = await grantAdminByEmail(targetEmail);
+      if (!result.ok) {
+        return c.json({ error: result.error }, result.status === 409 ? 409 : 404);
+      }
+
+      console.error(`[audit] admin role granted via bootstrap: ${targetEmail.toLowerCase()}`);
+      return c.json({ message: `Granted admin to ${targetEmail}. Sign out and back in to refresh your session.` });
+    } catch (error: any) {
+      return c.json({ error: error.message || "Bootstrap failed" }, 500);
+    }
+  },
+);
 
 // Estimate a per-serving GBP cost for recipes that lack one, via Gemini
 // (gemini-2.5-flash-lite). Resumable + throttled: only recipes missing

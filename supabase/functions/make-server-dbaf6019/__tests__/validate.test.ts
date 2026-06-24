@@ -1,5 +1,19 @@
 import { describe, it, expect } from 'vitest'
-import { vStr, vNum, vStrArr, vArr } from '../validate.ts'
+import { vStr, vNum, vStrArr, vArr, timingSafeEqual } from '../validate.ts'
+
+describe('timingSafeEqual', () => {
+  it('is true for identical strings', () => {
+    expect(timingSafeEqual('s3cr3t-value', 's3cr3t-value')).toBe(true)
+    expect(timingSafeEqual('', '')).toBe(true)
+  })
+  it('is false for different content of the same length', () => {
+    expect(timingSafeEqual('s3cr3t', 's3cr3X')).toBe(false)
+  })
+  it('is false for different lengths', () => {
+    expect(timingSafeEqual('abc', 'ab')).toBe(false)
+    expect(timingSafeEqual('ab', 'abc')).toBe(false)
+  })
+})
 
 describe('vStr', () => {
   it('trims strings and caps them at the default length', () => {

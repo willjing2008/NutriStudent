@@ -79,3 +79,44 @@ export async function requireAdmin(c: Context, next: Next): Promise<Response | v
 export function getUserId(c: Context): string {
   return c.get("userId");
 }
+
+/**
+ * Grant the admin role to the user with `email`, via the service-role client —
+ * the only way the role can be set (it lives in app_metadata). FIRST-ADMIN-ONLY:
+ * refuses (409) if any admin already exists, so this can't escalate a second
+ * account if the bootstrap secret ever leaks. Used by the secret-gated
+ * /admin/bootstrap endpoint.
+ */
+export async function grantAdminByEmail(
+  email: string,
+): Promise<{ ok: true } | { ok: false; status: number; error: string }> {
+  const target = email.toLowerCase();
+  let adminExists = false;
+  let user: { id: string; email?: string; app_metadata?: Record<string, unknown> } | undefined;
+
+  // Page through users to detect any existing admin and locate the target.
+  for (let page = 1; page <= 50; page++) {
+    const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 200 });
+    if (error) throw new Error(error.message);
+    for (const u of data.users) {
+      if ((u.app_metadata as { role?: string } | undefined)?.role === "admin") adminExists = true;
+      if (u.email?.toLowerCase() === target) {
+        user = { id: u.id, email: u.email, app_metadata: u.app_metadata };
+      }
+    }
+    if (data.users.length < 200) break;
+  }
+
+  if (adminExists) {
+    return { ok: false, status: 409, error: "An admin already exists; use an existing admin or the Supabase dashboard." };
+  }
+  if (!user) {
+    return { ok: false, status: 404, error: "No user found with that email." };
+  }
+
+  const { error } = await supabaseAdmin.auth.admin.updateUserById(user.id, {
+    app_metadata: { ...(user.app_metadata ?? {}), role: "admin" },
+  });
+  if (error) throw new Error(error.message);
+  return { ok: true };
+}

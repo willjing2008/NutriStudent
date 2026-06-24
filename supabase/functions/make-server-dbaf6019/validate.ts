@@ -23,3 +23,18 @@ export function vStrArr(v: unknown, maxItems = 50, maxLen = 200): string[] {
 export function vArr<T>(v: unknown, maxItems = 100): T[] {
   return Array.isArray(v) ? (v.slice(0, maxItems) as T[]) : [];
 }
+
+/**
+ * Constant-time string comparison — compares a request-supplied secret against a
+ * stored one without leaking length/content via early-exit timing. Returns false
+ * for differing lengths but still scans the full range.
+ */
+export function timingSafeEqual(a: string, b: string): boolean {
+  const len = Math.max(a.length, b.length);
+  let diff = a.length ^ b.length;
+  for (let i = 0; i < len; i++) {
+    // charCodeAt past the end is NaN; `| 0` coerces it to 0.
+    diff |= (a.charCodeAt(i) | 0) ^ (b.charCodeAt(i) | 0);
+  }
+  return diff === 0;
+}
