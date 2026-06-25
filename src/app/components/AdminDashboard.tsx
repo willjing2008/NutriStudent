@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Search, Plus, Edit2, Trash2, RefreshCw, Database, ChefHat, X, Save, Loader2, ImageIcon, Upload, Trash, ExternalLink, Calculator } from 'lucide-react';
-import { authedPost, authedFetch } from '../utils/apiClient';
+import { authedPost, authedFetch, getUserFacingApiErrorMessage } from '../utils/apiClient';
 import { useConfirm } from '../hooks/useConfirm';
 import { ImageStorageInfo } from './ImageStorageInfo';
 
@@ -280,7 +280,9 @@ export function AdminDashboard() {
       await fetchAllRecipes();
     } catch (error) {
       console.error('Error estimating recipe costs:', error);
-      showMessage('error', 'Failed to estimate recipe costs');
+      // Surface the server's actual reason (e.g. "ANTHROPIC_API_KEY is not
+      // configured") instead of a generic message, so failures are debuggable.
+      showMessage('error', `Failed to estimate recipe costs: ${getUserFacingApiErrorMessage(error)}`);
     } finally {
       setEstimatingCosts(false);
     }
