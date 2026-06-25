@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { writeFileSync, mkdirSync } from 'node:fs'
 
 // Verifies the security ordering fix (commit "rate-limit before requirePro on
 // paywalled routes"): on the four paywalled routes the chain is
@@ -90,12 +89,8 @@ describe('paywalled route middleware order: rateLimit before requirePro', () => 
       handler,
     ]
 
-    const transcript: string[] = []
     for (let i = 1; i <= MAX + 5; i++) {
       const res = await run(USER, chain)
-      transcript.push(
-        `req #${String(i).padStart(2)} -> ${res.status} ${res.status === 429 ? '(rate limited, RevenueCat NOT called)' : res.status === 402 ? '(payment required, RevenueCat checked)' : ''}`.trim(),
-      )
       if (i <= MAX) expect(res.status).toBe(402) // reached requirePro, non-Pro => 402
       else expect(res.status).toBe(429)          // throttled before requirePro
     }
@@ -117,25 +112,5 @@ describe('paywalled route middleware order: rateLimit before requirePro', () => 
     for (let i = 1; i <= MAX + 5; i++) await run(USER, oldChain)
     const oldOrderCalls = revenueCatCalls
     expect(oldOrderCalls).toBe(MAX + 5) // every request reached RevenueCat
-
-    const evidence = [
-      'Paywalled route: /generate-meal-plan  (chain: requireAuth -> rateLimit -> requirePro)',
-      `Configured limit: max=${MAX} requests / 60s per caller; caller = non-Pro user "${USER}"`,
-      '',
-      'NEW order (this commit) — limiter runs first:',
-      ...transcript.map((l) => '  ' + l),
-      `  => RevenueCat entitlement lookups: ${MAX} (capped by the limiter)`,
-      '',
-      `OLD order (requirePro first) — same ${MAX + 5} requests:`,
-      `  => RevenueCat entitlement lookups: ${oldOrderCalls} (one per request, unbounded)`,
-      '',
-      `Result: the ordering fix reduces attacker-driven RevenueCat calls from ${oldOrderCalls} to ${MAX}.`,
-    ].join('\n')
-
-    const dir = '/var/folders/s_/g8wv8cnn0031gt1lysnfftkr0000gn/T/no-mistakes-evidence/01KVZ1MJDTEXM9VBZTJNXG0W3P'
-    mkdirSync(dir, { recursive: true })
-    writeFileSync(`${dir}/paywall-rate-limit-order.txt`, evidence + '\n')
-    // eslint-disable-next-line no-console
-    console.log('\n' + evidence + '\n')
   })
 })
