@@ -117,3 +117,37 @@ export function applyCosts(recipes: NewRecipe[], costs: Map<number, PricedIngred
   });
 }
 
+/** Normalise an ingredient name for fuzzy matching (lowercase, alphanumeric). */
+function normalizeName(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+}
+
+const safeGbp = (n: number): number => (Number.isFinite(n) && n >= 0 ? n : 0);
+
+/**
+ * Per-ingredient GBP prices aligned to `rawIngredients`, sourced from the
+ * recipe's priced_ingredients (drives the shopping list's real prices). When the
+ * priced list has exactly one entry per raw ingredient — the normal case, since
+ * the pricing model is asked for exactly that, in order — align by position.
+ * Otherwise fall back to a best-effort name match, consuming each priced entry
+ * once so duplicates don't all grab the same line. Unknown ingredients get 0 so
+ * the list degrades gracefully rather than failing.
+ */
+export function alignIngredientPrices(
+  rawIngredients: string[],
+  priced?: PricedIngredient[],
+): number[] {
+  if (!priced || priced.length === 0) return rawIngredients.map(() => 0);
+  if (priced.length === rawIngredients.length) {
+    return priced.map(p => safeGbp(p.gbp));
+  }
+  const pool = priced.map(p => ({ name: normalizeName(p.name), gbp: p.gbp, used: false }));
+  return rawIngredients.map(raw => {
+    const target = normalizeName(raw);
+    const hit = pool.find(p => !p.used && p.name.length > 0 &&
+      (target.includes(p.name) || p.name.includes(target)));
+    if (hit) { hit.used = true; return safeGbp(hit.gbp); }
+    return 0;
+  });
+}
+

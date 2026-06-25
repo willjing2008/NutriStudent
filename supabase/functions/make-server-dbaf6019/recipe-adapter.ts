@@ -1,7 +1,7 @@
 import { NewRecipe } from "./recipe-data.ts";
 import * as kv from "./kv_store.tsx";
 import { classifyRecipe } from "./focus-classifier.ts";
-import { recipeCostPerServing } from "./recipe-cost.ts";
+import { recipeCostPerServing, alignIngredientPrices } from "./recipe-cost.ts";
 
 // Strip leading quantity and measurement units from an ingredient string.
 // e.g. "2 cups vanilla yogurt" → "Vanilla Yogurt"
@@ -122,15 +122,20 @@ export function toMealPlanMeal(
     servings: parseInt(recipe.servings) || 1,
     difficulty: inferDifficulty(recipe.total_time_minutes),
     tags: [recipe.meal_type, recipe.recipe_category, recipe.cuisine].filter(Boolean),
-    ingredients: recipe.ingredients.map((str) => ({
-      name: stripMeasurement(str),
-      amount: str,
-      category: "pantry" as const,
-      estimatedPrice: 0,
-      price: 0,
-      unit: "",
-      available: true,
-    })),
+    ingredients: (() => {
+      const prices = alignIngredientPrices(recipe.ingredients, recipe.priced_ingredients);
+      return recipe.ingredients.map((str, i) => ({
+        name: stripMeasurement(str),
+        amount: str,
+        category: "pantry" as const,
+        // Real per-ingredient cost from priced_ingredients (0 until priced or if
+        // a line can't be matched), so the shopping list shows real prices.
+        estimatedPrice: prices[i],
+        price: prices[i],
+        unit: "",
+        available: true,
+      }));
+    })(),
     ingredientNames: recipe.ingredients,
     instructions: recipe.instructions,
     cost: recipeCostPerServing(recipe),
@@ -178,15 +183,20 @@ export function toSwapOption(recipe: NewRecipe) {
     servings: parseInt(recipe.servings) || 1,
     difficulty: inferDifficulty(recipe.total_time_minutes),
     tags: [recipe.meal_type, recipe.recipe_category, recipe.cuisine].filter(Boolean),
-    ingredients: recipe.ingredients.map((str) => ({
-      name: stripMeasurement(str),
-      amount: str,
-      category: "pantry" as const,
-      estimatedPrice: 0,
-      price: 0,
-      unit: "",
-      available: true,
-    })),
+    ingredients: (() => {
+      const prices = alignIngredientPrices(recipe.ingredients, recipe.priced_ingredients);
+      return recipe.ingredients.map((str, i) => ({
+        name: stripMeasurement(str),
+        amount: str,
+        category: "pantry" as const,
+        // Real per-ingredient cost from priced_ingredients (0 until priced or if
+        // a line can't be matched), so the shopping list shows real prices.
+        estimatedPrice: prices[i],
+        price: prices[i],
+        unit: "",
+        available: true,
+      }));
+    })(),
     ingredientNames: recipe.ingredients,
     instructions: recipe.instructions,
     cost: recipeCostPerServing(recipe),

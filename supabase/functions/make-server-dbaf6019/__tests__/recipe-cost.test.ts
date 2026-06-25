@@ -5,6 +5,7 @@ import {
   buildBatchPrompt,
   parseBatchResponse,
   applyCosts,
+  alignIngredientPrices,
   FLAT_FALLBACK_GBP,
 } from '../recipe-cost.ts'
 import { makeRecipe } from './factory.ts'
@@ -72,5 +73,34 @@ describe('buildBatchPrompt', () => {
     const prompt = buildBatchPrompt([makeRecipe({ id: 7, ingredients: ['2 eggs'] })])
     expect(prompt).toContain('"id":7')
     expect(prompt).toContain('2 eggs')
+  })
+})
+
+describe('alignIngredientPrices', () => {
+  it('aligns by position when counts match', () => {
+    const prices = alignIngredientPrices(
+      ['2 eggs', '1 cup flour'],
+      [{ name: 'eggs', gbp: 0.3 }, { name: 'flour', gbp: 0.5 }],
+    )
+    expect(prices).toEqual([0.3, 0.5])
+  })
+  it('returns zeros when there are no priced ingredients', () => {
+    expect(alignIngredientPrices(['2 eggs', 'salt'], undefined)).toEqual([0, 0])
+    expect(alignIngredientPrices(['2 eggs'], [])).toEqual([0])
+  })
+  it('falls back to a name match when counts differ, consuming each entry once', () => {
+    // 3 raw lines, 2 priced entries -> match by name, unmatched -> 0
+    const prices = alignIngredientPrices(
+      ['2 large eggs', '1 tsp salt', '200g chicken breast'],
+      [{ name: 'chicken', gbp: 2.4 }, { name: 'eggs', gbp: 0.3 }],
+    )
+    expect(prices).toEqual([0.3, 0, 2.4])
+  })
+  it('coerces negative or non-finite gbp to 0', () => {
+    const prices = alignIngredientPrices(
+      ['a', 'b'],
+      [{ name: 'a', gbp: -1 }, { name: 'b', gbp: Number.NaN }],
+    )
+    expect(prices).toEqual([0, 0])
   })
 })
