@@ -33,21 +33,21 @@ describe('costPerServing', () => {
 
 describe('parseBatchResponse', () => {
   it('maps recipe id to priced ingredients', () => {
-    const map = parseBatchResponse('[{"id":1,"ingredients":[{"name":"egg","gbp":0.3}]}]')
+    const map = parseBatchResponse('{"recipes":[{"id":1,"ingredients":[{"name":"egg","gbp":0.3}]}]}')
     expect(map.get(1)).toEqual([{ name: 'egg', gbp: 0.3 }])
   })
   it('drops malformed ingredients (bad/negative gbp, wrong types)', () => {
     const map = parseBatchResponse(
-      '[{"id":1,"ingredients":[{"name":"egg","gbp":0.3},{"name":"x","gbp":-1},{"name":"y","gbp":"free"}]}]',
+      '{"recipes":[{"id":1,"ingredients":[{"name":"egg","gbp":0.3},{"name":"x","gbp":-1},{"name":"y","gbp":"free"}]}]}',
     )
     expect(map.get(1)).toEqual([{ name: 'egg', gbp: 0.3 }])
   })
   it('skips entries without a numeric id or an ingredients array', () => {
-    const map = parseBatchResponse('[{"id":"1","ingredients":[]},{"ingredients":[]},{"id":2,"ingredients":[]}]')
+    const map = parseBatchResponse('{"recipes":[{"id":"1","ingredients":[]},{"ingredients":[]},{"id":2,"ingredients":[]}]}')
     expect(map.has(2)).toBe(true)
     expect(map.size).toBe(1)
   })
-  it('throws when the response is not an array', () => {
+  it('throws when the response has no recipes array', () => {
     expect(() => parseBatchResponse('{"id":1}')).toThrow()
   })
 })

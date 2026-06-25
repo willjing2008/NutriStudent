@@ -16,7 +16,7 @@ import { ACHIEVEMENTS } from "./achievements.ts";
 import { computeIngredientKeywords, selectAllCoreRecipes, buildRotationSchedule, ScoredRecipe } from "./ingredient-overlap.ts";
 import { filterRecipes } from "./meal-filter.ts";
 import { buildGoalBias } from "./recipe-score.ts";
-import { estimateMissingCosts } from "./recipe-cost.ts";
+import { estimateMissingCosts } from "./recipe-backfill.ts";
 
 // Debug-gated logger: emits only when DEBUG is set, so production logs stay
 // quiet (avoids unconditional console.log per project style). console.error
@@ -724,15 +724,15 @@ app.post(
   },
 );
 
-// Estimate a per-serving GBP cost for recipes that lack one, via Gemini
-// (gemini-2.5-flash-lite). Resumable + throttled: only recipes missing
-// cost_per_serving_gbp are priced, so re-running continues where a tight
-// free-tier daily quota left off. Pass { maxBatches } to price in chunks.
+// Estimate a per-serving GBP cost for recipes that lack one, via Claude Haiku.
+// Resumable + throttled: only recipes missing cost_per_serving_gbp are priced,
+// so re-running continues where a previous run left off. Pass { maxBatches } to
+// price in chunks.
 app.post("/make-server-dbaf6019/admin/estimate-recipe-costs", requireAuth, requireAdmin, async (c) => {
   try {
-    const apiKey = Deno.env.get("GEMINI_API_KEY");
+    const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
     if (!apiKey) {
-      return c.json({ error: "GEMINI_API_KEY is not configured" }, 500);
+      return c.json({ error: "ANTHROPIC_API_KEY is not configured" }, 500);
     }
     const body = await c.req.json().catch(() => ({}));
     // Default ~100 recipes/run (5 batches of 20): enough to make progress in a
