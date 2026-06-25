@@ -8,6 +8,7 @@ import { vStr, vNum, vStrArr, vArr, timingSafeEqual } from "./validate.ts";
 import * as kv from "./kv_store.tsx";
 import { ALL_RECIPES, NewRecipe } from "./recipe-data.ts";
 import { toMealPlanMeal, toSwapOption, getRecipesByMealType, getAllRecipesFromDB, getRecipesByFocusType, getSleepFriendlyRecipes } from "./recipe-adapter.ts";
+import { recipeCostPerServing } from "./recipe-cost.ts";
 import { classifyRecipe } from "./focus-classifier.ts";
 import { generateRecipeQueue, getQueueWeekAsMealPlan, getQueueWeekShoppingList, swapQueueMeal, RecipeQueue } from "./recipe-queue.ts";
 import { generateImageQuery, enhanceImageQuery } from "./image-query-helper.ts";
@@ -2239,7 +2240,7 @@ app.post("/make-server-dbaf6019/admin/validate-nutrition", requireAuth, requireA
 // Track a meal as cooked or uncooked
 app.post("/make-server-dbaf6019/track-meal-cooked", requireAuth, async (c) => {
   try {
-    const { mealId, date, recipeId, recipeName, mealCost, category, isCooked } = await c.req.json();
+    const { mealId, date, recipeId, recipeName, category, isCooked } = await c.req.json();
     const userId = getUserId(c);
 
     if (!mealId || !date) {
@@ -2253,12 +2254,21 @@ app.post("/make-server-dbaf6019/track-meal-cooked", requireAuth, async (c) => {
       return c.json({ success: true, action: 'removed' });
     }
 
+    // Derive the meal cost from the server's authoritative recipe price rather
+    // than trusting a client-supplied value — so the Money-Saved stat is
+    // accurate and can't be spoofed. Falls back to the flat estimate when the
+    // recipe can't be found (recipeCostPerServing applies it for unpriced too).
+    const lookupId = recipeId || mealId;
+    const allRecipes = await getAllRecipesFromDB();
+    const recipe = allRecipes.find((r) => String(r.id) === String(lookupId));
+    const mealCost = recipe ? recipeCostPerServing(recipe) : 0;
+
     await kv.set(key, {
       mealId,
       date,
       recipeId: recipeId || mealId,
       recipeName: recipeName || '',
-      mealCost: mealCost || 0,
+      mealCost,
       category: category || '',
       cookedAt: new Date().toISOString(),
     });
