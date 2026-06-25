@@ -735,10 +735,10 @@ app.post("/make-server-dbaf6019/admin/estimate-recipe-costs", requireAuth, requi
       return c.json({ error: "GEMINI_API_KEY is not configured" }, 500);
     }
     const body = await c.req.json().catch(() => ({}));
-    // Small default chunk (~36 recipes) so one run stays well under the edge
-    // timeout even when transient 5xx retries add delay; pass a larger
-    // maxBatches to do more at once. The run is resumable, so re-running continues.
-    const maxBatches = vNum(body.maxBatches, 1, 1000, 3);
+    // Default ~100 recipes/run (5 batches of 20): enough to make progress in a
+    // few taps, but bounded so the run stays under the edge timeout and the
+    // free-tier per-minute request cap. Resumable, so re-running continues.
+    const maxBatches = vNum(body.maxBatches, 1, 1000, 5);
     const allRecipes = await getAllRecipesFromDB();
 
     // Persist each batch as it's priced, so a timeout never loses finished work.

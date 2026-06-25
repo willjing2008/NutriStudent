@@ -134,6 +134,11 @@ async function callGemini(prompt: string, apiKey: string): Promise<string> {
     const err = await res.json().catch(() => ({}));
     const error = new Error(`Gemini ${res.status}: ${err?.error?.message ?? res.statusText}`);
     (error as Error & { status?: number }).status = res.status;
+    // Honour the server's RetryInfo (e.g. "1.773s") so 429 backoff waits exactly
+    // as long as Gemini asks, instead of guessing — fixes per-minute rate limits.
+    const retry = (err?.error?.details ?? []).find((d: { retryDelay?: string }) => d?.retryDelay)?.retryDelay;
+    const secs = typeof retry === "string" ? parseFloat(retry) : NaN;
+    if (Number.isFinite(secs)) (error as Error & { retryMs?: number }).retryMs = Math.ceil(secs * 1000);
     throw error;
   }
   const data = await res.json();
@@ -174,8 +179,10 @@ export async function estimateMissingCosts(
     onPriced?: (recipes: NewRecipe[]) => Promise<void>;
   } = {},
 ): Promise<{ pricedRecipes: NewRecipe[]; summary: BackfillSummary }> {
-  const batchSize = opts.batchSize ?? 12;
-  const throttleMs = opts.throttleMs ?? 1500;
+  // Larger batches = fewer Gemini requests for the same recipes, and a slower
+  // throttle keeps us under the free-tier per-minute request cap (~20/min).
+  const batchSize = opts.batchSize ?? 20;
+  const throttleMs = opts.throttleMs ?? 3500;
   const todo = allRecipes.filter(r => r.cost_per_serving_gbp == null);
   const batches = chunk(todo, batchSize);
   const cap = Math.min(opts.maxBatches ?? batches.length, batches.length);
@@ -201,8 +208,11 @@ export async function estimateMissingCosts(
         // backoff would time out the request and lose the not-yet-persisted work.
         // Failures stay queued and the run is resumable, so re-running continues.
         const transient = status === 429 || (status !== undefined && status >= 500);
-        if (transient && attempt < 2) {
-          await sleep(Math.min(throttleMs * 2 ** (attempt + 1), 4000));
+        if (transient && attempt < 3) {
+          // Prefer the server's requested delay; otherwise capped exponential
+          // backoff. Cap keeps a run within the edge-function time budget.
+          const asked = (error as Error & { retryMs?: number }).retryMs ?? 0;
+          await sleep(Math.min(Math.max(asked, throttleMs * 2 ** attempt), 8000));
           continue;
         }
         // Genuine failure (schema 400, malformed JSON, auth, network) — surface it
