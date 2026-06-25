@@ -3,19 +3,31 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MealSwapModal } from './MealSwapModal';
 
 // --- IO mocks -------------------------------------------------------------
-// MealSwapModal hits three apiClient helpers:
-//   publicPost('get-swap-options')          -> Browse tab options (on mount)
+// MealSwapModal hits these apiClient helpers (all authed — get-swap-options is a
+// premium route gated server-side, so it sends the session JWT):
+//   authedPost('get-swap-options')          -> Browse tab options (on mount)
 //   authedPost('list-community-recipes')    -> Community tab (on switch)
 //   authedPost('toggle-community-like')     -> like button
 //   authedPost('save-community-recipe')     -> Create tab "share" path
 //   authedFetch('upload-recipe-image')      -> Create tab image upload
 // We control all of them so the unit never touches the network.
-const { publicPost, authedPost, authedFetch } = vi.hoisted(() => ({
-  publicPost: vi.fn(),
+const { authedPost, authedFetch } = vi.hoisted(() => ({
   authedPost: vi.fn(),
   authedFetch: vi.fn(),
 }));
-vi.mock('../utils/apiClient', () => ({ publicPost, authedPost, authedFetch }));
+vi.mock('../utils/apiClient', () => ({ authedPost, authedFetch }));
+
+// authedPost serves several endpoints with different response shapes; dispatch
+// by endpoint so each test gets the right payload from one shared mock.
+function mockAuthedPost(over: { swapOptions?: unknown[]; recipes?: unknown[] } = {}) {
+  const swapOptions = over.swapOptions;
+  const recipes = over.recipes ?? [];
+  authedPost.mockImplementation((endpoint: string) => {
+    if (endpoint === 'get-swap-options') return Promise.resolve({ swapOptions });
+    if (endpoint === 'list-community-recipes') return Promise.resolve({ recipes });
+    return Promise.resolve({});
+  });
+}
 
 // The component reads the current user via supabase.auth.getUser() on mount
 // (needed before the Community fetch fires). Stub the shared client.
@@ -121,19 +133,16 @@ function renderModal(overrides: Partial<Parameters<typeof MealSwapModal>[0]> = {
 }
 
 beforeEach(() => {
-  publicPost.mockReset();
   authedPost.mockReset();
   authedFetch.mockReset();
   getUser.mockReset();
 
-  // Default: Browse fetch returns two options.
-  publicPost.mockResolvedValue({ swapOptions: [optionHigher, optionLower] });
+  // Default: Browse fetch returns two options; community list is empty.
+  mockAuthedPost({ swapOptions: [optionHigher, optionLower] });
   // Default: a logged-in user (so the Community fetch can fire).
   getUser.mockResolvedValue({
     data: { user: { id: 'user-1', email: 'will@example.com', user_metadata: {} } },
   });
-  // Default: community list is empty (override per-test as needed).
-  authedPost.mockResolvedValue({ recipes: [] });
 });
 
 describe('MealSwapModal — Browse tab', () => {
@@ -142,7 +151,7 @@ describe('MealSwapModal — Browse tab', () => {
 
     // get-swap-options is fired on mount with the current meal context.
     await waitFor(() =>
-      expect(publicPost).toHaveBeenCalledWith(
+      expect(authedPost).toHaveBeenCalledWith(
         'get-swap-options',
         expect.objectContaining({
           currentRecipeId: 'meal-current',
@@ -202,7 +211,7 @@ describe('MealSwapModal — Browse tab', () => {
   });
 
   it('shows the empty state when no swap options come back', async () => {
-    publicPost.mockResolvedValue({ swapOptions: [] });
+    mockAuthedPost({ swapOptions: [] });
     renderModal();
 
     expect(
@@ -257,7 +266,7 @@ describe('MealSwapModal — Community tab', () => {
   });
 
   it('renders community recipes and enables swapping a selected one', async () => {
-    authedPost.mockResolvedValue({ recipes: [communityRecipe] });
+    mockAuthedPost({ swapOptions: [optionHigher, optionLower], recipes: [communityRecipe] });
     const { onSwap, onClose } = renderModal();
 
     fireEvent.click(screen.getByRole('button', { name: 'Community' }));

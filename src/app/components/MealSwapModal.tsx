@@ -2,7 +2,7 @@ import { X, Loader2, ArrowRight, TrendingUp, TrendingDown, Minus, Clock, Users, 
 import { useState, useEffect, useRef } from 'react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { supabase } from '../../utils/supabaseClient';
-import { authedPost, authedFetch, publicPost } from '../utils/apiClient';
+import { authedPost, authedFetch } from '../utils/apiClient';
 
 const LOCAL_IMAGE_FALLBACK =
   'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjI0MCIgdmlld0JveD0iMCAwIDMyMCAyNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjMyMCIgaGVpZ2h0PSIyNDAiIGZpbGw9IiMxNDJBMUQiLz48Y2lyY2xlIGN4PSIxNjAiIGN5PSIxMDAiIHI9IjQwIiBmaWxsPSIjMUU0MDI5Ii8+PHJlY3QgeD0iNzIiIHk9IjE2MiIgd2lkdGg9IjE3NiIgaGVpZ2h0PSIxMiIgcng9IjYiIGZpbGw9IiMyMkM1NUUiIG9wYWNpdHk9IjAuNzUiLz48L3N2Zz4=';
@@ -265,7 +265,7 @@ export function MealSwapModal({
     setError(null);
 
     try {
-      const data = await publicPost<{ swapOptions?: SwapOption[] }>('get-swap-options', {
+      const data = await authedPost<{ swapOptions?: SwapOption[] }>('get-swap-options', {
         currentRecipeId: currentMeal.id,
         goal: goal,
         currentMealIds: currentMealIds,

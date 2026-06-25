@@ -4,7 +4,7 @@ import { getNutritionTargets } from '../utils/nutritionTargets';
 import { getLocalTodayISO, parseLocalDate, initialPlanOffset } from '../utils/dateUtils';
 import { toast } from 'sonner';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { authedPost, publicPost } from '../utils/apiClient';
+import { authedPost } from '../utils/apiClient';
 import { ShoppingMode } from './ShoppingMode';
 import { getRecipeImageWithCache } from '../utils/recipeImages';
 import { MealSwapModal } from './MealSwapModal';
@@ -488,7 +488,7 @@ export function RecommendationsStep({
     setError(null);
 
     try {
-      const data = await publicPost<{ mealPlan?: any }>('generate-meal-plan', {
+      const data = await authedPost<{ mealPlan?: any }>('generate-meal-plan', {
         storeName: 'Generic UK Supermarket',
         mealsPerDay: preferences.mealsPerDay,
         budget: preferences.budget,
@@ -553,7 +553,7 @@ export function RecommendationsStep({
     try {
       const currentMealIds = mealPlan.meals.map(m => m.id);
 
-      const data = await publicPost<{ replacementMeal: any }>('shuffle-recipe', {
+      const data = await authedPost<{ replacementMeal: any }>('shuffle-recipe', {
         currentRecipeId: mealId,
         goal: preferences.goal,
         currentMealIds: currentMealIds,

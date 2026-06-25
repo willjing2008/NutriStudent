@@ -4,6 +4,7 @@ import { logger } from "npm:hono/logger";
 import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
 import { requireAuth, requireAdmin, getUserId, isUuid, grantAdminByEmail } from "./auth-middleware.ts";
 import { rateLimit } from "./rate-limit.ts";
+import { requirePro } from "./entitlement.ts";
 import { vStr, vNum, vStrArr, vArr, timingSafeEqual } from "./validate.ts";
 import * as kv from "./kv_store.tsx";
 import { ALL_RECIPES, NewRecipe } from "./recipe-data.ts";
@@ -389,7 +390,7 @@ app.post("/make-server-dbaf6019/fetch-store-ingredients", requireAuth, async (c)
 });
 
 // Endpoint to generate optimal meal plan
-app.post("/make-server-dbaf6019/generate-meal-plan", rateLimit({ name: "generate-meal-plan", max: 15, windowSec: 60 }), async (c) => {
+app.post("/make-server-dbaf6019/generate-meal-plan", requireAuth, requirePro, rateLimit({ name: "generate-meal-plan", max: 15, windowSec: 60 }), async (c) => {
   try {
     const { storeName, mealsPerDay, budget, goal, shoppingDate, maxCookingTime, avoidIngredients, dietaryRestrictions, selectedMealSlots } = await c.req.json();
 
@@ -977,7 +978,7 @@ app.post("/make-server-dbaf6019/admin/search-recipes", requireAuth, requireAdmin
 // ========== SHUFFLE/REPLACE RECIPE ENDPOINT ==========
 
 // Smart recipe replacement - find similar recipe by nutrition
-app.post("/make-server-dbaf6019/shuffle-recipe", rateLimit({ name: "shuffle-recipe", max: 30, windowSec: 60 }), async (c) => {
+app.post("/make-server-dbaf6019/shuffle-recipe", requireAuth, requirePro, rateLimit({ name: "shuffle-recipe", max: 30, windowSec: 60 }), async (c) => {
   try {
     const { currentRecipeId, goal, currentMealIds, maxCookingTime } = await c.req.json();
 
@@ -1047,7 +1048,7 @@ app.post("/make-server-dbaf6019/shuffle-recipe", rateLimit({ name: "shuffle-reci
 });
 
 // Get multiple meal swap options for user to choose from
-app.post("/make-server-dbaf6019/get-swap-options", rateLimit({ name: "get-swap-options", max: 30, windowSec: 60 }), async (c) => {
+app.post("/make-server-dbaf6019/get-swap-options", requireAuth, requirePro, rateLimit({ name: "get-swap-options", max: 30, windowSec: 60 }), async (c) => {
   try {
     const { currentRecipeId, goal, currentMealIds, maxCookingTime, limit = 6 } = await c.req.json();
 
@@ -1257,7 +1258,7 @@ app.post("/make-server-dbaf6019/get-meal-conflicts", requireAuth, async (c) => {
 // ========== RECIPE QUEUE ENDPOINTS ==========
 
 // Generate a 28-day recipe queue for a user
-app.post("/make-server-dbaf6019/generate-recipe-queue", requireAuth, rateLimit({ name: "generate-recipe-queue", max: 10, windowSec: 60 }), async (c) => {
+app.post("/make-server-dbaf6019/generate-recipe-queue", requireAuth, requirePro, rateLimit({ name: "generate-recipe-queue", max: 10, windowSec: 60 }), async (c) => {
   try {
     const { mealsPerDay, goal, avoidIngredients, maxCookingTime, budget, selectedMealSlots } = await c.req.json();
     const userId = getUserId(c);
