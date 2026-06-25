@@ -818,6 +818,9 @@ app.get("/make-server-dbaf6019/admin/all-recipes", requireAuth, requireAdmin, as
           cuisine: recipe.cuisine,
           total_time_minutes: recipe.total_time_minutes,
           rating: recipe.rating,
+          // Included so the admin dashboard's "Priced: X / Y" progress bar can
+          // tell which recipes already have a cost estimate.
+          cost_per_serving_gbp: recipe.cost_per_serving_gbp,
         };
       });
 
