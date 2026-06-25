@@ -390,7 +390,7 @@ app.post("/make-server-dbaf6019/fetch-store-ingredients", requireAuth, async (c)
 });
 
 // Endpoint to generate optimal meal plan
-app.post("/make-server-dbaf6019/generate-meal-plan", requireAuth, requirePro, rateLimit({ name: "generate-meal-plan", max: 15, windowSec: 60 }), async (c) => {
+app.post("/make-server-dbaf6019/generate-meal-plan", requireAuth, rateLimit({ name: "generate-meal-plan", max: 15, windowSec: 60 }), requirePro, async (c) => {
   try {
     const { storeName, mealsPerDay, budget, goal, shoppingDate, maxCookingTime, avoidIngredients, dietaryRestrictions, selectedMealSlots } = await c.req.json();
 
@@ -978,7 +978,7 @@ app.post("/make-server-dbaf6019/admin/search-recipes", requireAuth, requireAdmin
 // ========== SHUFFLE/REPLACE RECIPE ENDPOINT ==========
 
 // Smart recipe replacement - find similar recipe by nutrition
-app.post("/make-server-dbaf6019/shuffle-recipe", requireAuth, requirePro, rateLimit({ name: "shuffle-recipe", max: 30, windowSec: 60 }), async (c) => {
+app.post("/make-server-dbaf6019/shuffle-recipe", requireAuth, rateLimit({ name: "shuffle-recipe", max: 30, windowSec: 60 }), requirePro, async (c) => {
   try {
     const { currentRecipeId, goal, currentMealIds, maxCookingTime } = await c.req.json();
 
@@ -1048,7 +1048,7 @@ app.post("/make-server-dbaf6019/shuffle-recipe", requireAuth, requirePro, rateLi
 });
 
 // Get multiple meal swap options for user to choose from
-app.post("/make-server-dbaf6019/get-swap-options", requireAuth, requirePro, rateLimit({ name: "get-swap-options", max: 30, windowSec: 60 }), async (c) => {
+app.post("/make-server-dbaf6019/get-swap-options", requireAuth, rateLimit({ name: "get-swap-options", max: 30, windowSec: 60 }), requirePro, async (c) => {
   try {
     const { currentRecipeId, goal, currentMealIds, maxCookingTime, limit = 6 } = await c.req.json();
 
@@ -1258,7 +1258,7 @@ app.post("/make-server-dbaf6019/get-meal-conflicts", requireAuth, async (c) => {
 // ========== RECIPE QUEUE ENDPOINTS ==========
 
 // Generate a 28-day recipe queue for a user
-app.post("/make-server-dbaf6019/generate-recipe-queue", requireAuth, requirePro, rateLimit({ name: "generate-recipe-queue", max: 10, windowSec: 60 }), async (c) => {
+app.post("/make-server-dbaf6019/generate-recipe-queue", requireAuth, rateLimit({ name: "generate-recipe-queue", max: 10, windowSec: 60 }), requirePro, async (c) => {
   try {
     const { mealsPerDay, goal, avoidIngredients, maxCookingTime, budget, selectedMealSlots } = await c.req.json();
     const userId = getUserId(c);
