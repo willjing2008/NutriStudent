@@ -7,11 +7,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 npm run dev          # Start Vite dev server (localhost:5173)
 npm run build        # Production build → dist/
+npm run typecheck    # tsc --noEmit (excludes supabase/)
+npm test             # Vitest unit/integration tests
+npm run test:e2e     # Playwright E2E smoke tests (needs `npx playwright install chromium`)
 npx cap sync ios     # Sync web assets + native dependencies to iOS
 npx cap open ios     # Open Xcode project
 ```
 
-There are no test or lint scripts configured.
+See `docs/DEPLOYMENT.md` for the full quality-gate and release workflow.
 
 ## Architecture Overview
 
@@ -65,7 +68,7 @@ Frontend calls Supabase edge functions at:
 ```
 https://{projectId}.supabase.co/functions/v1/make-server-dbaf6019/{endpoint}
 ```
-With `Authorization: Bearer {anonKey}` header. The edge function uses Hono routing and a `kv_store` table for persistence.
+Authed routes require the caller's real session JWT via `src/app/utils/apiClient.ts` (`authedFetch`/`authedPost`/`authedGet`); the anon key is only for genuinely public endpoints. The edge function uses Hono routing and a `kv_store` table for persistence. See `AGENTS.md` for the backend auth & paywall model.
 
 ### Theming
 

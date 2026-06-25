@@ -94,7 +94,7 @@ This preserves login/session state in the simulator while refreshing web assets.
 Track these before release:
 
 - Replace the sandbox RevenueCat key with the production iOS public key.
-- Add RevenueCat webhook + webhook secret, then enforce server-side entitlements.
+- Set `REVENUECAT_SECRET_KEY` in production: server-side entitlement enforcement (`entitlement.ts`) is implemented but fails open without it. Optionally add a RevenueCat webhook + webhook secret for push-based updates.
 - Remove the web paywall bypass in `useSubscription.tsx` once web policy is decided.
 - Add account deletion flow and endpoint.
 - Add `PrivacyInfo.xcprivacy`, legal links, EULA, privacy labels, metadata, and screenshots.
