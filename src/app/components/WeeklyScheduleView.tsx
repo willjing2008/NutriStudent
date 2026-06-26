@@ -15,6 +15,8 @@ interface WeeklyScheduleViewProps {
   onRemoveMealTimeOverride?: (dayOfWeek: number, mealSlot: string) => void;
   currentWeekMeals?: any[];
   mealTimes?: MealTimes;
+  /** Day-of-week (0=Sun…6=Sat) that plan day 1 falls on. Defaults to Monday. */
+  weekStartDow?: number;
 }
 
 type PopoverTarget =
@@ -57,6 +59,15 @@ function addHourToTime(time: string): string {
   return `${String(Math.min(h + 1, 23)).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
+/**
+ * Column day-of-week (0=Sun…6=Sat) for a 1-based plan day, anchored to the
+ * weekday plan-day-1 actually falls on. `dayNumber % 7` previously hard-assumed
+ * a Monday start and mapped day 7 to Sunday's column regardless of start day.
+ */
+export function mealColumnDow(weekStartDow: number, dayNumber: number): number {
+  return (((weekStartDow + (dayNumber - 1)) % 7) + 7) % 7;
+}
+
 function getMealSlotTimes(mealTimes?: MealTimes) {
   const bt = mealTimes?.breakfast || '08:00';
   const lt = mealTimes?.lunch || '12:00';
@@ -80,6 +91,7 @@ export function WeeklyScheduleView({
   onRemoveMealTimeOverride,
   currentWeekMeals,
   mealTimes,
+  weekStartDow = 1,
 }: WeeklyScheduleViewProps) {
   const MEAL_SLOT_TIMES = getMealSlotTimes(mealTimes);
   const classes = schedule?.classes || [];
@@ -103,7 +115,7 @@ export function WeeklyScheduleView({
   const mealsByDayAndSlot = new Map<string, any>();
   if (currentWeekMeals) {
     for (const meal of currentWeekMeals) {
-      const dow = meal.dayNumber % 7;
+      const dow = mealColumnDow(weekStartDow, meal.dayNumber);
       const slot = meal.category || 'dinner';
       mealsByDayAndSlot.set(`${dow}-${slot}`, meal);
     }

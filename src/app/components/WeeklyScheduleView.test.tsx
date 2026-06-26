@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
-import { WeeklyScheduleView } from './WeeklyScheduleView';
+import { WeeklyScheduleView, mealColumnDow } from './WeeklyScheduleView';
 import type { AcademicSchedule, ClassEntry, MealConflict } from '../types/calendar';
 
 // WeeklyScheduleView does not call useLanguage itself, but it is mocked per the
@@ -293,6 +293,35 @@ describe('WeeklyScheduleView — empty days', () => {
 
     // No meal-name text exists in the Monday column; only the emoji placeholder.
     expect(screen.queryByText('MonMeal')).not.toBeInTheDocument();
+  });
+});
+
+// ── Start-weekday anchoring (regression: plan-day-1 vs real start day) ───────
+
+describe('WeeklyScheduleView — weekStartDow anchoring', () => {
+  it('mealColumnDow anchors day 1 to the start weekday', () => {
+    // Monday start (default) reproduces the historical dayNumber % 7 mapping.
+    expect(mealColumnDow(1, 1)).toBe(1); // Mon
+    expect(mealColumnDow(1, 7)).toBe(0); // Sun (boundary)
+    // Wednesday start (3): day 1 -> Wed, day 5 wraps to Sun.
+    expect(mealColumnDow(3, 1)).toBe(3);
+    expect(mealColumnDow(3, 5)).toBe(0);
+    // Sunday start (0) must not produce a negative column.
+    expect(mealColumnDow(0, 1)).toBe(0);
+    expect(mealColumnDow(0, 7)).toBe(6);
+  });
+
+  it('places plan day 1 under the real start weekday column when provided', () => {
+    // Plan starts on a Wednesday (dayIdx 3) — day 1's meal belongs in that column,
+    // not the Monday column the old `dayNumber % 7` would have used.
+    renderView({
+      weekStartDow: 3,
+      currentWeekMeals: [makeMeal({ dayNumber: 1, name: 'Day1Meal' })],
+    });
+
+    const block = screen.getByText('Day1Meal').closest('button')!;
+    expect(block.style.left).toBe(expectedLeft(3)); // Wed
+    expect(block.style.left).not.toBe(expectedLeft(1)); // not Mon
   });
 });
 

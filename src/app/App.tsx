@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { WelcomeStep } from './components/WelcomeStep';
 import { LocationStep } from './components/LocationStep';
 import { PreferencesStep } from './components/PreferencesStep';
@@ -95,6 +95,10 @@ export default function App() {
     mealTimes: { breakfast: '08:00', lunch: '12:00', dinner: '18:00' },
     selectedMealSlots: ['breakfast', 'lunch', 'dinner'],
   });
+
+  // True once the user has edited preferences. An in-flight saved-plan load
+  // must not clobber those edits with the persisted (older) preferences.
+  const preferencesEditedRef = useRef(false);
 
   // Shopping list ingredients (derived from meal plan)
   const shoppingIngredients = savedMealPlan?.meals?.flatMap((meal: any) => 
@@ -229,7 +233,9 @@ export default function App() {
       if (planData.mealPlan) {
         console.log('Found saved meal plan');
         setSavedMealPlan(planData.mealPlan);
-        if (planData.preferences) {
+        // Don't overwrite preferences the user has already started editing while
+        // this load was in flight (otherwise the late response wins, losing edits).
+        if (planData.preferences && !preferencesEditedRef.current) {
           setPreferences(planData.preferences);
           // Enrich plan metadata with goal from preferences
           setSavedPlansHistory(prev => prev.map((p, i) =>
@@ -248,11 +254,6 @@ export default function App() {
     if (!user) return;
 
     try {
-      // If replacing an existing plan, delete it first
-      if (replacePlanId) {
-        await deleteSavedMealPlanById(replacePlanId);
-      }
-
       const data = await authedPost<{ success?: boolean; planId?: string }>('save-meal-plan', {
         userId: user.id,
         mealPlan,
@@ -261,6 +262,18 @@ export default function App() {
       });
 
       if (data.success) {
+        // Only delete the old plan once the new save is confirmed, so a failed
+        // save can never leave the user with no plan at all.
+        if (replacePlanId) {
+          try {
+            await deleteSavedMealPlanById(replacePlanId);
+          } catch (err) {
+            // The new plan is already saved; a failed cleanup of the old plan
+            // is non-fatal (it just leaves a duplicate), so don't fail the save.
+            console.error('Failed to delete replaced plan:', err);
+          }
+        }
+
         console.log('Meal plan saved successfully');
         setSavedMealPlan(mealPlan);
         const newPlanId = data.planId || Date.now().toString();
@@ -291,22 +304,21 @@ export default function App() {
   const deleteSavedMealPlanById = async (planId: string) => {
     if (!user) return;
 
-    try {
-      const data = await authedPost<{ success?: boolean }>('delete-meal-plan-by-id', {
-        userId: user.id,
-        planId,
-      });
+    // Let errors propagate so callers can roll back optimistic UI and surface a
+    // message — a swallowed failure made deleted plans silently reappear.
+    const data = await authedPost<{ success?: boolean }>('delete-meal-plan-by-id', {
+      userId: user.id,
+      planId,
+    });
 
-      if (data.success) {
-        console.log('Meal plan deleted successfully:', planId);
-        setSavedPlansHistory(prev => prev.filter(p => p.id !== planId));
-        if (planId === activePlanId) {
-          setSavedMealPlan(null);
-          setActivePlanId(null);
-        }
-      }
-    } catch (err) {
-      console.error('Error deleting meal plan:', err);
+    if (!data.success) {
+      throw new Error('The server did not confirm the delete.');
+    }
+
+    setSavedPlansHistory(prev => prev.filter(p => p.id !== planId));
+    if (planId === activePlanId) {
+      setSavedMealPlan(null);
+      setActivePlanId(null);
     }
   };
 
@@ -358,10 +370,12 @@ export default function App() {
   };
 
   const updatePreferences = (updates: Partial<UserPreferences>) => {
+    preferencesEditedRef.current = true;
     setPreferences(prev => ({ ...prev, ...updates }));
   };
 
   const resetPreferences = () => {
+    preferencesEditedRef.current = false;
     setPreferences({
       gender: null,
       location: '',

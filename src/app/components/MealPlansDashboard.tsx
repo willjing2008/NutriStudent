@@ -106,6 +106,7 @@ export function MealPlansDashboard({
 
   const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const handleRename = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -125,10 +126,17 @@ export function MealPlansDashboard({
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setSavedPlansState(prev => prev.filter(p => p.id !== id));
+    if (!onDeletePlan) return;
     setEditingPlanId(null);
-    if (onDeletePlan) {
+    setDeleteError(null);
+    // Confirm the delete server-side BEFORE removing from the UI, so a failed
+    // delete doesn't show a phantom success that reappears on refresh.
+    try {
       await onDeletePlan(id);
+      setSavedPlansState(prev => prev.filter(p => p.id !== id));
+    } catch (err) {
+      console.error('Failed to delete plan:', err);
+      setDeleteError(getUserFacingApiErrorMessage(err));
     }
   };
 
@@ -327,6 +335,11 @@ export function MealPlansDashboard({
         {(activeTab === 'active' || activeTab === 'saved') && (
           <div>
             <h2 className="text-white font-semibold mb-4">{t("savedPlans")}</h2>
+            {deleteError && (
+              <div role="alert" className="mb-3 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-300">
+                {deleteError}
+              </div>
+            )}
             <div className="flex gap-4 overflow-x-auto pb-2 hide-scrollbar -mx-5 px-5">
               {savedPlansState.length === 0 ? (
               <div className="w-full text-center py-8">

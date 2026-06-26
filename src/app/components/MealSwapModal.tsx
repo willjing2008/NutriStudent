@@ -2,7 +2,7 @@ import { X, Loader2, ArrowRight, TrendingUp, TrendingDown, Minus, Clock, Users, 
 import { useState, useEffect, useRef } from 'react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { supabase } from '../../utils/supabaseClient';
-import { authedPost, authedFetch } from '../utils/apiClient';
+import { authedPost, authedFetch, getUserFacingApiErrorMessage } from '../utils/apiClient';
 
 const LOCAL_IMAGE_FALLBACK =
   'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjI0MCIgdmlld0JveD0iMCAwIDMyMCAyNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjMyMCIgaGVpZ2h0PSIyNDAiIGZpbGw9IiMxNDJBMUQiLz48Y2lyY2xlIGN4PSIxNjAiIGN5PSIxMDAiIHI9IjQwIiBmaWxsPSIjMUU0MDI5Ii8+PHJlY3QgeD0iNzIiIHk9IjE2MiIgd2lkdGg9IjE3NiIgaGVpZ2h0PSIxMiIgcng9IjYiIGZpbGw9IiMyMkM1NUUiIG9wYWNpdHk9IjAuNzUiLz48L3N2Zz4=';
@@ -152,6 +152,7 @@ export function MealSwapModal({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploadingRecipe, setUploadingRecipe] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Community state
@@ -181,12 +182,16 @@ export function MealSwapModal({
   // Fetch current user on mount
   useEffect(() => {
     const fetchUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setCurrentUser({
-          id: user.id,
-          name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Anonymous',
-        });
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          setCurrentUser({
+            id: user.id,
+            name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Anonymous',
+          });
+        }
+      } catch (err) {
+        console.error('Failed to fetch current user:', err);
       }
     };
     fetchUser();
@@ -314,15 +319,21 @@ export function MealSwapModal({
   };
 
   const handleCreateRecipe = async () => {
-    if (!imageFile) return;
+    if (!imageFile) {
+      setCreateError('Please add a photo of your recipe before creating it.');
+      return;
+    }
     setUploadingRecipe(true);
+    setCreateError(null);
 
     const filteredIngredients = recipeIngredients.filter(i => i.trim());
     const filteredInstructions = recipeInstructions.filter(i => i.trim());
     const recipeId = `custom-${Date.now()}`;
 
-    // Upload image to Supabase Storage
-    let imageUrl = imagePreview || LOCAL_IMAGE_FALLBACK;
+    // Upload image to Supabase Storage. A failed upload must NOT silently fall
+    // back to a placeholder — the user thinks their photo uploaded — so we abort
+    // and surface the error instead.
+    let imageUrl: string;
     try {
       const formData = new FormData();
       formData.append('image', imageFile);
@@ -335,12 +346,19 @@ export function MealSwapModal({
         method: 'POST',
         body: formData,
       });
-      const data = await response.json();
-      if (data.imageUrl) {
-        imageUrl = data.imageUrl;
+      if (!response.ok) {
+        throw new Error(`Image upload failed (${response.status}). Please try again.`);
       }
+      const data = await response.json();
+      if (!data.imageUrl) {
+        throw new Error('Image upload did not return an image. Please try again.');
+      }
+      imageUrl = data.imageUrl;
     } catch (err) {
-      console.error('Image upload failed, using local preview:', err);
+      console.error('Image upload failed:', err);
+      setCreateError(getUserFacingApiErrorMessage(err, 'Image upload failed. Please try again.'));
+      setUploadingRecipe(false);
+      return;
     }
 
     const customMeal = {
@@ -372,7 +390,8 @@ export function MealSwapModal({
       timesCooked: 0,
     };
 
-    // Share with community if checked
+    // Share with community if checked. A failed share must be surfaced, not
+    // swallowed — otherwise the user believes their recipe was shared.
     if (shareWithCommunity && currentUser) {
       try {
         await authedPost('save-community-recipe', {
@@ -382,6 +401,9 @@ export function MealSwapModal({
         });
       } catch (err) {
         console.error('Failed to share recipe with community:', err);
+        setCreateError(getUserFacingApiErrorMessage(err, 'Failed to share your recipe with the community. Please try again.'));
+        setUploadingRecipe(false);
+        return;
       }
     }
 
@@ -1147,7 +1169,9 @@ export function MealSwapModal({
         {view === 'create' && (
           <div className="flex items-center justify-between">
             <div className="text-sm text-[#6B7280]">
-              {canSubmitRecipe
+              {createError ? (
+                <span role="alert" className="text-red-400">{createError}</span>
+              ) : canSubmitRecipe
                 ? 'Ready to create your recipe'
                 : 'Fill in image, name, ingredients & instructions'}
             </div>
