@@ -10,7 +10,18 @@ import type {
 
 // ── Configuration ──────────────────────────────────────────────────────────────
 
-const REVENUECAT_API_KEY = 'test_dqGpabdLnErIJBfaBVIMvAAFMAH';
+const SANDBOX_IOS_API_KEY = 'test_dqGpabdLnErIJBfaBVIMvAAFMAH';
+
+// Read the real iOS public key from env; fall back to the sandbox key only when
+// unset (keeps local dev working, production must set VITE_REVENUECAT_IOS_API_KEY).
+const REVENUECAT_API_KEY =
+  import.meta.env.VITE_REVENUECAT_IOS_API_KEY || SANDBOX_IOS_API_KEY;
+
+if (!import.meta.env.VITE_REVENUECAT_IOS_API_KEY && import.meta.env.PROD) {
+  console.warn(
+    '[revenuecat] VITE_REVENUECAT_IOS_API_KEY is unset in a production build; falling back to the sandbox key.',
+  );
+}
 
 export const ENTITLEMENT_ID = 'NutriStudent Pro';
 

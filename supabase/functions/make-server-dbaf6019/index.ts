@@ -209,7 +209,7 @@ app.post("/make-server-dbaf6019/nearby-stores", rateLimit({ name: "nearby-stores
     return c.json({ stores });
   } catch (error: any) {
     log(`Error in /nearby-stores endpoint: ${error.message}`);
-    return c.json({ error: error.message || "Failed to fetch nearby stores" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -251,7 +251,7 @@ app.post("/make-server-dbaf6019/geocode-address", rateLimit({ name: "geocode", m
     });
   } catch (error: any) {
     log(`Error in /geocode-address endpoint: ${error.message}`);
-    return c.json({ error: error.message || "Failed to geocode address" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -385,7 +385,7 @@ app.post("/make-server-dbaf6019/fetch-store-ingredients", requireAuth, async (c)
     return c.json({ ingredients });
   } catch (error: any) {
     log(`Error in /fetch-store-ingredients endpoint: ${error.message}`);
-    return c.json({ error: error.message || "Failed to fetch ingredients" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -445,7 +445,7 @@ app.post("/make-server-dbaf6019/generate-meal-plan", requireAuth, rateLimit({ na
     return c.json({ mealPlan });
   } catch (error: any) {
     log(`Error in /generate-meal-plan endpoint: ${error.message}`);
-    return c.json({ error: error.message || "Failed to generate meal plan" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -643,7 +643,7 @@ app.post("/make-server-dbaf6019/init-recipes", requireAuth, requireAdmin, async 
     });
   } catch (error: any) {
     log(`Error initializing cuisine database: ${error.message}`);
-    return c.json({ error: error.message || "Failed to initialize recipes" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -683,7 +683,7 @@ app.post("/make-server-dbaf6019/classify-recipes", requireAuth, requireAdmin, as
       sleepCount,
     });
   } catch (error: any) {
-    return c.json({ error: error.message || "Failed to classify recipes" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -720,7 +720,7 @@ app.post(
       console.error(`[audit] admin role granted via bootstrap: ${targetEmail.toLowerCase()}`);
       return c.json({ message: `Granted admin to ${targetEmail}. Sign out and back in to refresh your session.` });
     } catch (error: any) {
-      return c.json({ error: error.message || "Bootstrap failed" }, 500);
+      return c.json({ error: "Internal server error" }, 500);
     }
   },
 );
@@ -754,7 +754,7 @@ app.post("/make-server-dbaf6019/admin/estimate-recipe-costs", requireAuth, requi
 
     return c.json({ message: "Recipe cost estimation complete", ...summary });
   } catch (error: any) {
-    return c.json({ error: error.message || "Failed to estimate recipe costs" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -797,7 +797,7 @@ app.get("/make-server-dbaf6019/admin/keys/:prefix", requireAuth, requireAdmin, a
     });
   } catch (error: any) {
     log(`Error fetching keys: ${error.message}`);
-    return c.json({ error: error.message || "Failed to fetch keys" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -831,7 +831,7 @@ app.get("/make-server-dbaf6019/admin/all-recipes", requireAuth, requireAdmin, as
     });
   } catch (error: any) {
     log(`Error fetching all recipes: ${error.message}`);
-    return c.json({ error: error.message || "Failed to fetch recipes" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -851,7 +851,7 @@ app.get("/make-server-dbaf6019/admin/recipe/:mealType/:recipeId", requireAuth, r
     return c.json({ key, recipe });
   } catch (error: any) {
     log(`Error fetching recipe: ${error.message}`);
-    return c.json({ error: error.message || "Failed to fetch recipe" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -874,7 +874,7 @@ app.post("/make-server-dbaf6019/admin/recipe", requireAuth, requireAdmin, async 
     });
   } catch (error: any) {
     log(`Error saving recipe: ${error.message}`);
-    return c.json({ error: error.message || "Failed to save recipe" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -902,7 +902,7 @@ app.patch("/make-server-dbaf6019/admin/recipe/:mealType/:recipeId", requireAuth,
     });
   } catch (error: any) {
     log(`Error updating recipe: ${error.message}`);
-    return c.json({ error: error.message || "Failed to update recipe" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -921,7 +921,7 @@ app.delete("/make-server-dbaf6019/admin/recipe/:mealType/:recipeId", requireAuth
     });
   } catch (error: any) {
     log(`Error deleting recipe: ${error.message}`);
-    return c.json({ error: error.message || "Failed to delete recipe" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -941,7 +941,7 @@ app.delete("/make-server-dbaf6019/admin/clear-all-recipes", requireAuth, require
     });
   } catch (error: any) {
     log(`Error clearing recipe data: ${error.message}`);
-    return c.json({ error: error.message || "Failed to clear data" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -971,7 +971,7 @@ app.post("/make-server-dbaf6019/admin/search-recipes", requireAuth, requireAdmin
     });
   } catch (error: any) {
     log(`Error searching recipes: ${error.message}`);
-    return c.json({ error: error.message || "Failed to search recipes" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -1043,7 +1043,7 @@ app.post("/make-server-dbaf6019/shuffle-recipe", requireAuth, rateLimit({ name: 
     });
   } catch (error: any) {
     log(`Error shuffling recipe: ${error.message}`);
-    return c.json({ error: error.message || "Failed to find replacement recipe" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -1114,7 +1114,7 @@ app.post("/make-server-dbaf6019/get-swap-options", requireAuth, rateLimit({ name
     });
   } catch (error: any) {
     log(`Error getting swap options: ${error.message}`);
-    return c.json({ error: error.message || "Failed to get swap options" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -1136,7 +1136,7 @@ app.post("/make-server-dbaf6019/save-academic-schedule", requireAuth, async (c) 
     await kv.set(`academic_schedule_${userId}`, JSON.stringify(schedule));
     return c.json({ schedule });
   } catch (error: any) {
-    return c.json({ error: error.message || "Failed to save academic schedule" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -1151,7 +1151,7 @@ app.post("/make-server-dbaf6019/get-academic-schedule", requireAuth, async (c) =
     const schedule = typeof raw === "string" ? JSON.parse(raw) : raw;
     return c.json({ schedule });
   } catch (error: any) {
-    return c.json({ error: error.message || "Failed to get academic schedule" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -1175,7 +1175,7 @@ app.post("/make-server-dbaf6019/check-testing-period", requireAuth, async (c) =>
       period: matchingPeriod || null,
     });
   } catch (error: any) {
-    return c.json({ error: error.message || "Failed to check testing period" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -1251,7 +1251,7 @@ app.post("/make-server-dbaf6019/get-meal-conflicts", requireAuth, async (c) => {
 
     return c.json({ conflicts });
   } catch (error: any) {
-    return c.json({ error: error.message || "Failed to get meal conflicts" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -1297,7 +1297,7 @@ app.post("/make-server-dbaf6019/generate-recipe-queue", requireAuth, rateLimit({
     log(`📋 Generated ${queue.meals.length}-meal queue for user ${userId} (focus=${focusMode})`);
     return c.json({ queue });
   } catch (error: any) {
-    return c.json({ error: error.message || "Failed to generate recipe queue" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -1314,7 +1314,7 @@ app.post("/make-server-dbaf6019/get-recipe-queue", requireAuth, async (c) => {
 
     return c.json({ queue, needsRefresh: unconsumed < 7 });
   } catch (error: any) {
-    return c.json({ error: error.message || "Failed to get recipe queue" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -1333,7 +1333,7 @@ app.post("/make-server-dbaf6019/get-queue-week", requireAuth, async (c) => {
 
     return c.json({ mealPlan });
   } catch (error: any) {
-    return c.json({ error: error.message || "Failed to get queue week" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -1367,7 +1367,7 @@ app.post("/make-server-dbaf6019/queue-swap-meal", requireAuth, async (c) => {
 
     return c.json({ mealPlan, queue });
   } catch (error: any) {
-    return c.json({ error: error.message || "Failed to swap queue meal" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -1405,7 +1405,7 @@ app.post("/make-server-dbaf6019/mark-queue-meal-consumed", requireAuth, async (c
 
     return c.json({ success: true });
   } catch (error: any) {
-    return c.json({ error: error.message || "Failed to mark meal consumed" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -1423,7 +1423,7 @@ app.post("/make-server-dbaf6019/get-queue-shopping-list", requireAuth, async (c)
 
     return c.json({ ingredients, weekNumber: weekNumber || 1 });
   } catch (error: any) {
-    return c.json({ error: error.message || "Failed to get queue shopping list" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -1459,7 +1459,7 @@ app.post("/make-server-dbaf6019/check-queue-testing-change", requireAuth, async 
         : "no_change",
     });
   } catch (error: any) {
-    return c.json({ error: error.message || "Failed to check queue testing change" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -1502,7 +1502,7 @@ app.post("/make-server-dbaf6019/auth/signup", async (c) => {
     });
   } catch (error: any) {
     log(`Error in signup endpoint: ${error.message}`);
-    return c.json({ error: error.message || "Failed to sign up" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -1521,7 +1521,7 @@ app.get("/make-server-dbaf6019/auth/profile", requireAuth, async (c) => {
     });
   } catch (error: any) {
     log(`Error in profile endpoint: ${error.message}`);
-    return c.json({ error: error.message || "Failed to get profile" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -1567,7 +1567,7 @@ app.post("/make-server-dbaf6019/generate-recipe-image", requireAuth, async (c) =
     });
   } catch (error: any) {
     log(`Error generating recipe image: ${error.message}`);
-    return c.json({ error: error.message || "Failed to generate image" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -1646,7 +1646,7 @@ app.post("/make-server-dbaf6019/upload-recipe-image", requireAuth, async (c) => 
     });
   } catch (error: any) {
     log(`Error uploading custom image: ${error.message}`);
-    return c.json({ error: error.message || "Failed to upload image" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -1683,7 +1683,7 @@ app.post("/make-server-dbaf6019/generate-all-recipe-images", requireAuth, requir
     });
   } catch (error: any) {
     log(`Error caching recipe images: ${error.message}`);
-    return c.json({ error: error.message || "Failed to cache images" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -1709,7 +1709,7 @@ app.get("/make-server-dbaf6019/recipe-image/:recipeId", async (c) => {
     });
   } catch (error: any) {
     log(`Error fetching recipe image: ${error.message}`);
-    return c.json({ error: error.message || "Failed to fetch image" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -1734,7 +1734,7 @@ app.post("/make-server-dbaf6019/check-kitchen-inventory", requireAuth, async (c)
     return c.json({ completed: false });
   } catch (error: any) {
     log(`Error checking kitchen inventory: ${error.message}`);
-    return c.json({ error: error.message || "Failed to check kitchen inventory" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -1757,7 +1757,7 @@ app.post("/make-server-dbaf6019/save-kitchen-inventory", requireAuth, async (c) 
     return c.json({ success: true });
   } catch (error: any) {
     log(`Error saving kitchen inventory: ${error.message}`);
-    return c.json({ error: error.message || "Failed to save kitchen inventory" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -1832,7 +1832,7 @@ app.post("/make-server-dbaf6019/save-meal-plan", requireAuth, async (c) => {
     });
   } catch (error: any) {
     log(`Error saving meal plan: ${error.message}`);
-    return c.json({ error: error.message || "Failed to save meal plan" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -1874,7 +1874,7 @@ app.post("/make-server-dbaf6019/rename-meal-plan", requireAuth, async (c) => {
     return c.json({ success: true, planId, planName: trimmed });
   } catch (error: any) {
     log(`Error renaming meal plan: ${error.message}`);
-    return c.json({ error: error.message || "Failed to rename meal plan" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -1916,7 +1916,7 @@ app.post("/make-server-dbaf6019/get-meal-plans", requireAuth, async (c) => {
     });
   } catch (error: any) {
     log(`Error getting meal plans: ${error.message}`);
-    return c.json({ error: error.message || "Failed to get meal plans" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -1948,7 +1948,7 @@ app.post("/make-server-dbaf6019/load-meal-plan-by-id", requireAuth, async (c) =>
     });
   } catch (error: any) {
     log(`Error loading meal plan: ${error.message}`);
-    return c.json({ error: error.message || "Failed to load meal plan" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -1983,7 +1983,7 @@ app.post("/make-server-dbaf6019/delete-meal-plan-by-id", requireAuth, async (c) 
     });
   } catch (error: any) {
     log(`Error deleting meal plan: ${error.message}`);
-    return c.json({ error: error.message || "Failed to delete meal plan" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -2012,7 +2012,7 @@ app.post("/make-server-dbaf6019/load-meal-plan", requireAuth, async (c) => {
     });
   } catch (error: any) {
     log(`Error loading meal plan: ${error.message}`);
-    return c.json({ error: error.message || "Failed to load meal plan" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -2033,7 +2033,7 @@ app.post("/make-server-dbaf6019/delete-meal-plan", requireAuth, async (c) => {
     });
   } catch (error: any) {
     log(`Error deleting meal plan: ${error.message}`);
-    return c.json({ error: error.message || "Failed to delete meal plan" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -2077,7 +2077,7 @@ app.post("/make-server-dbaf6019/get-recipe-image-with-cache", async (c) => {
     });
   } catch (error: any) {
     log(`Error getting recipe image with cache: ${error.message}`);
-    return c.json({ error: error.message || "Failed to get image" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -2119,7 +2119,7 @@ app.post("/make-server-dbaf6019/admin/calculate-nutrition", requireAuth, require
     });
   } catch (error: any) {
     log(`Error calculating nutrition: ${error.message}`);
-    return c.json({ error: error.message || "Failed to calculate nutrition" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -2231,7 +2231,7 @@ app.post("/make-server-dbaf6019/admin/validate-nutrition", requireAuth, requireA
     });
   } catch (error: any) {
     log(`Error validating nutrition: ${error.message}`);
-    return c.json({ error: error.message || "Failed to validate nutrition" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -2275,7 +2275,7 @@ app.post("/make-server-dbaf6019/track-meal-cooked", requireAuth, async (c) => {
     return c.json({ success: true, action: 'added' });
   } catch (error: any) {
     log(`Error in /track-meal-cooked: ${error.message}`);
-    return c.json({ error: error.message || "Failed to track meal" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -2298,7 +2298,7 @@ app.post("/make-server-dbaf6019/cooked-meals", requireAuth, async (c) => {
     return c.json({ date, cookedMeals, mealIds });
   } catch (error: any) {
     log(`Error in /cooked-meals: ${error.message}`);
-    return c.json({ error: error.message || "Failed to fetch cooked meals" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -2449,7 +2449,7 @@ app.post("/make-server-dbaf6019/user-stats", requireAuth, async (c) => {
     });
   } catch (error: any) {
     log(`Error in /user-stats: ${error.message}`);
-    return c.json({ error: error.message || "Failed to fetch user stats" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -2457,6 +2457,9 @@ app.post("/make-server-dbaf6019/user-stats", requireAuth, async (c) => {
 app.post("/make-server-dbaf6019/leaderboard", requireAuth, async (c) => {
   try {
     const { schoolId } = await c.req.json();
+    // The caller's own id comes from the token so we can flag their row without
+    // exposing raw auth UUIDs to other users.
+    const callerId = getUserId(c);
 
     if (!schoolId) {
       return c.json({ error: "schoolId is required" }, 400);
@@ -2470,7 +2473,8 @@ app.post("/make-server-dbaf6019/leaderboard", requireAuth, async (c) => {
 
     const { data: { users }, error } = await supabase.auth.admin.listUsers({ perPage: 1000 });
     if (error) {
-      return c.json({ error: error.message || "Failed to list users" }, 500);
+      log(`Error listing users in /leaderboard: ${error.message}`);
+      return c.json({ error: "Internal server error" }, 500);
     }
 
     const schoolUsers = (users || []).filter(
@@ -2501,7 +2505,7 @@ app.post("/make-server-dbaf6019/leaderboard", requireAuth, async (c) => {
         }
 
         return {
-          userId: u.id,
+          isCurrentUser: u.id === callerId,
           name: u.user_metadata?.name || 'Anonymous',
           currentStreak: longestStreak,
         };
@@ -2520,7 +2524,7 @@ app.post("/make-server-dbaf6019/leaderboard", requireAuth, async (c) => {
     return c.json({ leaderboard: ranked });
   } catch (error: any) {
     log(`Error in /leaderboard: ${error.message}`);
-    return c.json({ error: error.message || "Failed to fetch leaderboard" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -2544,7 +2548,8 @@ app.post("/make-server-dbaf6019/recipe-leaderboard", requireAuth, async (c) => {
 
     const { data: { users }, error } = await supabase.auth.admin.listUsers({ perPage: 1000 });
     if (error) {
-      return c.json({ error: error.message || "Failed to list users" }, 500);
+      log(`Error listing users in /recipe-leaderboard: ${error.message}`);
+      return c.json({ error: "Internal server error" }, 500);
     }
 
     const schoolUserIds = new Set(
@@ -2632,7 +2637,7 @@ app.post("/make-server-dbaf6019/recipe-leaderboard", requireAuth, async (c) => {
     return c.json({ recipes, total, hasMore: offset + limit < total });
   } catch (error: any) {
     log(`Error in /recipe-leaderboard: ${error.message}`);
-    return c.json({ error: error.message || "Failed to fetch recipe leaderboard" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -2692,7 +2697,7 @@ app.post("/make-server-dbaf6019/my-recipes", requireAuth, async (c) => {
     return c.json({ recipes });
   } catch (error: any) {
     log(`Error in /my-recipes: ${error.message}`);
-    return c.json({ error: error.message || "Failed to fetch recipes" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -2751,7 +2756,7 @@ app.post("/make-server-dbaf6019/save-community-recipe", requireAuth, async (c) =
     return c.json({ success: true });
   } catch (error: any) {
     log(`Error in /save-community-recipe: ${error.message}`);
-    return c.json({ error: error.message || "Failed to save community recipe" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -2776,7 +2781,7 @@ app.post("/make-server-dbaf6019/list-community-recipes", requireAuth, async (c) 
     return c.json({ recipes });
   } catch (error: any) {
     log(`Error in /list-community-recipes: ${error.message}`);
-    return c.json({ error: error.message || "Failed to list community recipes" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -2817,7 +2822,7 @@ app.post("/make-server-dbaf6019/toggle-community-like", requireAuth, async (c) =
     return c.json({ success: true, liked, likesCount: communityRecipe.likesCount });
   } catch (error: any) {
     log(`Error in /toggle-community-like: ${error.message}`);
-    return c.json({ error: error.message || "Failed to toggle like" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -2838,7 +2843,7 @@ app.get("/make-server-dbaf6019/schools/search", async (c) => {
     return c.json({ schools });
   } catch (error: any) {
     log(`Error in /schools/search: ${error.message}`);
-    return c.json({ error: error.message || "Failed to search schools" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -2860,7 +2865,7 @@ app.post("/make-server-dbaf6019/schools", requireAuth, async (c) => {
     return c.json({ school });
   } catch (error: any) {
     log(`Error in POST /schools: ${error.message}`);
-    return c.json({ error: error.message || "Failed to create school" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -2890,7 +2895,7 @@ app.post("/make-server-dbaf6019/schools/select", requireAuth, async (c) => {
     return c.json({ success: true });
   } catch (error: any) {
     log(`Error in /schools/select: ${error.message}`);
-    return c.json({ error: error.message || "Failed to select school" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
@@ -2923,7 +2928,7 @@ app.post("/make-server-dbaf6019/auth/update-profile", requireAuth, async (c) => 
     return c.json({ success: true, updated: metadata });
   } catch (error: any) {
     log(`Error in /auth/update-profile: ${error.message}`);
-    return c.json({ error: error.message || "Failed to update profile" }, 500);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 
