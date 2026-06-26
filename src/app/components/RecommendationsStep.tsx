@@ -1,7 +1,7 @@
 import { ShoppingCart, ArrowLeft, Loader2, X, Clock, ChefHat, Users, Flame, RefreshCw, Repeat2, MapPin, ArrowRight, Save, Check, Plus, Bell, ExternalLink, Play, Trash2, AlertTriangle } from 'lucide-react';
 import { UserPreferences, MealTimes } from '../App';
 import { getNutritionTargets } from '../utils/nutritionTargets';
-import { getLocalTodayISO, parseLocalDate, initialPlanOffset } from '../utils/dateUtils';
+import { getLocalTodayISO, parseLocalDate, initialPlanOffset, toLocalISODate } from '../utils/dateUtils';
 import { toast } from 'sonner';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { authedPost } from '../utils/apiClient';
@@ -108,6 +108,9 @@ interface MealPlan {
   mealsPerDay?: number;
 }
 
+// Stable empty set so `cookedByDate[date] ?? EMPTY_COOKED` keeps a constant ref.
+const EMPTY_COOKED: ReadonlySet<string> = new Set();
+
 const MEAL_TYPE_LABELS: Record<string, string> = {
   'breakfast': 'BREAKFAST',
   'lunch': 'LUNCH',
@@ -156,7 +159,10 @@ export function RecommendationsStep({
   const hasDoneInitialScrollRef = useRef(false);
   const [showMealSwapModal, setShowMealSwapModal] = useState(false);
   const [selectedMealForSwap, setSelectedMealForSwap] = useState<MealPlanMeal | null>(null);
-  const [cookedMeals, setCookedMeals] = useState<Set<string>>(new Set());
+  // Cooked state is keyed by calendar date so a recipe repeated across days is
+  // only "cooked" on the day it was actually marked (it previously bled across
+  // every day the same recipe id appeared).
+  const [cookedByDate, setCookedByDate] = useState<Record<string, Set<string>>>({});
 
 
   const [savingPlan, setSavingPlan] = useState(false);
@@ -207,6 +213,22 @@ export function RecommendationsStep({
   } | null>(null);
   const [totalCookedEver, setTotalCookedEver] = useState<number>(0);
   const [totalCookingDays, setTotalCookingDays] = useState<number>(0);
+
+  // The calendar date of the currently-selected day (plan start + offset), used
+  // to key cooked state and persistence. Matches the dates calendarDays builds.
+  const selectedDateISO = (() => {
+    const start = preferences.shoppingDate ? parseLocalDate(preferences.shoppingDate) : new Date();
+    if (isNaN(start.getTime())) return getLocalTodayISO();
+    start.setHours(0, 0, 0, 0);
+    start.setDate(start.getDate() + selectedCalendarOffset);
+    return toLocalISODate(start);
+  })();
+  const cookedForSelectedDay = cookedByDate[selectedDateISO] ?? EMPTY_COOKED;
+
+  // Queue meals carry their own consumption flag; saved-plan meals use the
+  // date-keyed cooked store for the selected day.
+  const isMealCooked = (meal: MealPlanMeal): boolean =>
+    isQueueMode ? !!(meal as any).isConsumed : cookedForSelectedDay.has(meal.id);
 
   useEffect(() => {
     requestAnimationFrame(() => {
@@ -369,21 +391,22 @@ export function RecommendationsStep({
     getUser();
   }, []);
 
-  // Load persisted cooked meals and stats when user is available
+  // Load the cooked meals for whichever day is selected (queue mode tracks
+  // consumption on the meal itself, so it doesn't use this date-keyed store).
   useEffect(() => {
-    if (!user) return;
-    const today = getLocalTodayISO();
+    if (!user || isQueueMode) return;
+    if (cookedByDate[selectedDateISO]) return; // already loaded this day
 
-    // Load today's cooked meals
-    authedPost<{ mealIds?: string[] }>('cooked-meals', { userId: user.id, date: today })
+    authedPost<{ mealIds?: string[] }>('cooked-meals', { userId: user.id, date: selectedDateISO })
       .then(data => {
-        if (data.mealIds?.length) {
-          setCookedMeals(new Set(data.mealIds));
-        }
+        setCookedByDate(prev => ({ ...prev, [selectedDateISO]: new Set(data.mealIds ?? []) }));
       })
       .catch(err => console.error('Failed to load cooked meals:', err));
+  }, [user, selectedDateISO, isQueueMode]);
 
-    // Load user stats for streak and total cooked count
+  // Load user stats for streak and total cooked count
+  useEffect(() => {
+    if (!user) return;
     authedPost<{ mealsLogged?: number; totalCookingDays?: number }>('user-stats', { userId: user.id })
       .then(data => {
         setTotalCookedEver(data.mealsLogged || 0);
@@ -594,6 +617,28 @@ export function RecommendationsStep({
   const handleMealSwap = async (newMeal: MealPlanMeal) => {
     if (!mealPlan || !selectedMealForSwap) return;
 
+    // Queue mode persists swaps through the queue endpoint (keyed by absolute
+    // day + slot); the refreshed week plan flows back via currentWeekMealPlan.
+    if (isQueueMode) {
+      setShowMealSwapModal(false);
+      if (onSwapQueueMeal && user && currentWeekMealPlan) {
+        const target = mealPlan.meals.find(m => m.id === selectedMealForSwap.id);
+        const absoluteDay = (currentWeekMealPlan.weekNumber - 1) * 7 + (target?.dayNumber || 1);
+        const slot = (target as any)?.category || (selectedMealForSwap as any).category;
+        const aiImage = getMealImageCandidates(newMeal)[0] || LOCAL_IMAGE_FALLBACK;
+        setMealImages(prev => ({ ...prev, [newMeal.id]: aiImage }));
+        void fetchImageWithTimeout(newMeal).then((cachedImage) => {
+          if (cachedImage) setMealImages(prev => ({ ...prev, [newMeal.id]: cachedImage }));
+        });
+        try {
+          await onSwapQueueMeal(user.id, absoluteDay, slot, newMeal.id);
+        } catch (err) {
+          console.error('Error swapping queue meal:', err);
+        }
+      }
+      return;
+    }
+
     const updatedMeals = mealPlan.meals.map(meal =>
       meal.id === selectedMealForSwap.id
         ? { ...newMeal, dayNumber: meal.dayNumber, mealNumber: meal.mealNumber }
@@ -667,24 +712,44 @@ export function RecommendationsStep({
     });
   }, []);
 
+  const setMealConsumedLocally = (mealId: string, consumed: boolean) => {
+    setMealPlan(prev => prev ? {
+      ...prev,
+      meals: prev.meals.map(m => m.id === mealId ? { ...m, isConsumed: consumed } : m),
+    } : prev);
+  };
+
   const toggleMealCooked = (mealId: string) => {
     if (!user?.id) return;
 
-    const wasCooked = cookedMeals.has(mealId);
-
-    // Optimistic update
-    setCookedMeals(prev => {
-      const updated = new Set(prev);
-      if (wasCooked) {
-        updated.delete(mealId);
-      } else {
-        updated.add(mealId);
-      }
-      return updated;
-    });
-
     const meal = currentDayMeals.find(m => m.id === mealId);
-    const today = getLocalTodayISO();
+
+    // Queue mode: persist consumption through the queue handler, keyed by the
+    // meal's absolute day + slot. The backend mark is one-way (consume only).
+    if (isQueueMode) {
+      if (!meal || !onMarkMealConsumed || !currentWeekMealPlan) return;
+      if ((meal as any).isConsumed) return;
+      const absoluteDay = (currentWeekMealPlan.weekNumber - 1) * 7 + (meal.dayNumber || 1);
+      setMealConsumedLocally(mealId, true);
+      onMarkMealConsumed(user.id, absoluteDay, (meal as any).category)
+        .then(ok => { if (!ok) setMealConsumedLocally(mealId, false); })
+        .catch(err => {
+          console.error('Failed to mark queue meal consumed:', err);
+          setMealConsumedLocally(mealId, false);
+        });
+      handleCelebration();
+      return;
+    }
+
+    const dateISO = selectedDateISO;
+    const wasCooked = (cookedByDate[dateISO] ?? EMPTY_COOKED).has(mealId);
+
+    // Optimistic update, scoped to the selected day
+    setCookedByDate(prev => {
+      const day = new Set(prev[dateISO] ?? []);
+      if (wasCooked) day.delete(mealId); else day.add(mealId);
+      return { ...prev, [dateISO]: day };
+    });
 
     // Increment/decrement timesCooked for user-created recipes
     if (meal && meal.timesCooked !== undefined && mealPlan) {
@@ -698,11 +763,11 @@ export function RecommendationsStep({
       });
     }
 
-    // Persist to backend
+    // Persist to backend, keyed by the selected day's date
     authedPost('track-meal-cooked', {
       userId: user.id,
       mealId,
-      date: today,
+      date: dateISO,
       recipeId: meal?.id || mealId,
       recipeName: meal?.name || '',
       mealCost: meal?.totalCost || 0,
@@ -711,14 +776,10 @@ export function RecommendationsStep({
     }).catch(err => {
       console.error('Failed to persist cooked meal:', err);
       // Revert on failure
-      setCookedMeals(prev => {
-        const reverted = new Set(prev);
-        if (wasCooked) {
-          reverted.add(mealId);
-        } else {
-          reverted.delete(mealId);
-        }
-        return reverted;
+      setCookedByDate(prev => {
+        const day = new Set(prev[dateISO] ?? []);
+        if (wasCooked) day.add(mealId); else day.delete(mealId);
+        return { ...prev, [dateISO]: day };
       });
     });
 
@@ -795,7 +856,7 @@ export function RecommendationsStep({
 
   // Calculate nutrition for selected day — only cooked/eaten meals count toward progress
   const todayNutrition = currentDayMeals
-    .filter(meal => cookedMeals.has(meal.id))
+    .filter(meal => isMealCooked(meal))
     .reduce(
       (totals, meal) => ({
         calories: totals.calories + (meal.nutrition?.calories || 0),
@@ -819,7 +880,7 @@ export function RecommendationsStep({
   const targetFiber = nutritionTargets.fiber;
 
   const caloriePercentage = Math.round((todayNutrition.calories / targetCalories) * 100);
-  const cookedCount = currentDayMeals.filter(meal => cookedMeals.has(meal.id)).length;
+  const cookedCount = currentDayMeals.filter(meal => isMealCooked(meal)).length;
 
 
   // Prepare shopping list
@@ -976,6 +1037,7 @@ export function RecommendationsStep({
             } : undefined}
             currentWeekMeals={mealPlan?.meals}
             mealTimes={preferences.mealTimes}
+            weekStartDow={planStartDate ? planStartDate.getDay() : undefined}
           />
           {/* Schedule Editor Modal */}
           {showScheduleEditor && (
@@ -1212,7 +1274,7 @@ export function RecommendationsStep({
 
         <div className="space-y-3">
           {currentDayMeals.map((meal) => {
-            const isCooked = cookedMeals.has(meal.id);
+            const isCooked = isMealCooked(meal);
             const mealType = meal.mealType?.toLowerCase() || 'meal';
             const mealImageCandidates = getMealImageCandidates(meal);
             

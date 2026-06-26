@@ -217,6 +217,35 @@ describe('MealPlansDashboard — inline rename editor', () => {
   });
 });
 
+describe('MealPlansDashboard — delete (await success, rollback on failure)', () => {
+  const openDeleteFor = (name: string) => {
+    fireEvent.click(screen.getByRole('button', { name: `Edit name of ${name}` }));
+    fireEvent.click(screen.getByText('deletePlan'));
+  };
+
+  it('removes the plan from the UI only after the delete resolves', async () => {
+    const onDeletePlan = vi.fn().mockResolvedValue(undefined);
+    renderDashboard({ onDeletePlan });
+
+    openDeleteFor('Cut Week');
+
+    await waitFor(() => expect(onDeletePlan).toHaveBeenCalledWith('plan-saved'));
+    await waitFor(() => expect(screen.queryByText('Cut Week')).not.toBeInTheDocument());
+  });
+
+  it('keeps the plan and surfaces an error when the delete fails', async () => {
+    const onDeletePlan = vi.fn().mockRejectedValue(new Error('Delete failed on the server.'));
+    renderDashboard({ onDeletePlan });
+
+    openDeleteFor('Cut Week');
+
+    await waitFor(() => expect(onDeletePlan).toHaveBeenCalledWith('plan-saved'));
+    // The plan must NOT vanish on a failed delete, and the user is told why.
+    expect(await screen.findByRole('alert')).toHaveTextContent('Delete failed on the server.');
+    expect(screen.getByText('Cut Week')).toBeInTheDocument();
+  });
+});
+
 describe('MealPlansDashboard — custom recipes network states', () => {
   it('shows a retry state when custom recipes fail to load', async () => {
     authedPost

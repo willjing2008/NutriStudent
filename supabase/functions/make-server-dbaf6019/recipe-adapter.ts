@@ -93,6 +93,23 @@ function generateBenefits(
   return benefits;
 }
 
+// Build the frontend ingredient rows with real per-ingredient GBP prices.
+// Shared by toMealPlanMeal and toSwapOption (previously duplicated verbatim).
+function toPricedIngredients(recipe: NewRecipe) {
+  const prices = alignIngredientPrices(recipe.ingredients, recipe.priced_ingredients);
+  return recipe.ingredients.map((str, i) => ({
+    name: stripMeasurement(str),
+    amount: str,
+    category: "pantry" as const,
+    // Real per-ingredient cost from priced_ingredients (0 until priced or if a
+    // line can't be matched), so the shopping list shows real prices.
+    estimatedPrice: prices[i],
+    price: prices[i],
+    unit: "",
+    available: true,
+  }));
+}
+
 // Convert a NewRecipe into the MealPlanMeal shape the frontend expects
 export function toMealPlanMeal(
   recipe: NewRecipe,
@@ -122,20 +139,7 @@ export function toMealPlanMeal(
     servings: parseInt(recipe.servings) || 1,
     difficulty: inferDifficulty(recipe.total_time_minutes),
     tags: [recipe.meal_type, recipe.recipe_category, recipe.cuisine].filter(Boolean),
-    ingredients: (() => {
-      const prices = alignIngredientPrices(recipe.ingredients, recipe.priced_ingredients);
-      return recipe.ingredients.map((str, i) => ({
-        name: stripMeasurement(str),
-        amount: str,
-        category: "pantry" as const,
-        // Real per-ingredient cost from priced_ingredients (0 until priced or if
-        // a line can't be matched), so the shopping list shows real prices.
-        estimatedPrice: prices[i],
-        price: prices[i],
-        unit: "",
-        available: true,
-      }));
-    })(),
+    ingredients: toPricedIngredients(recipe),
     ingredientNames: recipe.ingredients,
     instructions: recipe.instructions,
     cost: recipeCostPerServing(recipe),
@@ -183,20 +187,7 @@ export function toSwapOption(recipe: NewRecipe) {
     servings: parseInt(recipe.servings) || 1,
     difficulty: inferDifficulty(recipe.total_time_minutes),
     tags: [recipe.meal_type, recipe.recipe_category, recipe.cuisine].filter(Boolean),
-    ingredients: (() => {
-      const prices = alignIngredientPrices(recipe.ingredients, recipe.priced_ingredients);
-      return recipe.ingredients.map((str, i) => ({
-        name: stripMeasurement(str),
-        amount: str,
-        category: "pantry" as const,
-        // Real per-ingredient cost from priced_ingredients (0 until priced or if
-        // a line can't be matched), so the shopping list shows real prices.
-        estimatedPrice: prices[i],
-        price: prices[i],
-        unit: "",
-        available: true,
-      }));
-    })(),
+    ingredients: toPricedIngredients(recipe),
     ingredientNames: recipe.ingredients,
     instructions: recipe.instructions,
     cost: recipeCostPerServing(recipe),

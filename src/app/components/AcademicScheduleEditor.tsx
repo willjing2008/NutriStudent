@@ -104,7 +104,23 @@ export function AcademicScheduleEditor({ schedule, onSave, onClose, isSaving, in
     return warnings;
   }, [classes, editedMealTimes, editedMealSlots, mealsPerDay]);
 
+  // Classes whose end time is not after their start time — these corrupt
+  // conflict detection and the displayed range, so saving is blocked.
+  const invalidTimeClassIds = useMemo(
+    () =>
+      new Set(
+        classes
+          .filter(c => c.startTime && c.endTime && c.endTime <= c.startTime)
+          .map(c => c.id),
+      ),
+    [classes],
+  );
+
   const handleSave = async () => {
+    if (invalidTimeClassIds.size > 0) {
+      setActiveTab('classes');
+      return;
+    }
     const activeSlots: ('breakfast' | 'lunch' | 'dinner')[] = mealsPerDay >= 3
       ? ['breakfast', 'lunch', 'dinner']
       : [...editedMealSlots];
@@ -199,6 +215,13 @@ export function AcademicScheduleEditor({ schedule, onSave, onClose, isSaving, in
                       className="bg-[#0A1F13] text-white text-xs rounded-lg px-3 py-2 border border-[#1E4029] focus:outline-none focus:border-[#22C55E] [color-scheme:dark] w-[100px]"
                     />
                   </div>
+
+                  {invalidTimeClassIds.has(cls.id) && (
+                    <div className="flex items-center gap-1.5 text-[11px] text-red-300">
+                      <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+                      End time must be after the start time.
+                    </div>
+                  )}
 
                   <input
                     value={cls.location || ''}
@@ -356,8 +379,8 @@ export function AcademicScheduleEditor({ schedule, onSave, onClose, isSaving, in
         <div className="p-4 border-t border-[#1E4029]">
           <button
             onClick={handleSave}
-            disabled={isSaving}
-            className="w-full py-3 bg-[#22C55E] text-[#052E16] rounded-xl font-semibold hover:bg-[#4ADE80] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            disabled={isSaving || invalidTimeClassIds.size > 0}
+            className="w-full py-3 bg-[#22C55E] text-[#052E16] rounded-xl font-semibold hover:bg-[#4ADE80] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isSaving ? (
               <>

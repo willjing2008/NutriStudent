@@ -109,6 +109,36 @@ describe('toSwapOption', () => {
   })
 })
 
+describe('ingredient pricing (shared helper, no servings double-count)', () => {
+  const pricedRecipe = makeRecipe({
+    servings: '4',
+    ingredients: ['2 cups rice', '200 g chicken breast'],
+    priced_ingredients: [
+      { name: 'rice', gbp: 1.2 },
+      { name: 'chicken breast', gbp: 3.8 },
+    ],
+    cost_per_serving_gbp: 1.25,
+  })
+
+  it('uses real per-ingredient (full-quantity) prices, not servings x per-serving', () => {
+    const meal = toMealPlanMeal(pricedRecipe, 1, 1, 'dinner')
+    expect(meal.ingredients.map((i) => i.estimatedPrice)).toEqual([1.2, 3.8])
+    expect(meal.ingredients.map((i) => i.price)).toEqual([1.2, 3.8])
+  })
+
+  it('keeps cost/totalCost per-serving (4 servings must NOT multiply it to 5.0)', () => {
+    const meal = toMealPlanMeal(pricedRecipe, 1, 1, 'dinner')
+    expect(meal.cost).toBe(1.25)
+    expect(meal.totalCost).toBe(1.25)
+  })
+
+  it('toMealPlanMeal and toSwapOption build identical ingredient rows (deduped helper)', () => {
+    const meal = toMealPlanMeal(pricedRecipe, 1, 1, 'dinner')
+    const option = toSwapOption(pricedRecipe)
+    expect(option.ingredients).toEqual(meal.ingredients)
+  })
+})
+
 describe('kv-backed recipe fetchers', () => {
   beforeEach(() => {
     vi.mocked(kv.getByPrefix).mockReset()
