@@ -2,6 +2,7 @@ import { X, Loader2, ArrowRight, TrendingUp, TrendingDown, Minus, Clock, Users, 
 import { useState, useEffect, useRef } from 'react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { supabase } from '../../utils/supabaseClient';
+import { authedPost, authedFetch } from '../utils/apiClient';
 
 const LOCAL_IMAGE_FALLBACK =
   'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjI0MCIgdmlld0JveD0iMCAwIDMyMCAyNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjMyMCIgaGVpZ2h0PSIyNDAiIGZpbGw9IiMxNDJBMUQiLz48Y2lyY2xlIGN4PSIxNjAiIGN5PSIxMDAiIHI9IjQwIiBmaWxsPSIjMUU0MDI5Ii8+PHJlY3QgeD0iNzIiIHk9IjE2MiIgd2lkdGg9IjE3NiIgaGVpZ2h0PSIxMiIgcng9IjYiIGZpbGw9IiMyMkM1NUUiIG9wYWNpdHk9IjAuNzUiLz48L3N2Zz4=';
@@ -24,8 +25,6 @@ interface MealSwapModalProps {
   goal: string;
   currentMealIds: string[];
   maxCookingTime?: number;
-  projectId: string;
-  publicAnonKey: string;
   onSwap: (newMeal: any) => void;
   onClose: () => void;
 }
@@ -127,8 +126,6 @@ export function MealSwapModal({
   goal,
   currentMealIds,
   maxCookingTime,
-  projectId,
-  publicAnonKey,
   onSwap,
   onClose,
 }: MealSwapModalProps) {
@@ -208,20 +205,10 @@ export function MealSwapModal({
     setCommunityError(null);
 
     try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/list-community-recipes`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-          body: JSON.stringify({ userId: currentUser.id }),
-        }
+      const data = await authedPost<{ recipes?: CommunityRecipe[] }>(
+        'list-community-recipes',
+        { userId: currentUser.id },
       );
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to load community recipes');
       setCommunityRecipes(data.recipes || []);
     } catch (err: any) {
       console.error('Error fetching community recipes:', err);
@@ -236,20 +223,10 @@ export function MealSwapModal({
     setTogglingLike(recipeId);
 
     try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/toggle-community-like`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-          body: JSON.stringify({ userId: currentUser.id, recipeId }),
-        }
+      const data = await authedPost<{ liked: boolean; likesCount: number }>(
+        'toggle-community-like',
+        { userId: currentUser.id, recipeId },
       );
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to toggle like');
 
       setCommunityRecipes(prev =>
         prev.map(r =>
@@ -288,34 +265,19 @@ export function MealSwapModal({
     setError(null);
 
     try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/get-swap-options`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-          body: JSON.stringify({
-            currentRecipeId: currentMeal.id,
-            goal: goal,
-            currentMealIds: currentMealIds,
-            maxCookingTime: maxCookingTime,
-            limit: 6,
-          }),
-        }
-      );
+      const data = await authedPost<{ swapOptions?: SwapOption[] }>('get-swap-options', {
+        currentRecipeId: currentMeal.id,
+        goal: goal,
+        currentMealIds: currentMealIds,
+        maxCookingTime: maxCookingTime,
+        limit: 6,
+      });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to load swap options');
-      }
-
-      setSwapOptions(data.swapOptions);
+      const options = data.swapOptions || [];
+      setSwapOptions(options);
 
       const imageMap: Record<string, string> = {};
-      for (const option of data.swapOptions) {
+      for (const option of options) {
         imageMap[option.id] = option.imageUrl || option.image || LOCAL_IMAGE_FALLBACK;
       }
       setOptionImages(imageMap);
@@ -367,14 +329,12 @@ export function MealSwapModal({
       formData.append('recipeId', recipeId);
       formData.append('cuisine', 'custom');
 
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/upload-recipe-image`,
-        {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${publicAnonKey}` },
-          body: formData,
-        }
-      );
+      // FormData upload: authedFetch sends the session JWT and does NOT set
+      // Content-Type, so the browser supplies the multipart boundary.
+      const response = await authedFetch('upload-recipe-image', {
+        method: 'POST',
+        body: formData,
+      });
       const data = await response.json();
       if (data.imageUrl) {
         imageUrl = data.imageUrl;
@@ -415,21 +375,11 @@ export function MealSwapModal({
     // Share with community if checked
     if (shareWithCommunity && currentUser) {
       try {
-        await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/save-community-recipe`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${publicAnonKey}`,
-            },
-            body: JSON.stringify({
-              userId: currentUser.id,
-              creatorName: currentUser.name,
-              recipe: customMeal,
-            }),
-          }
-        );
+        await authedPost('save-community-recipe', {
+          userId: currentUser.id,
+          creatorName: currentUser.name,
+          recipe: customMeal,
+        });
       } catch (err) {
         console.error('Failed to share recipe with community:', err);
       }
@@ -492,6 +442,7 @@ export function MealSwapModal({
           </div>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="p-2 hover:bg-[#142A1D] rounded-lg transition-colors"
           >
             <X className="w-6 h-6 text-[#9CA3AF]" />
@@ -739,10 +690,19 @@ export function MealSwapModal({
                   const isSelected = selectedCommunityRecipe?.id === recipe.id;
 
                   return (
-                    <button
+                    <div
                       key={recipe.id}
+                      role="button"
+                      tabIndex={0}
+                      aria-pressed={isSelected}
                       onClick={() => setSelectedCommunityRecipe(recipe)}
-                      className={`text-left bg-[#142A1D] rounded-2xl overflow-hidden border-2 transition-all hover:shadow-lg ${
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setSelectedCommunityRecipe(recipe);
+                        }
+                      }}
+                      className={`cursor-pointer text-left bg-[#142A1D] rounded-2xl overflow-hidden border-2 transition-all hover:shadow-lg ${
                         isSelected
                           ? 'border-[#22C55E] shadow-lg shadow-green-900/30 scale-[1.02]'
                           : 'border-[#1E4029] hover:border-[#2D5A3D]'
@@ -765,8 +725,11 @@ export function MealSwapModal({
                         </div>
 
                         {/* Like Button */}
-                        <div
+                        <button
+                          type="button"
                           className="absolute top-2 right-2"
+                          aria-label={recipe.likedByMe ? `Unlike ${recipe.name}` : `Like ${recipe.name}`}
+                          aria-pressed={recipe.likedByMe}
                           onClick={(e) => {
                             e.stopPropagation();
                             handleToggleLike(recipe.id);
@@ -780,7 +743,7 @@ export function MealSwapModal({
                             <Heart className={`w-3.5 h-3.5 ${recipe.likedByMe ? 'fill-current' : ''} ${togglingLike === recipe.id ? 'animate-pulse' : ''}`} />
                             <span>{recipe.likesCount}</span>
                           </div>
-                        </div>
+                        </button>
 
                         {/* Selected Checkmark */}
                         {isSelected && (
@@ -825,7 +788,7 @@ export function MealSwapModal({
                           </div>
                         </div>
                       </div>
-                    </button>
+                    </div>
                   );
                 })}
               </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { projectId, publicAnonKey } from '../../utils/supabase/info';
+import { projectId, publicAnonKey } from '../../../utils/supabase/info';
+import { authedPost } from '../utils/apiClient';
 
 interface UseRecipeImageOptions {
   recipeId: string;
@@ -15,6 +16,11 @@ interface UseRecipeImageResult {
   isStored: boolean; // Whether the image is permanently stored
   generateAndStore: () => Promise<void>; // Manual trigger to generate and store
 }
+
+const getErrorMessage = (error: unknown, fallback: string): string => {
+  if (error instanceof Error && error.message.trim()) return error.message;
+  return fallback;
+};
 
 /**
  * Hook to manage recipe images with permanent storage
@@ -43,38 +49,20 @@ export function useRecipeImage({
     setError(null);
 
     try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/generate-recipe-image`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-          body: JSON.stringify({
-            imageQuery,
-            recipeId,
-            cuisine
-          }),
-        }
+      const data = await authedPost<{ success?: boolean; imageUrl?: string; cached?: boolean }>(
+        'generate-recipe-image',
+        { imageQuery, recipeId, cuisine },
       );
-
-      if (!response.ok) {
-        throw new Error('Failed to generate and store image');
-      }
-
-      const data = await response.json();
 
       if (data.success && data.imageUrl) {
         setImageUrl(data.imageUrl);
         setIsStored(true);
-        console.log(`✓ Image ${data.cached ? 'loaded from cache' : 'generated and stored'} for ${recipeId}`);
       } else {
         throw new Error('Invalid response from image generation endpoint');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(`Error generating image for ${recipeId}:`, err);
-      setError(err.message || 'Failed to generate image');
+      setError(getErrorMessage(err, 'Failed to generate image'));
       setImageUrl('');
       setIsStored(false);
     } finally {
@@ -128,7 +116,7 @@ export function useRecipeImage({
         } else {
           setIsStored(false);
         }
-      } catch (err: any) {
+      } catch {
         setImageUrl('');
         setIsStored(false);
       }

@@ -1,6 +1,7 @@
 import { NewRecipe } from "./recipe-data.ts";
 import * as kv from "./kv_store.tsx";
 import { classifyRecipe } from "./focus-classifier.ts";
+import { recipeCostPerServing, alignIngredientPrices } from "./recipe-cost.ts";
 
 // Strip leading quantity and measurement units from an ingredient string.
 // e.g. "2 cups vanilla yogurt" → "Vanilla Yogurt"
@@ -18,6 +19,19 @@ const MEASUREMENT_WORDS = new Set([
   "packed","heaping","level","rounded",
 ]);
 
+// Leading conjunctions / preparation adjectives to drop from the front of an
+// ingredient so display names read cleanly
+// (e.g. "and chilled, cooked chicken meat" -> "Chicken Meat").
+// Note: meaning-bearing words like "raw"/"ripe" are intentionally excluded so
+// names like "raw honey" / "ripe plantains" keep their descriptor.
+const DESCRIPTOR_WORDS = new Set([
+  "and","or","plus",
+  "cooked","uncooked","chilled","warmed","frozen","canned","drained",
+  "rinsed","peeled","seeded","trimmed","halved","quartered","boneless",
+  "skinless","melted","softened","prepared","finely","roughly",
+  "thinly","freshly","lightly","optional",
+]);
+
 function stripMeasurement(raw: string): string {
   // Remove parenthetical notes like "(about 1 lb)" or "(optional)"
   let s = raw.replace(/\(.*?\)/g, "").trim();
@@ -33,6 +47,8 @@ function stripMeasurement(raw: string): string {
     if (t === "of") { i++; continue; }
     // Skip measurement words
     if (MEASUREMENT_WORDS.has(t)) { i++; continue; }
+    // Skip leading conjunctions / preparation adjectives
+    if (DESCRIPTOR_WORDS.has(t)) { i++; continue; }
     break;
   }
   const name = tokens.slice(i).join(" ").replace(/[,;]+$/, "").trim();
@@ -106,23 +122,24 @@ export function toMealPlanMeal(
     servings: parseInt(recipe.servings) || 1,
     difficulty: inferDifficulty(recipe.total_time_minutes),
     tags: [recipe.meal_type, recipe.recipe_category, recipe.cuisine].filter(Boolean),
-    ingredients: recipe.ingredients.map((str) => ({
-      name: stripMeasurement(str),
-      amount: str,
-      category: "pantry" as const,
-      estimatedPrice: 0,
-      price: 0,
-      unit: "",
-      calories: 0,
-      protein: 0,
-      carbs: 0,
-      fats: 0,
-      available: true,
-    })),
+    ingredients: (() => {
+      const prices = alignIngredientPrices(recipe.ingredients, recipe.priced_ingredients);
+      return recipe.ingredients.map((str, i) => ({
+        name: stripMeasurement(str),
+        amount: str,
+        category: "pantry" as const,
+        // Real per-ingredient cost from priced_ingredients (0 until priced or if
+        // a line can't be matched), so the shopping list shows real prices.
+        estimatedPrice: prices[i],
+        price: prices[i],
+        unit: "",
+        available: true,
+      }));
+    })(),
     ingredientNames: recipe.ingredients,
     instructions: recipe.instructions,
-    cost: 0,
-    totalCost: 0,
+    cost: recipeCostPerServing(recipe),
+    totalCost: recipeCostPerServing(recipe),
     nutrition: {
       calories: recipe.nutrition_per_serving.calories,
       protein: recipe.nutrition_per_serving.protein_g,
@@ -131,7 +148,6 @@ export function toMealPlanMeal(
       fiber: recipe.nutrition_per_serving.fiber_g,
     },
     sourceUrl: recipe.url,
-    youtubeUrl: undefined,
     dayNumber,
     mealNumber,
     // Extra fields from new data
@@ -167,23 +183,24 @@ export function toSwapOption(recipe: NewRecipe) {
     servings: parseInt(recipe.servings) || 1,
     difficulty: inferDifficulty(recipe.total_time_minutes),
     tags: [recipe.meal_type, recipe.recipe_category, recipe.cuisine].filter(Boolean),
-    ingredients: recipe.ingredients.map((str) => ({
-      name: stripMeasurement(str),
-      amount: str,
-      category: "pantry" as const,
-      estimatedPrice: 0,
-      price: 0,
-      unit: "",
-      calories: 0,
-      protein: 0,
-      carbs: 0,
-      fats: 0,
-      available: true,
-    })),
+    ingredients: (() => {
+      const prices = alignIngredientPrices(recipe.ingredients, recipe.priced_ingredients);
+      return recipe.ingredients.map((str, i) => ({
+        name: stripMeasurement(str),
+        amount: str,
+        category: "pantry" as const,
+        // Real per-ingredient cost from priced_ingredients (0 until priced or if
+        // a line can't be matched), so the shopping list shows real prices.
+        estimatedPrice: prices[i],
+        price: prices[i],
+        unit: "",
+        available: true,
+      }));
+    })(),
     ingredientNames: recipe.ingredients,
     instructions: recipe.instructions,
-    cost: 0,
-    totalCost: 0,
+    cost: recipeCostPerServing(recipe),
+    totalCost: recipeCostPerServing(recipe),
     nutrition: {
       calories: recipe.nutrition_per_serving.calories,
       protein: recipe.nutrition_per_serving.protein_g,
@@ -192,7 +209,6 @@ export function toSwapOption(recipe: NewRecipe) {
       fiber: recipe.nutrition_per_serving.fiber_g,
     },
     sourceUrl: recipe.url,
-    youtubeUrl: undefined,
     cuisine: recipe.cuisine,
     mealTypeTag: recipe.meal_type,
   };

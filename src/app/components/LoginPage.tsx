@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Mail, Lock, Loader2, Eye, EyeOff, User, ArrowRight, Apple, Check } from 'lucide-react';
 import { supabase } from '../../utils/supabaseClient';
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
+import { authedPost } from '../utils/apiClient';
 import { SchoolSelectionStep } from './SchoolSelectionStep';
 import { SubscriptionPage } from './SubscriptionPage';
 import { useSubscription } from '../hooks/useSubscription';
@@ -488,17 +489,7 @@ function GenderSelectionStep({
     try {
       // Save gender to user_metadata if selected
       if (selectedGender) {
-        await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/auth/update-profile`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${publicAnonKey}`,
-            },
-            body: JSON.stringify({ userId, gender: selectedGender }),
-          }
-        );
+        await authedPost('auth/update-profile', { userId, gender: selectedGender });
       }
       onComplete();
     } catch (err) {

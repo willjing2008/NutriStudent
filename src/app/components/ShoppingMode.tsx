@@ -1,6 +1,7 @@
 import { Check, ChevronLeft, ShoppingCart, Star } from 'lucide-react';
 import { useState } from 'react';
 import { BottomNavigation, NavTab } from './BottomNavigation';
+import { categorizeIngredient } from '../utils/ingredientCategory';
 
 interface ShoppingIngredient {
   name: string;
@@ -96,11 +97,14 @@ export function ShoppingMode({ ingredients, storeName, onBack, missingEssentials
   // Deduplicate first, then organize by category
   const dedupedIngredients = deduplicateIngredients(ingredients);
 
+  // Categorize by ingredient name — the backend tags every ingredient 'pantry',
+  // which would collapse the whole list into one section.
   const organizedIngredients = dedupedIngredients.reduce((acc, ingredient) => {
-    if (!acc[ingredient.category]) {
-      acc[ingredient.category] = [];
+    const category = categorizeIngredient(ingredient.name);
+    if (!acc[category]) {
+      acc[category] = [];
     }
-    acc[ingredient.category].push(ingredient);
+    acc[category].push(ingredient);
     return acc;
   }, {} as Record<string, ShoppingIngredient[]>);
 
@@ -120,6 +124,7 @@ export function ShoppingMode({ ingredients, storeName, onBack, missingEssentials
           <div className="flex items-center justify-between mb-4">
             <button
               onClick={onBack}
+              aria-label="Back"
               className="p-2 -ml-2 hover:bg-[#1E1E1E] rounded-full transition-colors"
             >
               <ChevronLeft className="w-6 h-6 text-white" />
@@ -143,7 +148,14 @@ export function ShoppingMode({ ingredients, storeName, onBack, missingEssentials
                 {Math.round(progress)}%
               </span>
             </div>
-            <div className="h-1.5 bg-[#1E1E1E] rounded-full overflow-hidden">
+            <div
+              className="h-1.5 bg-[#1E1E1E] rounded-full overflow-hidden"
+              role="progressbar"
+              aria-valuenow={Math.round(progress)}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label="Items collected"
+            >
               <div
                 className="h-full bg-[#22C55E] transition-all duration-300 ease-out rounded-full"
                 style={{ width: `${progress}%` }}
@@ -170,18 +182,20 @@ export function ShoppingMode({ ingredients, storeName, onBack, missingEssentials
                 </div>
               </div>
               <span className="text-sm font-medium text-[#6B7280]">
-                {missingEssentials.filter(item => checkedItems.has(item.name)).length}/{missingEssentials.length}
+                {missingEssentials.filter(item => checkedItems.has(`essential:${item.name}`)).length}/{missingEssentials.length}
               </span>
             </div>
 
             {/* Essentials Items */}
             {missingEssentials.map((essential) => {
-              const isChecked = checkedItems.has(essential.name);
+              const isChecked = checkedItems.has(`essential:${essential.name}`);
 
               return (
                 <button
                   key={essential.id}
-                  onClick={() => toggleItem(essential.name)}
+                  onClick={() => toggleItem(`essential:${essential.name}`)}
+                  aria-pressed={isChecked}
+                  aria-label={`${essential.name}, mark as collected`}
                   className="w-full text-left px-4 py-3 rounded-xl bg-[#141414] border border-[#1E1E1E] transition-all hover:border-[#2D2D2D] active:scale-[0.99]"
                 >
                   <div className="flex items-center gap-3">
@@ -217,7 +231,7 @@ export function ShoppingMode({ ingredients, storeName, onBack, missingEssentials
           if (!items || items.length === 0) return null;
 
           const config = CATEGORY_CONFIG[category as keyof typeof CATEGORY_CONFIG];
-          const categoryChecked = items.filter(item => checkedItems.has(item.name)).length;
+          const categoryChecked = items.filter(item => checkedItems.has(`ing:${item.name}`)).length;
 
           return (
             <div key={category} className="space-y-2">
@@ -236,12 +250,14 @@ export function ShoppingMode({ ingredients, storeName, onBack, missingEssentials
 
               {/* Category Items — name only, no amounts */}
               {items.map((ingredient) => {
-                const isChecked = checkedItems.has(ingredient.name);
+                const isChecked = checkedItems.has(`ing:${ingredient.name}`);
 
                 return (
                   <button
                     key={ingredient.name}
-                    onClick={() => toggleItem(ingredient.name)}
+                    onClick={() => toggleItem(`ing:${ingredient.name}`)}
+                    aria-pressed={isChecked}
+                    aria-label={`${ingredient.name}, mark as collected`}
                     className="w-full text-left px-4 py-3 rounded-xl bg-[#141414] border border-[#1E1E1E] transition-all hover:border-[#2D2D2D] active:scale-[0.99]"
                   >
                     <div className="flex items-center gap-3">

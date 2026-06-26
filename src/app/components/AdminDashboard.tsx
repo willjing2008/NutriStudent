@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Plus, Edit2, Trash2, RefreshCw, Database, ChefHat, X, Save, Loader2, ImageIcon, Upload, Trash, ExternalLink, Calculator } from 'lucide-react';
-import { projectId, publicAnonKey } from '../../../utils/supabase/info';
+import { authedPost, authedFetch, getUserFacingApiErrorMessage } from '../utils/apiClient';
+import { useConfirm } from '../hooks/useConfirm';
 import { ImageStorageInfo } from './ImageStorageInfo';
 
 const LOCAL_IMAGE_FALLBACK =
@@ -30,6 +31,7 @@ interface Recipe {
 }
 
 export function AdminDashboard() {
+  const confirm = useConfirm();
   const [recipes, setRecipes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -66,12 +68,8 @@ export function AdminDashboard() {
   const [newRecipeAiImageLoadError, setNewRecipeAiImageLoadError] = useState(false);
   const [calculatingNutrition, setCalculatingNutrition] = useState(false);
   const [nutritionDetails, setNutritionDetails] = useState<any[] | null>(null);
+  const [estimatingCosts, setEstimatingCosts] = useState(false);
 
-  const baseUrl = `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019`;
-  const headers = {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${publicAnonKey}`,
-  };
 
   useEffect(() => {
     fetchAllRecipes();
@@ -80,9 +78,9 @@ export function AdminDashboard() {
   const fetchAllRecipes = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${baseUrl}/admin/all-recipes`, { headers });
+      const response = await authedFetch('admin/all-recipes', { method: 'GET' });
       const data = await response.json();
-      
+
       // Check for errors in response
       if (data.error) {
         console.error('Error from server:', data.error);
@@ -102,24 +100,13 @@ export function AdminDashboard() {
   };
 
   const initializeRecipes = async () => {
-    if (!confirm('This will clear all existing recipes and re-initialize the full recipe database (breakfast, lunch & dinner). Continue?')) {
+    if (!(await confirm({ title: 'Re-initialize recipe database?', description: 'This clears all existing recipes and re-initializes the full database (breakfast, lunch & dinner).', confirmText: 'Continue', destructive: true }))) {
       return;
     }
 
     setLoading(true);
     try {
-      const response = await fetch(`${baseUrl}/init-recipes`, {
-        method: 'POST',
-        headers,
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        showMessage('error', `Server error: ${response.status} - ${errorText}`);
-        return;
-      }
-
-      const data = await response.json();
+      const data = await authedPost<any>('init-recipes');
 
       if (data.error) {
         showMessage('error', `Failed to initialize recipes: ${data.error}`);
@@ -145,7 +132,7 @@ export function AdminDashboard() {
       const mealType = parts[1];
       const recipeId = parts[2];
 
-      const response = await fetch(`${baseUrl}/admin/recipe/${mealType}/${recipeId}`, { headers });
+      const response = await authedFetch(`admin/recipe/${mealType}/${recipeId}`);
       const data = await response.json();
       setSelectedRecipe(data.recipe);
       setSelectedRecipeKey(recipeKey);
@@ -165,12 +152,7 @@ export function AdminDashboard() {
 
     setLoading(true);
     try {
-      const response = await fetch(`${baseUrl}/admin/recipe`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(editedRecipe),
-      });
-      const data = await response.json();
+      await authedPost('admin/recipe', editedRecipe);
       showMessage('success', 'Recipe saved successfully!');
       setEditMode(false);
       setSelectedRecipe(editedRecipe);
@@ -186,7 +168,7 @@ export function AdminDashboard() {
   };
 
   const deleteRecipe = async (recipeKey: string) => {
-    if (!confirm('Are you sure you want to delete this recipe?')) return;
+    if (!(await confirm({ title: 'Delete recipe?', description: 'This permanently removes the recipe.', confirmText: 'Delete', destructive: true }))) return;
 
     setLoading(true);
     try {
@@ -195,10 +177,7 @@ export function AdminDashboard() {
       const mealType = parts[1];
       const recipeId = parts[2];
 
-      const response = await fetch(`${baseUrl}/admin/recipe/${mealType}/${recipeId}`, {
-        method: 'DELETE',
-        headers,
-      });
+      await authedFetch(`admin/recipe/${mealType}/${recipeId}`, { method: 'DELETE' });
       showMessage('success', 'Recipe deleted successfully!');
       setSelectedRecipe(null);
       setSelectedRecipeKey(null);
@@ -219,13 +198,8 @@ export function AdminDashboard() {
 
     setLoading(true);
     try {
-      const response = await fetch(`${baseUrl}/admin/search-recipes`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ query: searchQuery }),
-      });
-      const data = await response.json();
-      
+      const data = await authedPost<any>('admin/search-recipes', { query: searchQuery });
+
       // Check if there's an error in the response
       if (data.error) {
         console.error('Search error from server:', data.error);
@@ -266,7 +240,52 @@ export function AdminDashboard() {
 
   const showMessage = (type: 'success' | 'error', text: string) => {
     setMessage({ type, text });
-    setTimeout(() => setMessage(null), 3000);
+    // Errors stay until the next action so they can actually be read; success
+    // messages clear on their own after a longer, readable delay.
+    if (type === 'success') {
+      setTimeout(() => setMessage(null), 6000);
+    }
+  };
+
+  // Price unpriced recipes via Gemini, a resumable chunk per click (the backend
+  // defaults to ~60 recipes/run). Re-run until `remaining` reaches 0.
+  const estimateRecipeCosts = async () => {
+    if (!(await confirm({
+      title: 'Estimate recipe costs?',
+      description: 'Prices recipes that have no cost yet, using Gemini. Runs a chunk per click — re-run until none remain.',
+      confirmText: 'Run',
+    }))) {
+      return;
+    }
+
+    setEstimatingCosts(true);
+    showMessage('success', 'Estimating recipe costs…');
+    try {
+      const data = await authedPost<any>('admin/estimate-recipe-costs', {});
+      if (data.error) {
+        showMessage('error', `Cost estimation failed: ${data.error}`);
+        return;
+      }
+      if (data.priced === 0 && data.failed > 0) {
+        showMessage(
+          'error',
+          `All ${data.failed} failed — none priced. Reason: ${data.firstError || 'unknown error'}`,
+        );
+      } else {
+        showMessage(
+          'success',
+          `Priced ${data.priced} recipes${data.failed ? `, ${data.failed} failed (${data.firstError || 'see logs'})` : ''}. ${data.remaining} remaining${data.remaining ? ' — run again to continue.' : ' ✓'}`,
+        );
+      }
+      await fetchAllRecipes();
+    } catch (error) {
+      console.error('Error estimating recipe costs:', error);
+      // Surface the server's actual reason (e.g. "ANTHROPIC_API_KEY is not
+      // configured") instead of a generic message, so failures are debuggable.
+      showMessage('error', `Failed to estimate recipe costs: ${getUserFacingApiErrorMessage(error)}`);
+    } finally {
+      setEstimatingCosts(false);
+    }
   };
 
   // Handle image file selection
@@ -306,17 +325,16 @@ export function AdminDashboard() {
       formData.append('image', imageFile);
       formData.append('recipeId', editedRecipe.id);
       formData.append('cuisine', editedRecipe.cuisine);
-      
-      const response = await fetch(`${baseUrl}/upload-recipe-image`, {
+
+      // FormData upload: authedFetch sends the session JWT and does NOT set
+      // Content-Type, so the browser supplies the multipart boundary.
+      const response = await authedFetch('upload-recipe-image', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${publicAnonKey}`,
-        },
         body: formData,
       });
-      
+
       const data = await response.json();
-      
+
       if (data.error) {
         showMessage('error', `Upload failed: ${data.error}`);
         return;
@@ -409,15 +427,14 @@ export function AdminDashboard() {
         formData.append('image', newRecipeImageFile);
         formData.append('recipeId', newRecipe.id);
         formData.append('cuisine', newRecipe.cuisine);
-        
-        const uploadResponse = await fetch(`${baseUrl}/upload-recipe-image`, {
+
+        // FormData upload: authedFetch sends the session JWT and does NOT set
+        // Content-Type, so the browser supplies the multipart boundary.
+        const uploadResponse = await authedFetch('upload-recipe-image', {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
           body: formData,
         });
-        
+
         const uploadData = await uploadResponse.json();
         if (uploadData.imageUrl) {
           imageUrl = uploadData.imageUrl;
@@ -426,19 +443,14 @@ export function AdminDashboard() {
       
       // Create the recipe with the uploaded image URL
       const recipeWithImage = imageUrl ? { ...newRecipe, imageUrl } : newRecipe;
-      
-      const response = await fetch(`${baseUrl}/admin/recipe`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(recipeWithImage),
-      });
-      const data = await response.json();
-      
+
+      const data = await authedPost<any>('admin/recipe', recipeWithImage);
+
       if (data.error) {
         showMessage('error', `Failed to create recipe: ${data.error}`);
         return;
       }
-      
+
       showMessage('success', 'Recipe created successfully!');
       setShowAddRecipe(false);
       // Reset form
@@ -538,33 +550,21 @@ export function AdminDashboard() {
 
   // Generate and store all recipe images
   const generateAllImages = async () => {
-    if (!confirm('This will generate and permanently store images for all recipes. This may take several minutes. Continue?')) {
+    if (!(await confirm({ title: 'Generate all images?', description: 'This generates and permanently stores images for all recipes. It may take several minutes.', confirmText: 'Continue' }))) {
       return;
     }
 
     setLoading(true);
     try {
       showMessage('success', 'Started generating images... This may take a few minutes.');
-      
-      const response = await fetch(`${baseUrl}/generate-all-recipe-images`, {
-        method: 'POST',
-        headers,
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Server error:', errorText);
-        showMessage('error', `Server error (${response.status}): Failed to generate images. Check console for details.`);
-        return;
-      }
-      
-      const data = await response.json();
-      
+
+      const data = await authedPost<any>('generate-all-recipe-images');
+
       if (data.error) {
         showMessage('error', `Failed to generate images: ${data.error}`);
         return;
       }
-      
+
       showMessage('success', `Successfully generated ${data.successCount} images! ${data.skippedCount} already existed, ${data.errorCount} errors.`);
     } catch (error: any) {
       console.error('Error generating images:', error);
@@ -586,19 +586,13 @@ export function AdminDashboard() {
     setCalculatingNutrition(true);
     setNutritionDetails(null);
     try {
-      const response = await fetch(`${baseUrl}/admin/calculate-nutrition`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          ingredients: recipe.ingredients.map((ing: any) => ({
-            name: ing.name,
-            amount: ing.amount,
-          })),
-          servings: recipe.servings || 1,
-        }),
+      const data = await authedPost<any>('admin/calculate-nutrition', {
+        ingredients: recipe.ingredients.map((ing: any) => ({
+          name: ing.name,
+          amount: ing.amount,
+        })),
+        servings: recipe.servings || 1,
       });
-
-      const data = await response.json();
 
       if (data.error) {
         showMessage('error', `Nutrition calculation failed: ${data.error}`);
@@ -647,19 +641,14 @@ export function AdminDashboard() {
   };
 
   const validateAllNutrition = async () => {
-    if (!confirm('This will validate nutrition for all recipes against CalorieNinjas API. This may take several minutes. Continue?')) {
+    if (!(await confirm({ title: 'Validate all nutrition?', description: 'This validates nutrition for all recipes against the CalorieNinjas API. It may take several minutes.', confirmText: 'Continue' }))) {
       return;
     }
 
     setLoading(true);
     showMessage('success', 'Validating all recipes... This will take a few minutes.');
     try {
-      const response = await fetch(`${baseUrl}/admin/validate-nutrition`, {
-        method: 'POST',
-        headers,
-      });
-
-      const data = await response.json();
+      const data = await authedPost<any>('admin/validate-nutrition');
 
       if (data.error) {
         showMessage('error', `Validation failed: ${data.error}`);
@@ -797,6 +786,30 @@ export function AdminDashboard() {
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Calculator className="w-5 h-5" />}
             Validate All Nutrition
           </button>
+
+          <button
+            onClick={estimateRecipeCosts}
+            disabled={estimatingCosts}
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-xl hover:from-amber-600 hover:to-yellow-600 transition-all shadow-md disabled:opacity-50"
+          >
+            {estimatingCosts ? <Loader2 className="w-5 h-5 animate-spin" /> : <Calculator className="w-5 h-5" />}
+            💷 Estimate Recipe Costs
+          </button>
+
+          {recipes.length > 0 && (() => {
+            const priced = recipes.filter((r) => r?.cost_per_serving_gbp != null).length;
+            const pct = Math.round((priced / recipes.length) * 100);
+            return (
+              <div className="flex items-center gap-3 px-4 py-3 bg-amber-50 border-2 border-amber-200 rounded-xl">
+                <span className="text-sm font-semibold text-amber-800 whitespace-nowrap">
+                  Priced: {priced} / {recipes.length} ({pct}%)
+                </span>
+                <div className="w-32 h-2 bg-amber-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-amber-500 transition-all" style={{ width: `${pct}%` }} />
+                </div>
+              </div>
+            );
+          })()}
 
           <button
             onClick={fetchAllRecipes}

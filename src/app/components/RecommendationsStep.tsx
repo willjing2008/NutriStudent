@@ -1,8 +1,10 @@
 import { ShoppingCart, ArrowLeft, Loader2, X, Clock, ChefHat, Users, Flame, RefreshCw, Repeat2, MapPin, ArrowRight, Save, Check, Plus, Bell, ExternalLink, Play, Trash2, AlertTriangle } from 'lucide-react';
 import { UserPreferences, MealTimes } from '../App';
 import { getNutritionTargets } from '../utils/nutritionTargets';
+import { getLocalTodayISO, parseLocalDate, initialPlanOffset } from '../utils/dateUtils';
+import { toast } from 'sonner';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { projectId, publicAnonKey } from '../../../utils/supabase/info';
+import { authedPost } from '../utils/apiClient';
 import { ShoppingMode } from './ShoppingMode';
 import { getRecipeImageWithCache } from '../utils/recipeImages';
 import { MealSwapModal } from './MealSwapModal';
@@ -223,7 +225,6 @@ export function RecommendationsStep({
     (meal: MealPlanMeal): string[] => {
       const urls = [
         mealImages[meal.id],
-        isRenderableImageUrl(meal.imageUrl) ? meal.imageUrl : undefined,
         isRenderableImageUrl(meal.image) ? meal.image : undefined,
         LOCAL_IMAGE_FALLBACK,
       ].filter((url): url is string => isRenderableImageUrl(url));
@@ -312,23 +313,10 @@ export function RecommendationsStep({
     setShowSavedPlansModal(false);
     
     try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/load-meal-plan-by-id`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-          body: JSON.stringify({ userId: user.id, planId }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to load plan');
-      }
+      const data = await authedPost<{ mealPlan?: any }>('load-meal-plan-by-id', {
+        userId: user.id,
+        planId,
+      });
 
       setMealPlan((data.mealPlan));
 
@@ -338,7 +326,7 @@ export function RecommendationsStep({
 
     } catch (err: any) {
       console.error('Error loading plan:', err);
-      alert(err.message || 'Failed to load plan');
+      toast.error(err.message || 'Failed to load plan');
     } finally {
       setLoadingPlan(false);
     }
@@ -354,7 +342,7 @@ export function RecommendationsStep({
       setMealPlan(enriched);
       setLoading(false);
       setPlanSaved(true);
-      setSavedMealPlanSnapshot(JSON.stringify(enriched.meals.map(m => m.id).sort()));
+      setSavedMealPlanSnapshot(JSON.stringify(enriched.meals.map((m: MealPlanMeal) => m.id).sort()));
       fetchMealImages(enriched.meals);
     } else if (hasRequiredPreferences) {
       fetchMealPlan();
@@ -384,15 +372,10 @@ export function RecommendationsStep({
   // Load persisted cooked meals and stats when user is available
   useEffect(() => {
     if (!user) return;
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalTodayISO();
 
     // Load today's cooked meals
-    fetch(`https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/cooked-meals`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${publicAnonKey}` },
-      body: JSON.stringify({ userId: user.id, date: today }),
-    })
-      .then(res => res.json())
+    authedPost<{ mealIds?: string[] }>('cooked-meals', { userId: user.id, date: today })
       .then(data => {
         if (data.mealIds?.length) {
           setCookedMeals(new Set(data.mealIds));
@@ -401,12 +384,7 @@ export function RecommendationsStep({
       .catch(err => console.error('Failed to load cooked meals:', err));
 
     // Load user stats for streak and total cooked count
-    fetch(`https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/user-stats`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${publicAnonKey}` },
-      body: JSON.stringify({ userId: user.id }),
-    })
-      .then(res => res.json())
+    authedPost<{ mealsLogged?: number; totalCookingDays?: number }>('user-stats', { userId: user.id })
       .then(data => {
         setTotalCookedEver(data.mealsLogged || 0);
         setTotalCookingDays(data.totalCookingDays || 0);
@@ -427,9 +405,18 @@ export function RecommendationsStep({
   // Uses 'instant' so there is no visible slide-in animation on page open.
   useEffect(() => {
     if (!mealPlan || !calendarScrollRef.current) return;
+    // Select the day for "today" within the plan, clamped to a real plan day so
+    // the meals always display (a stale/past shopping date previously pushed the
+    // index past the plan end, leaving "Today's Meals" empty).
+    const targetOffset = initialPlanOffset(
+      preferences.shoppingDate,
+      getLocalTodayISO(),
+      daysWithMeals.length,
+    );
+    setSelectedCalendarOffset(targetOffset);
     const container = calendarScrollRef.current;
     requestAnimationFrame(() => {
-      const idx = calendarDays.findIndex(d => d.offset === selectedCalendarOffset);
+      const idx = calendarDays.findIndex(d => d.offset === targetOffset);
       if (idx < 0) return;
       const DAY_W = 64;
       container.scrollTo({
@@ -501,33 +488,18 @@ export function RecommendationsStep({
     setError(null);
 
     try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/generate-meal-plan`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-          body: JSON.stringify({
-            storeName: 'Generic UK Supermarket',
-            mealsPerDay: preferences.mealsPerDay,
-            budget: preferences.budget,
-            goal: preferences.goal,
-            shoppingDate: preferences.shoppingDate,
-            maxCookingTime: preferences.maxCookingTime,
-            avoidIngredients: preferences.avoidIngredients || [],
-            mealTimes: preferences.mealTimes,
-            selectedMealSlots: preferences.selectedMealSlots || ['breakfast', 'lunch', 'dinner'],
-          }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to generate meal plan');
-      }
+      const data = await authedPost<{ mealPlan?: any }>('generate-meal-plan', {
+        storeName: 'Generic UK Supermarket',
+        mealsPerDay: preferences.mealsPerDay,
+        budget: preferences.budget,
+        goal: preferences.goal,
+        shoppingDate: preferences.shoppingDate,
+        maxCookingTime: preferences.maxCookingTime,
+        avoidIngredients: preferences.avoidIngredients || [],
+        dietaryRestrictions: preferences.dietaryRestrictions || [],
+        mealTimes: preferences.mealTimes,
+        selectedMealSlots: preferences.selectedMealSlots || ['breakfast', 'lunch', 'dinner'],
+      });
 
       setMealPlan((data.mealPlan));
 
@@ -580,31 +552,15 @@ export function RecommendationsStep({
 
     try {
       const currentMealIds = mealPlan.meals.map(m => m.id);
-      
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/shuffle-recipe`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-          body: JSON.stringify({
-            currentRecipeId: mealId,
-            goal: preferences.goal,
-            currentMealIds: currentMealIds,
-            maxCookingTime: preferences.maxCookingTime,
-          }),
-        }
-      );
 
-      const data = await response.json();
+      const data = await authedPost<{ replacementMeal: any }>('shuffle-recipe', {
+        currentRecipeId: mealId,
+        goal: preferences.goal,
+        currentMealIds: currentMealIds,
+        maxCookingTime: preferences.maxCookingTime,
+      });
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to find alternative recipe');
-      }
-
-      const updatedMeals = mealPlan.meals.map(meal => 
+      const updatedMeals = mealPlan.meals.map(meal =>
         meal.id === mealId ? data.replacementMeal : meal
       );
 
@@ -728,7 +684,7 @@ export function RecommendationsStep({
     });
 
     const meal = currentDayMeals.find(m => m.id === mealId);
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalTodayISO();
 
     // Increment/decrement timesCooked for user-created recipes
     if (meal && meal.timesCooked !== undefined && mealPlan) {
@@ -743,19 +699,15 @@ export function RecommendationsStep({
     }
 
     // Persist to backend
-    fetch(`https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/track-meal-cooked`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${publicAnonKey}` },
-      body: JSON.stringify({
-        userId: user.id,
-        mealId,
-        date: today,
-        recipeId: meal?.id || mealId,
-        recipeName: meal?.name || '',
-        mealCost: meal?.totalCost || 0,
-        category: meal?.category || '',
-        isCooked: !wasCooked,
-      }),
+    authedPost('track-meal-cooked', {
+      userId: user.id,
+      mealId,
+      date: today,
+      recipeId: meal?.id || mealId,
+      recipeName: meal?.name || '',
+      mealCost: meal?.totalCost || 0,
+      category: meal?.category || '',
+      isCooked: !wasCooked,
     }).catch(err => {
       console.error('Failed to persist cooked meal:', err);
       // Revert on failure
@@ -805,7 +757,7 @@ export function RecommendationsStep({
   // Parse the plan start date from preferences (shoppingDate is 'YYYY-MM-DD' from date input)
   const planStartDate: Date | null = (() => {
     if (!preferences.shoppingDate) return null;
-    const d = new Date(preferences.shoppingDate + 'T00:00:00');
+    const d = parseLocalDate(preferences.shoppingDate);
     return isNaN(d.getTime()) ? null : d;
   })();
 
@@ -982,7 +934,7 @@ export function RecommendationsStep({
               <h1 className="text-xl font-bold text-white">{userName}</h1>
           </div>
         </div>
-          <button className="w-10 h-10 rounded-full bg-[#142A1D] flex items-center justify-center border border-[#1E4029]">
+          <button aria-label="Notifications" className="w-10 h-10 rounded-full bg-[#142A1D] flex items-center justify-center border border-[#1E4029]">
             <Bell className="w-5 h-5 text-[#9CA3AF]" />
             </button>
           </div>
@@ -1164,8 +1116,15 @@ export function RecommendationsStep({
                 <span className="text-[#9CA3AF]">Protein</span>
                 <span className="text-white">{todayNutrition.protein}g/{targetProtein}g</span>
               </div>
-              <div className="h-2 bg-[#1E4029] rounded-full overflow-hidden">
-                <div 
+              <div
+                className="h-2 bg-[#1E4029] rounded-full overflow-hidden"
+                role="progressbar"
+                aria-label="Protein"
+                aria-valuenow={Math.round(Math.min((todayNutrition.protein / targetProtein) * 100, 100))}
+                aria-valuemin={0}
+                aria-valuemax={100}
+              >
+                <div
                   className="h-full bg-[#22C55E] rounded-full transition-all"
                   style={{ width: `${Math.min((todayNutrition.protein / targetProtein) * 100, 100)}%` }}
                 />
@@ -1178,8 +1137,15 @@ export function RecommendationsStep({
                 <span className="text-[#9CA3AF]">Carbs</span>
                 <span className="text-white">{todayNutrition.carbs}g/{targetCarbs}g</span>
               </div>
-              <div className="h-2 bg-[#1E4029] rounded-full overflow-hidden">
-                <div 
+              <div
+                className="h-2 bg-[#1E4029] rounded-full overflow-hidden"
+                role="progressbar"
+                aria-label="Carbs"
+                aria-valuenow={Math.round(Math.min((todayNutrition.carbs / targetCarbs) * 100, 100))}
+                aria-valuemin={0}
+                aria-valuemax={100}
+              >
+                <div
                   className="h-full bg-[#4ADE80] rounded-full transition-all"
                   style={{ width: `${Math.min((todayNutrition.carbs / targetCarbs) * 100, 100)}%` }}
                 />
@@ -1192,7 +1158,14 @@ export function RecommendationsStep({
                 <span className="text-[#9CA3AF]">Fats</span>
                 <span className="text-white">{todayNutrition.fats}g/{targetFats}g</span>
                                   </div>
-              <div className="h-2 bg-[#1E4029] rounded-full overflow-hidden">
+              <div
+                className="h-2 bg-[#1E4029] rounded-full overflow-hidden"
+                role="progressbar"
+                aria-label="Fats"
+                aria-valuenow={Math.round(Math.min((todayNutrition.fats / targetFats) * 100, 100))}
+                aria-valuemin={0}
+                aria-valuemax={100}
+              >
                 <div
                   className="h-full bg-[#86EFAC] rounded-full transition-all"
                   style={{ width: `${Math.min((todayNutrition.fats / targetFats) * 100, 100)}%` }}
@@ -1206,7 +1179,14 @@ export function RecommendationsStep({
                 <span className="text-[#9CA3AF]">Fiber</span>
                 <span className="text-white">{todayNutrition.fiber}g/{targetFiber}g</span>
               </div>
-              <div className="h-2 bg-[#1E4029] rounded-full overflow-hidden">
+              <div
+                className="h-2 bg-[#1E4029] rounded-full overflow-hidden"
+                role="progressbar"
+                aria-label="Fiber"
+                aria-valuenow={Math.round(Math.min((todayNutrition.fiber / targetFiber) * 100, 100))}
+                aria-valuemin={0}
+                aria-valuemax={100}
+              >
                 <div
                   className="h-full bg-[#BBF7D0] rounded-full transition-all"
                   style={{ width: `${Math.min((todayNutrition.fiber / targetFiber) * 100, 100)}%` }}
@@ -1300,6 +1280,8 @@ export function RecommendationsStep({
                       e.stopPropagation();
                       toggleMealCooked(meal.id);
                     }}
+                    aria-pressed={isCooked}
+                    aria-label={isCooked ? `Mark ${mealType} as not cooked` : `Mark ${mealType} as cooked`}
                     className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
                       isCooked
                         ? 'bg-[#22C55E] text-[#052E16] animate-pulse-glow'
@@ -1459,6 +1441,7 @@ export function RecommendationsStep({
               <h3 className="text-white font-semibold">{selectedMeal.name}</h3>
               <button
                 onClick={() => setShowRecipeModal(false)}
+                aria-label="Close"
                 className="p-2 hover:bg-[#142A1D] rounded-full transition-colors"
               >
                 <X className="w-5 h-5 text-[#9CA3AF]" />
@@ -1648,11 +1631,9 @@ export function RecommendationsStep({
       {showMealSwapModal && selectedMealForSwap && (
         <MealSwapModal
           currentMeal={selectedMealForSwap}
-          goal={preferences.goal}
+          goal={preferences.goal || 'Custom'}
           currentMealIds={mealPlan.meals.map(m => m.id)}
           maxCookingTime={preferences.maxCookingTime}
-          projectId={projectId}
-          publicAnonKey={publicAnonKey}
           onSwap={handleMealSwap}
           onClose={() => setShowMealSwapModal(false)}
         />

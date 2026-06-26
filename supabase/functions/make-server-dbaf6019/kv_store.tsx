@@ -60,11 +60,14 @@ export const mset = async (keys: string[], values: any[]): Promise<void> => {
 // Gets multiple key-value pairs from the database.
 export const mget = async (keys: string[]): Promise<any[]> => {
   const supabase = client()
-  const { data, error } = await supabase.from("kv_store_dbaf6019").select("value").in("key", keys);
+  const { data, error } = await supabase.from("kv_store_dbaf6019").select("key, value").in("key", keys);
   if (error) {
     throw new Error(error.message);
   }
-  return data?.map((d) => d.value) ?? [];
+  // Map results back to the requested order; missing keys resolve to undefined
+  // (PostgREST .in() does not guarantee order and drops absent keys).
+  const byKey = new Map((data ?? []).map((d) => [d.key, d.value]));
+  return keys.map((key) => byKey.get(key));
 };
 
 // Deletes multiple key-value pairs from the database.
@@ -76,10 +79,20 @@ export const mdel = async (keys: string[]): Promise<void> => {
   }
 };
 
+// Escape LIKE metacharacters (\, %, _) in a literal prefix so a crafted prefix
+// cannot inject wildcards and match keys across other users/namespaces. The
+// backslash is escaped first so we don't double-escape the escapes we add. Pair
+// with PostgREST's ESCAPE clause via the `\` escape character.
+export const escapeLikePrefix = (prefix: string): string =>
+  prefix.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_");
+
 // Search for key-value pairs by prefix.
 export const getByPrefix = async (prefix: string): Promise<any[]> => {
   const supabase = client()
-  const { data, error } = await supabase.from("kv_store_dbaf6019").select("key, value").like("key", prefix + "%");
+  // Match only keys that start with the literal prefix; wildcards in `prefix`
+  // are neutralised by escapeLikePrefix.
+  const pattern = `${escapeLikePrefix(prefix)}%`;
+  const { data, error } = await supabase.from("kv_store_dbaf6019").select("key, value").like("key", pattern);
   if (error) {
     throw new Error(error.message);
   }

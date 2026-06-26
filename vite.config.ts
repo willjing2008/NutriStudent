@@ -16,4 +16,20 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // Split heavy vendor libraries into their own chunks so the main app
+        // bundle shrinks and third-party code caches independently.
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return
+          if (id.includes('recharts') || id.includes('d3-')) return 'charts'
+          if (id.includes('@radix-ui')) return 'radix'
+          if (id.includes('@mui') || id.includes('@emotion')) return 'mui'
+          if (id.includes('/react/') || id.includes('react-dom') || id.includes('scheduler')) return 'react'
+          return 'vendor'
+        },
+      },
+    },
+  },
 })

@@ -1,14 +1,9 @@
 import { useLanguage } from '../hooks/useLanguage';
 import React, { useState, useEffect, useCallback } from 'react';
-import { Edit2, Search, Plus, ChevronRight, Check, Calendar, Sparkles, ChefHat, Flame } from 'lucide-react';
+import { Edit2, Plus, ChevronRight, Check, Calendar, Sparkles, ChefHat, Flame } from 'lucide-react';
 import { BottomNavigation, NavTab } from './BottomNavigation';
-import { projectId, publicAnonKey } from '../../../utils/supabase/info';
-
-const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019`;
-const API_HEADERS = {
-  'Content-Type': 'application/json',
-  'Authorization': `Bearer ${publicAnonKey}`,
-};
+import { ImageWithFallback } from './figma/ImageWithFallback';
+import { authedPost, getUserFacingApiErrorMessage } from '../utils/apiClient';
 
 interface MyRecipe {
   recipeId: string;
@@ -80,20 +75,17 @@ export function MealPlansDashboard({
 
   const [myRecipes, setMyRecipes] = useState<MyRecipe[]>([]);
   const [myRecipesLoading, setMyRecipesLoading] = useState(false);
+  const [myRecipesError, setMyRecipesError] = useState<string | null>(null);
 
   const fetchMyRecipes = useCallback(async () => {
     if (!user?.id) return;
     setMyRecipesLoading(true);
+    setMyRecipesError(null);
     try {
-      const res = await fetch(`${API_BASE}/my-recipes`, {
-        method: 'POST',
-        headers: API_HEADERS,
-        body: JSON.stringify({ userId: user.id }),
-      });
-      const data = await res.json();
-      if (data.recipes) setMyRecipes(data.recipes);
+      const data = await authedPost<{ recipes?: MyRecipe[] }>('my-recipes', { userId: user.id });
+      setMyRecipes(data.recipes ?? []);
     } catch (err) {
-      console.error('Failed to fetch my recipes:', err);
+      setMyRecipesError(getUserFacingApiErrorMessage(err));
     } finally {
       setMyRecipesLoading(false);
     }
@@ -115,10 +107,20 @@ export function MealPlansDashboard({
   const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
 
-  const handleRename = (id: string, e: React.MouseEvent) => {
+  const handleRename = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setSavedPlansState(prev => prev.map(p => p.id === id ? { ...p, name: renameValue } : p));
+    const newName = renameValue.trim();
+    if (!newName) return;
+    const previous = savedPlansState;
+    // Optimistic update, then persist; revert if the request fails.
+    setSavedPlansState(prev => prev.map(p => p.id === id ? { ...p, name: newName } : p));
     setEditingPlanId(null);
+    try {
+      await authedPost('rename-meal-plan', { planId: id, planName: newName });
+    } catch (err) {
+      console.error('Failed to rename plan:', err);
+      setSavedPlansState(previous);
+    }
   };
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
@@ -164,21 +166,24 @@ export function MealPlansDashboard({
       <div className="px-5 pt-6 pb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center overflow-hidden">
+            <button
+              type="button"
+              onClick={onNavigateProfile}
+              aria-label="Open profile"
+              className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#22C55E]"
+            >
               <img
                 src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`}
                 alt={userName}
                 className="w-10 h-10 rounded-full"
               />
-            </div>
+            </button>
             <h1 className="text-xl font-bold text-white">{t("yourMealPlans")}</h1>
           </div>
           <div className="flex items-center gap-3">
-            <button className="p-2 hover:bg-[#1A1A1A] rounded-full transition-colors">
-              <Search className="w-5 h-5 text-white" />
-            </button>
-            <button 
+            <button
               onClick={onCreateNew}
+              aria-label="Create new plan"
               className="p-2 hover:bg-[#1A1A1A] rounded-full transition-colors"
             >
               <Plus className="w-5 h-5 text-white" />
@@ -290,9 +295,10 @@ export function MealPlansDashboard({
 
                   {/* Plan Image */}
                   <div className="absolute top-5 right-5 w-28 h-28 rounded-xl overflow-hidden shadow-lg shadow-black/20 rotate-3 border-2 border-[#2D5A3D]/20">
-                    <img
+                    <ImageWithFallback
                       src={currentActivePlan.image}
                       alt={currentActivePlan.name}
+                      loading="eager"
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -330,7 +336,7 @@ export function MealPlansDashboard({
                 <div key={plan.id} className="relative flex-shrink-0 w-48 group">
                    <button onClick={() => onViewPlan(plan.id)} className="w-full text-left">
                      <div className="w-48 h-32 rounded-2xl overflow-hidden mb-3 relative">
-                       <img src={plan.image} alt={plan.name} className="w-full h-full object-cover" />
+                       <ImageWithFallback src={plan.image} alt={plan.name} className="w-full h-full object-cover" />
                        <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-all" />
                      </div>
                      <h4 className="text-white font-semibold text-sm mb-1">{plan.name}</h4>
@@ -348,6 +354,7 @@ export function MealPlansDashboard({
                    
                    <button
                      onClick={(e) => startEditing(plan.id, plan.name, e)}
+                     aria-label={`Edit name of ${plan.name}`}
                      className="absolute top-2 right-2 p-2.5 bg-black/60 backdrop-blur-md rounded-full text-white shadow-lg hover:bg-black/80 hover:scale-110 transition-all"
                    >
                      <Edit2 className="w-4 h-4" />
@@ -393,6 +400,19 @@ export function MealPlansDashboard({
                 {Array.from({ length: 2 }).map((_, i) => (
                   <div key={i} className="h-16 rounded-2xl bg-[#1A1A1A] animate-pulse" />
                 ))}
+              </div>
+            ) : myRecipesError ? (
+              <div className="rounded-2xl border border-amber-400/20 bg-amber-400/10 py-6 px-4 text-center">
+                <ChefHat className="w-8 h-8 text-amber-300 mx-auto mb-2.5" />
+                <p className="text-amber-100 text-sm font-semibold mb-1">Couldn't load your recipes</p>
+                <p className="text-amber-100/70 text-xs leading-5 mb-4">{myRecipesError}</p>
+                <button
+                  type="button"
+                  onClick={fetchMyRecipes}
+                  className="px-4 py-2 rounded-full bg-amber-300 text-[#1F1300] text-xs font-bold hover:bg-amber-200 transition-colors"
+                >
+                  Try again
+                </button>
               </div>
             ) : myRecipes.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-[#2D2D2D] bg-[#111111] py-8 px-4 text-center">

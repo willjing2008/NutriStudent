@@ -1,9 +1,13 @@
 node_modules/
 dist/
+coverage/
+test-results/
+playwright-report/
 .DS_Store
 *.log
 ios/App/App/public/
 ios/App/Pods/
+supabase/.temp/
 .cursor/
 .claude/
 .agents/

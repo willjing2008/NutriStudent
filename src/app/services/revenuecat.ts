@@ -1,5 +1,5 @@
 import { Capacitor } from '@capacitor/core';
-import { Purchases, LOG_LEVEL, PURCHASES_ERROR_CODE, PACKAGE_TYPE } from '@revenuecat/purchases-capacitor';
+import { Purchases, LOG_LEVEL, PURCHASES_ERROR_CODE, PACKAGE_TYPE, VERIFICATION_RESULT } from '@revenuecat/purchases-capacitor';
 import { RevenueCatUI, PAYWALL_RESULT } from '@revenuecat/purchases-capacitor-ui';
 import type {
   CustomerInfo,
@@ -19,6 +19,17 @@ export const PRODUCT_IDS = {
   yearly: 'yearly',
 } as const;
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+const getSdkErrorCode = (error: unknown): unknown =>
+  isRecord(error) ? error.code : undefined;
+
+const getSdkErrorMessage = (error: unknown, fallback: string): string => {
+  const message = isRecord(error) ? error.message : undefined;
+  return typeof message === 'string' && message.trim() ? message : fallback;
+};
+
 // ── Platform guard ─────────────────────────────────────────────────────────────
 
 /**
@@ -29,7 +40,7 @@ export const isNativePlatform = Capacitor.isNativePlatform();
 
 /** Stub CustomerInfo returned on web so the rest of the app keeps working. */
 const EMPTY_CUSTOMER_INFO: CustomerInfo = {
-  entitlements: { all: {}, active: {}, verification: 'NOT_REQUESTED' as any },
+  entitlements: { all: {}, active: {}, verification: VERIFICATION_RESULT.NOT_REQUESTED },
   activeSubscriptions: [],
   allPurchasedProductIdentifiers: [],
   latestExpirationDate: null,
@@ -218,12 +229,12 @@ export async function purchasePackage(
       aPackage: pkg,
     });
     return { success: true, customerInfo };
-  } catch (error: any) {
-    if (error.code === PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) {
+  } catch (error: unknown) {
+    if (getSdkErrorCode(error) === PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) {
       return { success: false, cancelled: true };
     }
     console.error('[RevenueCat] Purchase failed:', error);
-    return { success: false, error: error.message ?? 'Purchase failed' };
+    return { success: false, error: getSdkErrorMessage(error, 'Purchase failed') };
   }
 }
 
@@ -240,9 +251,9 @@ export async function restorePurchases(): Promise<PurchaseResult> {
   try {
     const { customerInfo } = await Purchases.restorePurchases();
     return { success: true, customerInfo };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[RevenueCat] Restore failed:', error);
-    return { success: false, error: error.message ?? 'Restore failed' };
+    return { success: false, error: getSdkErrorMessage(error, 'Restore failed') };
   }
 }
 

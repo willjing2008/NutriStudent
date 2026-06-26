@@ -1,6 +1,8 @@
 import { X, Calendar, ShoppingCart, Loader2, Trash2, Eye, ChefHat } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { projectId, publicAnonKey } from '../../../utils/supabase/info';
+import { toast } from 'sonner';
+import { authedPost } from '../utils/apiClient';
+import { useConfirm } from '../hooks/useConfirm';
 
 interface SavedPlan {
   planId: string;
@@ -21,6 +23,7 @@ export function SavedPlansModal({ userId, onClose, onLoadPlan }: SavedPlansModal
   const [loading, setLoading] = useState(true);
   const [deletingPlanId, setDeletingPlanId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const confirm = useConfirm();
 
   useEffect(() => {
     fetchSavedPlans();
@@ -31,24 +34,7 @@ export function SavedPlansModal({ userId, onClose, onLoadPlan }: SavedPlansModal
     setError(null);
 
     try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/get-meal-plans`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-          body: JSON.stringify({ userId }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to load saved plans');
-      }
-
+      const data = await authedPost<{ plans?: SavedPlan[] }>('get-meal-plans', { userId });
       setPlans(data.plans || []);
     } catch (err: any) {
       console.error('Error fetching saved plans:', err);
@@ -59,30 +45,18 @@ export function SavedPlansModal({ userId, onClose, onLoadPlan }: SavedPlansModal
   };
 
   const handleDeletePlan = async (planId: string) => {
-    if (!confirm('Are you sure you want to delete this meal plan?')) {
-      return;
-    }
+    const ok = await confirm({
+      title: 'Delete meal plan?',
+      description: 'This permanently removes the saved plan.',
+      confirmText: 'Delete',
+      destructive: true,
+    });
+    if (!ok) return;
 
     setDeletingPlanId(planId);
 
     try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/delete-meal-plan-by-id`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-          body: JSON.stringify({ userId, planId }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to delete plan');
-      }
+      await authedPost<{ success?: boolean }>('delete-meal-plan-by-id', { userId, planId });
 
       // Remove from local state
       setPlans(plans.filter(p => p.planId !== planId));
@@ -90,7 +64,7 @@ export function SavedPlansModal({ userId, onClose, onLoadPlan }: SavedPlansModal
       console.log('✅ Plan deleted successfully');
     } catch (err: any) {
       console.error('Error deleting plan:', err);
-      alert(err.message || 'Failed to delete plan');
+      toast.error(err.message || 'Failed to delete plan');
     } finally {
       setDeletingPlanId(null);
     }
@@ -124,6 +98,7 @@ export function SavedPlansModal({ userId, onClose, onLoadPlan }: SavedPlansModal
           </div>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="p-2 hover:bg-white/20 rounded-lg transition-colors"
           >
             <X className="w-6 h-6" />
@@ -198,6 +173,7 @@ export function SavedPlansModal({ userId, onClose, onLoadPlan }: SavedPlansModal
                       <button
                         onClick={() => handleDeletePlan(plan.planId)}
                         disabled={deletingPlanId === plan.planId}
+                        aria-label={`Delete plan ${plan.planName}`}
                         className={`px-4 py-3 rounded-lg transition-all font-medium flex items-center justify-center ${
                           deletingPlanId === plan.planId
                             ? 'bg-gray-300 cursor-not-allowed'

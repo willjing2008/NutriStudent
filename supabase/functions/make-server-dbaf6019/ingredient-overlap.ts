@@ -85,6 +85,14 @@ export function computeIngredientKeywords(recipe: NewRecipe): Set<string> {
 // ── 1b. Overlap scoring ────────────────────────────────────────────
 
 /** Count overlapping ingredients between two keyword sets. Partial credit for substring matches. */
+// Partial credit only when two keywords share a whole word, so multi-word
+// ingredients still overlap ("chicken breast" / "chicken thigh") but raw
+// substrings no longer false-match ("egg" / "eggplant", "pea" / "peanut").
+function sharesWord(a: string, b: string): boolean {
+  const wordsB = new Set(b.split(/\s+/).filter(Boolean));
+  return a.split(/\s+/).filter(Boolean).some(w => wordsB.has(w));
+}
+
 export function overlapScore(
   keywordsA: Set<string>,
   keywordsB: Set<string>
@@ -94,7 +102,7 @@ export function overlapScore(
     for (const b of keywordsB) {
       if (a === b) {
         score += 1;
-      } else if (a.includes(b) || b.includes(a)) {
+      } else if (sharesWord(a, b)) {
         score += 0.5;
       }
     }
@@ -110,28 +118,48 @@ export interface ScoredRecipe {
 }
 
 /**
+ * Optional goal bias for selection. `scoreFn` returns a recipe's goal-suitability
+ * in [0,1] (see recipe-score.ts); `weight` scales how hard it nudges against
+ * ingredient overlap. Omit entirely to keep selection purely overlap-driven.
+ */
+export interface RecipeBias {
+  scoreFn: (recipe: NewRecipe) => number;
+  weight: number;
+}
+
+/**
  * Greedy selection of `targetCount` recipes from `candidates` that maximize
  * ingredient overlap among themselves AND with `alreadySelected` recipes.
  */
 export function selectOverlapCluster(
   candidates: ScoredRecipe[],
   targetCount: number,
-  alreadySelected: ScoredRecipe[]
+  alreadySelected: ScoredRecipe[],
+  bias?: RecipeBias
 ): ScoredRecipe[] {
+  // Goal nudge added to each candidate's score (0 when no bias is supplied, so
+  // default callers and the 28-day queue path are unaffected).
+  const goalBonus = (r: NewRecipe): number => (bias ? bias.weight * bias.scoreFn(r) : 0);
+
+  // Too few to cluster: the whole pool is used, so the goal bias can't change
+  // which recipes are picked here (and the later rotation shuffle discards
+  // order). Bias only bites when a pool exceeds its target — true for the
+  // ~36-recipe study pool, whose per-category pools still exceed sizes 3/4/4.
   if (candidates.length <= targetCount) return [...candidates];
 
-  // Score each candidate: total overlap with all other candidates + cross-category bonus
+  // Score each candidate by its MEAN overlap (within-pool + cross-category ×1.5),
+  // not the raw sum, so the goal bonus is a comparable-magnitude nudge regardless
+  // of pool size and is applied on the same scale as the marginal loop below.
+  const seedDenom = Math.max(1, candidates.length - 1 + alreadySelected.length);
   const seedScores = candidates.map((c, i) => {
-    let score = 0;
-    // Overlap with other candidates in this pool
+    let overlap = 0;
     for (let j = 0; j < candidates.length; j++) {
-      if (i !== j) score += overlapScore(c.keywords, candidates[j].keywords);
+      if (i !== j) overlap += overlapScore(c.keywords, candidates[j].keywords);
     }
-    // Cross-category bonus (1.5× weight)
     for (const sel of alreadySelected) {
-      score += overlapScore(c.keywords, sel.keywords) * 1.5;
+      overlap += overlapScore(c.keywords, sel.keywords) * 1.5;
     }
-    return { index: i, score };
+    return { index: i, score: overlap / seedDenom + goalBonus(c.recipe) };
   });
 
   seedScores.sort((a, b) => b.score - a.score);
@@ -146,13 +174,16 @@ export function selectOverlapCluster(
     for (let i = 0; i < candidates.length; i++) {
       if (usedIndices.has(i)) continue;
 
-      let marginal = 0;
+      let overlap = 0;
       for (const sel of selected) {
-        marginal += overlapScore(candidates[i].keywords, sel.keywords);
+        overlap += overlapScore(candidates[i].keywords, sel.keywords);
       }
       for (const sel of alreadySelected) {
-        marginal += overlapScore(candidates[i].keywords, sel.keywords) * 1.5;
+        overlap += overlapScore(candidates[i].keywords, sel.keywords) * 1.5;
       }
+      // Mean overlap (same scale as the seed loop) + the goal nudge.
+      const marginalDenom = Math.max(1, selected.length + alreadySelected.length);
+      const marginal = overlap / marginalDenom + goalBonus(candidates[i].recipe);
 
       if (marginal > bestScore) {
         bestScore = marginal;
@@ -177,7 +208,8 @@ export function selectAllCoreRecipes(
   breakfastPool: ScoredRecipe[],
   lunchPool: ScoredRecipe[],
   dinnerPool: ScoredRecipe[],
-  clusterSizes?: { breakfast?: number; lunch?: number; dinner?: number }
+  clusterSizes?: { breakfast?: number; lunch?: number; dinner?: number },
+  bias?: RecipeBias
 ): { breakfast: ScoredRecipe[]; lunch: ScoredRecipe[]; dinner: ScoredRecipe[] } {
   const sizes = {
     breakfast: clusterSizes?.breakfast ?? 3,
@@ -186,13 +218,13 @@ export function selectAllCoreRecipes(
   };
 
   // Dinner first — largest pool, most freedom
-  const dinner = selectOverlapCluster(dinnerPool, sizes.dinner, []);
+  const dinner = selectOverlapCluster(dinnerPool, sizes.dinner, [], bias);
 
   // Lunch — cross-overlap with dinner
-  const lunch = selectOverlapCluster(lunchPool, sizes.lunch, dinner);
+  const lunch = selectOverlapCluster(lunchPool, sizes.lunch, dinner, bias);
 
   // Breakfast — cross-overlap with dinner + lunch
-  const breakfast = selectOverlapCluster(breakfastPool, sizes.breakfast, [...dinner, ...lunch]);
+  const breakfast = selectOverlapCluster(breakfastPool, sizes.breakfast, [...dinner, ...lunch], bias);
 
   return { breakfast, lunch, dinner };
 }

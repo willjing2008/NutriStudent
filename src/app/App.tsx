@@ -6,13 +6,15 @@ import { RecommendationsStep } from './components/RecommendationsStep';
 import { LoginPage } from './components/LoginPage';
 import { AdminDashboard } from './components/AdminDashboard';
 import { MealPlansDashboard } from './components/MealPlansDashboard';
+import { DEFAULT_PLAN_IMAGE, firstMealImage } from './utils/planImage';
 import { ShoppingMode } from './components/ShoppingMode';
 import { ProfilePage } from './components/ProfilePage';
 import { LeaderboardPage } from './components/LeaderboardPage';
 import { SubscriptionPage } from './components/SubscriptionPage';
+import { NetworkStatusBanner } from './components/NetworkStatusBanner';
 import { NavTab } from './components/BottomNavigation';
 import { supabase } from '../utils/supabaseClient';
-import { projectId, publicAnonKey } from '../../utils/supabase/info';
+import { authedPost } from './utils/apiClient';
 import { useSubscription } from './hooks/useSubscription';
 import { useAcademicCalendar } from './hooks/useAcademicCalendar';
 import { Apple, LogOut } from 'lucide-react';
@@ -47,6 +49,7 @@ export interface UserPreferences {
   goal: 'study' | 'work' | 'fitness' | null;
   maxCookingTime: number;
   avoidIngredients: string[];
+  dietaryRestrictions: string[];
   mealTimes: MealTimes;
   selectedMealSlots: ('breakfast' | 'lunch' | 'dinner')[];
 }
@@ -88,6 +91,7 @@ export default function App() {
     goal: null,
     maxCookingTime: 30,
     avoidIngredients: [],
+    dietaryRestrictions: [],
     mealTimes: { breakfast: '08:00', lunch: '12:00', dinner: '18:00' },
     selectedMealSlots: ['breakfast', 'lunch', 'dinner'],
   });
@@ -185,39 +189,17 @@ export default function App() {
   useEffect(() => {
     if (!user?.id || preferences.gender === null) return;
 
-    fetch(
-      `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/auth/update-profile`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${publicAnonKey}`,
-        },
-        body: JSON.stringify({
-          userId: user.id,
-          gender: preferences.gender,
-        }),
-      }
-    ).catch(err => console.error('Failed to persist gender:', err));
+    authedPost('auth/update-profile', {
+      userId: user.id,
+      gender: preferences.gender,
+    }).catch(err => console.error('Failed to persist gender:', err));
   }, [preferences.gender, user?.id]);
 
   const loadSavedMealPlan = async (userId: string) => {
     setLoadingSavedPlan(true);
     try {
       // Step 1: get the list to find the most recent plan ID
-      const listResponse = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/get-meal-plans`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-          body: JSON.stringify({ userId }),
-        }
-      );
-
-      const listData = await listResponse.json();
+      const listData = await authedPost<{ plans?: any[] }>('get-meal-plans', { userId });
 
       if (!listData.plans?.length) {
         console.log('No saved meal plans found');
@@ -230,7 +212,7 @@ export default function App() {
         name: p.planName,
         createdAt: p.savedAt,
         description: 'Saved meal plan',
-        image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400',
+        image: p.image || DEFAULT_PLAN_IMAGE,
         calories: 0,
         protein: 0,
       }));
@@ -239,19 +221,10 @@ export default function App() {
       // Step 2: load the most recent plan by its ID
       const latestPlanId = listData.plans[0].planId;
       setActivePlanId(latestPlanId);
-      const planResponse = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/load-meal-plan-by-id`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-          body: JSON.stringify({ userId, planId: latestPlanId }),
-        }
+      const planData = await authedPost<{ mealPlan?: any; preferences?: any }>(
+        'load-meal-plan-by-id',
+        { userId, planId: latestPlanId },
       );
-
-      const planData = await planResponse.json();
 
       if (planData.mealPlan) {
         console.log('Found saved meal plan');
@@ -280,24 +253,12 @@ export default function App() {
         await deleteSavedMealPlanById(replacePlanId);
       }
 
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/save-meal-plan`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-          body: JSON.stringify({
-            userId: user.id,
-            mealPlan,
-            preferences,
-            planName: planName || `Meal Plan - ${new Date().toLocaleDateString('en-GB')}`,
-          }),
-        }
-      );
-
-      const data = await response.json();
+      const data = await authedPost<{ success?: boolean; planId?: string }>('save-meal-plan', {
+        userId: user.id,
+        mealPlan,
+        preferences,
+        planName: planName || `Meal Plan - ${new Date().toLocaleDateString('en-GB')}`,
+      });
 
       if (data.success) {
         console.log('Meal plan saved successfully');
@@ -310,7 +271,7 @@ export default function App() {
           name: planName || `Meal Plan - ${new Date().toLocaleDateString('en-GB')}`,
           createdAt: new Date().toISOString(),
           description: `${preferences.goal || 'Custom'} plan`,
-          image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400',
+          image: firstMealImage(mealPlan.meals),
           calories: mealPlan.meals?.reduce((sum: number, m: any) => sum + (m.nutrition?.calories || 0), 0) || 2000,
           protein: mealPlan.meals?.reduce((sum: number, m: any) => sum + (m.nutrition?.protein || 0), 0) || 100,
           goal: preferences.goal || 'Custom',
@@ -331,19 +292,10 @@ export default function App() {
     if (!user) return;
 
     try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/delete-meal-plan-by-id`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-          body: JSON.stringify({ userId: user.id, planId }),
-        }
-      );
-
-      const data = await response.json();
+      const data = await authedPost<{ success?: boolean }>('delete-meal-plan-by-id', {
+        userId: user.id,
+        planId,
+      });
 
       if (data.success) {
         console.log('Meal plan deleted successfully:', planId);
@@ -421,6 +373,7 @@ export default function App() {
       goal: null,
       maxCookingTime: 30,
       avoidIngredients: [],
+      dietaryRestrictions: [],
       mealTimes: { breakfast: '08:00', lunch: '12:00', dinner: '18:00' },
       selectedMealSlots: ['breakfast', 'lunch', 'dinner'],
     });
@@ -443,31 +396,45 @@ export default function App() {
   // Loading State
   if (checkingAuth) {
     return (
-      <div className="min-h-screen bg-[#0A1F13] flex items-center justify-center">
-        <div className="text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Apple className="w-10 h-10 text-[#22C55E] animate-pulse" />
+      <>
+        <NetworkStatusBanner />
+        <div className="min-h-screen bg-[#0A1F13] flex items-center justify-center">
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <Apple className="w-10 h-10 text-[#22C55E] animate-pulse" />
+            </div>
+            <div className="text-[#9CA3AF]">Loading...</div>
           </div>
-          <div className="text-[#9CA3AF]">Loading...</div>
         </div>
-      </div>
+      </>
     );
   }
 
   // Login Page
   if (!isAuthenticated) {
-    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+    return (
+      <>
+        <NetworkStatusBanner />
+        <LoginPage onLoginSuccess={handleLoginSuccess} />
+      </>
+    );
   }
 
   // Mandatory Paywall — non-Pro authenticated users
   if (isAuthenticated && isReady && !isPro) {
-    return <SubscriptionPage mandatory onLogout={handleLogout} />;
+    return (
+      <>
+        <NetworkStatusBanner />
+        <SubscriptionPage mandatory onLogout={handleLogout} />
+      </>
+    );
   }
 
   // Admin Dashboard
   if (showAdminDashboard) {
     return (
       <div className="min-h-screen bg-[#0A1F13]">
+        <NetworkStatusBanner />
         <div className="container mx-auto px-4 py-6">
           <div className="mb-6 flex items-center justify-between bg-[#142A1D] rounded-2xl p-4 border border-[#1E4029]">
             <div className="flex items-center gap-3">
@@ -497,6 +464,7 @@ export default function App() {
   if (isOnboarding) {
     return (
       <div className="min-h-screen bg-[#0A1F13]">
+        <NetworkStatusBanner />
         {onboardingStep === 1 && (
           <WelcomeStep 
             onNext={() => setOnboardingStep(2)} 
@@ -564,6 +532,7 @@ export default function App() {
   // Main App with Tab Navigation
   return (
     <>
+      <NetworkStatusBanner />
       {/* Home Tab - Meal Plans Dashboard */}
       {activeNavTab === 'home' && (
         <MealPlansDashboard
@@ -580,7 +549,7 @@ export default function App() {
             id: activePlanId || 'active-plan',
             name: savedPlansHistory[0]?.name || 'Your Current Plan',
             description: `${preferences.goal === 'study' ? 'Study focus' : preferences.goal === 'work' ? 'Work efficiency' : 'Fitness'} meal plan`,
-            image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400',
+            image: firstMealImage(savedMealPlan.meals),
             calories: savedMealPlan.meals?.reduce((sum: number, m: any) => sum + (m.nutrition?.calories || 0), 0) || 0,
             protein: savedMealPlan.meals?.reduce((sum: number, m: any) => sum + (m.nutrition?.protein || 0), 0) || 0,
             isActive: true,

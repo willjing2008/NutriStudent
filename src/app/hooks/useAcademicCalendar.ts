@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { projectId, publicAnonKey } from '../../../utils/supabase/info';
+import { authedFetch } from '../utils/apiClient';
 import type {
   AcademicSchedule,
   RecipeQueue,
@@ -9,24 +9,36 @@ import type {
   ShoppingIngredient,
 } from '../types/calendar';
 import type { MealTimes } from '../App';
-
-const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019`;
-
-const apiHeaders = {
-  'Content-Type': 'application/json',
-  'Authorization': `Bearer ${publicAnonKey}`,
-};
+import { getLocalTodayISO, toLocalISODate } from '../utils/dateUtils';
 
 async function apiPost<T>(endpoint: string, body: object): Promise<T> {
-  const res = await fetch(`${API_BASE}/${endpoint}`, {
+  const res = await authedFetch(endpoint, {
     method: 'POST',
-    headers: apiHeaders,
     body: JSON.stringify(body),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || `API error: ${res.status}`);
   return data;
 }
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+const getErrorMessage = (err: unknown, fallback: string): string => {
+  const message = err instanceof Error
+    ? err.message
+    : isRecord(err)
+      ? err.message
+      : undefined;
+  return typeof message === 'string' && message.trim() ? message : fallback;
+};
+
+const CALENDAR_ERROR_MESSAGES = {
+  saveSchedule: 'Failed to save academic schedule',
+  generateQueue: 'Failed to generate recipe queue',
+  loadQueueWeek: 'Failed to load queue week',
+  swapQueueMeal: 'Failed to swap queue meal',
+} as const;
 
 export interface AcademicCalendarState {
   schedule: AcademicSchedule | null;
@@ -58,7 +70,7 @@ export function useAcademicCalendar() {
       const data = await apiPost<{ schedule: AcademicSchedule | null }>('get-academic-schedule', { userId });
       setSchedule(data.schedule);
       return data.schedule;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to load academic schedule:', err);
       return null;
     }
@@ -78,7 +90,7 @@ export function useAcademicCalendar() {
   // Load meal conflicts for today
   const loadMealConflicts = useCallback(async (userId: string, mealTimes?: MealTimes) => {
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getLocalTodayISO();
       const data = await apiPost<{ conflicts: MealConflict[] }>('get-meal-conflicts', { userId, date: today, mealTimes });
       setMealConflicts(data.conflicts);
       return data.conflicts;
@@ -96,7 +108,7 @@ export function useAcademicCalendar() {
       const promises = Array.from({ length: 7 }, (_, i) => {
         const d = new Date(today);
         d.setDate(today.getDate() + (i - dow));
-        const dateStr = d.toISOString().split('T')[0];
+        const dateStr = toLocalISODate(d);
         return apiPost<{ conflicts: MealConflict[] }>('get-meal-conflicts', { userId, date: dateStr, mealTimes })
           .then(data => ({ day: i, conflicts: data.conflicts }));
       });
@@ -127,8 +139,8 @@ export function useAcademicCalendar() {
       setError(null);
       await refreshAllConflicts(userId, mealTimes);
       return data.schedule;
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, CALENDAR_ERROR_MESSAGES.saveSchedule));
       return null;
     } finally {
       setIsLoading(false);
@@ -177,7 +189,7 @@ export function useAcademicCalendar() {
       const data = await apiPost<{ queue: RecipeQueue | null; needsRefresh: boolean }>('get-recipe-queue', { userId });
       setRecipeQueue(data.queue);
       return data;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to load queue:', err);
       return { queue: null, needsRefresh: true };
     }
@@ -208,8 +220,8 @@ export function useAcademicCalendar() {
       });
       setQueueShoppingList(shopData.ingredients);
       return data.queue;
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, CALENDAR_ERROR_MESSAGES.generateQueue));
       return null;
     } finally {
       setIsLoading(false);
@@ -228,8 +240,8 @@ export function useAcademicCalendar() {
       setCurrentWeekMealPlan(weekData.mealPlan);
       setQueueShoppingList(shopData.ingredients);
       return weekData.mealPlan;
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, CALENDAR_ERROR_MESSAGES.loadQueueWeek));
       return null;
     } finally {
       setIsLoading(false);
@@ -261,8 +273,8 @@ export function useAcademicCalendar() {
       });
       setQueueShoppingList(shopData.ingredients);
       return data.mealPlan;
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, CALENDAR_ERROR_MESSAGES.swapQueueMeal));
       return null;
     } finally {
       setIsLoading(false);
@@ -317,7 +329,7 @@ export function useAcademicCalendar() {
       if (queueData.queue) {
         await loadQueueWeek(userId, 1);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to init calendar:', err);
     } finally {
       setIsLoading(false);

@@ -105,9 +105,9 @@ export function AcademicScheduleEditor({ schedule, onSave, onClose, isSaving, in
   }, [classes, editedMealTimes, editedMealSlots, mealsPerDay]);
 
   const handleSave = async () => {
-    const activeSlots = mealsPerDay >= 3
-      ? (['breakfast', 'lunch', 'dinner'] as const)
-      : ([...editedMealSlots] as ('breakfast' | 'lunch' | 'dinner')[]);
+    const activeSlots: ('breakfast' | 'lunch' | 'dinner')[] = mealsPerDay >= 3
+      ? ['breakfast', 'lunch', 'dinner']
+      : [...editedMealSlots];
     await onSave(
       { classes, testingPeriods: schedule?.testingPeriods || [], sleepSchedule },
       editedMealTimes,

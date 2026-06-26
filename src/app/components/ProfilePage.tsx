@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../hooks/useLanguage';
 import { useSubscription } from '../hooks/useSubscription';
-import { LogOut, Settings, Bell, Shield, HelpCircle, ChevronRight, Moon, Globe, Crown, Pencil, Search, GraduationCap, Check, Loader2, X, Plus, User } from 'lucide-react';
+import { LogOut, Settings, ChevronRight, Globe, Crown, Pencil, Search, GraduationCap, Check, Loader2, X, Plus, User } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { BottomNavigation, NavTab } from './BottomNavigation';
 import { ACHIEVEMENTS } from '../constants/achievements';
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
+import { authedPost } from '../utils/apiClient';
 import { Gender } from '../utils/nutritionTargets';
 
 interface ProfilePageProps {
@@ -33,6 +35,8 @@ interface School {
 }
 
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019`;
+// Anon-key headers, used only for the genuinely public schools/search endpoint.
+// Authenticated calls go through authedPost (session JWT).
 const API_HEADERS = {
   'Content-Type': 'application/json',
   'Authorization': `Bearer ${publicAnonKey}`,
@@ -40,7 +44,7 @@ const API_HEADERS = {
 
 export function ProfilePage({ user, onLogout, onOpenAdmin, onUserUpdate, activeTab, onTabChange }: ProfilePageProps) {
   const { language, setLanguage, t } = useLanguage();
-  const { showCustomerCenter } = useSubscription();
+  const { showCustomerCenter, isPro } = useSubscription();
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [stats, setStats] = useState<UserStats | null>(null);
@@ -48,6 +52,7 @@ export function ProfilePage({ user, onLogout, onOpenAdmin, onUserUpdate, activeT
 
   const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'Student';
   const userEmail = user?.email || 'student@university.ac.uk';
+  const isAdmin = user?.app_metadata?.role === 'admin';
 
   useEffect(() => {
     if (!user?.id) {
@@ -55,12 +60,7 @@ export function ProfilePage({ user, onLogout, onOpenAdmin, onUserUpdate, activeT
       return;
     }
 
-    fetch(`https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019/user-stats`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${publicAnonKey}` },
-      body: JSON.stringify({ userId: user.id }),
-    })
-      .then(res => res.json())
+    authedPost<UserStats>('user-stats', { userId: user.id })
       .then(data => {
         setStats(data);
       })
@@ -70,22 +70,27 @@ export function ProfilePage({ user, onLogout, onOpenAdmin, onUserUpdate, activeT
       .finally(() => setLoadingStats(false));
   }, [user?.id]);
 
-  const settingsGroups = [
+  interface SettingsItem {
+    icon: LucideIcon;
+    label: string;
+    value?: string;
+    action: () => void;
+  }
+
+  const settingsGroups: { title: string; items: SettingsItem[] }[] = [
     {
-      title: 'Preferences',
+      title: t('preferences'),
       items: [
-        { icon: Bell, label: 'Notifications', value: 'On', action: () => {} },
         { icon: Globe, label: t('language'), value: language === 'zh-CN' ? '中文' : 'English', action: () => setShowLanguageModal(true) },
-        { icon: Moon, label: 'Dark Mode', value: 'On', action: () => {} },
       ],
     },
     {
-      title: 'Account',
+      title: t('account'),
       items: [
-        { icon: Crown, label: 'Billing', action: showCustomerCenter },
-        { icon: Shield, label: 'Privacy & Security', action: () => {} },
-        { icon: Settings, label: 'Admin Dashboard', action: onOpenAdmin },
-        { icon: HelpCircle, label: 'Help & Support', action: () => {} },
+        { icon: Crown, label: t('billing'), action: showCustomerCenter },
+        // Admin Dashboard entry is only shown to admins. This is cosmetic —
+        // the backend remains the real authorization gate.
+        ...(isAdmin ? [{ icon: Settings, label: t('adminDashboard'), action: onOpenAdmin }] : []),
       ],
     },
   ];
@@ -109,10 +114,12 @@ export function ProfilePage({ user, onLogout, onOpenAdmin, onUserUpdate, activeT
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <h2 className="text-xl font-bold text-white">{userName}</h2>
-                <span className="px-2 py-0.5 bg-[#22C55E]/20 border border-[#22C55E]/50 rounded-full text-[10px] font-bold text-[#22C55E] uppercase flex items-center gap-1">
-                  <Crown className="w-3 h-3" />
-                  Pro
-                </span>
+                {isPro && (
+                  <span className="px-2 py-0.5 bg-[#22C55E]/20 border border-[#22C55E]/50 rounded-full text-[10px] font-bold text-[#22C55E] uppercase flex items-center gap-1">
+                    <Crown className="w-3 h-3" />
+                    Pro
+                  </span>
+                )}
               </div>
               <p className="text-[#6B7280] text-sm">{userEmail}</p>
               {user?.user_metadata?.school_name && (
@@ -121,6 +128,7 @@ export function ProfilePage({ user, onLogout, onOpenAdmin, onUserUpdate, activeT
             </div>
             <button
               onClick={() => setShowEditProfile(true)}
+              aria-label="Edit profile"
               className="p-2 bg-[#2D2D2D] rounded-full hover:bg-[#3D3D3D] transition-colors"
             >
               <Pencil className="w-5 h-5 text-[#9CA3AF]" />
@@ -163,10 +171,12 @@ export function ProfilePage({ user, onLogout, onOpenAdmin, onUserUpdate, activeT
                 <span className="text-3xl font-bold text-white">
                   {loadingStats ? '...' : stats?.totalCookingDays ?? 0}
                 </span>
-                <span className="text-[#6B7280] text-sm">days cooked</span>
+                <span className="text-[#6B7280] text-sm">
+                  {(stats?.totalCookingDays ?? 0) === 1 ? 'day' : 'days'} cooked
+                </span>
               </div>
               <p className="text-[#6B7280] text-xs mt-0.5">
-                Best streak: {loadingStats ? '...' : stats?.longestStreak ?? 0} days
+                Best streak: {loadingStats ? '...' : stats?.longestStreak ?? 0} {(stats?.longestStreak ?? 0) === 1 ? 'day' : 'days'}
               </p>
             </div>
           </div>
@@ -241,7 +251,7 @@ export function ProfilePage({ user, onLogout, onOpenAdmin, onUserUpdate, activeT
           className="w-full flex items-center justify-center gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-2xl text-red-400 font-medium hover:bg-red-500/20 transition-colors"
         >
           <LogOut className="w-5 h-5" />
-          Sign Out
+          {t('signOut')}
         </button>
 
         {/* App Version */}
@@ -320,7 +330,7 @@ function EditProfileModal({ user, onClose, onSave }: { user: any; onClose: () =>
   const [addingSchool, setAddingSchool] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const debounceRef = React.useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const searchSchools = React.useCallback(async (query: string) => {
     setSearching(true);
@@ -350,13 +360,7 @@ function EditProfileModal({ user, onClose, onSave }: { user: any; onClose: () =>
     setAddingSchool(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE}/schools`, {
-        method: 'POST',
-        headers: API_HEADERS,
-        body: JSON.stringify({ name: newSchoolName.trim() }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to add school');
+      const data = await authedPost<{ school: School }>('schools', { name: newSchoolName.trim() });
       setSelectedSchool(data.school);
       setNewSchoolName('');
       setShowAddSchool(false);
@@ -391,13 +395,7 @@ function EditProfileModal({ user, onClose, onSave }: { user: any; onClose: () =>
 
       body.userId = user.id;
 
-      const res = await fetch(`${API_BASE}/auth/update-profile`, {
-        method: 'POST',
-        headers: API_HEADERS,
-        body: JSON.stringify(body),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to update profile');
+      await authedPost<{ success?: boolean }>('auth/update-profile', body);
 
       // Merge updated metadata back into user object
       const updatedUser = {
@@ -423,7 +421,7 @@ function EditProfileModal({ user, onClose, onSave }: { user: any; onClose: () =>
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-white font-bold text-lg">Edit Profile</h3>
-          <button onClick={onClose} className="p-1 text-[#9CA3AF] hover:text-white transition-colors">
+          <button onClick={onClose} aria-label="Close" className="p-1 text-[#9CA3AF] hover:text-white transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
