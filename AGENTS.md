@@ -11,6 +11,15 @@ This file is the project's committed home for project-intrinsic agent knowledge:
   - `entitlement.ts`: `requirePro` enforces the paywall server-side via the RevenueCat REST API, keyed by the authenticated `userId` (RevenueCat is identified client-side with `session.user.id`). Gated routes: `generate-meal-plan`, `generate-recipe-queue`, `shuffle-recipe`, `get-swap-options`. Needs env `REVENUECAT_SECRET_KEY`; entitlement id is `"NutriStudent Pro"`. Fails OPEN if the key is unset or RevenueCat is unreachable (so non-prod/outage doesn't lock out users) — **production MUST set `REVENUECAT_SECRET_KEY`** or the paywall is a no-op. The client gate (`useSubscription`, `isPro` hard-coded true on web) is cosmetic only.
 - Client API calls: use `src/app/utils/apiClient.ts` — `authedFetch`/`authedPost`/`authedGet` send the real session JWT and are required for any `requireAuth` route. The anon key (`publicPost` / hand-rolled headers) is ONLY for genuinely public endpoints (`health`, `schools/search`, `recipe-image/:id`, `get-recipe-image-with-cache`, `auth/signup`, the Google-proxy location routes). Never send the anon key to an authed route.
 
+## Error responses
+
+- Edge-function handlers must NOT return raw `error.message` to clients on 5xx (it leaks internals).
+  Pattern: `log(...)` the real error server-side, return `{ error: "Internal server error" }` with the 5xx status.
+  Intentional 4xx validation errors keep their actionable messages.
+- The school streaks `leaderboard` route must never return raw auth UUIDs.
+  It flags the caller's own row with `isCurrentUser` (derived from `getUserId(c)`); the client highlights "(you)" off that flag, not a UUID compare.
+  `recipe-leaderboard` is keyed by `recipeId` and uses `getUserId(c)` for "liked by me", so it exposes no user UUIDs.
+
 ## Build / CI sharp edges
 
 - `tsconfig.json` EXCLUDES `supabase/`, so `npm run typecheck` (CI) does NOT typecheck the Deno edge function. Validate edge-function changes via tests/deploy, not tsc.

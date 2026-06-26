@@ -6,7 +6,7 @@ import { authedPost } from '../utils/apiClient';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 
 interface LeaderboardEntry {
-  userId: string;
+  isCurrentUser: boolean;
   name: string;
   currentStreak: number;
   rank: number;
@@ -275,12 +275,12 @@ export function LeaderboardPage({ user, activeTab, onTabChange }: LeaderboardPag
               <div className="space-y-2.5">
                 {leaderboard.map((entry) => {
                   const style = getRankStyle(entry.rank);
-                  const isCurrentUser = entry.userId === currentUserId;
+                  const isCurrentUser = entry.isCurrentUser;
                   const initial = (entry.name?.[0] || '?').toUpperCase();
 
                   return (
                     <div
-                      key={entry.userId}
+                      key={entry.rank}
                       className={`flex items-center gap-3.5 px-4 py-3.5 rounded-2xl border transition-colors ${style.bg} ${style.border} ${
                         isCurrentUser ? 'ring-1 ring-[#22C55E]/40' : ''
                       }`}
