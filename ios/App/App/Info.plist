@@ -47,5 +47,9 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>NutriStudent reads this week's calendar events so it can import your classes and schedule meals around them.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>NutriStudent reads this week's calendar events so it can import your classes and schedule meals around them.</string>
 </dict>
 </plist>

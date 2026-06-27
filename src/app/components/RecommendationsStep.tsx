@@ -16,10 +16,12 @@ import { BottomNavigation, NavTab } from './BottomNavigation';
 import { CelebrationOverlay, CelebrationType } from './CelebrationOverlay';
 import { PlanTabSubNav } from './PlanTabSubNav';
 import { MealReminderBanner } from './MealReminderBanner';
-import { WeeklyScheduleView } from './WeeklyScheduleView';
+import { ScheduleSettingsView } from './ScheduleSettingsView';
 import { AcademicScheduleEditor } from './AcademicScheduleEditor';
+import { CalendarImportModal } from './CalendarImportModal';
+import { calendarImportSupported, currentWeekStart } from '../utils/systemCalendar';
 import { useMealReminders } from '../hooks/useMealReminders';
-import type { AcademicSchedule, RecipeQueue, MealConflict, MealTimeOverride, QueueWeekMealPlan } from '../types/calendar';
+import type { AcademicSchedule, ClassEntry, RecipeQueue, MealConflict, MealTimeOverride, QueueWeekMealPlan } from '../types/calendar';
 
 interface RecommendationsStepProps {
   preferences: UserPreferences;
@@ -181,7 +183,8 @@ export function RecommendationsStep({
   // Calendar + queue state
   const [planSubView, setPlanSubView] = useState<'meals' | 'schedule'>('meals');
   const [showScheduleEditor, setShowScheduleEditor] = useState(false);
-  const [scheduleEditorTab, setScheduleEditorTab] = useState<'classes' | 'meals'>('classes');
+  const [scheduleEditorTab, setScheduleEditorTab] = useState<'classes' | 'exams' | 'sleep'>('classes');
+  const [showCalendarImport, setShowCalendarImport] = useState(false);
   const [savingSchedule, setSavingSchedule] = useState(false);
 
   // Whether we're operating in queue mode (queue exists and has meals)
@@ -502,6 +505,33 @@ export function RecommendationsStep({
       }
     } catch (err) {
       console.error('Failed to save schedule:', err);
+    } finally {
+      setSavingSchedule(false);
+    }
+  };
+
+  // Persist classes imported from the system calendar. Reuses the existing
+  // save-academic-schedule pipeline and PRESERVES the non-calendar fields
+  // (testing periods, sleep, meal-time overrides) so focus mode, sleep dinners
+  // and conflict overrides keep working — buildAcademicSchedule replaces the
+  // whole blob, so anything omitted here would be wiped.
+  const handleImportClasses = async (classes: ClassEntry[]) => {
+    if (!user || !onSaveSchedule) return;
+    setSavingSchedule(true);
+    try {
+      await onSaveSchedule(
+        user.id,
+        {
+          classes,
+          testingPeriods: academicSchedule?.testingPeriods ?? [],
+          sleepSchedule: academicSchedule?.sleepSchedule ?? { bedtime: '23:00', wakeTime: '07:00', lastMealBeforeBed: 120 },
+          mealTimeOverrides: academicSchedule?.mealTimeOverrides ?? [],
+        },
+        preferences.mealTimes,
+      );
+      setShowCalendarImport(false);
+    } catch (err) {
+      console.error('Failed to import classes:', err);
     } finally {
       setSavingSchedule(false);
     }
@@ -1022,28 +1052,27 @@ export function RecommendationsStep({
       {/* Schedule View */}
       {planSubView === 'schedule' && (
         <>
-          <WeeklyScheduleView
+          <ScheduleSettingsView
             schedule={academicSchedule || null}
-            mealConflicts={mealConflicts}
-            weekConflicts={weekConflicts}
             isTestingPeriod={isTestingPeriod}
-            onEditSchedule={(tab) => {
-              setScheduleEditorTab(tab || 'classes');
+            onImportClasses={() => setShowCalendarImport(true)}
+            onManageClasses={() => {
+              setScheduleEditorTab('classes');
               setShowScheduleEditor(true);
             }}
-            onViewMeal={(_dayIdx, _slot) => {
-              setPlanSubView('meals');
+            onEditExamsSleep={() => {
+              setScheduleEditorTab('exams');
+              setShowScheduleEditor(true);
             }}
-            onSaveMealTimeOverride={user && onSaveMealTimeOverride ? (override) => {
-              onSaveMealTimeOverride(user.id, override, preferences.mealTimes);
-            } : undefined}
-            onRemoveMealTimeOverride={user && onRemoveMealTimeOverride ? (dayOfWeek, mealSlot) => {
-              onRemoveMealTimeOverride(user.id, dayOfWeek, mealSlot, preferences.mealTimes);
-            } : undefined}
-            currentWeekMeals={mealPlan?.meals}
-            mealTimes={preferences.mealTimes}
-            weekStartDow={planStartDate ? planStartDate.getDay() : undefined}
           />
+          {/* Calendar Import Modal (native only) */}
+          {showCalendarImport && calendarImportSupported && (
+            <CalendarImportModal
+              weekStart={currentWeekStart()}
+              onImport={handleImportClasses}
+              onClose={() => setShowCalendarImport(false)}
+            />
+          )}
           {/* Schedule Editor Modal */}
           {showScheduleEditor && (
             <AcademicScheduleEditor
