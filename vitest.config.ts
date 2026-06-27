@@ -35,6 +35,7 @@ export default defineConfig({
         'supabase/functions/make-server-dbaf6019/validate.ts',
         'supabase/functions/make-server-dbaf6019/calorie-ninjas.ts',
         'supabase/functions/make-server-dbaf6019/achievements.ts',
+        'supabase/functions/make-server-dbaf6019/academic-schedule.ts',
       ],
       // UI primitives are vendored shadcn copies; main.tsx is the bootstrap.
       exclude: ['src/app/components/ui/**', 'src/**/*.d.ts', 'src/main.tsx'],

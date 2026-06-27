@@ -17,6 +17,7 @@ import { ACHIEVEMENTS } from "./achievements.ts";
 import { computeIngredientKeywords, selectAllCoreRecipes, buildRotationSchedule, ScoredRecipe } from "./ingredient-overlap.ts";
 import { filterRecipes } from "./meal-filter.ts";
 import { buildGoalBias } from "./recipe-score.ts";
+import { buildAcademicSchedule } from "./academic-schedule.ts";
 import { estimateMissingCosts } from "./recipe-backfill.ts";
 
 // Debug-gated logger: emits only when DEBUG is set, so production logs stay
@@ -1123,15 +1124,10 @@ app.post("/make-server-dbaf6019/get-swap-options", requireAuth, rateLimit({ name
 // Save/update academic schedule (classes, testing periods, sleep schedule)
 app.post("/make-server-dbaf6019/save-academic-schedule", requireAuth, async (c) => {
   try {
-    const { classes, testingPeriods, sleepSchedule } = await c.req.json();
+    const body = await c.req.json();
     const userId = getUserId(c);
 
-    const schedule = {
-      classes: classes || [],
-      testingPeriods: testingPeriods || [],
-      sleepSchedule: sleepSchedule || { bedtime: "23:00", wakeTime: "07:00", lastMealBeforeBed: 120 },
-      updatedAt: new Date().toISOString(),
-    };
+    const schedule = buildAcademicSchedule(body, new Date().toISOString());
 
     await kv.set(`academic_schedule_${userId}`, JSON.stringify(schedule));
     return c.json({ schedule });
