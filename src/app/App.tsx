@@ -569,6 +569,10 @@ export default function App() {
             isActive: true,
           } : null}
           onEditPlan={() => startOnboarding()}
+          savedMealPlan={savedMealPlan}
+          goal={preferences.goal}
+          maxCookingTime={preferences.maxCookingTime}
+          onSwapQueueMeal={calendar.swapQueueMeal}
         />
       )}
 
