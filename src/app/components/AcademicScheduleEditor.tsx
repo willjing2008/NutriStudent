@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
-import { X, Plus, Trash2, BookOpen, Clock, Save, Loader2, AlertTriangle, Sunrise, Sun, Moon } from 'lucide-react';
-import type { AcademicSchedule, ClassEntry, SleepSchedule } from '../types/calendar';
+import { X, Plus, Trash2, BookOpen, Save, Loader2, AlertTriangle, GraduationCap, Moon } from 'lucide-react';
+import type { AcademicSchedule, ClassEntry, SleepSchedule, TestingPeriod } from '../types/calendar';
 import type { MealTimes } from '../App';
+import { calendarImportSupported } from '../utils/systemCalendar';
 
 interface ClassConflictWarning {
   classId: string;
@@ -11,15 +12,20 @@ interface ClassConflictWarning {
   classTime: string;
 }
 
+type EditorTab = 'classes' | 'exams' | 'sleep';
+
 interface AcademicScheduleEditorProps {
   schedule: AcademicSchedule | null;
-  onSave: (schedule: Omit<AcademicSchedule, 'updatedAt'>, mealTimes?: MealTimes, selectedMealSlots?: ('breakfast' | 'lunch' | 'dinner')[]) => Promise<any>;
+  onSave: (schedule: Omit<AcademicSchedule, 'updatedAt'>) => Promise<any>;
   onClose: () => void;
   isSaving?: boolean;
-  initialTab?: 'classes' | 'meals';
+  initialTab?: EditorTab;
+  /** Base meal times (from preferences) — used only to preview class/meal conflicts. */
   mealTimes?: MealTimes;
   mealsPerDay?: number;
   selectedMealSlots?: ('breakfast' | 'lunch' | 'dinner')[];
+  /** When false (web fallback), manual class entry stays available. On native, classes are imported. */
+  allowClassEntry?: boolean;
 }
 
 const DAY_OPTIONS = [
@@ -34,6 +40,13 @@ const DAY_OPTIONS = [
 
 const COLOR_OPTIONS = ['#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#EF4444', '#06B6D4'];
 
+const TESTING_TYPES: { value: TestingPeriod['type']; label: string }[] = [
+  { value: 'midterm', label: 'Midterm' },
+  { value: 'final', label: 'Final' },
+  { value: 'quiz', label: 'Quiz' },
+  { value: 'custom', label: 'Custom' },
+];
+
 function createEmptyClass(): ClassEntry {
   return {
     id: crypto.randomUUID(),
@@ -44,6 +57,10 @@ function createEmptyClass(): ClassEntry {
     location: '',
     color: COLOR_OPTIONS[Math.floor(Math.random() * COLOR_OPTIONS.length)],
   };
+}
+
+function createEmptyTestingPeriod(): TestingPeriod {
+  return { id: crypto.randomUUID(), name: '', startDate: '', endDate: '', type: 'midterm' };
 }
 
 const DEFAULT_SLEEP: SleepSchedule = {
@@ -64,26 +81,34 @@ function formatTime12(time: string): string {
   return m === 0 ? `${h12}${suffix}` : `${h12}:${String(m).padStart(2, '0')}${suffix}`;
 }
 
-export function AcademicScheduleEditor({ schedule, onSave, onClose, isSaving, initialTab, mealTimes, mealsPerDay = 3, selectedMealSlots: initialSelectedSlots }: AcademicScheduleEditorProps) {
+export function AcademicScheduleEditor({
+  schedule,
+  onSave,
+  onClose,
+  isSaving,
+  initialTab,
+  mealTimes,
+  mealsPerDay = 3,
+  selectedMealSlots,
+  allowClassEntry = !calendarImportSupported,
+}: AcademicScheduleEditorProps) {
   const [classes, setClasses] = useState<ClassEntry[]>(schedule?.classes || []);
+  const [testingPeriods, setTestingPeriods] = useState<TestingPeriod[]>(schedule?.testingPeriods || []);
   const [sleepSchedule, setSleepSchedule] = useState<SleepSchedule>(schedule?.sleepSchedule || DEFAULT_SLEEP);
-  const [activeTab, setActiveTab] = useState<'classes' | 'meals'>(initialTab === 'classes' ? 'classes' : initialTab === 'meals' ? 'meals' : 'classes');
-  const [editedMealTimes, setEditedMealTimes] = useState<MealTimes>(
-    mealTimes || { breakfast: '08:00', lunch: '12:00', dinner: '18:00' }
-  );
-  const [editedMealSlots, setEditedMealSlots] = useState<Set<'breakfast' | 'lunch' | 'dinner'>>(
-    new Set(initialSelectedSlots || ['breakfast', 'lunch', 'dinner'])
-  );
+  const [activeTab, setActiveTab] = useState<EditorTab>(initialTab || (allowClassEntry ? 'classes' : 'exams'));
 
-  // Detect meal/class conflicts in real-time as classes are edited
+  const previewMealTimes = mealTimes || { breakfast: '08:00', lunch: '12:00', dinner: '18:00' };
+
+  // Preview meal/class conflicts as classes are edited (web manual entry only).
   const classConflictWarnings = useMemo<ClassConflictWarning[]>(() => {
+    const slotSet = new Set(selectedMealSlots || ['breakfast', 'lunch', 'dinner']);
     const activeSlots = mealsPerDay >= 3
       ? (['breakfast', 'lunch', 'dinner'] as const)
-      : (['breakfast', 'lunch', 'dinner'] as const).filter(k => editedMealSlots.has(k));
+      : (['breakfast', 'lunch', 'dinner'] as const).filter(k => slotSet.has(k));
     const meals = activeSlots.map(slot => ({
       slot,
-      start: editedMealTimes[slot],
-      end: addOneHour(editedMealTimes[slot]),
+      start: previewMealTimes[slot],
+      end: addOneHour(previewMealTimes[slot]),
     }));
 
     const warnings: ClassConflictWarning[] = [];
@@ -102,7 +127,7 @@ export function AcademicScheduleEditor({ schedule, onSave, onClose, isSaving, in
       }
     }
     return warnings;
-  }, [classes, editedMealTimes, editedMealSlots, mealsPerDay]);
+  }, [classes, previewMealTimes, selectedMealSlots, mealsPerDay]);
 
   // Classes whose end time is not after their start time — these corrupt
   // conflict detection and the displayed range, so saving is blocked.
@@ -116,24 +141,52 @@ export function AcademicScheduleEditor({ schedule, onSave, onClose, isSaving, in
     [classes],
   );
 
+  // Testing periods whose end date is before their start date are invalid.
+  const invalidPeriodIds = useMemo(
+    () =>
+      new Set(
+        testingPeriods
+          .filter(p => p.startDate && p.endDate && p.endDate < p.startDate)
+          .map(p => p.id),
+      ),
+    [testingPeriods],
+  );
+
   const handleSave = async () => {
     if (invalidTimeClassIds.size > 0) {
       setActiveTab('classes');
       return;
     }
-    const activeSlots: ('breakfast' | 'lunch' | 'dinner')[] = mealsPerDay >= 3
-      ? ['breakfast', 'lunch', 'dinner']
-      : [...editedMealSlots];
-    await onSave(
-      { classes, testingPeriods: schedule?.testingPeriods || [], sleepSchedule },
-      editedMealTimes,
-      activeSlots,
-    );
+    if (invalidPeriodIds.size > 0) {
+      setActiveTab('exams');
+      return;
+    }
+    // Persist only usable testing periods (a date range is required to drive focus mode).
+    const cleanPeriods = testingPeriods.filter(p => p.startDate && p.endDate);
+    await onSave({
+      classes,
+      testingPeriods: cleanPeriods,
+      sleepSchedule,
+      // Preserve overrides — buildAcademicSchedule replaces the whole blob.
+      mealTimeOverrides: schedule?.mealTimeOverrides ?? [],
+    });
   };
 
   const updateClass = (id: string, field: keyof ClassEntry, value: any) => {
     setClasses((prev) => prev.map((c) => (c.id === id ? { ...c, [field]: value } : c)));
   };
+
+  const updatePeriod = (id: string, field: keyof TestingPeriod, value: any) => {
+    setTestingPeriods((prev) => prev.map((p) => (p.id === id ? { ...p, [field]: value } : p)));
+  };
+
+  const tabs: { id: EditorTab; label: string; icon: typeof BookOpen }[] = [
+    ...(allowClassEntry ? [{ id: 'classes' as const, label: 'Classes', icon: BookOpen }] : []),
+    { id: 'exams', label: 'Exam Periods', icon: GraduationCap },
+    { id: 'sleep', label: 'Sleep', icon: Moon },
+  ];
+
+  const saveDisabled = isSaving || invalidTimeClassIds.size > 0 || invalidPeriodIds.size > 0;
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-end sm:items-center justify-center z-[70]">
@@ -148,10 +201,7 @@ export function AcademicScheduleEditor({ schedule, onSave, onClose, isSaving, in
 
         {/* Tab bar */}
         <div className="flex border-b border-[#1E4029]">
-          {[
-            { id: 'classes' as const, label: 'Classes', icon: BookOpen },
-            { id: 'meals' as const, label: 'Meal Times', icon: Clock },
-          ].map((tab) => (
+          {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
@@ -169,8 +219,8 @@ export function AcademicScheduleEditor({ schedule, onSave, onClose, isSaving, in
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {/* Classes Tab */}
-          {activeTab === 'classes' && (
+          {/* Classes Tab (web fallback only) */}
+          {activeTab === 'classes' && allowClassEntry && (
             <>
               {classes.map((cls) => (
                 <div key={cls.id} className="bg-[#142A1D] rounded-xl p-4 border border-[#1E4029] space-y-3">
@@ -261,9 +311,6 @@ export function AcademicScheduleEditor({ schedule, onSave, onClose, isSaving, in
                       {' '}({w.mealTime})
                     </div>
                   ))}
-                  <div className="text-[10px] text-red-400/60 pl-5">
-                    You can adjust meal times for conflict days from the schedule view.
-                  </div>
                 </div>
               )}
 
@@ -277,100 +324,118 @@ export function AcademicScheduleEditor({ schedule, onSave, onClose, isSaving, in
             </>
           )}
 
-          {/* Meal Times Tab */}
-          {activeTab === 'meals' && (
-            <div className="space-y-4">
-              <p className="text-[#6B7280] text-sm">
-                {mealsPerDay < 3
-                  ? `Pick which ${mealsPerDay === 1 ? 'meal' : 'meals'} you'd like, then set the time.`
-                  : 'Set when you usually eat. This helps schedule meals around your classes.'}
+          {/* Exam Periods Tab — drives Focus Mode */}
+          {activeTab === 'exams' && (
+            <>
+              <p className="text-[#9CA3AF] text-sm">
+                Add your exam periods. During these dates the app switches to Focus Mode and favors focus-friendly meals.
               </p>
-
-              {/* Slot picker — shown when fewer than 3 meals */}
-              {mealsPerDay < 3 && (
-                <div className="flex gap-2">
-                  {([
-                    { key: 'breakfast' as const, label: 'Breakfast', icon: Sunrise, color: '#F59E0B' },
-                    { key: 'lunch' as const, label: 'Lunch', icon: Sun, color: '#22C55E' },
-                    { key: 'dinner' as const, label: 'Dinner', icon: Moon, color: '#8B5CF6' },
-                  ]).map(({ key, label, icon: MealIcon, color }) => {
-                    const active = editedMealSlots.has(key);
-                    return (
-                      <button
-                        key={key}
-                        onClick={() => {
-                          setEditedMealSlots(prev => {
-                            const next = new Set(prev);
-                            if (active) {
-                              if (next.size > 1) next.delete(key);
-                            } else {
-                              if (next.size < mealsPerDay) next.add(key);
-                              else {
-                                const first = [...next][0];
-                                next.delete(first);
-                                next.add(key);
-                              }
-                            }
-                            return next;
-                          });
-                        }}
-                        className={`flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl transition-all ${
-                          active
-                            ? 'bg-[#0A1F13] border-2 border-[#22C55E]'
-                            : 'bg-[#0A1F13] border border-[#2D5A3D] opacity-50 hover:opacity-75'
-                        }`}
-                      >
-                        <MealIcon className="w-4 h-4" style={{ color: active ? color : '#6B7280' }} />
-                        <span className={`text-xs font-medium ${active ? 'text-white' : 'text-[#6B7280]'}`}>{label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Time pickers for active slots */}
-              <div className="space-y-3">
-                {([
-                  { key: 'breakfast' as const, label: 'Breakfast', icon: Sunrise, color: '#F59E0B' },
-                  { key: 'lunch' as const, label: 'Lunch', icon: Sun, color: '#22C55E' },
-                  { key: 'dinner' as const, label: 'Dinner', icon: Moon, color: '#8B5CF6' },
-                ]).filter(({ key }) => mealsPerDay >= 3 || editedMealSlots.has(key))
-                  .slice(0, mealsPerDay >= 3 ? 3 : mealsPerDay)
-                  .map(({ key, label, icon: MealIcon, color }) => (
-                  <div key={key} className="flex items-center gap-3 p-3 bg-[#142A1D] rounded-xl border border-[#1E4029]">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${color}20` }}>
-                      <MealIcon className="w-4 h-4" style={{ color }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <span className="text-white text-sm font-medium">{label}</span>
-                    </div>
+              {testingPeriods.map((p) => (
+                <div key={p.id} className="bg-[#142A1D] rounded-xl p-4 border border-[#1E4029] space-y-3">
+                  <div className="flex items-center justify-between gap-2">
                     <input
-                      type="time"
-                      value={editedMealTimes[key]}
-                      onChange={(e) => setEditedMealTimes(prev => ({ ...prev, [key]: e.target.value }))}
-                      className="bg-[#0A1F13] text-white text-sm rounded-lg px-4 py-2 border border-[#1E4029] focus:outline-none focus:border-[#22C55E] [color-scheme:dark] w-[140px]"
+                      value={p.name}
+                      onChange={(e) => updatePeriod(p.id, 'name', e.target.value)}
+                      placeholder="Name (e.g., Midterm Exams)"
+                      className="bg-transparent text-white text-sm font-medium focus:outline-none placeholder-[#6B7280] w-full"
                     />
+                    <button
+                      onClick={() => setTestingPeriods((prev) => prev.filter((x) => x.id !== p.id))}
+                      className="text-red-400/50 hover:text-red-400 transition-colors flex-shrink-0"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
-                ))}
-              </div>
 
-              {/* Conflict warnings with classes */}
-              {classConflictWarnings.length > 0 && (
-                <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-3 space-y-2">
-                  <div className="flex items-center gap-2 text-red-400 text-xs font-semibold">
-                    <AlertTriangle className="w-3.5 h-3.5" />
-                    Meal Time Conflicts Detected
+                  <select
+                    value={p.type}
+                    onChange={(e) => updatePeriod(p.id, 'type', e.target.value as TestingPeriod['type'])}
+                    className="w-full bg-[#0A1F13] text-white text-xs rounded-lg px-2 py-2 border border-[#1E4029] focus:outline-none focus:border-[#22C55E]"
+                  >
+                    {TESTING_TYPES.map((t) => (
+                      <option key={t.value} value={t.value}>{t.label}</option>
+                    ))}
+                  </select>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <label className="flex flex-col gap-1 text-[11px] text-[#6B7280]">
+                      Start
+                      <input
+                        type="date"
+                        value={p.startDate}
+                        onChange={(e) => updatePeriod(p.id, 'startDate', e.target.value)}
+                        className="bg-[#0A1F13] text-white text-xs rounded-lg px-3 py-2 border border-[#1E4029] focus:outline-none focus:border-[#22C55E] [color-scheme:dark]"
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1 text-[11px] text-[#6B7280]">
+                      End
+                      <input
+                        type="date"
+                        value={p.endDate}
+                        onChange={(e) => updatePeriod(p.id, 'endDate', e.target.value)}
+                        className="bg-[#0A1F13] text-white text-xs rounded-lg px-3 py-2 border border-[#1E4029] focus:outline-none focus:border-[#22C55E] [color-scheme:dark]"
+                      />
+                    </label>
                   </div>
-                  {classConflictWarnings.map((w, i) => (
-                    <div key={i} className="text-[11px] text-red-300/80 pl-5">
-                      <span className="font-medium text-red-300">{w.className}</span>
-                      {' '}({w.classTime}) overlaps with{' '}
-                      <span className="font-medium text-red-300">{w.mealSlot}</span>
-                      {' '}({w.mealTime})
+
+                  {invalidPeriodIds.has(p.id) && (
+                    <div className="flex items-center gap-1.5 text-[11px] text-red-300">
+                      <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+                      End date must be on or after the start date.
                     </div>
-                  ))}
+                  )}
                 </div>
-              )}
+              ))}
+
+              <button
+                onClick={() => setTestingPeriods((prev) => [...prev, createEmptyTestingPeriod()])}
+                className="w-full py-3 border-2 border-dashed border-[#1E4029] rounded-xl text-[#22C55E] text-sm font-medium hover:border-[#22C55E]/50 hover:bg-[#142A1D]/50 transition-all flex items-center justify-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Add Exam Period
+              </button>
+            </>
+          )}
+
+          {/* Sleep Tab — drives sleep-friendly dinners */}
+          {activeTab === 'sleep' && (
+            <div className="space-y-3">
+              <p className="text-[#9CA3AF] text-sm">
+                Your sleep window lets the app prefer lighter, sleep-friendly dinners.
+              </p>
+              <div className="flex items-center gap-3 p-3 bg-[#142A1D] rounded-xl border border-[#1E4029]">
+                <span className="flex-1 text-white text-sm font-medium">Bedtime</span>
+                <input
+                  type="time"
+                  value={sleepSchedule.bedtime}
+                  onChange={(e) => setSleepSchedule((s) => ({ ...s, bedtime: e.target.value }))}
+                  className="bg-[#0A1F13] text-white text-sm rounded-lg px-4 py-2 border border-[#1E4029] focus:outline-none focus:border-[#22C55E] [color-scheme:dark] w-[140px]"
+                />
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-[#142A1D] rounded-xl border border-[#1E4029]">
+                <span className="flex-1 text-white text-sm font-medium">Wake time</span>
+                <input
+                  type="time"
+                  value={sleepSchedule.wakeTime}
+                  onChange={(e) => setSleepSchedule((s) => ({ ...s, wakeTime: e.target.value }))}
+                  className="bg-[#0A1F13] text-white text-sm rounded-lg px-4 py-2 border border-[#1E4029] focus:outline-none focus:border-[#22C55E] [color-scheme:dark] w-[140px]"
+                />
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-[#142A1D] rounded-xl border border-[#1E4029]">
+                <span className="flex-1 text-white text-sm font-medium">Last meal before bed</span>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={0}
+                    max={360}
+                    step={15}
+                    value={sleepSchedule.lastMealBeforeBed}
+                    onChange={(e) => setSleepSchedule((s) => ({ ...s, lastMealBeforeBed: Number(e.target.value) }))}
+                    className="bg-[#0A1F13] text-white text-sm rounded-lg px-4 py-2 border border-[#1E4029] focus:outline-none focus:border-[#22C55E] w-[90px]"
+                  />
+                  <span className="text-[#6B7280] text-xs">min</span>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -379,7 +444,7 @@ export function AcademicScheduleEditor({ schedule, onSave, onClose, isSaving, in
         <div className="p-4 border-t border-[#1E4029]">
           <button
             onClick={handleSave}
-            disabled={isSaving || invalidTimeClassIds.size > 0}
+            disabled={saveDisabled}
             className="w-full py-3 bg-[#22C55E] text-[#052E16] rounded-xl font-semibold hover:bg-[#4ADE80] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isSaving ? (
