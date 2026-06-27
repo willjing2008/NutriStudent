@@ -8,6 +8,7 @@ import { authedPost } from '../utils/apiClient';
 import { ShoppingMode } from './ShoppingMode';
 import { getRecipeImageWithCache } from '../utils/recipeImages';
 import { MealSwapModal } from './MealSwapModal';
+import { applyQueueMealSwap } from '../utils/mealSwap';
 
 import { supabase } from '../../utils/supabaseClient';
 import { SavedPlansModal } from './SavedPlansModal';
@@ -622,16 +623,20 @@ export function RecommendationsStep({
     if (isQueueMode) {
       setShowMealSwapModal(false);
       if (onSwapQueueMeal && user && currentWeekMealPlan) {
-        const target = mealPlan.meals.find(m => m.id === selectedMealForSwap.id);
-        const absoluteDay = (currentWeekMealPlan.weekNumber - 1) * 7 + (target?.dayNumber || 1);
-        const slot = (target as any)?.category || (selectedMealForSwap as any).category;
         const aiImage = getMealImageCandidates(newMeal)[0] || LOCAL_IMAGE_FALLBACK;
         setMealImages(prev => ({ ...prev, [newMeal.id]: aiImage }));
         void fetchImageWithTimeout(newMeal).then((cachedImage) => {
           if (cachedImage) setMealImages(prev => ({ ...prev, [newMeal.id]: cachedImage }));
         });
         try {
-          await onSwapQueueMeal(user.id, absoluteDay, slot, newMeal.id);
+          await applyQueueMealSwap({
+            meals: mealPlan.meals,
+            recipeId: selectedMealForSwap.id,
+            weekNumber: currentWeekMealPlan.weekNumber,
+            userId: user.id,
+            newRecipeId: newMeal.id,
+            swapQueueMeal: onSwapQueueMeal,
+          });
         } catch (err) {
           console.error('Error swapping queue meal:', err);
         }

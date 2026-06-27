@@ -20,6 +20,12 @@ This file is the project's committed home for project-intrinsic agent knowledge:
   It flags the caller's own row with `isCurrentUser` (derived from `getUserId(c)`); the client highlights "(you)" off that flag, not a UUID compare.
   `recipe-leaderboard` is keyed by `recipeId` and uses `getUserId(c)` for "liked by me", so it exposes no user UUIDs.
 
+## Meal swap
+
+- Queue-mode meal swaps are applied by `src/app/utils/mealSwap.ts` (`resolveSwapSlot` / `applyQueueMealSwap`), shared by the plan view (`RecommendationsStep`) and the "My Recipes" dashboard so the slot math (`absoluteDay = (weekNumber-1)*7 + dayNumber`, `slot = category`) can't drift between the two entry points. Don't re-derive it inline.
+- "My Recipes" is a cooked-history list with no plan/slot context, so its Swap button renders ONLY for rows whose `recipeId` matches a meal in the active plan (`savedMealPlan.meals`); cooked recipes not in the plan have no slot and get no button.
+- Both swap surfaces reuse `MealSwapModal`, whose `get-swap-options` call is the Pro paywall (server-side `requirePro`). There is no client-side gate on the swap button itself; reusing the modal is what keeps the paywall consistent - don't add a separate gate to one surface.
+
 ## Build / CI sharp edges
 
 - `tsconfig.json` EXCLUDES `supabase/`, so `npm run typecheck` (CI) does NOT typecheck the Deno edge function. Validate edge-function changes via tests/deploy, not tsc.
