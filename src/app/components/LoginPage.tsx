@@ -254,9 +254,15 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
 
   // Auth Form View
   return (
-    <div className="min-h-screen bg-[#0A1F13] flex flex-col">
+    <div
+      className="min-h-screen bg-[#0A1F13] flex flex-col"
+      style={{
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+      }}
+    >
       {/* Header */}
-      <header className="px-6 pt-4 pb-3 flex items-center justify-between">
+      <header className="px-6 pt-5 pb-3 flex items-center justify-between">
         <button
           onClick={() => setShowAuthForm(false)}
           className="text-[#9CA3AF] hover:text-white transition-colors flex items-center gap-2"
@@ -272,7 +278,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
       </header>
 
       {/* Form Container */}
-      <div className="flex-1 flex items-start justify-center px-6 pt-2 pb-6">
+      <div className="flex-1 flex items-center justify-center px-6 py-8 overflow-y-auto">
         <div className="w-full max-w-md">
           {/* Title */}
           <div className="text-center mb-8">
