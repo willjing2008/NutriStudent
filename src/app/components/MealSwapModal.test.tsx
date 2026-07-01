@@ -145,6 +145,28 @@ beforeEach(() => {
   });
 });
 
+describe('MealSwapModal — layering', () => {
+  it('renders the full-screen modal above the bottom navigation so the apply button is tappable', () => {
+    // BottomNavigation is fixed at z-[60]; the swap modal is a full-screen
+    // takeover, so its root must sit ABOVE the nav — otherwise the nav overlaps
+    // and intercepts taps on the footer "Swap Meal" button and the swap can't be
+    // completed on mobile (even though the backend applies it).
+    const { container } = render(
+      <MealSwapModal
+        currentMeal={currentMeal}
+        goal="bulk"
+        currentMealIds={[]}
+        onSwap={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    const root = container.firstChild as HTMLElement;
+    expect(root.className).toContain('fixed');
+    expect(root.className).toContain('inset-0');
+    expect(root.className).toContain('z-[70]');
+  });
+});
+
 describe('MealSwapModal — Browse tab', () => {
   it('renders swap options with their nutrition deltas after the mount fetch', async () => {
     renderModal();

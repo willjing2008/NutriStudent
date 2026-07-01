@@ -456,7 +456,11 @@ export function MealSwapModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-[#0A1F13] z-50 flex flex-col">
+    // z-[70] keeps this full-screen modal — including the footer "Swap Meal"
+    // button — above the fixed BottomNavigation (z-[60]); otherwise the nav
+    // overlaps and intercepts taps on the apply button, so a swap can't be
+    // completed on mobile even though the backend applies it.
+    <div className="fixed inset-0 bg-[#0A1F13] z-[70] flex flex-col">
       {/* Header */}
       <div className="flex-shrink-0 bg-[#0A1F13] border-b border-[#1E4029] px-5 pt-5 pb-0">
         <div className="flex items-center justify-between mb-4">
