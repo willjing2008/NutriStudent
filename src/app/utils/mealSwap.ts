@@ -50,11 +50,18 @@ export async function applyQueueMealSwap(params: {
   weekNumber: number;
   userId: string;
   newRecipeId: string;
+  /**
+   * The full meal object the swap modal built. Sent alongside `newRecipeId` so
+   * the backend can apply custom/community recipes (id like "custom-…") that
+   * aren't in the catalog. Catalog recipes ignore it and rebuild from the DB.
+   */
+  newMeal?: any;
   swapQueueMeal: (
     userId: string,
     dayNumber: number,
     mealSlot: string,
     newRecipeId: string,
+    newMeal?: any,
   ) => Promise<any>;
 }): Promise<any | null> {
   const resolved = resolveSwapSlot(params.meals, params.recipeId, params.weekNumber);
@@ -64,5 +71,6 @@ export async function applyQueueMealSwap(params: {
     resolved.absoluteDay,
     resolved.slot,
     params.newRecipeId,
+    params.newMeal,
   );
 }

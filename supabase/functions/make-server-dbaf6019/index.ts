@@ -8,7 +8,7 @@ import { requirePro } from "./entitlement.ts";
 import { vStr, vNum, vStrArr, vArr, timingSafeEqual } from "./validate.ts";
 import * as kv from "./kv_store.tsx";
 import { ALL_RECIPES, NewRecipe } from "./recipe-data.ts";
-import { toMealPlanMeal, toSwapOption, getRecipesByMealType, getAllRecipesFromDB, getRecipesByFocusType, getSleepFriendlyRecipes } from "./recipe-adapter.ts";
+import { toMealPlanMeal, toSwapOption, buildCustomQueueMeal, getCategorySlot, getRecipesByMealType, getAllRecipesFromDB, getRecipesByFocusType, getSleepFriendlyRecipes } from "./recipe-adapter.ts";
 import { classifyRecipe } from "./focus-classifier.ts";
 import { generateRecipeQueue, getQueueWeekAsMealPlan, getQueueWeekShoppingList, swapQueueMeal, RecipeQueue } from "./recipe-queue.ts";
 import { generateImageQuery, enhanceImageQuery } from "./image-query-helper.ts";
@@ -1051,7 +1051,7 @@ app.post("/make-server-dbaf6019/shuffle-recipe", requireAuth, rateLimit({ name: 
 // Get multiple meal swap options for user to choose from
 app.post("/make-server-dbaf6019/get-swap-options", requireAuth, rateLimit({ name: "get-swap-options", max: 30, windowSec: 60 }), requirePro, async (c) => {
   try {
-    const { currentRecipeId, goal, currentMealIds, maxCookingTime, limit = 6 } = await c.req.json();
+    const { currentRecipeId, goal, currentMealIds, maxCookingTime, limit = 6, currentNutrition, currentCategory } = await c.req.json();
 
     if (!currentRecipeId || !goal) {
       return c.json({ error: "Missing required parameters" }, 400);
@@ -1064,10 +1064,24 @@ app.post("/make-server-dbaf6019/get-swap-options", requireAuth, rateLimit({ name
       allRecipes = allRecipes.filter(r => (r.total_time_minutes ?? r.cook_time_minutes ?? 0) <= maxCookingTime);
     }
 
+    // The current recipe may be a catalog recipe OR a custom/community recipe
+    // (id like "custom-…") that isn't in the `recipe:` catalog — e.g. when the
+    // swap is launched from "My Recipes". For catalog recipes we use their stored
+    // nutrition as the similarity reference; for custom ones the client sends the
+    // meal's nutrition/category (bounded here). Either way the browse options
+    // themselves are always catalog recipes, so we never 404 on the current id.
     const currentRecipe = allRecipes.find(r => String(r.id) === String(currentRecipeId));
-    if (!currentRecipe) {
-      return c.json({ error: "Current recipe not found" }, 404);
-    }
+    const refN = currentRecipe
+      ? { calories: currentRecipe.nutrition_per_serving.calories, protein_g: currentRecipe.nutrition_per_serving.protein_g }
+      : { calories: vNum(currentNutrition?.calories, 0, 100000, 0), protein_g: vNum(currentNutrition?.protein, 0, 10000, 0) };
+    // For a catalog current recipe, compare candidates by raw `recipe_category`
+    // (unchanged behaviour). For a custom/community current recipe the client can
+    // only send a meal SLOT (breakfast/lunch/dinner from getCategorySlot), so
+    // compare candidates by their slot too — otherwise "Salad" === "dinner" is
+    // always false and the category bonus is dead on this path.
+    const currentIsCatalog = !!currentRecipe;
+    const refCategory = currentRecipe ? currentRecipe.recipe_category : vStr(currentCategory, 50);
+    const candidateCategory = (recipe: any) => currentIsCatalog ? recipe.recipe_category : getCategorySlot(recipe.recipe_category);
 
     const excludedIds = (currentMealIds || [currentRecipeId]).map(String);
     let candidates = allRecipes.filter(r => !excludedIds.includes(String(r.id)));
@@ -1081,14 +1095,13 @@ app.post("/make-server-dbaf6019/get-swap-options", requireAuth, rateLimit({ name
       return c.json({ error: "No alternative recipes available." }, 400);
     }
 
-    const currentN = currentRecipe.nutrition_per_serving;
     const scored = candidates.map(recipe => {
       const n = recipe.nutrition_per_serving;
-      const calorieDiff = Math.abs(n.calories - currentN.calories);
+      const calorieDiff = Math.abs(n.calories - refN.calories);
       const calorieScore = Math.max(0, 1 - (calorieDiff / 500));
-      const proteinDiff = Math.abs(n.protein_g - currentN.protein_g);
+      const proteinDiff = Math.abs(n.protein_g - refN.protein_g);
       const proteinScore = Math.max(0, 1 - (proteinDiff / 30));
-      const categoryBonus = recipe.recipe_category === currentRecipe.recipe_category ? 0.2 : 0;
+      const categoryBonus = refCategory && candidateCategory(recipe) === refCategory ? 0.2 : 0;
       const score = (calorieScore * 0.4) + (proteinScore * 0.3) + categoryBonus + (Math.random() * 0.1);
 
       return { recipe, score, calorieDiff, proteinDiff };
@@ -1109,8 +1122,8 @@ app.post("/make-server-dbaf6019/get-swap-options", requireAuth, rateLimit({ name
     return c.json({
       swapOptions,
       currentRecipe: {
-        calories: currentN.calories,
-        protein: currentN.protein_g
+        calories: refN.calories,
+        protein: refN.protein_g
       }
     });
   } catch (error: any) {
@@ -1336,7 +1349,7 @@ app.post("/make-server-dbaf6019/get-queue-week", requireAuth, async (c) => {
 // Swap a meal in the queue
 app.post("/make-server-dbaf6019/queue-swap-meal", requireAuth, async (c) => {
   try {
-    const { dayNumber, mealSlot, newRecipeId } = await c.req.json();
+    const { dayNumber, mealSlot, newRecipeId, newMeal } = await c.req.json();
     const userId = getUserId(c);
     if (!dayNumber || !mealSlot || !newRecipeId) {
       return c.json({ error: "Missing required parameters" }, 400);
@@ -1347,12 +1360,21 @@ app.post("/make-server-dbaf6019/queue-swap-meal", requireAuth, async (c) => {
 
     let queue: RecipeQueue = typeof raw === "string" ? JSON.parse(raw) : raw;
 
-    // Fetch the new recipe
+    // Resolve the new meal. Catalog recipes (numeric ids) are rebuilt from the DB
+    // as before. Custom/community recipes (id like "custom-…") aren't in the
+    // catalog — e.g. a Community or Create swap — so we apply the display-ready
+    // meal object the client already built, sanitised and re-slotted. This only
+    // ever writes into the caller's own queue.
     const allRecipes = await getAllRecipesFromDB();
     const newRecipe = allRecipes.find((r) => String(r.id) === String(newRecipeId));
-    if (!newRecipe) return c.json({ error: "Recipe not found" }, 404);
-
-    const mealObj = toMealPlanMeal(newRecipe, dayNumber, 1);
+    let mealObj;
+    if (newRecipe) {
+      mealObj = toMealPlanMeal(newRecipe, dayNumber, 1);
+    } else {
+      const safeId = vStr(newRecipeId, 100).replace(/[^A-Za-z0-9_-]/g, "");
+      mealObj = safeId ? buildCustomQueueMeal(newMeal, safeId, dayNumber, mealSlot) : null;
+      if (!mealObj) return c.json({ error: "Recipe not found" }, 404);
+    }
     queue = swapQueueMeal(queue, dayNumber, mealSlot, mealObj);
 
     await kv.set(`recipe_queue_${userId}`, JSON.stringify(queue));

@@ -50,8 +50,23 @@ describe('applyQueueMealSwap', () => {
       swapQueueMeal,
     });
     // week 2, day 3 -> (2-1)*7 + 3 = 10
-    expect(swapQueueMeal).toHaveBeenCalledWith('user-1', 10, 'dinner', 'new-recipe');
+    expect(swapQueueMeal).toHaveBeenCalledWith('user-1', 10, 'dinner', 'new-recipe', undefined);
     expect(result).toBe('ok');
+  });
+
+  it('threads the full new meal object to swapQueueMeal (for custom/community swaps)', async () => {
+    const swapQueueMeal = vi.fn().mockResolvedValue('ok');
+    const newMeal = { id: 'custom-99', name: 'My Stir Fry', nutrition: { calories: 400 } };
+    await applyQueueMealSwap({
+      meals,
+      recipeId: 'r-lunch',
+      weekNumber: 1,
+      userId: 'user-1',
+      newRecipeId: 'custom-99',
+      newMeal,
+      swapQueueMeal,
+    });
+    expect(swapQueueMeal).toHaveBeenCalledWith('user-1', 2, 'lunch', 'custom-99', newMeal);
   });
 
   it('does not call swapQueueMeal and returns null when the recipe is not in the plan', async () => {

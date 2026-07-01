@@ -276,6 +276,10 @@ export function MealSwapModal({
         currentMealIds: currentMealIds,
         maxCookingTime: maxCookingTime,
         limit: 6,
+        // For custom/community current recipes (id like "custom-…") the backend
+        // can't look up nutrition from the catalog, so send it for scoring.
+        currentNutrition: currentMeal.nutrition,
+        currentCategory: currentMeal.category,
       });
 
       const options = data.swapOptions || [];

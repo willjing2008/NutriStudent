@@ -2,6 +2,7 @@ import { NewRecipe } from "./recipe-data.ts";
 import * as kv from "./kv_store.tsx";
 import { classifyRecipe } from "./focus-classifier.ts";
 import { recipeCostPerServing, alignIngredientPrices } from "./recipe-cost.ts";
+import { vStr, vNum, vStrArr, vArr } from "./validate.ts";
 
 // Strip leading quantity and measurement units from an ingredient string.
 // e.g. "2 cups vanilla yogurt" → "Vanilla Yogurt"
@@ -58,7 +59,7 @@ function stripMeasurement(raw: string): string {
 }
 
 // Maps recipe_category to a simplified meal slot
-function getCategorySlot(recipeCategory: string): string {
+export function getCategorySlot(recipeCategory: string): string {
   const cat = (recipeCategory || "").toLowerCase();
   if (cat === "breakfast" || cat === "brunch") return "breakfast";
   if (["lunch", "salad", "sandwich", "soup"].includes(cat)) return "lunch";
@@ -203,6 +204,66 @@ export function toSwapOption(recipe: NewRecipe) {
     cuisine: recipe.cuisine,
     mealTypeTag: recipe.meal_type,
   };
+}
+
+// Build a queue meal from a client-supplied custom/community recipe object.
+//
+// The catalog swap path uses `toMealPlanMeal(NewRecipe)`, but custom/community
+// recipes (id like "custom-…") are NOT in the `recipe:` catalog, so
+// `queue-swap-meal` cannot rebuild them from the DB. Instead it applies the
+// display-ready meal object the client already built (from the Community/Create
+// tabs). This writes only into the caller's OWN queue, so it is the caller's own
+// data — but we still whitelist + bound every field (like `save-community-recipe`)
+// so a swap can't stuff unbounded strings/arrays into storage. The slot fields
+// (`category`, `dayNumber`, `mealNumber`) are forced from the resolved swap slot,
+// never trusted from the client. Returns null when `raw` isn't a usable meal.
+export function buildCustomQueueMeal(
+  raw: unknown,
+  recipeId: string,
+  dayNumber: number,
+  mealSlot: string,
+): ReturnType<typeof toMealPlanMeal> | null {
+  if (!raw || typeof raw !== "object") return null;
+  const m = raw as Record<string, any>;
+
+  const name = vStr(m.name, 150);
+  if (!name) return null;
+
+  const slot = vStr(mealSlot, 30) || "dinner";
+  const slotLabel = slot.charAt(0).toUpperCase() + slot.slice(1);
+  const n = m.nutrition || {};
+
+  return {
+    id: recipeId,
+    name,
+    description: vStr(m.description, 2000),
+    image: vStr(m.image, 600),
+    imageUrl: vStr(m.imageUrl, 600) || null,
+    rationale: vStr(m.rationale, 2000),
+    benefits: vStrArr(m.benefits, 20, 200),
+    mealType: slotLabel,
+    category: slot,
+    cookingTime: vNum(m.cookingTime, 0, 1440, 0),
+    servings: vNum(m.servings, 1, 50, 1),
+    difficulty: vStr(m.difficulty, 30) || "easy",
+    tags: vStrArr(m.tags, 20, 40),
+    ingredients: vArr(m.ingredients, 100),
+    ingredientNames: vStrArr(m.ingredientNames, 100, 200),
+    instructions: vStrArr(m.instructions, 100, 2000),
+    cost: vNum(m.cost ?? m.totalCost, 0, 100000, 0),
+    totalCost: vNum(m.totalCost ?? m.cost, 0, 100000, 0),
+    nutrition: {
+      calories: vNum(n.calories, 0, 100000, 0),
+      protein: vNum(n.protein, 0, 10000, 0),
+      carbs: vNum(n.carbs, 0, 10000, 0),
+      fats: vNum(n.fats, 0, 10000, 0),
+      fiber: vNum(n.fiber, 0, 10000, 0),
+    },
+    sourceUrl: vStr(m.sourceUrl, 600),
+    cuisine: vStr(m.cuisine, 50),
+    dayNumber,
+    mealNumber: 1,
+  } as ReturnType<typeof toMealPlanMeal>;
 }
 
 // Fetch recipes from kv_store by meal_type

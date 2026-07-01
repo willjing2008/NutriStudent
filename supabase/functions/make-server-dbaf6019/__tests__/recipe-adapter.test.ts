@@ -18,6 +18,8 @@ vi.mock('../kv_store.tsx', () => ({
 import {
   toMealPlanMeal,
   toSwapOption,
+  buildCustomQueueMeal,
+  getCategorySlot,
   getRecipesByMealType,
   getAllRecipesFromDB,
   getRecipesByFocusType,
@@ -106,6 +108,84 @@ describe('toSwapOption', () => {
   it('strips ingredient names the same way as the meal-plan adapter', () => {
     const option = toSwapOption(makeRecipe({ ingredients: ['3 cloves garlic'] }))
     expect(option.ingredients[0].name).toBe('Garlic')
+  })
+})
+
+describe('getCategorySlot (exported for swap-option slot normalization)', () => {
+  // get-swap-options compares a custom current recipe's SLOT to each candidate's
+  // slot via this mapping, so the raw catalog category must normalize correctly.
+  it('maps raw catalog categories to breakfast/lunch/dinner slots', () => {
+    expect(getCategorySlot('Breakfast')).toBe('breakfast')
+    expect(getCategorySlot('Brunch')).toBe('breakfast')
+    expect(getCategorySlot('Salad')).toBe('lunch')
+    expect(getCategorySlot('Soup')).toBe('lunch')
+    expect(getCategorySlot('Sandwich')).toBe('lunch')
+    expect(getCategorySlot('Dessert')).toBe('dinner')
+    expect(getCategorySlot('Entree')).toBe('dinner')
+    expect(getCategorySlot('')).toBe('dinner')
+  })
+})
+
+describe('buildCustomQueueMeal (custom/community swap target)', () => {
+  const communityMeal = {
+    id: 'custom-should-be-ignored',
+    name: 'Grandma Stir Fry',
+    description: 'Custom recipe',
+    image: 'https://img/x.jpg',
+    imageUrl: 'https://img/x.jpg',
+    category: 'breakfast', // client category is IGNORED; slot wins
+    cookingTime: 25,
+    servings: 3,
+    difficulty: 'medium',
+    cuisine: 'Custom',
+    tags: ['custom'],
+    ingredients: [{ name: 'rice', amount: '', unit: '', available: true }],
+    ingredientNames: ['rice', 'egg'],
+    instructions: ['Cook rice', 'Fry egg'],
+    totalCost: 4,
+    cost: 2,
+    nutrition: { calories: 420, protein: 22, carbs: 30, fats: 12 },
+  }
+
+  it('maps a client meal object and forces the resolved slot + day', () => {
+    const meal = buildCustomQueueMeal(communityMeal, 'custom-42', 9, 'dinner')
+    expect(meal).not.toBeNull()
+    expect(meal!.id).toBe('custom-42') // the resolved swap id, not the client id
+    expect(meal!.name).toBe('Grandma Stir Fry')
+    expect(meal!.category).toBe('dinner') // slot forced, not client 'breakfast'
+    expect(meal!.mealType).toBe('Dinner')
+    expect(meal!.dayNumber).toBe(9)
+    expect(meal!.mealNumber).toBe(1)
+    expect(meal!.nutrition).toEqual({ calories: 420, protein: 22, carbs: 30, fats: 12, fiber: 0 })
+    expect(meal!.ingredientNames).toEqual(['rice', 'egg'])
+  })
+
+  it('returns null for non-object / empty-name input (so the handler can 404)', () => {
+    expect(buildCustomQueueMeal(null, 'custom-1', 1, 'dinner')).toBeNull()
+    expect(buildCustomQueueMeal(undefined, 'custom-1', 1, 'dinner')).toBeNull()
+    expect(buildCustomQueueMeal('nope', 'custom-1', 1, 'dinner')).toBeNull()
+    expect(buildCustomQueueMeal({ name: '   ' }, 'custom-1', 1, 'dinner')).toBeNull()
+  })
+
+  it('bounds untrusted fields to prevent storage abuse', () => {
+    const meal = buildCustomQueueMeal(
+      {
+        name: 'x'.repeat(500),
+        description: 'd'.repeat(5000),
+        instructions: Array.from({ length: 500 }, () => 'step'),
+        servings: 9999,
+        nutrition: { calories: -50, protein: 1e9 },
+      },
+      'custom-1',
+      1,
+      'lunch',
+    )
+    expect(meal!.name.length).toBe(150)
+    expect(meal!.description.length).toBe(2000)
+    expect(meal!.instructions.length).toBe(100)
+    expect(meal!.servings).toBe(50)
+    expect(meal!.nutrition.calories).toBe(0) // clamped up from -50
+    expect(meal!.nutrition.protein).toBe(10000) // clamped down from 1e9
   })
 })
 
