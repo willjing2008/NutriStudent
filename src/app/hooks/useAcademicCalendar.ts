@@ -253,7 +253,8 @@ export function useAcademicCalendar() {
     userId: string,
     dayNumber: number,
     mealSlot: string,
-    newRecipeId: string
+    newRecipeId: string,
+    newMeal?: any
   ) => {
     try {
       setIsLoading(true);
@@ -262,6 +263,8 @@ export function useAcademicCalendar() {
         dayNumber,
         mealSlot,
         newRecipeId,
+        // Full meal object for custom/community recipes not in the catalog.
+        newMeal,
       });
       setRecipeQueue(data.queue);
       setCurrentWeekMealPlan(data.mealPlan);

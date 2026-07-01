@@ -46,7 +46,7 @@ interface MealPlansDashboardProps {
   savedMealPlan?: { meals?: any[]; weekNumber?: number } | null;
   goal?: string | null;
   maxCookingTime?: number;
-  onSwapQueueMeal?: (userId: string, dayNumber: number, mealSlot: string, newRecipeId: string) => Promise<any>;
+  onSwapQueueMeal?: (userId: string, dayNumber: number, mealSlot: string, newRecipeId: string, newMeal?: any) => Promise<any>;
 }
 
 export function MealPlansDashboard({
@@ -128,6 +128,7 @@ export function MealPlansDashboard({
         weekNumber: planWeekNumber,
         userId: user.id,
         newRecipeId: newMeal.id,
+        newMeal,
         swapQueueMeal: onSwapQueueMeal,
       });
     } catch (err) {

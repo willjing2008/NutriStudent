@@ -45,7 +45,7 @@ interface RecommendationsStepProps {
   weekConflicts?: Map<number, MealConflict[]>;
   onSaveSchedule?: (userId: string, schedule: Omit<AcademicSchedule, 'updatedAt'>, mealTimes?: MealTimes) => Promise<any>;
   onGenerateQueue?: (userId: string, params: any) => Promise<any>;
-  onSwapQueueMeal?: (userId: string, dayNumber: number, mealSlot: string, newRecipeId: string) => Promise<any>;
+  onSwapQueueMeal?: (userId: string, dayNumber: number, mealSlot: string, newRecipeId: string, newMeal?: any) => Promise<any>;
   onMarkMealConsumed?: (userId: string, dayNumber: number, mealSlot: string) => Promise<boolean>;
   onCheckQueueTestingChange?: (userId: string) => Promise<any>;
   onSaveMealTimeOverride?: (userId: string, override: MealTimeOverride, mealTimes?: any) => Promise<void>;
@@ -665,6 +665,7 @@ export function RecommendationsStep({
             weekNumber: currentWeekMealPlan.weekNumber,
             userId: user.id,
             newRecipeId: newMeal.id,
+            newMeal,
             swapQueueMeal: onSwapQueueMeal,
           });
         } catch (err) {

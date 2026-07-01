@@ -300,9 +300,10 @@ describe('MealPlansDashboard — swap from My Recipe (in-plan only)', () => {
 
     fireEvent.click(screen.getByText('confirm-swap'));
 
-    // week 1, day 1 -> absoluteDay 1, slot breakfast, new recipe id passed through.
+    // week 1, day 1 -> absoluteDay 1, slot breakfast, new recipe id + the full
+    // meal object (so the backend can apply custom/community recipes) passed through.
     await waitFor(() =>
-      expect(onSwapQueueMeal).toHaveBeenCalledWith('user-1', 1, 'breakfast', 'new-recipe'),
+      expect(onSwapQueueMeal).toHaveBeenCalledWith('user-1', 1, 'breakfast', 'new-recipe', { id: 'new-recipe' }),
     );
     // Modal closes after a successful swap.
     await waitFor(() => expect(screen.queryByTestId('swap-modal')).not.toBeInTheDocument());
