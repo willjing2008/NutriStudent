@@ -13,8 +13,7 @@ vi.mock('../hooks/useLanguage', () => ({
   }),
 }));
 
-// authedPost is fired on mount (fetchMyRecipes) and on rename. We control it so
-// the unit never hits the network.
+// authedPost is fired on rename. We control it so the unit never hits the network.
 const { authedPost } = vi.hoisted(() => ({ authedPost: vi.fn() }));
 vi.mock('../utils/apiClient', () => ({
   authedPost,
@@ -25,17 +24,6 @@ vi.mock('../utils/apiClient', () => ({
 // ImageWithFallback pulls in figma image helpers / network; stub to a plain img.
 vi.mock('./figma/ImageWithFallback', () => ({
   ImageWithFallback: ({ alt }: { alt: string }) => <img alt={alt} />,
-}));
-
-// MealSwapModal fetches swap options on mount; stub it to a controllable shell
-// that surfaces which meal it was seeded with and lets us fire a confirmed swap.
-vi.mock('./MealSwapModal', () => ({
-  MealSwapModal: ({ currentMeal, onSwap }: any) => (
-    <div data-testid="swap-modal">
-      <span>Swapping: {currentMeal.name}</span>
-      <button onClick={() => onSwap({ id: 'new-recipe' })}>confirm-swap</button>
-    </div>
-  ),
 }));
 
 type MealPlan = {
@@ -94,8 +82,7 @@ function renderDashboard(overrides: Partial<Parameters<typeof MealPlansDashboard
 
 beforeEach(() => {
   authedPost.mockReset();
-  // fetchMyRecipes on mount resolves to no recipes by default.
-  authedPost.mockResolvedValue({ recipes: [] });
+  authedPost.mockResolvedValue({});
 });
 
 describe('MealPlansDashboard — tab switching', () => {
@@ -200,7 +187,7 @@ describe('MealPlansDashboard — inline rename editor', () => {
     fireEvent.click(screen.getByText('cancel'));
 
     expect(screen.queryByText('save')).not.toBeInTheDocument();
-    // rename endpoint must not have been called (only the mount fetch).
+    // rename endpoint must not have been called.
     expect(authedPost).not.toHaveBeenCalledWith(
       'rename-meal-plan',
       expect.anything(),
@@ -257,84 +244,3 @@ describe('MealPlansDashboard — delete (await success, rollback on failure)', (
   });
 });
 
-describe('MealPlansDashboard — swap from My Recipe (in-plan only)', () => {
-  const myRecipes = [
-    { recipeId: 'recipe-in', name: 'Plan Porridge', category: 'breakfast', timesCooked: 3, lastCooked: '2026-06-17T08:00:00.000Z' },
-    { recipeId: 'recipe-out', name: 'Cooked-only Curry', category: 'dinner', timesCooked: 5, lastCooked: '2026-06-18T19:00:00.000Z' },
-  ];
-  const savedMealPlan = {
-    weekNumber: 1,
-    meals: [
-      { id: 'recipe-in', name: 'Plan Porridge', category: 'breakfast', dayNumber: 1 },
-      { id: 'other-meal', name: 'Plan Salad', category: 'lunch', dayNumber: 1 },
-    ],
-  };
-
-  beforeEach(() => {
-    authedPost.mockReset();
-    authedPost.mockResolvedValue({ recipes: myRecipes });
-  });
-
-  it('renders the Swap button only for My-Recipe rows present in the active plan', async () => {
-    renderDashboard({ savedMealPlan, onSwapQueueMeal: vi.fn(), goal: 'study' });
-
-    expect(await screen.findByRole('button', { name: 'Swap Plan Porridge' })).toBeInTheDocument();
-    // The cooked-only recipe is not in the plan -> no swap button.
-    expect(screen.queryByRole('button', { name: 'Swap Cooked-only Curry' })).not.toBeInTheDocument();
-  });
-
-  it('shows no Swap buttons when there is no active plan to swap against', async () => {
-    renderDashboard({ savedMealPlan: null, onSwapQueueMeal: vi.fn() });
-
-    await screen.findByText('Plan Porridge');
-    expect(screen.queryByRole('button', { name: 'Swap Plan Porridge' })).not.toBeInTheDocument();
-  });
-
-  it('opens the swap modal seeded from the plan meal and applies via onSwapQueueMeal', async () => {
-    const onSwapQueueMeal = vi.fn().mockResolvedValue(undefined);
-    renderDashboard({ savedMealPlan, onSwapQueueMeal, goal: 'study' });
-
-    fireEvent.click(await screen.findByRole('button', { name: 'Swap Plan Porridge' }));
-
-    expect(await screen.findByText('Swapping: Plan Porridge')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByText('confirm-swap'));
-
-    // week 1, day 1 -> absoluteDay 1, slot breakfast, new recipe id passed through.
-    await waitFor(() =>
-      expect(onSwapQueueMeal).toHaveBeenCalledWith('user-1', 1, 'breakfast', 'new-recipe'),
-    );
-    // Modal closes after a successful swap.
-    await waitFor(() => expect(screen.queryByTestId('swap-modal')).not.toBeInTheDocument());
-  });
-});
-
-describe('MealPlansDashboard — custom recipes network states', () => {
-  it('shows a retry state when custom recipes fail to load', async () => {
-    authedPost
-      .mockRejectedValueOnce(new Error("You're offline. Connect to the internet and try again."))
-      .mockResolvedValueOnce({
-        recipes: [
-          {
-            recipeId: 'recipe-1',
-            name: 'Exam Day Porridge',
-            category: 'breakfast',
-            timesCooked: 2,
-            lastCooked: '2026-06-17T08:00:00.000Z',
-          },
-        ],
-      });
-
-    renderDashboard();
-
-    expect(await screen.findByText("Couldn't load your recipes")).toBeInTheDocument();
-    expect(
-      screen.getByText("You're offline. Connect to the internet and try again."),
-    ).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
-
-    expect(await screen.findByText('Exam Day Porridge')).toBeInTheDocument();
-    expect(screen.queryByText("Couldn't load your recipes")).not.toBeInTheDocument();
-  });
-});

@@ -22,9 +22,8 @@ This file is the project's committed home for project-intrinsic agent knowledge:
 
 ## Meal swap
 
-- Queue-mode meal swaps are applied by `src/app/utils/mealSwap.ts` (`resolveSwapSlot` / `applyQueueMealSwap`), shared by the plan view (`RecommendationsStep`) and the "My Recipes" dashboard so the slot math (`absoluteDay = (weekNumber-1)*7 + dayNumber`, `slot = category`) can't drift between the two entry points. Don't re-derive it inline.
-- "My Recipes" is a cooked-history list with no plan/slot context, so its Swap button renders ONLY for rows whose `recipeId` matches a meal in the active plan (`savedMealPlan.meals`); cooked recipes not in the plan have no slot and get no button.
-- Both swap surfaces reuse `MealSwapModal`, whose `get-swap-options` call is the Pro paywall (server-side `requirePro`). There is no client-side gate on the swap button itself; reusing the modal is what keeps the paywall consistent - don't add a separate gate to one surface.
+- Queue-mode meal swaps are applied by `src/app/utils/mealSwap.ts` (`resolveSwapSlot` / `applyQueueMealSwap`) from the plan view (`RecommendationsStep`); the slot math is `absoluteDay = (weekNumber-1)*7 + dayNumber`, `slot = category`. Don't re-derive it inline in new swap surfaces.
+- The dashboard's "My Recipes" section (cooked-history list with per-row Swap) was removed from the UI in July 2026; the `my-recipes` backend route still exists. If a new surface adds swapping, reuse `MealSwapModal` — its `get-swap-options` call is the Pro paywall (server-side `requirePro`); there is no client-side gate on swap buttons, and reusing the modal is what keeps the paywall consistent.
 
 ## Build / CI sharp edges
 

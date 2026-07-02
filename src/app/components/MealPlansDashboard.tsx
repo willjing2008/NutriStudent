@@ -1,19 +1,9 @@
 import { useLanguage } from '../hooks/useLanguage';
-import React, { useState, useEffect, useCallback } from 'react';
-import { Edit2, Plus, ChevronRight, Check, Calendar, Sparkles, ChefHat, Flame, Repeat2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Edit2, Plus, ChevronRight, Check, Calendar, Sparkles } from 'lucide-react';
 import { BottomNavigation, NavTab } from './BottomNavigation';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { authedPost, getUserFacingApiErrorMessage } from '../utils/apiClient';
-import { MealSwapModal } from './MealSwapModal';
-import { applyQueueMealSwap } from '../utils/mealSwap';
-
-interface MyRecipe {
-  recipeId: string;
-  name: string;
-  category: string;
-  timesCooked: number;
-  lastCooked: string;
-}
 
 interface MealPlan {
   id: string;
@@ -41,12 +31,6 @@ interface MealPlansDashboardProps {
   savedPlans?: MealPlan[];
   onDeletePlan?: (planId: string) => Promise<void>;
   onEditPlan?: () => void;
-  // Swap-from-My-Recipe: the active plan's meals (source of truth for slot
-  // resolution) plus the same swap inputs the in-plan swap uses.
-  savedMealPlan?: { meals?: any[]; weekNumber?: number } | null;
-  goal?: string | null;
-  maxCookingTime?: number;
-  onSwapQueueMeal?: (userId: string, dayNumber: number, mealSlot: string, newRecipeId: string) => Promise<any>;
 }
 
 export function MealPlansDashboard({
@@ -61,10 +45,6 @@ export function MealPlansDashboard({
   onDeletePlan,
   onNavTabChange,
   onEditPlan,
-  savedMealPlan,
-  goal,
-  maxCookingTime,
-  onSwapQueueMeal,
 }: MealPlansDashboardProps) {
   const { t } = useLanguage();
 
@@ -84,67 +64,6 @@ export function MealPlansDashboard({
   useEffect(() => {
     setSavedPlansState(savedPlans);
   }, [savedPlans]);
-
-  const [myRecipes, setMyRecipes] = useState<MyRecipe[]>([]);
-  const [myRecipesLoading, setMyRecipesLoading] = useState(false);
-  const [myRecipesError, setMyRecipesError] = useState<string | null>(null);
-
-  const fetchMyRecipes = useCallback(async () => {
-    if (!user?.id) return;
-    setMyRecipesLoading(true);
-    setMyRecipesError(null);
-    try {
-      const data = await authedPost<{ recipes?: MyRecipe[] }>('my-recipes', { userId: user.id });
-      setMyRecipes(data.recipes ?? []);
-    } catch (err) {
-      setMyRecipesError(getUserFacingApiErrorMessage(err));
-    } finally {
-      setMyRecipesLoading(false);
-    }
-  }, [user?.id]);
-
-  useEffect(() => {
-    fetchMyRecipes();
-  }, [fetchMyRecipes]);
-
-  // Swap-from-My-Recipe. A My-Recipe row is only swappable when its recipeId
-  // occupies a slot in the active plan; the matched plan meal seeds the modal
-  // and gives us the slot to swap. Cooked recipes that aren't in the plan have
-  // no slot, so no swap button is shown for them.
-  const planMeals: any[] = savedMealPlan?.meals ?? [];
-  const planWeekNumber = savedMealPlan?.weekNumber ?? 1;
-  const swapEnabled = !!onSwapQueueMeal && planMeals.length > 0;
-  const findPlanMeal = (recipeId: string) =>
-    swapEnabled ? planMeals.find((m) => m.id === recipeId) ?? null : null;
-
-  const [swapMeal, setSwapMeal] = useState<any | null>(null);
-
-  const handleApplySwap = async (newMeal: any) => {
-    if (!swapMeal || !onSwapQueueMeal || !user?.id) return;
-    try {
-      await applyQueueMealSwap({
-        meals: planMeals,
-        recipeId: swapMeal.id,
-        weekNumber: planWeekNumber,
-        userId: user.id,
-        newRecipeId: newMeal.id,
-        swapQueueMeal: onSwapQueueMeal,
-      });
-    } catch (err) {
-      console.error('Error swapping meal from My Recipe:', err);
-    } finally {
-      setSwapMeal(null);
-    }
-  };
-
-  const getCategoryEmoji = (category: string) => {
-    const lower = (category || '').toLowerCase();
-    if (lower.includes('breakfast')) return '🥣';
-    if (lower.includes('lunch')) return '🥗';
-    if (lower.includes('dinner')) return '🍽️';
-    if (lower.includes('snack')) return '🍎';
-    return '🍳';
-  };
 
   const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
@@ -437,85 +356,6 @@ export function MealPlansDashboard({
           </div>
         )}
 
-        {/* My Recipes Section */}
-        {activeTab === 'active' && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-white font-semibold flex items-center gap-2">
-                <ChefHat className="w-4.5 h-4.5 text-[#22C55E]" />
-                My Recipes
-              </h2>
-              {myRecipes.length > 0 && (
-                <span className="text-[#6B7280] text-xs">{myRecipes.length} recipe{myRecipes.length !== 1 ? 's' : ''}</span>
-              )}
-            </div>
-
-            {myRecipesLoading ? (
-              <div className="space-y-2.5">
-                {Array.from({ length: 2 }).map((_, i) => (
-                  <div key={i} className="h-16 rounded-2xl bg-[#1A1A1A] animate-pulse" />
-                ))}
-              </div>
-            ) : myRecipesError ? (
-              <div className="rounded-2xl border border-amber-400/20 bg-amber-400/10 py-6 px-4 text-center">
-                <ChefHat className="w-8 h-8 text-amber-300 mx-auto mb-2.5" />
-                <p className="text-amber-100 text-sm font-semibold mb-1">Couldn't load your recipes</p>
-                <p className="text-amber-100/70 text-xs leading-5 mb-4">{myRecipesError}</p>
-                <button
-                  type="button"
-                  onClick={fetchMyRecipes}
-                  className="px-4 py-2 rounded-full bg-amber-300 text-[#1F1300] text-xs font-bold hover:bg-amber-200 transition-colors"
-                >
-                  Try again
-                </button>
-              </div>
-            ) : myRecipes.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-[#2D2D2D] bg-[#111111] py-8 px-4 text-center">
-                <ChefHat className="w-8 h-8 text-[#3D3D3D] mx-auto mb-2.5" />
-                <p className="text-[#6B7280] text-sm font-medium mb-1">No custom recipes yet</p>
-                <p className="text-[#4B5563] text-xs">Swap a meal in your plan and choose "Create Your Own" to add one</p>
-              </div>
-            ) : (
-              <div className="space-y-2.5">
-                {myRecipes.map((recipe) => {
-                  const planMeal = findPlanMeal(recipe.recipeId);
-                  return (
-                  <div
-                    key={recipe.recipeId}
-                    className="flex items-center gap-3.5 px-4 py-3.5 rounded-2xl bg-[#111111] border border-[#1E1E1E]"
-                  >
-                    <div className="w-10 h-10 rounded-full bg-[#1A2A1F] flex items-center justify-center text-xl flex-shrink-0">
-                      {getCategoryEmoji(recipe.category)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[15px] font-medium truncate text-white">{recipe.name}</p>
-                      <p className="text-xs text-[#6B7280] mt-0.5">
-                        {recipe.timesCooked} {recipe.timesCooked === 1 ? 'time' : 'times'} cooked
-                      </p>
-                    </div>
-                    {planMeal && (
-                      <button
-                        type="button"
-                        onClick={() => setSwapMeal(planMeal)}
-                        aria-label={`Swap ${recipe.name}`}
-                        className="flex items-center gap-1.5 flex-shrink-0 px-3 py-1.5 rounded-full bg-[#142A1D] border border-[#2D5A3D] text-[#22C55E] text-xs font-semibold hover:border-[#22C55E] transition-colors"
-                      >
-                        <Repeat2 className="w-3.5 h-3.5" />
-                        Swap
-                      </button>
-                    )}
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
-                      <Flame className="w-4 h-4 text-orange-400" />
-                      <span className="text-sm font-semibold text-orange-400">{recipe.timesCooked}</span>
-                    </div>
-                  </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
-
         {/* History Tab Content */}
         {activeTab === 'history' && (
           <div className="text-center py-12">
@@ -527,19 +367,6 @@ export function MealPlansDashboard({
           </div>
         )}
       </div>
-
-      {/* Swap Meal modal — reuses the exact in-plan swap flow (and its
-          server-side Pro paywall via get-swap-options). */}
-      {swapMeal && (
-        <MealSwapModal
-          currentMeal={swapMeal}
-          goal={goal || 'Custom'}
-          currentMealIds={planMeals.map((m) => m.id)}
-          maxCookingTime={maxCookingTime}
-          onSwap={handleApplySwap}
-          onClose={() => setSwapMeal(null)}
-        />
-      )}
 
       {/* Shared Bottom Navigation */}
       <BottomNavigation activeTab="home" onTabChange={handleNavTabChange} />
