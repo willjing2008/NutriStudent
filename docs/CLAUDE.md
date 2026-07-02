@@ -58,7 +58,7 @@ Tab-based bottom navigation using a `NavTab` enum (`home`, `plan`, `shop`, `prof
 ### App Flows
 
 1. **Auth**: Supabase email/password + OAuth → session check on mount
-2. **Onboarding**: WelcomeStep → PreferencesStep → LocationStep → RecommendationsStep
+2. **Onboarding**: PreferencesStep → RecommendationsStep (exits via "Save This Plan"/"Discard Plan")
 3. **Main**: MealPlansDashboard (home) → RecommendationsStep (plan view) → ShoppingMode
 4. **Subscriptions**: RevenueCat identify on login, paywall via native UI, entitlement: "NutriStudent Pro"
 
