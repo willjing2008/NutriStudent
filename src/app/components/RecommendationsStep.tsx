@@ -1,8 +1,7 @@
-import { ShoppingCart, ArrowLeft, Loader2, X, Clock, ChefHat, Users, Flame, RefreshCw, Repeat2, MapPin, ArrowRight, Save, Check, Plus, Bell, ExternalLink, Play, Trash2, AlertTriangle } from 'lucide-react';
+import { ShoppingCart, ArrowLeft, Loader2, X, Clock, ChefHat, Users, Flame, RefreshCw, Repeat2, MapPin, ArrowRight, Save, Check, Plus, ExternalLink, Play, Trash2, AlertTriangle } from 'lucide-react';
 import { UserPreferences, MealTimes } from '../App';
 import { getNutritionTargets } from '../utils/nutritionTargets';
 import { getLocalTodayISO, parseLocalDate, initialPlanOffset, toLocalISODate } from '../utils/dateUtils';
-import { toast } from 'sonner';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { authedPost } from '../utils/apiClient';
 import { ShoppingMode } from './ShoppingMode';
@@ -11,7 +10,6 @@ import { MealSwapModal } from './MealSwapModal';
 import { applyQueueMealSwap } from '../utils/mealSwap';
 
 import { supabase } from '../../utils/supabaseClient';
-import { SavedPlansModal } from './SavedPlansModal';
 import { BottomNavigation, NavTab } from './BottomNavigation';
 import { CelebrationOverlay, CelebrationType } from './CelebrationOverlay';
 import { PlanTabSubNav } from './PlanTabSubNav';
@@ -26,7 +24,6 @@ import type { AcademicSchedule, ClassEntry, RecipeQueue, MealConflict, MealTimeO
 interface RecommendationsStepProps {
   preferences: UserPreferences;
   onBack: () => void;
-  onNext: () => void;
   onReset: () => void;
   onSaveMealPlan?: (mealPlan: any) => Promise<boolean | undefined>;
   onDeletePlan?: (planId: string) => Promise<void>;
@@ -126,7 +123,7 @@ const LOCAL_IMAGE_FALLBACK =
 
 
 export function RecommendationsStep({
-  preferences, onBack, onNext, onReset, onSaveMealPlan, onDeletePlan, activePlanId,
+  preferences, onBack, onReset, onSaveMealPlan, onDeletePlan, activePlanId,
   onNavigateHome, activeNavTab, onNavTabChange, savedMealPlan: initialSavedPlan,
   // Calendar + queue props
   academicSchedule, recipeQueue, currentWeekMealPlan,
@@ -172,8 +169,6 @@ export function RecommendationsStep({
   const [planSaved, setPlanSaved] = useState(false);
   const [savedMealPlanSnapshot, setSavedMealPlanSnapshot] = useState<string | null>(null);
 
-  const [showSavedPlansModal, setShowSavedPlansModal] = useState(false);
-
   // Leave warning for unsaved new plans
   const [showLeaveWarning, setShowLeaveWarning] = useState(false);
   const [pendingNavAction, setPendingNavAction] = useState<(() => void) | null>(null);
@@ -205,8 +200,6 @@ export function RecommendationsStep({
       fetchMealImages(currentWeekMealPlan.meals);
     }
   }, [currentWeekMealPlan]);
-  const [loadingPlan, setLoadingPlan] = useState(false);
-  
   const [user, setUser] = useState<any>(null);
 
   const [celebration, setCelebration] = useState<{
@@ -332,32 +325,6 @@ export function RecommendationsStep({
     }
   };
   
-  const handleLoadSavedPlan = async (planId: string) => {
-    if (!user) return;
-    
-    setLoadingPlan(true);
-    setShowSavedPlansModal(false);
-    
-    try {
-      const data = await authedPost<{ mealPlan?: any }>('load-meal-plan-by-id', {
-        userId: user.id,
-        planId,
-      });
-
-      setMealPlan((data.mealPlan));
-
-      if (data.mealPlan?.meals) {
-        fetchMealImages(data.mealPlan.meals);
-      }
-
-    } catch (err: any) {
-      console.error('Error loading plan:', err);
-      toast.error(err.message || 'Failed to load plan');
-    } finally {
-      setLoadingPlan(false);
-    }
-  };
-
   // Check if required preferences are set
   const hasRequiredPreferences = preferences.goal !== null;
 
@@ -1030,9 +997,6 @@ export function RecommendationsStep({
               <h1 className="text-xl font-bold text-white">{userName}</h1>
           </div>
         </div>
-          <button aria-label="Notifications" className="w-10 h-10 rounded-full bg-[#142A1D] flex items-center justify-center border border-[#1E4029]">
-            <Bell className="w-5 h-5 text-[#9CA3AF]" />
-            </button>
           </div>
             </div>
 
@@ -1733,25 +1697,6 @@ export function RecommendationsStep({
           onSwap={handleMealSwap}
           onClose={() => setShowMealSwapModal(false)}
         />
-      )}
-
-      {/* Saved Plans Modal */}
-      {showSavedPlansModal && user && (
-        <SavedPlansModal
-          userId={user.id}
-          onClose={() => setShowSavedPlansModal(false)}
-          onLoadPlan={handleLoadSavedPlan}
-        />
-      )}
-
-      {/* Loading overlay */}
-      {loadingPlan && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-[#142A1D] rounded-2xl p-8 flex flex-col items-center gap-4 border border-[#1E4029]">
-            <Loader2 className="w-12 h-12 text-[#22C55E] animate-spin" />
-            <p className="text-white font-medium">Loading your meal plan...</p>
-          </div>
-        </div>
       )}
 
       {/* Celebration Overlay */}

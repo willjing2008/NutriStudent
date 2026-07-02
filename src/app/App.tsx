@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { WelcomeStep } from './components/WelcomeStep';
-import { LocationStep } from './components/LocationStep';
 import { PreferencesStep } from './components/PreferencesStep';
 import { RecommendationsStep } from './components/RecommendationsStep';
 import { LoginPage } from './components/LoginPage';
@@ -65,7 +63,9 @@ export default function App() {
   const [activeNavTab, setActiveNavTab] = useState<NavTab>('home');
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
   const [isOnboarding, setIsOnboarding] = useState(false);
-  const [onboardingStep, setOnboardingStep] = useState(1);
+  // Onboarding is two steps: preferences (2) → plan preview (3). The historical
+  // steps 1 and 4 were removed as unreachable; 2/3 numbering kept to minimize the diff.
+  const [onboardingStep, setOnboardingStep] = useState(2);
 
   // RevenueCat subscription
   const { identify: rcIdentify, reset: rcReset, isPro, isReady } = useSubscription();
@@ -479,15 +479,6 @@ export default function App() {
     return (
       <div className="min-h-screen bg-[#0A1F13]">
         <NetworkStatusBanner />
-        {onboardingStep === 1 && (
-          <WelcomeStep 
-            onNext={() => setOnboardingStep(2)} 
-            onBack={() => {
-              setIsOnboarding(false);
-              setActiveNavTab('home');
-            }}
-          />
-        )}
         {onboardingStep === 2 && (
           <PreferencesStep
             preferences={preferences}
@@ -503,7 +494,6 @@ export default function App() {
           <RecommendationsStep
             preferences={preferences}
             onBack={() => setOnboardingStep(2)}
-            onNext={() => setOnboardingStep(4)}
             onReset={() => {
               resetPreferences();
               setOnboardingStep(2);
@@ -526,17 +516,6 @@ export default function App() {
               setIsOnboarding(false);
               setActiveNavTab('home');
             }}
-          />
-        )}
-        {onboardingStep === 4 && (
-          <LocationStep
-            preferences={preferences}
-            updatePreferences={updatePreferences}
-            onNext={() => {
-              setIsOnboarding(false);
-              setActiveNavTab('shop');
-            }}
-            onBack={() => setOnboardingStep(3)}
           />
         )}
       </div>
@@ -581,7 +560,6 @@ export default function App() {
         <RecommendationsStep
           preferences={preferences}
           onBack={() => setActiveNavTab('home')}
-          onNext={() => setActiveNavTab('shop')}
           onReset={startOnboarding}
           onSaveMealPlan={(mealPlan) => saveMealPlan(mealPlan, undefined, activePlanId)}
           onDeletePlan={deleteSavedMealPlanById}

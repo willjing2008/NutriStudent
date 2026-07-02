@@ -20,6 +20,10 @@ This file is the project's committed home for project-intrinsic agent knowledge:
   It flags the caller's own row with `isCurrentUser` (derived from `getUserId(c)`); the client highlights "(you)" off that flag, not a UUID compare.
   `recipe-leaderboard` is keyed by `recipeId` and uses `getUserId(c)` for "liked by me", so it exposes no user UUIDs.
 
+## Onboarding flow
+
+- Onboarding is two steps: preferences (`onboardingStep === 2`) → plan preview (`=== 3`); it exits from step 3 via "Save This Plan"/"Discard Plan". The historical steps 1 (`WelcomeStep`) and 4 (`LocationStep`) were removed as unreachable dead code. `onboardingStep` is in-memory only (never persisted); the 2/3 numbering was kept just to minimize that diff — refactoring it to a two-value union is fine. Don't re-add an `onNext` prop to `RecommendationsStep`: its "Go Shopping" opens the internal `ShoppingMode`, it never advances a step.
+
 ## Meal swap
 
 - Queue-mode meal swaps are applied by `src/app/utils/mealSwap.ts` (`resolveSwapSlot` / `applyQueueMealSwap`), shared by the plan view (`RecommendationsStep`) and the "My Recipes" dashboard so the slot math (`absoluteDay = (weekNumber-1)*7 + dayNumber`, `slot = category`) can't drift between the two entry points. Don't re-derive it inline.

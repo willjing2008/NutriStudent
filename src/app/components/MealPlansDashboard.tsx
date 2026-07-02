@@ -283,10 +283,7 @@ export function MealPlansDashboard({
         {activeTab === 'active' && currentActivePlan && (
           <>
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-white font-semibold">{t("currentlyActive")}</h2>
-                <button className="text-[#22C55E] text-sm font-medium">{t("manage")}</button>
-              </div>
+              <h2 className="text-white font-semibold mb-4">{t("currentlyActive")}</h2>
 
               {/* Active Plan Card */}
               <div className="relative bg-gradient-to-br from-[#1A2A1F] to-[#0F1A14] rounded-2xl p-5 border border-[#2D5A3D]/30 min-h-[160px]">
