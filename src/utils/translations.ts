@@ -31,7 +31,6 @@ export const translations = {
     cancel: 'Cancel',
     delete: 'Delete',
     deletePlan: 'Delete Plan',
-    manage: 'Manage',
     
     // Profile
     settings: 'Settings',
@@ -109,7 +108,6 @@ export const translations = {
     cancel: '取消',
     delete: '删除',
     deletePlan: '删除计划',
-    manage: '管理',
     
     // Profile
     settings: '设置',
