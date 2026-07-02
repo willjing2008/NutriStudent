@@ -101,6 +101,22 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
         throw new Error(data.error || 'Failed to create account');
       }
 
+      // The signup route creates the user but returns no session. Sign in with
+      // the same credentials now so the following onboarding steps
+      // (schools/select, auth/update-profile) have a JWT — they all go through
+      // authedPost and 401 without one.
+      const { data: signInData, error: signInError } =
+        await supabase.auth.signInWithPassword({ email, password });
+
+      if (signInError || !signInData.session) {
+        console.error('Post-signup sign-in failed:', signInError);
+        setIsSignUp(false);
+        setError(
+          'Your account was created, but signing you in failed. Please sign in with your new email and password.'
+        );
+        return;
+      }
+
       setSignedUpUserId(data.user.id);
     } catch (err: any) {
       console.error('Sign up error:', err);
