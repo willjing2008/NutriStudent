@@ -1,9 +1,9 @@
 // Shared meal-swap slot logic.
 //
-// Both the plan view (RecommendationsStep, queue mode) and the My-Recipe
-// dashboard swap a recipe out of a specific plan slot via `swapQueueMeal`,
-// keyed by an absolute (queue) day + meal slot. The day/slot math lives here so
-// the two call sites cannot drift.
+// The plan view (RecommendationsStep, queue mode) swaps a recipe out of a
+// specific plan slot via `swapQueueMeal`, keyed by an absolute (queue) day +
+// meal slot. The day/slot math lives here so any future swap surface reuses it
+// instead of re-deriving it inline.
 
 /** Minimal shape a plan meal needs for swap-slot resolution. */
 export interface SwapSlotMeal {
@@ -40,9 +40,9 @@ export function resolveSwapSlot(
 
 /**
  * Apply a queue-mode meal swap: resolve the slot the recipe occupies and
- * persist the swap through `swapQueueMeal`. Shared by the plan view and the
- * My-Recipe dashboard so both compute the slot identically. Returns the
- * `swapQueueMeal` result, or null when there is no matching slot.
+ * persist the swap through `swapQueueMeal`, so every swap surface computes
+ * the slot identically. Returns the `swapQueueMeal` result, or null when
+ * there is no matching slot.
  */
 export async function applyQueueMealSwap(params: {
   meals: SwapSlotMeal[] | undefined;
