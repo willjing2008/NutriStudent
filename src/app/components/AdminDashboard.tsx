@@ -1237,7 +1237,11 @@ export function AdminDashboard() {
                             </div>
                             <div className="text-sm text-gray-600 flex items-center gap-3">
                               <span>{ing.amount}</span>
-                              <span className="text-green-600 font-semibold">£{ing.estimatedPrice.toFixed(2)}</span>
+                              <span className="text-green-600 font-semibold">
+                                {typeof ing.estimatedPrice === 'number' && Number.isFinite(ing.estimatedPrice)
+                                  ? `£${ing.estimatedPrice.toFixed(2)}`
+                                  : '—'}
+                              </span>
                             </div>
                           </div>
                         ))}
@@ -1357,19 +1361,19 @@ export function AdminDashboard() {
                         <div className="grid grid-cols-4 gap-3">
                           <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
                             <div className="text-xs text-amber-700">Calories</div>
-                            <div className="font-bold text-amber-900">{selectedRecipe.nutrition.calories}</div>
+                            <div className="font-bold text-amber-900">{selectedRecipe.nutrition?.calories ?? '—'}</div>
                           </div>
                           <div className="p-3 bg-red-50 rounded-lg border border-red-200">
                             <div className="text-xs text-red-700">Protein</div>
-                            <div className="font-bold text-red-900">{selectedRecipe.nutrition.protein}g</div>
+                            <div className="font-bold text-red-900">{selectedRecipe.nutrition?.protein ?? '—'}g</div>
                           </div>
                           <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                             <div className="text-xs text-blue-700">Carbs</div>
-                            <div className="font-bold text-blue-900">{selectedRecipe.nutrition.carbs}g</div>
+                            <div className="font-bold text-blue-900">{selectedRecipe.nutrition?.carbs ?? '—'}g</div>
                           </div>
                           <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
                             <div className="text-xs text-purple-700">Fats</div>
-                            <div className="font-bold text-purple-900">{selectedRecipe.nutrition.fats}g</div>
+                            <div className="font-bold text-purple-900">{selectedRecipe.nutrition?.fats ?? '—'}g</div>
                           </div>
                         </div>
                       )}

@@ -3,6 +3,7 @@ import { PreferencesStep } from './components/PreferencesStep';
 import { RecommendationsStep } from './components/RecommendationsStep';
 import { LoginPage } from './components/LoginPage';
 import { AdminDashboard } from './components/AdminDashboard';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { MealPlansDashboard } from './components/MealPlansDashboard';
 import { DEFAULT_PLAN_IMAGE, firstMealImage } from './utils/planImage';
 import { ShoppingMode } from './components/ShoppingMode';
@@ -468,7 +469,9 @@ export default function App() {
               Logout
             </button>
           </div>
-          <AdminDashboard />
+          <ErrorBoundary label="Admin Dashboard">
+            <AdminDashboard />
+          </ErrorBoundary>
         </div>
       </div>
     );
