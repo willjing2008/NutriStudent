@@ -22,7 +22,7 @@ This file is the project's committed home for project-intrinsic agent knowledge:
 
 ## Signup / auth flow
 
-- `auth/signup` (edge route; admin-creates the user with a confirmed email) returns NO session. `LoginPage.handleSignUp` must `signInWithPassword` with the same credentials immediately after signup, BEFORE rendering `SchoolSelectionStep` — the post-signup steps (`schools/select`, `auth/update-profile`) go through `authedPost` and 401 without a session JWT. `App.tsx` reads the session only once on mount (no `onAuthStateChange` listener), so signing in mid-flow does not eject the user from signup onboarding; `LoginPage` stays mounted until it calls `onLoginSuccess`.
+- `auth/signup` (edge route; admin-creates the user with a confirmed email) returns NO session. `LoginPage.handleSignUp` must `signInWithPassword` with the same credentials immediately after signup, BEFORE rendering `SchoolSelectionStep` — the post-signup steps (`schools/select`, `auth/update-profile`) go through `authedPost` and 401 without a session JWT. `App.tsx` reads the session only once on mount (no `onAuthStateChange` listener), so signing in mid-flow does not eject the user from signup onboarding; `LoginPage` stays mounted until it calls `onLoginSuccess`. If that post-signup sign-in fails, `handleSignUp` must NOT advance to `SchoolSelectionStep`: it flips back to sign-in mode (`setIsSignUp(false)`) and surfaces a message telling the user the account exists and to sign in manually — the account was already created, so a retry of signup would collide.
 
 ## Onboarding flow
 
