@@ -17,7 +17,11 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
-    exclude: ['node_modules/**', 'dist/**', 'e2e/**'],
+    // ios/** matters: an Xcode build tree (ios/App/build) contains recursive
+    // symlinks (SPM checkouts, e.g. purchases-root -> ../../..) that send the
+    // test-file glob into an infinite walk — vitest then GC-thrashes at the
+    // RUN banner and OOMs without ever collecting a test.
+    exclude: ['node_modules/**', 'dist/**', 'e2e/**', 'ios/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],
