@@ -110,7 +110,7 @@ export function SubscriptionPage({ onBack, mandatory = false, onLogout }: Subscr
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#22C55E] to-[#16A34A] flex items-center justify-center mx-auto mb-3">
               <Crown className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-white mb-1">NutriStudent Pro</h1>
+            <h1 className="text-2xl font-bold text-white mb-1">ChefPocket Pro</h1>
             <p className="text-[#22C55E] font-medium">Active</p>
           </div>
         </div>
@@ -208,7 +208,7 @@ export function SubscriptionPage({ onBack, mandatory = false, onLogout }: Subscr
           </div>
           <h1 className="text-2xl font-bold text-white mb-1">Upgrade to Pro</h1>
           <p className="text-[#9CA3AF] text-sm max-w-xs mx-auto">
-            Unlock the full NutriStudent experience
+            Unlock the full ChefPocket experience
           </p>
         </div>
       </div>

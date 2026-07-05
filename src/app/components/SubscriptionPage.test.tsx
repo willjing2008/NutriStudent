@@ -268,7 +268,7 @@ describe('SubscriptionPage — active subscriber view', () => {
     setSubState({ isPro: true });
     render(<SubscriptionPage />);
 
-    expect(screen.getByText('NutriStudent Pro')).toBeInTheDocument();
+    expect(screen.getByText('ChefPocket Pro')).toBeInTheDocument();
     expect(screen.getByText('Active')).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /Manage Subscription/i }),

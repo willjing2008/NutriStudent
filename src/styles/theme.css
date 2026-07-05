@@ -4,7 +4,7 @@
   --font-size: 16px;
   --safe-area-bg: #0A1F13;
   
-  /* NutriStudent Dark Theme - Primary Colors */
+  /* ChefPocket Dark Theme - Primary Colors */
   --background: #0A1F13;
   --background-secondary: #0D2818;
   --background-card: #142A1D;
@@ -242,7 +242,7 @@
   }
 }
 
-/* Custom utilities for NutriStudent */
+/* Custom utilities for ChefPocket */
 @layer utilities {
   .nutri-gradient {
     background: linear-gradient(135deg, #0A1F13 0%, #142A1D 100%);

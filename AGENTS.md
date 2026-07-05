@@ -4,6 +4,15 @@ This file is the project's committed home for project-intrinsic agent knowledge:
 
 - Add durable project-specific notes here as they are discovered through real work.
 
+## Branding / product name
+
+- The user-facing product name is **ChefPocket** (chosen for the first iOS ship, July 2026). It replaced two older inconsistent names: the iOS home-screen name "Nutrition App" and the brand "NutriStudent". All user-facing surfaces now read "ChefPocket": `CFBundleDisplayName` (Info.plist), `appName` (both `capacitor.config.json` copies), `index.html` `<title>`/`apple-mobile-web-app-title`, the iOS calendar permission strings (`NSCalendars*UsageDescription`), and UI copy in LoginPage, ProfilePage, SubscriptionPage, CalendarImportModal, and `apiClient` NETWORK_ERROR_MESSAGE.
+- **Deliberately NOT renamed** (technical identifiers, not brand copy — renaming would break external registration):
+  - Bundle identifier `com.nutritionapp.students` (Info.plist `PRODUCT_BUNDLE_IDENTIFIER`, `project.pbxproj`, both `capacitor.config.json` `appId`) — the App Store identity; leave exactly as-is.
+  - RevenueCat entitlement id `"NutriStudent Pro"` (`ENTITLEMENT_ID` in `src/app/services/revenuecat.ts`, plus key lookups in `SubscriptionPage`/`useSubscription` and their tests). This string must match the RevenueCat dashboard config. The paywall *display heading* is now "ChefPocket Pro", but the entitlement KEY stays `"NutriStudent Pro"` — don't rename the code without also renaming the dashboard entitlement.
+  - `CFBundleName` in Info.plist is `$(PRODUCT_NAME)` → `$(TARGET_NAME)` = "App" (internal executable name, not user-facing) — left unchanged.
+  - Internal `package.json` `"name"`, git repo name, test fixture identifiers — not user-facing, left unchanged.
+
 ## Security: backend auth & paywall
 
 - The Supabase edge function (`supabase/functions/make-server-dbaf6019/`) runs on the service-role key (bypasses RLS), so each route's middleware IS the authorization.
