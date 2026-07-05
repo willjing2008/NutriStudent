@@ -8,45 +8,60 @@
 /** Minimal shape a plan meal needs for swap-slot resolution. */
 export interface SwapSlotMeal {
   id: string;
+  /** Week-relative day (1-7) as rendered by the plan view. */
   dayNumber?: number;
   category?: string;
+  /**
+   * Absolute queue day stamped by get-queue-week. When present it is the
+   * source of truth; the (weekNumber-1)*7 reconstruction is only a fallback
+   * for meals that predate the stamped field.
+   */
+  queueDayNumber?: number;
+  /**
+   * Queue slot stamped by get-queue-week. Preferred over `category`, which
+   * can drift from the slot (e.g. a dinner-categorised recipe swapped into a
+   * breakfast slot).
+   */
+  mealSlot?: string;
 }
 
 export interface ResolvedSwapSlot {
-  /** The plan meal currently occupying the slot. */
+  /** The plan meal occupying the slot. */
   target: SwapSlotMeal;
-  /** Absolute queue day: (weekNumber - 1) * 7 + dayNumber. */
+  /** Absolute queue day (1-28). */
   absoluteDay: number;
-  /** Meal slot/category being swapped. */
+  /** Meal slot/category being targeted. */
   slot: string;
 }
 
 /**
- * Resolve which plan slot a recipe occupies, computing its absolute queue day.
- * Returns null when the recipe is not in `meals` (nothing to swap) or the
- * matched meal has no category (no slot to target). A missing `dayNumber`
- * defaults to day 1, matching the original in-plan swap behaviour.
+ * Resolve the queue slot a rendered plan meal occupies. The meal object itself
+ * is the key (its day + slot) — deliberately NOT a recipe-id lookup, which
+ * would always hit the first occurrence of a recipe appearing on several days
+ * and mutate a slot the user never saw. Returns null when there is no meal or
+ * no slot to target. A missing `dayNumber` defaults to day 1, matching the
+ * original in-plan swap behaviour.
  */
 export function resolveSwapSlot(
-  meals: SwapSlotMeal[] | undefined,
-  recipeId: string,
+  meal: SwapSlotMeal | null | undefined,
   weekNumber: number,
 ): ResolvedSwapSlot | null {
-  const target = meals?.find((m) => m.id === recipeId);
-  if (!target || !target.category) return null;
-  const absoluteDay = (weekNumber - 1) * 7 + (target.dayNumber || 1);
-  return { target, absoluteDay, slot: target.category };
+  if (!meal) return null;
+  const slot = meal.mealSlot || meal.category;
+  if (!slot) return null;
+  const absoluteDay =
+    meal.queueDayNumber ?? (weekNumber - 1) * 7 + (meal.dayNumber || 1);
+  return { target: meal, absoluteDay, slot };
 }
 
 /**
- * Apply a queue-mode meal swap: resolve the slot the recipe occupies and
- * persist the swap through `swapQueueMeal`, so every swap surface computes
+ * Apply a queue-mode meal swap: resolve the slot the given plan meal occupies
+ * and persist the swap through `swapQueueMeal`, so every swap surface computes
  * the slot identically. Returns the `swapQueueMeal` result, or null when
- * there is no matching slot.
+ * there is no resolvable slot.
  */
 export async function applyQueueMealSwap(params: {
-  meals: SwapSlotMeal[] | undefined;
-  recipeId: string;
+  meal: SwapSlotMeal | null | undefined;
   weekNumber: number;
   userId: string;
   newRecipeId: string;
@@ -57,7 +72,7 @@ export async function applyQueueMealSwap(params: {
     newRecipeId: string,
   ) => Promise<any>;
 }): Promise<any | null> {
-  const resolved = resolveSwapSlot(params.meals, params.recipeId, params.weekNumber);
+  const resolved = resolveSwapSlot(params.meal, params.weekNumber);
   if (!resolved) return null;
   return params.swapQueueMeal(
     params.userId,

@@ -33,9 +33,12 @@ This file is the project's committed home for project-intrinsic agent knowledge:
 
 - Onboarding is two steps: preferences (`onboardingStep === 2`) → plan preview (`=== 3`); it exits from step 3 via "Save This Plan"/"Discard Plan". The historical steps 1 (`WelcomeStep`) and 4 (`LocationStep`) were removed as unreachable dead code. `onboardingStep` is in-memory only (never persisted); the 2/3 numbering was kept just to minimize that diff — refactoring it to a two-value union is fine. Don't re-add an `onNext` prop to `RecommendationsStep`: its "Go Shopping" opens the internal `ShoppingMode`, it never advances a step.
 
-## Meal swap
+## Meal swap / mark-cooked (queue slot targeting)
 
-- Queue-mode meal swaps are applied by `src/app/utils/mealSwap.ts` (`resolveSwapSlot` / `applyQueueMealSwap`) from the plan view (`RecommendationsStep`); the slot math is `absoluteDay = (weekNumber-1)*7 + dayNumber`, `slot = category`. Don't re-derive it inline in new swap surfaces.
+- Queue mutations (`queue-swap-meal`, `mark-queue-meal-consumed`) are keyed by **absolute queue day (1-28) + mealSlot**. `get-queue-week` stamps every meal with `queueDayNumber` (absolute) and `mealSlot` exactly for this; the shared resolver `src/app/utils/mealSwap.ts` (`resolveSwapSlot` / `applyQueueMealSwap`) uses the stamped values, falling back to `(weekNumber-1)*7 + dayNumber` only for unstamped data. Don't re-derive slot math inline in new surfaces, and never resolve a slot by recipe-id lookup — a recipe repeats across queue days, so find-by-id targets the wrong day (this was a P0: swap/mark-cooked silently wrote to slots the user never saw).
+- `mealSlot` is authoritative over `category`: after a swap, the occupying recipe's own `category` can differ from the slot it sits in.
+- In queue mode, `RecommendationsStep`'s rendered plan MUST be `currentWeekMealPlan` (the queue week). The saved active plan is a different object with unrelated day numbers — the mount effect deliberately skips seeding from `savedMealPlan` when a queue week exists. Breaking that precedence re-introduces the render-one-plan/mutate-another bug. Regression tests: `RecommendationsStep.queueSlot.test.tsx` (the rendered slot must equal the mutated slot).
+- `MealSwapModal.onSwap` is awaited: the modal only closes when the apply resolves and shows the error on rejection — so swap-apply implementations must **throw** on failure (including a null result from `swapQueueMeal`, which swallows network errors into null), never resolve silently.
 - The dashboard's "My Recipes" section (cooked-history list with per-row Swap) was removed from the UI in July 2026; the `my-recipes` backend route still exists. If a new surface adds swapping, reuse `MealSwapModal` — its `get-swap-options` call is the Pro paywall (server-side `requirePro`); there is no client-side gate on swap buttons, and reusing the modal is what keeps the paywall consistent.
 
 ## Build / CI sharp edges

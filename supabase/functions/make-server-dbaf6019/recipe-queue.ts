@@ -187,6 +187,12 @@ export function getQueueWeekAsMealPlan(
       ...m.recipe,
       // Remap dayNumber to 1-7 for the week view
       dayNumber: m.dayNumber - startDay + 1,
+      // The queue slot is the single source of truth for mutations
+      // (queue-swap-meal / mark-queue-meal-consumed key on absolute day +
+      // mealSlot). recipe.category can drift from mealSlot after a swap, so
+      // both are carried explicitly.
+      queueDayNumber: m.dayNumber,
+      mealSlot: m.mealSlot,
       isConsumed: m.isConsumed,
     }));
 

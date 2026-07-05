@@ -7,7 +7,7 @@ import { authedPost } from '../utils/apiClient';
 import { ShoppingMode } from './ShoppingMode';
 import { getRecipeImageWithCache } from '../utils/recipeImages';
 import { MealSwapModal } from './MealSwapModal';
-import { applyQueueMealSwap } from '../utils/mealSwap';
+import { applyQueueMealSwap, resolveSwapSlot } from '../utils/mealSwap';
 
 import { supabase } from '../../utils/supabaseClient';
 import { BottomNavigation, NavTab } from './BottomNavigation';
@@ -92,6 +92,11 @@ interface MealPlanMeal {
   };
   dayNumber?: number;
   mealNumber?: number;
+  /** Absolute queue day (1-28) stamped by get-queue-week; queue mode only. */
+  queueDayNumber?: number;
+  /** Queue slot stamped by get-queue-week; authoritative over category. */
+  mealSlot?: string;
+  isConsumed?: boolean;
   youtubeUrl?: string;
   sourceUrl?: string;
   timesCooked?: number;
@@ -329,6 +334,11 @@ export function RecommendationsStep({
   const hasRequiredPreferences = preferences.goal !== null;
 
   useEffect(() => {
+    // Queue mode owns the rendered plan (synced from currentWeekMealPlan
+    // above). Seeding from the saved plan here would render one plan while
+    // swap/mark-cooked mutate the queue — the wrong-slot P0: mutations landed
+    // on queue slots derived from the saved plan's unrelated day numbers.
+    if (currentWeekMealPlan?.meals?.length) return;
     // If a saved plan was passed in, use it directly instead of generating a new one
     if (initialSavedPlan?.meals?.length) {
       const enriched = (initialSavedPlan);
@@ -344,8 +354,10 @@ export function RecommendationsStep({
     }
   }, []);
 
-  // When the saved plan is deleted externally, clear local state
+  // When the saved plan is deleted externally, clear local state (not in
+  // queue mode, where the rendered plan is the queue week, not the saved plan)
   useEffect(() => {
+    if (isQueueMode) return;
     if (!initialSavedPlan && planSaved) {
       setMealPlan(null);
       setPlanSaved(false);
@@ -612,32 +624,41 @@ export function RecommendationsStep({
     }
   };
 
+  // Called by MealSwapModal, which awaits it and only closes on success —
+  // a thrown error keeps the modal open and is shown to the user.
   const handleMealSwap = async (newMeal: MealPlanMeal) => {
     if (!mealPlan || !selectedMealForSwap) return;
 
     // Queue mode persists swaps through the queue endpoint (keyed by absolute
     // day + slot); the refreshed week plan flows back via currentWeekMealPlan.
     if (isQueueMode) {
-      setShowMealSwapModal(false);
-      if (onSwapQueueMeal && user && currentWeekMealPlan) {
-        const aiImage = getMealImageCandidates(newMeal)[0] || LOCAL_IMAGE_FALLBACK;
-        setMealImages(prev => ({ ...prev, [newMeal.id]: aiImage }));
-        void fetchImageWithTimeout(newMeal).then((cachedImage) => {
-          if (cachedImage) setMealImages(prev => ({ ...prev, [newMeal.id]: cachedImage }));
-        });
-        try {
-          await applyQueueMealSwap({
-            meals: mealPlan.meals,
-            recipeId: selectedMealForSwap.id,
-            weekNumber: currentWeekMealPlan.weekNumber,
-            userId: user.id,
-            newRecipeId: newMeal.id,
-            swapQueueMeal: onSwapQueueMeal,
-          });
-        } catch (err) {
-          console.error('Error swapping queue meal:', err);
-        }
+      if (!onSwapQueueMeal || !user || !currentWeekMealPlan) {
+        throw new Error('Swapping is unavailable right now. Please try again.');
       }
+      // The mutation must target exactly the rendered slot: re-find the
+      // selected meal inside the queue week by day + slot + recipe. If it
+      // isn't there (the rendered plan diverged from the queue week), fail
+      // loudly instead of overwriting another day's slot.
+      const target = currentWeekMealPlan.meals.find((m: any) =>
+        m.id === selectedMealForSwap.id &&
+        (m.dayNumber || 1) === (selectedMealForSwap.dayNumber || 1) &&
+        (m.mealSlot || m.category) === (selectedMealForSwap.mealSlot || selectedMealForSwap.category)
+      );
+      const result = await applyQueueMealSwap({
+        meal: target,
+        weekNumber: currentWeekMealPlan.weekNumber,
+        userId: user.id,
+        newRecipeId: newMeal.id,
+        swapQueueMeal: onSwapQueueMeal,
+      });
+      if (!result) {
+        throw new Error('Failed to swap meal. Please try again.');
+      }
+      const aiImage = getMealImageCandidates(newMeal)[0] || LOCAL_IMAGE_FALLBACK;
+      setMealImages(prev => ({ ...prev, [newMeal.id]: aiImage }));
+      void fetchImageWithTimeout(newMeal).then((cachedImage) => {
+        if (cachedImage) setMealImages(prev => ({ ...prev, [newMeal.id]: cachedImage }));
+      });
       return;
     }
 
@@ -714,30 +735,43 @@ export function RecommendationsStep({
     });
   }, []);
 
-  const setMealConsumedLocally = (mealId: string, consumed: boolean) => {
+  // Scoped to the exact slot (day + slot + recipe), not just the recipe id:
+  // a recipe repeated across days must only flip on the day that was tapped.
+  const setMealConsumedLocally = (target: MealPlanMeal, consumed: boolean) => {
     setMealPlan(prev => prev ? {
       ...prev,
-      meals: prev.meals.map(m => m.id === mealId ? { ...m, isConsumed: consumed } : m),
+      meals: prev.meals.map(m =>
+        m.id === target.id &&
+        (m.dayNumber || 1) === (target.dayNumber || 1) &&
+        (m.mealSlot || m.category) === (target.mealSlot || target.category)
+          ? { ...m, isConsumed: consumed }
+          : m
+      ),
     } : prev);
   };
 
-  const toggleMealCooked = (mealId: string) => {
+  const toggleMealCooked = (meal: MealPlanMeal) => {
     if (!user?.id) return;
 
-    const meal = currentDayMeals.find(m => m.id === mealId);
+    const mealId = meal.id;
 
     // Queue mode: persist consumption through the queue handler, keyed by the
-    // meal's absolute day + slot. The backend mark is one-way (consume only).
+    // meal's absolute day + slot (resolveSwapSlot is the shared slot math used
+    // by swaps too). The backend mark is one-way (consume only).
     if (isQueueMode) {
-      if (!meal || !onMarkMealConsumed || !currentWeekMealPlan) return;
-      if ((meal as any).isConsumed) return;
-      const absoluteDay = (currentWeekMealPlan.weekNumber - 1) * 7 + (meal.dayNumber || 1);
-      setMealConsumedLocally(mealId, true);
-      onMarkMealConsumed(user.id, absoluteDay, (meal as any).category)
-        .then(ok => { if (!ok) setMealConsumedLocally(mealId, false); })
+      if (!onMarkMealConsumed || !currentWeekMealPlan) return;
+      if (meal.isConsumed) return;
+      const resolved = resolveSwapSlot(meal, currentWeekMealPlan.weekNumber);
+      if (!resolved) {
+        console.error('Could not resolve queue slot for meal:', mealId);
+        return;
+      }
+      setMealConsumedLocally(meal, true);
+      onMarkMealConsumed(user.id, resolved.absoluteDay, resolved.slot)
+        .then(ok => { if (!ok) setMealConsumedLocally(meal, false); })
         .catch(err => {
           console.error('Failed to mark queue meal consumed:', err);
-          setMealConsumedLocally(mealId, false);
+          setMealConsumedLocally(meal, false);
         });
       handleCelebration();
       return;
@@ -1338,7 +1372,7 @@ export function RecommendationsStep({
                                 <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      toggleMealCooked(meal.id);
+                      toggleMealCooked(meal);
                     }}
                     aria-pressed={isCooked}
                     aria-label={isCooked ? `Mark ${mealType} as not cooked` : `Mark ${mealType} as cooked`}
