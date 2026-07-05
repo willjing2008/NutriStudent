@@ -282,6 +282,9 @@ describe('LoginPage — sign up', () => {
     getFetchMock().mockResolvedValue(
       jsonResponse({ user: { id: 'new-user-7' } }),
     );
+    signInWithPassword.mockResolvedValue(
+      signInSuccess('new-user-token', { id: 'new-user-7' }),
+    );
 
     render(<LoginPage onLoginSuccess={vi.fn()} />);
     openForm('signup');
@@ -309,6 +312,63 @@ describe('LoginPage — sign up', () => {
     expect((init.headers as Record<string, string>).Authorization).toBe(
       `Bearer ${publicAnonKey}`,
     );
+  });
+
+  // Regression: schools/select and update-profile go through authedPost, which
+  // needs a Supabase session. Signup alone creates none, so before this
+  // sequence existed every fresh signup 401'd at school selection.
+  it('establishes a session (signInWithPassword) before showing school selection', async () => {
+    getFetchMock().mockResolvedValue(
+      jsonResponse({ user: { id: 'new-user-7' } }),
+    );
+    signInWithPassword.mockResolvedValue(
+      signInSuccess('new-user-token', { id: 'new-user-7' }),
+    );
+
+    render(<LoginPage onLoginSuccess={vi.fn()} />);
+    openForm('signup');
+
+    typeInto(/Enter your name/, 'Will T');
+    typeInto(/student@university/, 'will@uni.ac.uk');
+    typeInto(/Create a strong password/, 'sixchars');
+    fireEvent.click(screen.getByRole('button', { name: 'Create Account' }));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('school-step')).toBeInTheDocument(),
+    );
+    // Signed in with the just-registered credentials, so the session JWT is
+    // in place before SchoolSelectionStep's authedPost('schools/select') runs.
+    expect(signInWithPassword).toHaveBeenCalledWith({
+      email: 'will@uni.ac.uk',
+      password: 'sixchars',
+    });
+  });
+
+  it('does not advance to school selection when the post-signup sign-in fails', async () => {
+    getFetchMock().mockResolvedValue(
+      jsonResponse({ user: { id: 'new-user-7' } }),
+    );
+    signInWithPassword.mockResolvedValue(signInError('Invalid login credentials'));
+
+    render(<LoginPage onLoginSuccess={vi.fn()} />);
+    openForm('signup');
+
+    typeInto(/Enter your name/, 'Will T');
+    typeInto(/student@university/, 'will@uni.ac.uk');
+    typeInto(/Create a strong password/, 'sixchars');
+    fireEvent.click(screen.getByRole('button', { name: 'Create Account' }));
+
+    // Visible error plus a route back: the form flips to sign-in mode so the
+    // user can log in with the account that WAS created.
+    expect(
+      await screen.findByText(
+        'Your account was created, but signing you in failed. Please sign in with your new email and password.',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId('school-step')).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Welcome Back' }),
+    ).toBeInTheDocument();
   });
 
   it('renders the server error from a failed signup and stays on the form', async () => {

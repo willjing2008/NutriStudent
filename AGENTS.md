@@ -20,6 +20,10 @@ This file is the project's committed home for project-intrinsic agent knowledge:
   It flags the caller's own row with `isCurrentUser` (derived from `getUserId(c)`); the client highlights "(you)" off that flag, not a UUID compare.
   `recipe-leaderboard` is keyed by `recipeId` and uses `getUserId(c)` for "liked by me", so it exposes no user UUIDs.
 
+## Signup / auth flow
+
+- `auth/signup` (edge route; admin-creates the user with a confirmed email) returns NO session. `LoginPage.handleSignUp` must `signInWithPassword` with the same credentials immediately after signup, BEFORE rendering `SchoolSelectionStep` — the post-signup steps (`schools/select`, `auth/update-profile`) go through `authedPost` and 401 without a session JWT. `App.tsx` reads the session only once on mount (no `onAuthStateChange` listener), so signing in mid-flow does not eject the user from signup onboarding; `LoginPage` stays mounted until it calls `onLoginSuccess`. If that post-signup sign-in fails, `handleSignUp` must NOT advance to `SchoolSelectionStep`: it flips back to sign-in mode (`setIsSignUp(false)`) and surfaces a message telling the user the account exists and to sign in manually — the account was already created, so a retry of signup would collide.
+
 ## Onboarding flow
 
 - Onboarding is two steps: preferences (`onboardingStep === 2`) → plan preview (`=== 3`); it exits from step 3 via "Save This Plan"/"Discard Plan". The historical steps 1 (`WelcomeStep`) and 4 (`LocationStep`) were removed as unreachable dead code. `onboardingStep` is in-memory only (never persisted); the 2/3 numbering was kept just to minimize that diff — refactoring it to a two-value union is fine. Don't re-add an `onNext` prop to `RecommendationsStep`: its "Go Shopping" opens the internal `ShoppingMode`, it never advances a step.
