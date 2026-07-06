@@ -256,7 +256,7 @@ export function ProfilePage({ user, onLogout, onOpenAdmin, onUserUpdate, activeT
 
         {/* App Version */}
         <div className="text-center pb-4">
-          <p className="text-[#4B4B4B] text-xs">NutriStudent v1.0.0</p>
+          <p className="text-[#4B4B4B] text-xs">ChefPocket v1.0.0</p>
         </div>
       </div>
 

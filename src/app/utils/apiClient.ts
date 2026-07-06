@@ -3,7 +3,7 @@ import { projectId, publicAnonKey } from '../../../utils/supabase/info';
 
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-dbaf6019`;
 
-export const NETWORK_ERROR_MESSAGE = "We couldn't reach NutriStudent. Check your connection and try again.";
+export const NETWORK_ERROR_MESSAGE = "We couldn't reach ChefPocket. Check your connection and try again.";
 export const OFFLINE_ERROR_MESSAGE = "You're offline. Connect to the internet and try again.";
 
 type ApiErrorBody = {

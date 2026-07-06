@@ -91,7 +91,7 @@ export function CalendarImportModal({ weekStart, onImport, onClose }: CalendarIm
               <AlertTriangle className="w-6 h-6 text-amber-400" />
               <p className="text-sm text-white font-medium">Calendar access is off</p>
               <p className="text-xs text-[#9CA3AF] max-w-xs">
-                To import your classes, enable Calendar access for NutriStudent in iOS Settings → Privacy → Calendars, then try again.
+                To import your classes, enable Calendar access for ChefPocket in iOS Settings → Privacy → Calendars, then try again.
               </p>
             </div>
           )}

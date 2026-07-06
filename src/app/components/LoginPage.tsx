@@ -288,7 +288,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
         </button>
         <div className="flex items-center gap-2">
           <Apple className="w-6 h-6 text-[#22C55E]" />
-          <span className="text-lg font-bold text-white">NutriStudent</span>
+          <span className="text-lg font-bold text-white">ChefPocket</span>
         </div>
         <div className="w-16" /> {/* Spacer for centering */}
       </header>

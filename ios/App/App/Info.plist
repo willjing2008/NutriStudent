@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-        <string>Nutrition App</string>
+        <string>ChefPocket</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -48,8 +48,8 @@
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
 	<key>NSCalendarsFullAccessUsageDescription</key>
-	<string>NutriStudent reads this week's calendar events so it can import your classes and schedule meals around them.</string>
+	<string>ChefPocket reads this week's calendar events so it can import your classes and schedule meals around them.</string>
 	<key>NSCalendarsUsageDescription</key>
-	<string>NutriStudent reads this week's calendar events so it can import your classes and schedule meals around them.</string>
+	<string>ChefPocket reads this week's calendar events so it can import your classes and schedule meals around them.</string>
 </dict>
 </plist>
