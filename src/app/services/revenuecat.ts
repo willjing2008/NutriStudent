@@ -12,14 +12,18 @@ import type {
 
 const SANDBOX_IOS_API_KEY = 'test_dqGpabdLnErIJBfaBVIMvAAFMAH';
 
-// Read the real iOS public key from env; fall back to the sandbox key only when
-// unset (keeps local dev working, production must set VITE_REVENUECAT_IOS_API_KEY).
+// Read the real iOS public key from env. The sandbox (Test Store) key is a
+// dev-only fallback: the RevenueCat iOS SDK fatalError()s any non-DEBUG build
+// configured with a test_ key, so a production bundle must never carry it.
+// A production build without VITE_REVENUECAT_IOS_API_KEY gets an empty key and
+// skips configure entirely (app boots, subscriptions disabled).
 const REVENUECAT_API_KEY =
-  import.meta.env.VITE_REVENUECAT_IOS_API_KEY || SANDBOX_IOS_API_KEY;
+  import.meta.env.VITE_REVENUECAT_IOS_API_KEY ||
+  (import.meta.env.DEV ? SANDBOX_IOS_API_KEY : '');
 
 if (!import.meta.env.VITE_REVENUECAT_IOS_API_KEY && import.meta.env.PROD) {
   console.warn(
-    '[revenuecat] VITE_REVENUECAT_IOS_API_KEY is unset in a production build; falling back to the sandbox key.',
+    '[revenuecat] VITE_REVENUECAT_IOS_API_KEY is unset in a production build; RevenueCat will not be configured and subscriptions are disabled.',
   );
 }
 
@@ -81,6 +85,13 @@ export async function initializeRevenueCat(appUserID?: string): Promise<void> {
     return;
   }
   if (isInitialized) return;
+
+  if (!REVENUECAT_API_KEY) {
+    console.error(
+      '[RevenueCat] No API key for this build — skipping configure; subscriptions disabled.',
+    );
+    return;
+  }
 
   try {
     await Purchases.setLogLevel({ level: LOG_LEVEL.DEBUG });
