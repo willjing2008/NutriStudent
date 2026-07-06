@@ -51,5 +51,7 @@
 	<string>ChefPocket reads this week's calendar events so it can import your classes and schedule meals around them.</string>
 	<key>NSCalendarsUsageDescription</key>
 	<string>ChefPocket reads this week's calendar events so it can import your classes and schedule meals around them.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>
