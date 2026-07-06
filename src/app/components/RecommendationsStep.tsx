@@ -970,7 +970,7 @@ export function RecommendationsStep({
     return (
       <ShoppingMode
         ingredients={uniqueIngredients}
-        storeName={preferences.selectedStores[0]?.name || 'Supermarket'}
+        storeName={preferences.selectedStores?.[0]?.name || 'Supermarket'}
         onBack={() => setShoppingMode(false)}
       />
     );

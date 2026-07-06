@@ -615,7 +615,7 @@ export default function App() {
                 ? calendar.queueShoppingList
                 : savedMealPlan ? uniqueIngredients : []
             }
-            storeName={preferences.selectedStores[0]?.name || 'Supermarket'}
+            storeName={preferences.selectedStores?.[0]?.name || 'Supermarket'}
             onBack={() => setActiveNavTab('home')}
             activeNavTab={activeNavTab}
             onNavTabChange={handleNavTabChange}

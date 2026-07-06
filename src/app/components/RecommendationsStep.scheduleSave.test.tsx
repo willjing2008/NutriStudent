@@ -187,6 +187,30 @@ afterEach(() => {
 });
 
 describe('RecommendationsStep - schedule persistence failures', () => {
+  it('opens shopping mode when persisted preferences do not include selectedStores', () => {
+    const preferencesWithoutStores = { ...preferences } as any;
+    delete preferencesWithoutStores.selectedStores;
+
+    render(
+      <RecommendationsStep
+        preferences={preferencesWithoutStores}
+        onBack={vi.fn()}
+        onReset={vi.fn()}
+        activePlanId="plan-1"
+        activeNavTab="plan"
+        savedMealPlan={savedMealPlan}
+        academicSchedule={null}
+        onSaveSchedule={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /go shopping/i }));
+
+    expect(
+      screen.getByRole('heading', { name: 'Shopping List' }),
+    ).toBeInTheDocument();
+  });
+
   it('keeps the schedule editor open when save returns null', async () => {
     const onSaveSchedule = vi.fn().mockResolvedValue(null);
     renderPlan(onSaveSchedule);
