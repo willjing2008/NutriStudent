@@ -327,6 +327,83 @@ describe('native platform — happy paths', () => {
   });
 });
 
+// ── API key resolution (no-key guard) ────────────────────────────────────────────
+//
+// The RevenueCat iOS SDK fatalError()s any non-DEBUG build configured with a
+// test_ (Test Store) key, so the sandbox fallback must be dev-only: a production
+// bundle without VITE_REVENUECAT_IOS_API_KEY must skip Purchases.configure
+// entirely. import.meta.env is a mutable runtime object under vitest, and
+// loadModule() re-imports the module fresh, so each test controls the build mode.
+
+describe('API key resolution — initializeRevenueCat guard', () => {
+  const originalEnv = {
+    DEV: import.meta.env.DEV,
+    PROD: import.meta.env.PROD,
+    key: import.meta.env.VITE_REVENUECAT_IOS_API_KEY,
+  };
+
+  afterEach(() => {
+    import.meta.env.DEV = originalEnv.DEV;
+    import.meta.env.PROD = originalEnv.PROD;
+    if (originalEnv.key === undefined) {
+      delete import.meta.env.VITE_REVENUECAT_IOS_API_KEY;
+    } else {
+      import.meta.env.VITE_REVENUECAT_IOS_API_KEY = originalEnv.key;
+    }
+  });
+
+  function setBuildEnv({ dev, key }: { dev: boolean; key?: string }) {
+    import.meta.env.DEV = dev;
+    import.meta.env.PROD = !dev;
+    if (key === undefined) {
+      delete import.meta.env.VITE_REVENUECAT_IOS_API_KEY;
+    } else {
+      import.meta.env.VITE_REVENUECAT_IOS_API_KEY = key;
+    }
+  }
+
+  it('production build without VITE_REVENUECAT_IOS_API_KEY never configures the SDK', async () => {
+    setBuildEnv({ dev: false });
+    const rc = await loadModule(true);
+
+    await expect(rc.initializeRevenueCat('user-1')).resolves.toBeUndefined();
+    // Repeat call must stay a no-op too (isInitialized never flips true).
+    await expect(rc.initializeRevenueCat('user-1')).resolves.toBeUndefined();
+
+    expect(purchasesMock.setLogLevel).not.toHaveBeenCalled();
+    expect(purchasesMock.configure).not.toHaveBeenCalled();
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining('skipping configure'),
+    );
+  });
+
+  it('production build with VITE_REVENUECAT_IOS_API_KEY configures with that key', async () => {
+    setBuildEnv({ dev: false, key: 'appl_prodKey123' });
+    purchasesMock.setLogLevel.mockResolvedValue(undefined);
+    purchasesMock.configure.mockResolvedValue(undefined);
+
+    const rc = await loadModule(true);
+    await rc.initializeRevenueCat();
+
+    expect(purchasesMock.configure).toHaveBeenCalledWith(
+      expect.objectContaining({ apiKey: 'appl_prodKey123' }),
+    );
+  });
+
+  it('dev build without the env var falls back to the sandbox key', async () => {
+    setBuildEnv({ dev: true });
+    purchasesMock.setLogLevel.mockResolvedValue(undefined);
+    purchasesMock.configure.mockResolvedValue(undefined);
+
+    const rc = await loadModule(true);
+    await rc.initializeRevenueCat();
+
+    expect(purchasesMock.configure).toHaveBeenCalledWith(
+      expect.objectContaining({ apiKey: expect.stringMatching(/^test_/) }),
+    );
+  });
+});
+
 // ── Error-code mapping & error paths (native) ────────────────────────────────────
 
 describe('native platform — error handling', () => {
