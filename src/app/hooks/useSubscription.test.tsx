@@ -29,6 +29,7 @@ const rc = vi.hoisted(() => {
     presentPaywallIfNeeded: vi.fn(),
     presentCustomerCenter: vi.fn(),
     getPackagesByType: vi.fn(),
+    isRevenueCatConfigured: vi.fn(),
   };
 });
 
@@ -47,6 +48,7 @@ vi.mock('../services/revenuecat', () => ({
   presentPaywallIfNeeded: rc.presentPaywallIfNeeded,
   presentCustomerCenter: rc.presentCustomerCenter,
   getPackagesByType: rc.getPackagesByType,
+  isRevenueCatConfigured: rc.isRevenueCatConfigured,
   ENTITLEMENT_ID: 'NutriStudent Pro',
   get isNativePlatform() {
     return rc.holder.isNative;
@@ -93,6 +95,7 @@ beforeEach(() => {
   rc.getCustomerInfo.mockResolvedValue(FREE_INFO);
   rc.getCurrentOffering.mockResolvedValue(null);
   rc.getPackagesByType.mockReturnValue({});
+  rc.isRevenueCatConfigured.mockReturnValue(false);
   // Silence the provider's console.error on init failures.
   vi.spyOn(console, 'error').mockImplementation(() => {});
 });
@@ -103,7 +106,7 @@ afterEach(() => {
 
 // ── Tests ────────────────────────────────────────────────────────────────────
 
-describe('useSubscription — guard', () => {
+describe('useSubscription - guard', () => {
   it('throws when used outside of a SubscriptionProvider', async () => {
     await loadHook();
     // Suppress React's error-boundary console noise for the expected throw.
@@ -115,7 +118,7 @@ describe('useSubscription — guard', () => {
   });
 });
 
-describe('useSubscription — isReady transition', () => {
+describe('useSubscription - isReady transition', () => {
   it('starts not-ready and flips to ready after init completes', async () => {
     await loadHook();
     rc.getCustomerInfo.mockResolvedValue(FREE_INFO);
@@ -139,7 +142,31 @@ describe('useSubscription — isReady transition', () => {
   });
 });
 
-describe('isPro derivation — web vs native (documented current behaviour)', () => {
+describe('subscriptionsAvailable derivation', () => {
+  it('is true only when the RevenueCat service reports a configured SDK', async () => {
+    rc.holder.isNative = true;
+    rc.isRevenueCatConfigured.mockReturnValue(true);
+    await loadHook();
+
+    const { result } = renderHook(() => useSubscription(), { wrapper });
+
+    await waitFor(() => expect(result.current.isReady).toBe(true));
+    expect(result.current.subscriptionsAvailable).toBe(true);
+  });
+
+  it('stays false when init succeeds but RevenueCat was not configured', async () => {
+    rc.holder.isNative = true;
+    rc.isRevenueCatConfigured.mockReturnValue(false);
+    await loadHook();
+
+    const { result } = renderHook(() => useSubscription(), { wrapper });
+
+    await waitFor(() => expect(result.current.isReady).toBe(true));
+    expect(result.current.subscriptionsAvailable).toBe(false);
+  });
+});
+
+describe('isPro derivation - web vs native (documented current behaviour)', () => {
   it('on web: isPro is true regardless of entitlement (paywall bypassed)', async () => {
     rc.holder.isNative = false;
     await loadHook();
@@ -191,7 +218,7 @@ describe('useIsPro convenience hook', () => {
   });
 });
 
-describe('identify — delegates to the service', () => {
+describe('identify - delegates to the service', () => {
   it('logs the user in and processes the returned customer info (native => Pro)', async () => {
     rc.holder.isNative = true;
     await loadHook();
@@ -227,7 +254,7 @@ describe('identify — delegates to the service', () => {
   });
 });
 
-describe('reset — delegates to the service', () => {
+describe('reset - delegates to the service', () => {
   it('logs the user out and reprocesses customer info (native => drops Pro)', async () => {
     rc.holder.isNative = true;
     await loadHook();
@@ -248,7 +275,7 @@ describe('reset — delegates to the service', () => {
   });
 });
 
-describe('purchase — delegates to the service', () => {
+describe('purchase - delegates to the service', () => {
   it('processes the returned customerInfo on a successful purchase (native)', async () => {
     rc.holder.isNative = true;
     await loadHook();
@@ -296,7 +323,7 @@ describe('purchase — delegates to the service', () => {
   });
 });
 
-describe('restore — delegates to the service', () => {
+describe('restore - delegates to the service', () => {
   it('processes the returned customerInfo on a successful restore (native)', async () => {
     rc.holder.isNative = true;
     await loadHook();
@@ -318,7 +345,7 @@ describe('restore — delegates to the service', () => {
   });
 });
 
-describe('paywall actions — delegate to the service and refresh on success', () => {
+describe('paywall actions - delegate to the service and refresh on success', () => {
   it('showPaywall refreshes customer info when a purchase occurs', async () => {
     rc.holder.isNative = true;
     await loadHook();

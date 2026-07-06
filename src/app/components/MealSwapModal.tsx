@@ -94,6 +94,29 @@ const CATEGORY_COLORS: Record<string, string> = {
   'meal-prep': 'bg-purple-900/40 text-purple-400 border-purple-700',
 };
 
+const numberOrNull = (value: unknown): number | null =>
+  typeof value === 'number' && Number.isFinite(value) ? value : null;
+
+const numberOrZero = (value: unknown): number => numberOrNull(value) ?? 0;
+
+const positiveNumberOrOne = (value: unknown): number => {
+  const numeric = numberOrNull(value);
+  return numeric && numeric > 0 ? numeric : 1;
+};
+
+const formatOptionalNumber = (value: unknown, suffix = ''): string => {
+  const numeric = numberOrNull(value);
+  return numeric === null ? '-' : `${numeric}${suffix}`;
+};
+
+const formatMealType = (category: unknown): string => {
+  const value = typeof category === 'string' && category.trim() ? category : 'meal';
+  return value
+    .split('-')
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+};
+
 interface CommunityRecipe {
   id: string;
   name: string;
@@ -263,10 +286,10 @@ export function MealSwapModal({
 
     const swappedMeal = {
       ...recipeFields,
-      cost: selectedCommunityRecipe.totalCost / selectedCommunityRecipe.servings,
+      cost: numberOrZero(selectedCommunityRecipe.totalCost) / positiveNumberOrOne(selectedCommunityRecipe.servings),
       rationale: selectedCommunityRecipe.description,
       benefits: [selectedCommunityRecipe.description],
-      mealType: selectedCommunityRecipe.category.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+      mealType: formatMealType(selectedCommunityRecipe.category),
     };
 
     setSwapping(true);
@@ -320,10 +343,10 @@ export function MealSwapModal({
     try {
       const swappedMeal = {
         ...selectedOption,
-        cost: selectedOption.totalCost / selectedOption.servings,
+        cost: numberOrZero(selectedOption.totalCost) / positiveNumberOrOne(selectedOption.servings),
         rationale: selectedOption.description,
         benefits: [selectedOption.description],
-        mealType: selectedOption.category.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+        mealType: formatMealType(selectedOption.category),
       };
 
       // Await the apply and only close on success; a failure keeps the modal
@@ -351,7 +374,7 @@ export function MealSwapModal({
     const recipeId = `custom-${Date.now()}`;
 
     // Upload image to Supabase Storage. A failed upload must NOT silently fall
-    // back to a placeholder — the user thinks their photo uploaded — so we abort
+    // back to a placeholder - the user thinks their photo uploaded - so we abort
     // and surface the error instead.
     let imageUrl: string;
     try {
@@ -411,7 +434,7 @@ export function MealSwapModal({
     };
 
     // Share with community if checked. A failed share must be surfaced, not
-    // swallowed — otherwise the user believes their recipe was shared.
+    // swallowed - otherwise the user believes their recipe was shared.
     if (shareWithCommunity && currentUser) {
       try {
         await authedPost('save-community-recipe', {
@@ -568,11 +591,11 @@ export function MealSwapModal({
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div className="text-center">
                       <div className="text-xs text-[#6B7280] mb-1">Calories</div>
-                      <div className="font-bold text-white">{currentMeal.nutrition.calories}</div>
+                      <div className="font-bold text-white">{formatOptionalNumber(currentMeal.nutrition?.calories)}</div>
                     </div>
                     <div className="text-center">
                       <div className="text-xs text-[#6B7280] mb-1">Protein</div>
-                      <div className="font-bold text-white">{currentMeal.nutrition.protein}g</div>
+                      <div className="font-bold text-white">{formatOptionalNumber(currentMeal.nutrition?.protein, 'g')}</div>
                     </div>
                     <div className="text-center">
                       <div className="text-xs text-[#6B7280] mb-1">Time</div>
@@ -589,8 +612,16 @@ export function MealSwapModal({
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {swapOptions.map((option) => {
                     const isSelected = selectedOption?.id === option.id;
-                    const calorieDiff = option.nutrition.calories - currentMeal.nutrition.calories;
-                    const proteinDiff = option.nutrition.protein - currentMeal.nutrition.protein;
+                    const currentCalories = numberOrNull(currentMeal.nutrition?.calories);
+                    const optionCalories = numberOrNull(option.nutrition?.calories);
+                    const currentProtein = numberOrNull(currentMeal.nutrition?.protein);
+                    const optionProtein = numberOrNull(option.nutrition?.protein);
+                    const calorieDiff = currentCalories !== null && optionCalories !== null
+                      ? optionCalories - currentCalories
+                      : null;
+                    const proteinDiff = currentProtein !== null && optionProtein !== null
+                      ? optionProtein - currentProtein
+                      : null;
 
                     return (
                       <button
@@ -619,7 +650,7 @@ export function MealSwapModal({
                           {/* Match Score Badge */}
                           <div className="absolute top-2 right-2">
                             <div className="px-3 py-1 rounded-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs font-bold shadow-lg">
-                              {option.similarity.matchScore}% Match
+                              {option.similarity?.matchScore ?? '-'}% Match
                             </div>
                           </div>
 
@@ -655,10 +686,18 @@ export function MealSwapModal({
                             <div className="flex items-center justify-between text-xs">
                               <span className="text-[#6B7280]">Calories</span>
                               <div className="flex items-center gap-1.5">
-                                {getDifferenceIcon(currentMeal.nutrition.calories, option.nutrition.calories)}
-                                <span className={`font-bold ${getDifferenceColor(currentMeal.nutrition.calories, option.nutrition.calories)}`}>
-                                  {option.nutrition.calories}
-                                  {calorieDiff !== 0 && (
+                                {currentCalories !== null && optionCalories !== null ? (
+                                  getDifferenceIcon(currentCalories, optionCalories)
+                                ) : (
+                                  <Minus className="w-4 h-4 text-[#6B7280]" />
+                                )}
+                                <span className={`font-bold ${
+                                  currentCalories !== null && optionCalories !== null
+                                    ? getDifferenceColor(currentCalories, optionCalories)
+                                    : 'text-[#6B7280]'
+                                }`}>
+                                  {formatOptionalNumber(optionCalories)}
+                                  {calorieDiff !== null && calorieDiff !== 0 && (
                                     <span className="ml-1 text-[10px]">
                                       ({calorieDiff > 0 ? '+' : ''}{calorieDiff})
                                     </span>
@@ -670,10 +709,18 @@ export function MealSwapModal({
                             <div className="flex items-center justify-between text-xs">
                               <span className="text-[#6B7280]">Protein</span>
                               <div className="flex items-center gap-1.5">
-                                {getDifferenceIcon(currentMeal.nutrition.protein, option.nutrition.protein)}
-                                <span className={`font-bold ${getDifferenceColor(currentMeal.nutrition.protein, option.nutrition.protein)}`}>
-                                  {option.nutrition.protein}g
-                                  {proteinDiff !== 0 && (
+                                {currentProtein !== null && optionProtein !== null ? (
+                                  getDifferenceIcon(currentProtein, optionProtein)
+                                ) : (
+                                  <Minus className="w-4 h-4 text-[#6B7280]" />
+                                )}
+                                <span className={`font-bold ${
+                                  currentProtein !== null && optionProtein !== null
+                                    ? getDifferenceColor(currentProtein, optionProtein)
+                                    : 'text-[#6B7280]'
+                                }`}>
+                                  {formatOptionalNumber(optionProtein, 'g')}
+                                  {proteinDiff !== null && proteinDiff !== 0 && (
                                     <span className="ml-1 text-[10px]">
                                       ({proteinDiff > 0 ? '+' : ''}{proteinDiff}g)
                                     </span>
@@ -817,11 +864,11 @@ export function MealSwapModal({
                         <div className="flex items-center gap-3 mb-3 text-xs">
                           <div className="flex items-center gap-1 text-[#9CA3AF]">
                             <Flame className="w-3 h-3 text-orange-500" />
-                            <span className="font-semibold text-white">{recipe.nutrition.calories}</span> cal
+                            <span className="font-semibold text-white">{formatOptionalNumber(recipe.nutrition?.calories)}</span> cal
                           </div>
                           <div className="flex items-center gap-1 text-[#9CA3AF]">
                             <TrendingUp className="w-3 h-3 text-blue-400" />
-                            <span className="font-semibold text-white">{recipe.nutrition.protein}g</span> protein
+                            <span className="font-semibold text-white">{formatOptionalNumber(recipe.nutrition?.protein, 'g')}</span> protein
                           </div>
                         </div>
 

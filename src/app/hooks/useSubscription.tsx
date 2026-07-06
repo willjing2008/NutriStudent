@@ -15,6 +15,7 @@ import {
   presentCustomerCenter as rcPresentCustomerCenter,
   getPackagesByType,
   isNativePlatform,
+  isRevenueCatConfigured,
   ENTITLEMENT_ID,
   type CustomerInfo,
   type PurchasesOffering,
@@ -31,6 +32,13 @@ interface SubscriptionState {
   isLoading: boolean;
   /** The user has an active "NutriStudent Pro" entitlement */
   isPro: boolean;
+  /**
+   * RevenueCat is configured and purchases can actually be attempted.
+   * False on web and in native builds shipped without a RevenueCat API key -
+   * the paywall UI must degrade to a "not available yet" state instead of
+   * calling the SDK (unconfigured native paywall calls crash Release builds).
+   */
+  subscriptionsAvailable: boolean;
   /** Latest customer info from RevenueCat */
   customerInfo: CustomerInfo | null;
   /** Current offering (packages available for purchase) */
@@ -78,6 +86,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
   const [isReady, setIsReady] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isPro, setIsPro] = useState(false);
+  const [subscriptionsAvailable, setSubscriptionsAvailable] = useState(false);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
   const [currentOffering, setCurrentOffering] = useState<PurchasesOffering | null>(null);
   const [packages, setPackages] = useState<SubscriptionState['packages']>({});
@@ -99,7 +108,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
         setPackages(getPackagesByType(offering));
       }
     } catch {
-      // Offerings might not be configured yet — non-fatal
+      // Offerings might not be configured yet - non-fatal
     }
   }, []);
 
@@ -111,6 +120,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     (async () => {
       try {
         await initializeRevenueCat();
+        setSubscriptionsAvailable(isRevenueCatConfigured());
 
         // Listen for real-time customer info updates
         await addCustomerInfoListener(processCustomerInfo);
@@ -216,6 +226,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     isReady,
     isLoading,
     isPro,
+    subscriptionsAvailable,
     customerInfo,
     currentOffering,
     packages,

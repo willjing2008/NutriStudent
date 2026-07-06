@@ -5,38 +5,55 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 // LoginPage talks to four external surfaces. We mock all of them so the screen
 // renders in isolation and we can assert which auth path it drives.
 
-// 1. Supabase client — the sign-in path calls auth.signInWithPassword.
+// 1. Supabase client - the sign-in path calls auth.signInWithPassword.
 //    vi.hoisted lets the spy exist before the hoisted vi.mock factory runs.
-const { signInWithPassword } = vi.hoisted(() => ({
+const { signInWithPassword, signOut } = vi.hoisted(() => ({
   signInWithPassword: vi.fn(),
+  signOut: vi.fn(),
 }));
 vi.mock('../../utils/supabaseClient', () => ({
   supabase: {
     auth: {
       signInWithPassword,
+      signOut,
     },
   },
 }));
 
-// 2. Subscription context — the component calls useSubscription() at render.
+// 2. Subscription context - the component calls useSubscription() at render.
 //    isPro is false so the auto-login paywall effect never fires during tests.
-const { rcIdentify } = vi.hoisted(() => ({ rcIdentify: vi.fn() }));
+const { rcIdentify, subState } = vi.hoisted(() => ({
+  rcIdentify: vi.fn(),
+  subState: { current: { isPro: false, subscriptionsAvailable: true } },
+}));
 vi.mock('../hooks/useSubscription', () => ({
   useSubscription: () => ({
-    isPro: false,
+    isPro: subState.current.isPro,
+    subscriptionsAvailable: subState.current.subscriptionsAvailable,
     identify: rcIdentify,
   }),
 }));
 
-// 3. Post-signup step components — replaced with markers so we can detect the
+const { authedPost } = vi.hoisted(() => ({ authedPost: vi.fn() }));
+vi.mock('../utils/apiClient', () => ({ authedPost }));
+
+// 3. Post-signup step components - replaced with markers so we can detect the
 //    transition without pulling in their own dependencies.
 vi.mock('./SchoolSelectionStep', () => ({
-  SchoolSelectionStep: ({ userId }: { userId: string }) => (
-    <div data-testid="school-step">school step for {userId}</div>
+  SchoolSelectionStep: ({ userId, onComplete }: { userId: string; onComplete: () => void }) => (
+    <div data-testid="school-step">
+      school step for {userId}
+      <button onClick={onComplete}>complete school</button>
+    </div>
   ),
 }));
 vi.mock('./SubscriptionPage', () => ({
-  SubscriptionPage: () => <div data-testid="subscription-page">paywall</div>,
+  SubscriptionPage: ({ onLogout }: { onLogout?: () => void }) => (
+    <div data-testid="subscription-page">
+      paywall
+      {onLogout && <button onClick={onLogout}>Sign out</button>}
+    </div>
+  ),
 }));
 
 import { LoginPage } from './LoginPage';
@@ -101,7 +118,11 @@ const submitForm = () => {
 
 beforeEach(() => {
   signInWithPassword.mockReset();
+  signOut.mockReset();
   rcIdentify.mockReset();
+  authedPost.mockReset();
+  authedPost.mockResolvedValue({});
+  subState.current = { isPro: false, subscriptionsAvailable: true };
   vi.stubGlobal('fetch', vi.fn());
 });
 
@@ -111,7 +132,7 @@ afterEach(() => {
 
 // ── Landing page ─────────────────────────────────────────────────────────────
 
-describe('LoginPage — landing page', () => {
+describe('LoginPage - landing page', () => {
   it('shows the two landing CTAs before any auth form', () => {
     render(<LoginPage onLoginSuccess={vi.fn()} />);
 
@@ -150,7 +171,7 @@ describe('LoginPage — landing page', () => {
 
 // ── Sign in / sign up toggle ─────────────────────────────────────────────────
 
-describe('LoginPage — mode toggle', () => {
+describe('LoginPage - mode toggle', () => {
   it('switches from sign-in to sign-up via the tab switcher', () => {
     render(<LoginPage onLoginSuccess={vi.fn()} />);
     openForm('signin');
@@ -181,7 +202,7 @@ describe('LoginPage — mode toggle', () => {
 
 // ── Field validation (native HTML constraints) ───────────────────────────────
 
-describe('LoginPage — field validation', () => {
+describe('LoginPage - field validation', () => {
   it('marks email and password required, with email type', () => {
     render(<LoginPage onLoginSuccess={vi.fn()} />);
     openForm('signin');
@@ -214,7 +235,7 @@ describe('LoginPage — field validation', () => {
 
 // ── Sign in path ─────────────────────────────────────────────────────────────
 
-describe('LoginPage — sign in', () => {
+describe('LoginPage - sign in', () => {
   it('calls signInWithPassword with the entered credentials and signals success', async () => {
     const onLoginSuccess = vi.fn();
     signInWithPassword.mockResolvedValue(signInSuccess('tok-99', { id: 'u-42' }));
@@ -277,7 +298,7 @@ describe('LoginPage — sign in', () => {
 
 // ── Sign up path ─────────────────────────────────────────────────────────────
 
-describe('LoginPage — sign up', () => {
+describe('LoginPage - sign up', () => {
   it('POSTs the signup endpoint with name/email/password and advances to school selection', async () => {
     getFetchMock().mockResolvedValue(
       jsonResponse({ user: { id: 'new-user-7' } }),
@@ -389,11 +410,67 @@ describe('LoginPage — sign up', () => {
     ).toBeInTheDocument();
     expect(screen.queryByTestId('school-step')).not.toBeInTheDocument();
   });
+
+  it('bypasses the signup paywall and enters the app when subscriptions are unavailable', async () => {
+    subState.current = { isPro: false, subscriptionsAvailable: false };
+    getFetchMock().mockResolvedValue(
+      jsonResponse({ user: { id: 'new-user-7' } }),
+    );
+    signInWithPassword.mockResolvedValue(
+      signInSuccess('new-user-token', { id: 'new-user-7' }),
+    );
+    const onLoginSuccess = vi.fn();
+
+    render(<LoginPage onLoginSuccess={onLoginSuccess} />);
+    openForm('signup');
+
+    typeInto(/Enter your name/, 'Will T');
+    typeInto(/student@university/, 'will@uni.ac.uk');
+    typeInto(/Create a strong password/, 'sixchars');
+    fireEvent.click(screen.getByRole('button', { name: 'Create Account' }));
+
+    fireEvent.click(await screen.findByRole('button', { name: 'complete school' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+
+    await waitFor(() =>
+      expect(onLoginSuccess).toHaveBeenCalledWith(
+        { id: 'new-user-7' },
+        'new-user-token',
+      ),
+    );
+    expect(screen.queryByTestId('subscription-page')).not.toBeInTheDocument();
+  });
+
+  it('provides a working Sign out escape on the signup paywall', async () => {
+    getFetchMock().mockResolvedValue(
+      jsonResponse({ user: { id: 'new-user-7' } }),
+    );
+    signInWithPassword.mockResolvedValue(
+      signInSuccess('new-user-token', { id: 'new-user-7' }),
+    );
+
+    render(<LoginPage onLoginSuccess={vi.fn()} />);
+    openForm('signup');
+
+    typeInto(/Enter your name/, 'Will T');
+    typeInto(/student@university/, 'will@uni.ac.uk');
+    typeInto(/Create a strong password/, 'sixchars');
+    fireEvent.click(screen.getByRole('button', { name: 'Create Account' }));
+
+    fireEvent.click(await screen.findByRole('button', { name: 'complete school' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+
+    expect(await screen.findByTestId('subscription-page')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Sign out' }));
+
+    await waitFor(() => expect(signOut).toHaveBeenCalledTimes(1));
+    expect(screen.getByText('Build Your Plan')).toBeInTheDocument();
+  });
 });
 
 // ── Password visibility toggle ───────────────────────────────────────────────
 
-describe('LoginPage — password visibility', () => {
+describe('LoginPage - password visibility', () => {
   it('toggles the password field between hidden and visible', () => {
     render(<LoginPage onLoginSuccess={vi.fn()} />);
     openForm('signin');

@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MealSwapModal } from './MealSwapModal';
 
 // --- IO mocks -------------------------------------------------------------
-// MealSwapModal hits these apiClient helpers (all authed — get-swap-options is a
+// MealSwapModal hits these apiClient helpers (all authed - get-swap-options is a
 // premium route gated server-side, so it sends the session JWT):
 //   authedPost('get-swap-options')          -> Browse tab options (on mount)
 //   authedPost('list-community-recipes')    -> Community tab (on switch)
@@ -145,7 +145,7 @@ beforeEach(() => {
   });
 });
 
-describe('MealSwapModal — Browse tab', () => {
+describe('MealSwapModal - Browse tab', () => {
   it('renders swap options with their nutrition deltas after the mount fetch', async () => {
     renderModal();
 
@@ -220,9 +220,33 @@ describe('MealSwapModal — Browse tab', () => {
       ),
     ).toBeInTheDocument();
   });
+
+  it('renders a swap option with missing nutrition and similarity data', async () => {
+    mockAuthedPost({
+      swapOptions: [
+        makeSwapOption({
+          id: 'opt-brittle',
+          name: 'Mystery Bowl',
+          nutrition: undefined,
+          similarity: undefined,
+        }),
+      ],
+    });
+
+    renderModal({
+      currentMeal: {
+        ...currentMeal,
+        nutrition: undefined,
+      } as unknown as typeof currentMeal,
+    });
+
+    expect(await screen.findByText('Mystery Bowl')).toBeInTheDocument();
+    expect(screen.getByText('-% Match')).toBeInTheDocument();
+    expect(screen.getAllByText('-').length).toBeGreaterThan(0);
+  });
 });
 
-describe('MealSwapModal — tab switching', () => {
+describe('MealSwapModal - tab switching', () => {
   it('switches between Browse, Community and Create tabs', async () => {
     renderModal();
 
@@ -249,7 +273,7 @@ describe('MealSwapModal — tab switching', () => {
   });
 });
 
-describe('MealSwapModal — Community tab', () => {
+describe('MealSwapModal - Community tab', () => {
   it('shows the empty state and fetches with the resolved user id', async () => {
     renderModal();
 
@@ -295,9 +319,29 @@ describe('MealSwapModal — Community tab', () => {
     // The apply is awaited before the modal closes.
     await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
   });
+
+  it('renders community recipes with missing nutrition data', async () => {
+    mockAuthedPost({
+      swapOptions: [optionHigher],
+      recipes: [
+        {
+          ...communityRecipe,
+          id: 'com-brittle',
+          name: 'Community Mystery Bowl',
+          nutrition: undefined,
+        },
+      ],
+    });
+    renderModal();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Community' }));
+
+    expect(await screen.findByText('Community Mystery Bowl')).toBeInTheDocument();
+    expect(screen.getAllByText('-').length).toBeGreaterThan(0);
+  });
 });
 
-describe('MealSwapModal — swap apply outcome', () => {
+describe('MealSwapModal - swap apply outcome', () => {
   it('keeps the modal open and shows the error when the apply fails', async () => {
     const onSwap = vi.fn().mockRejectedValue(new Error('Failed to swap meal. Please try again.'));
     const { onClose } = renderModal({ onSwap });
@@ -334,7 +378,7 @@ describe('MealSwapModal — swap apply outcome', () => {
   });
 });
 
-describe('MealSwapModal — Create tab gating', () => {
+describe('MealSwapModal - Create tab gating', () => {
   it('keeps Create & Swap disabled until name, image, ingredient and instruction are all set', async () => {
     renderModal();
     fireEvent.click(screen.getByRole('button', { name: 'Create' }));
@@ -372,7 +416,7 @@ describe('MealSwapModal — Create tab gating', () => {
   });
 });
 
-describe('MealSwapModal — close', () => {
+describe('MealSwapModal - close', () => {
   it('calls onClose from the header close button', async () => {
     const { onClose } = renderModal();
     await screen.findByText('Beef Burrito Bowl');

@@ -5,7 +5,7 @@ import { RecommendationsStep } from './RecommendationsStep';
 // Regression tests for the P0 wrong-slot bug: in queue mode the Plan tab
 // rendered one plan (the saved plan overwrote the queue week on mount) while
 // swap and mark-as-cooked mutated queue slots reconstructed from that other
-// plan's day numbers — the two core daily actions silently landed on a slot
+// plan's day numbers - the two core daily actions silently landed on a slot
 // the user never saw. The invariant under test: the slot targeted by a
 // mutation is exactly the slot rendered for the selected day.
 
@@ -49,7 +49,7 @@ vi.mock('../hooks/useLanguage', () => ({
 // Animation overlay uses timers; irrelevant to slot targeting.
 vi.mock('./CelebrationOverlay', () => ({ CelebrationOverlay: () => null }));
 
-// Stub the swap modal to a single button that applies a fixed replacement —
+// Stub the swap modal to a single button that applies a fixed replacement -
 // the modal's own await/error UX is covered by MealSwapModal.test.tsx. Here we
 // only care which queue slot RecommendationsStep resolves for the apply, and
 // whether the apply promise resolves or rejects (the modal keys its
@@ -191,7 +191,7 @@ beforeEach(() => {
   window.scrollTo = vi.fn();
 });
 
-describe('RecommendationsStep — queue mode slot targeting', () => {
+describe('RecommendationsStep - queue mode slot targeting', () => {
   it('renders the queue week, not the saved plan, when both exist', async () => {
     renderPlanTab();
 
@@ -200,6 +200,28 @@ describe('RecommendationsStep — queue mode slot targeting', () => {
     // ...and the saved plan's meals must NOT leak into the plan view (when
     // they did, mutations wrote to queue slots derived from saved-plan days).
     expect(screen.queryByText('Saved Frittata')).not.toBeInTheDocument();
+  });
+
+  it('opens recipe detail without crashing when optional recipe data is missing', async () => {
+    renderPlanTab({
+      currentWeekMealPlan: {
+        ...currentWeekMealPlan,
+        meals: [
+          queueMeal({
+            nutrition: undefined,
+            ingredients: undefined,
+            instructions: undefined,
+          }),
+        ],
+      },
+    });
+
+    fireEvent.click(await screen.findByText('Queue Oats'));
+
+    expect(await screen.findByText('Ingredients')).toBeInTheDocument();
+    expect(screen.getByText('No ingredients listed.')).toBeInTheDocument();
+    expect(screen.getByText('No instructions listed.')).toBeInTheDocument();
+    expect(screen.getAllByText('-').length).toBeGreaterThan(0);
   });
 
   it('marks cooked exactly the rendered slot: stamped absolute queue day + queue mealSlot', async () => {
