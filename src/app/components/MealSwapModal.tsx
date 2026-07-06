@@ -25,7 +25,12 @@ interface MealSwapModalProps {
   goal: string;
   currentMealIds: string[];
   maxCookingTime?: number;
-  onSwap: (newMeal: any) => void;
+  /**
+   * Applies the swap. The modal awaits this and only closes on success; a
+   * rejection keeps it open and shows the error, so implementations must
+   * throw (not swallow) failures.
+   */
+  onSwap: (newMeal: any) => void | Promise<unknown>;
   onClose: () => void;
 }
 
@@ -134,6 +139,9 @@ export function MealSwapModal({
   const [error, setError] = useState<string | null>(null);
   const [selectedOption, setSelectedOption] = useState<SwapOption | null>(null);
   const [swapping, setSwapping] = useState(false);
+  // Error from applying a swap (distinct from `error`, which is the
+  // options-load failure and replaces the grid).
+  const [swapError, setSwapError] = useState<string | null>(null);
   const [optionImages, setOptionImages] = useState<Record<string, string>>({});
   const [view, setView] = useState<ModalView>('browse');
 
@@ -247,8 +255,8 @@ export function MealSwapModal({
     }
   };
 
-  const handleSwapCommunityRecipe = () => {
-    if (!selectedCommunityRecipe) return;
+  const handleSwapCommunityRecipe = async () => {
+    if (!selectedCommunityRecipe || swapping) return;
 
     // Strip community-specific fields that shouldn't be on a meal plan meal
     const { creatorId, creatorName, createdAt, timesCooked, likesCount, likedByMe, ...recipeFields } = selectedCommunityRecipe;
@@ -261,8 +269,17 @@ export function MealSwapModal({
       mealType: selectedCommunityRecipe.category.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
     };
 
-    onSwap(swappedMeal);
-    onClose();
+    setSwapping(true);
+    setSwapError(null);
+    try {
+      await onSwap(swappedMeal);
+      onClose();
+    } catch (err: any) {
+      console.error('Error swapping meal:', err);
+      setSwapError(err?.message || 'Failed to swap meal. Please try again.');
+    } finally {
+      setSwapping(false);
+    }
   };
 
   const fetchSwapOptions = async () => {
@@ -295,9 +312,10 @@ export function MealSwapModal({
   };
 
   const handleSwap = async () => {
-    if (!selectedOption) return;
+    if (!selectedOption || swapping) return;
 
     setSwapping(true);
+    setSwapError(null);
 
     try {
       const swappedMeal = {
@@ -308,11 +326,13 @@ export function MealSwapModal({
         mealType: selectedOption.category.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
       };
 
-      onSwap(swappedMeal);
+      // Await the apply and only close on success; a failure keeps the modal
+      // open with the error visible instead of silently discarding the swap.
+      await onSwap(swappedMeal);
       onClose();
     } catch (err: any) {
       console.error('Error swapping meal:', err);
-      setError('Failed to swap meal. Please try again.');
+      setSwapError(err?.message || 'Failed to swap meal. Please try again.');
     } finally {
       setSwapping(false);
     }
@@ -407,8 +427,15 @@ export function MealSwapModal({
       }
     }
 
-    onSwap(customMeal);
-    onClose();
+    try {
+      await onSwap(customMeal);
+      onClose();
+    } catch (err: any) {
+      console.error('Error swapping meal:', err);
+      setCreateError(err?.message || 'Failed to swap in your recipe. Please try again.');
+    } finally {
+      setUploadingRecipe(false);
+    }
   };
 
   const canSubmitRecipe =
@@ -1092,7 +1119,9 @@ export function MealSwapModal({
         {view === 'browse' && (
           <div className="flex items-center justify-between">
             <div className="text-sm text-[#6B7280]">
-              {selectedOption ? (
+              {swapError ? (
+                <span role="alert" className="text-red-400">{swapError}</span>
+              ) : selectedOption ? (
                 <span className="font-semibold text-[#22C55E]">
                   ✓ {selectedOption.name} selected
                 </span>
@@ -1135,7 +1164,9 @@ export function MealSwapModal({
         {view === 'community' && (
           <div className="flex items-center justify-between">
             <div className="text-sm text-[#6B7280]">
-              {selectedCommunityRecipe ? (
+              {swapError ? (
+                <span role="alert" className="text-red-400">{swapError}</span>
+              ) : selectedCommunityRecipe ? (
                 <span className="font-semibold text-[#22C55E]">
                   ✓ {selectedCommunityRecipe.name} selected
                 </span>
@@ -1152,15 +1183,24 @@ export function MealSwapModal({
               </button>
               <button
                 onClick={handleSwapCommunityRecipe}
-                disabled={!selectedCommunityRecipe}
+                disabled={!selectedCommunityRecipe || swapping}
                 className={`px-5 py-3 rounded-xl font-medium transition-all flex items-center gap-2 ${
-                  selectedCommunityRecipe
+                  selectedCommunityRecipe && !swapping
                     ? 'bg-[#22C55E] text-[#052E16] hover:bg-[#4ADE80]'
                     : 'bg-[#1E4029] text-[#6B7280] cursor-not-allowed'
                 }`}
               >
-                Swap Meal
-                <ArrowRight className="w-5 h-5" />
+                {swapping ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Swapping...
+                  </>
+                ) : (
+                  <>
+                    Swap Meal
+                    <ArrowRight className="w-5 h-5" />
+                  </>
+                )}
               </button>
             </div>
           </div>

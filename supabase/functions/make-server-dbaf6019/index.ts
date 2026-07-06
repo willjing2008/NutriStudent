@@ -1352,7 +1352,9 @@ app.post("/make-server-dbaf6019/queue-swap-meal", requireAuth, async (c) => {
     const newRecipe = allRecipes.find((r) => String(r.id) === String(newRecipeId));
     if (!newRecipe) return c.json({ error: "Recipe not found" }, 404);
 
-    const mealObj = toMealPlanMeal(newRecipe, dayNumber, 1);
+    // Pass the slot so the swapped-in recipe's category/mealType reflect the
+    // slot it now occupies (not the recipe's own category).
+    const mealObj = toMealPlanMeal(newRecipe, dayNumber, 1, mealSlot);
     queue = swapQueueMeal(queue, dayNumber, mealSlot, mealObj);
 
     await kv.set(`recipe_queue_${userId}`, JSON.stringify(queue));

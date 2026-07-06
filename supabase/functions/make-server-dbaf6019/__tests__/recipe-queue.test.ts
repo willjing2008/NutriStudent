@@ -74,6 +74,15 @@ describe('getQueueWeekAsMealPlan', () => {
     expect(week.meals[0].name).toBe('Day 8')
   })
 
+  it('stamps each meal with its absolute queue day and queue slot for mutations', () => {
+    // queueDayNumber + mealSlot are what the frontend sends back to
+    // queue-swap-meal / mark-queue-meal-consumed. Without the stamp it has to
+    // reconstruct the slot from week math, which can diverge from the render.
+    const week = getQueueWeekAsMealPlan(fourteenDayQueue(), 2)
+    expect(week.meals.map((m) => m.queueDayNumber)).toEqual([8, 9, 10, 11, 12, 13, 14])
+    expect(week.meals.every((m) => m.mealSlot === 'dinner')).toBe(true)
+  })
+
   it('defaults the weekly budget to 100 and derives the daily budget', () => {
     const week = getQueueWeekAsMealPlan(fourteenDayQueue(), 1)
     expect(week.weeklyBudget).toBe(100)

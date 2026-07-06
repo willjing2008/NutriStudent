@@ -292,7 +292,45 @@ describe('MealSwapModal — Community tab', () => {
         mealType: 'Dinner',
       }),
     );
-    expect(onClose).toHaveBeenCalledTimes(1);
+    // The apply is awaited before the modal closes.
+    await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
+  });
+});
+
+describe('MealSwapModal — swap apply outcome', () => {
+  it('keeps the modal open and shows the error when the apply fails', async () => {
+    const onSwap = vi.fn().mockRejectedValue(new Error('Failed to swap meal. Please try again.'));
+    const { onClose } = renderModal({ onSwap });
+
+    fireEvent.click(await screen.findByText('Beef Burrito Bowl'));
+    fireEvent.click(screen.getByRole('button', { name: /Swap Meal/i }));
+
+    // Error surfaces in the footer; the modal does NOT close.
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Failed to swap meal. Please try again.',
+    );
+    expect(onClose).not.toHaveBeenCalled();
+
+    // The action stays available for a retry.
+    expect(screen.getByRole('button', { name: /Swap Meal/i })).toBeEnabled();
+  });
+
+  it('shows a progress state and only closes once the apply resolves', async () => {
+    let resolveSwap: (v?: unknown) => void = () => {};
+    const onSwap = vi.fn().mockImplementation(
+      () => new Promise((resolve) => { resolveSwap = resolve; }),
+    );
+    const { onClose } = renderModal({ onSwap });
+
+    fireEvent.click(await screen.findByText('Beef Burrito Bowl'));
+    fireEvent.click(screen.getByRole('button', { name: /Swap Meal/i }));
+
+    // While the apply is in flight the button shows progress and the modal stays open.
+    expect(await screen.findByText('Swapping...')).toBeInTheDocument();
+    expect(onClose).not.toHaveBeenCalled();
+
+    resolveSwap();
+    await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
   });
 });
 
