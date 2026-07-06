@@ -52,6 +52,18 @@ describe('vNum', () => {
     expect(vNum(Infinity, 0, 10, 3)).toBe(3)
     expect(vNum(NaN, 0, 10, 4)).toBe(4)
   })
+
+  // Pins the exact bounds the generate-meal-plan handler uses for planDays:
+  // vNum(planDays, 1, 14, 7). Out-of-range clamps to 1-14, missing → 7.
+  it('bounds planDays as used by generate-meal-plan', () => {
+    expect(vNum(3, 1, 14, 7)).toBe(3)
+    expect(vNum(14, 1, 14, 7)).toBe(14)
+    expect(vNum(0, 1, 14, 7)).toBe(1)
+    expect(vNum(-2, 1, 14, 7)).toBe(1)
+    expect(vNum(99, 1, 14, 7)).toBe(14)
+    expect(vNum(undefined, 1, 14, 7)).toBe(7)
+    expect(vNum('not-a-number', 1, 14, 7)).toBe(7)
+  })
 })
 
 describe('vStrArr', () => {

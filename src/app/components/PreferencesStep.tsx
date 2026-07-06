@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowRight, ArrowLeft, X, Calendar, Users, Target, Clock, AlertCircle, Sunrise, Sun, Moon, Wallet } from 'lucide-react';
+import { ArrowRight, ArrowLeft, X, Calendar, CalendarDays, Users, Target, Clock, AlertCircle, Sunrise, Sun, Moon, Wallet } from 'lucide-react';
 import { UserPreferences, MealTimes } from '../App';
 import { getLocalTodayISO } from '../utils/dateUtils';
 
@@ -26,6 +26,7 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
       ? preferences.shoppingDate
       : getLocalTodayISO(),
   );
+  const [planDays, setPlanDays] = useState(preferences.planDays || 7);
   const [mealsPerDay, setMealsPerDay] = useState(preferences.mealsPerDay);
   const [goal, setGoal] = useState(preferences.goal);
   const [maxCookingTime, setMaxCookingTime] = useState(preferences.maxCookingTime);
@@ -80,6 +81,7 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
       : (['breakfast', 'lunch', 'dinner'] as const).filter(k => selectedMealSlots.has(k));
     updatePreferences({
       shoppingDate,
+      planDays,
       mealsPerDay,
       goal,
       maxCookingTime,
@@ -146,9 +148,9 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
       <div className="flex-1 px-6 pb-32 overflow-y-auto">
         <div className="max-w-md mx-auto space-y-8">
 
-          {/* Section 1: Shopping Date */}
+          {/* Section 1: Plan Start Date (internal field stays `shoppingDate`) */}
           <div className="bg-[#142A1D] rounded-2xl p-5 border border-[#2D5A3D]">
-            <SectionHeader icon={Calendar} title="Next Shopping Date" />
+            <SectionHeader icon={Calendar} title="Plan Start Date" />
             <div className="relative">
               <input
                 type="date"
@@ -163,6 +165,45 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </div>
+            </div>
+          </div>
+
+          {/* Section 1b: Number of Days */}
+          <div className="bg-[#142A1D] rounded-2xl p-5 border border-[#2D5A3D]">
+            <SectionHeader icon={CalendarDays} title="Number of Days" />
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setPlanDays(prev => Math.max(1, prev - 1))}
+                aria-label="Fewer days"
+                className="w-14 py-4 rounded-xl font-semibold text-lg bg-[#0A1F13] text-white border border-[#2D5A3D] hover:border-[#22C55E] transition-all"
+              >
+                −
+              </button>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={14}
+                value={planDays}
+                onChange={(e) => {
+                  const num = parseInt(e.target.value, 10);
+                  setPlanDays(Number.isNaN(num) ? 7 : Math.min(14, Math.max(1, num)));
+                }}
+                aria-label="Number of days"
+                className="flex-1 px-4 py-4 bg-[#0A1F13] border border-[#2D5A3D] rounded-xl text-white text-center font-semibold text-lg focus:outline-none focus:border-[#22C55E] transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              />
+              <button
+                onClick={() => setPlanDays(prev => Math.min(14, prev + 1))}
+                aria-label="More days"
+                className="w-14 py-4 rounded-xl font-semibold text-lg bg-[#0A1F13] text-white border border-[#2D5A3D] hover:border-[#22C55E] transition-all"
+              >
+                +
+              </button>
+            </div>
+            <div className="mt-4 p-3 bg-[#22C55E]/10 rounded-xl border border-[#22C55E]/20">
+              <p className="text-sm text-[#22C55E]">
+                Your plan will cover <strong>{planDays} {planDays === 1 ? 'day' : 'days'}</strong> from the start date (1–14).
+              </p>
             </div>
           </div>
 
@@ -309,9 +350,9 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
             </div>
           </div>
 
-          {/* Section 6: Weekly Budget */}
+          {/* Section 6: Plan Budget */}
           <div className="bg-[#142A1D] rounded-2xl p-5 border border-[#2D5A3D]">
-            <SectionHeader icon={Wallet} title="Weekly Budget" />
+            <SectionHeader icon={Wallet} title="Budget for this plan" />
             <div className="grid grid-cols-4 gap-3">
               {[40, 60, 80, 100].map((amount) => (
                 <button
@@ -330,7 +371,7 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
             </div>
             <div className="mt-4 p-3 bg-[#22C55E]/10 rounded-xl border border-[#22C55E]/20">
               <p className="text-sm text-[#22C55E]">
-                We'll keep your week's groceries around <strong>£{budget}</strong>.
+                We'll keep your plan's groceries around <strong>£{budget}</strong>.
               </p>
             </div>
           </div>

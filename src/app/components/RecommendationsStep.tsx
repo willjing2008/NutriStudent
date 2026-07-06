@@ -558,6 +558,7 @@ export function RecommendationsStep({
         budget: preferences.budget,
         goal: preferences.goal,
         shoppingDate: preferences.shoppingDate,
+        planDays: preferences.planDays,
         maxCookingTime: preferences.maxCookingTime,
         avoidIngredients: preferences.avoidIngredients || [],
         dietaryRestrictions: preferences.dietaryRestrictions || [],

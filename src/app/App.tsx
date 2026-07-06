@@ -43,6 +43,7 @@ export interface UserPreferences {
     address: string;
   }>;
   shoppingDate: string;
+  planDays: number;
   mealsPerDay: number;
   budget: number;
   goal: 'study' | 'work' | 'fitness' | null;
@@ -93,6 +94,7 @@ export default function App() {
     selectedStore: null,
     selectedStores: [],
     shoppingDate: '',
+    planDays: 7,
     mealsPerDay: 3,
     budget: 100,
     goal: null,
@@ -393,6 +395,7 @@ export default function App() {
       selectedStore: null,
       selectedStores: [],
       shoppingDate: '',
+      planDays: 7,
       mealsPerDay: 3,
       budget: 100,
       goal: null,
