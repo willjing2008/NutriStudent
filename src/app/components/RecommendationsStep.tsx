@@ -558,6 +558,7 @@ export function RecommendationsStep({
         budget: preferences.budget,
         goal: preferences.goal,
         shoppingDate: preferences.shoppingDate,
+        planDays: preferences.planDays,
         maxCookingTime: preferences.maxCookingTime,
         avoidIngredients: preferences.avoidIngredients || [],
         dietaryRestrictions: preferences.dietaryRestrictions || [],
@@ -936,7 +937,7 @@ export function RecommendationsStep({
     );
 
   const dailyBudgetUsed = currentDayMeals.reduce((sum, meal) => sum + (meal.totalCost || 0), 0);
-  const dailyBudgetLimit = mealPlan?.dailyBudget || (preferences.budget / 7);
+  const dailyBudgetLimit = mealPlan?.dailyBudget || (preferences.budget / (preferences.planDays || 7));
 
   // Target nutrition based on user's gender
   const nutritionTargets = getNutritionTargets(preferences.gender);

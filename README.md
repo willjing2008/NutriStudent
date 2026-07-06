@@ -1,6 +1,6 @@
 # NutriStudent
 
-Personalised meal planning app built for university students. Generates weekly meal plans based on dietary preferences, cooking equipment, and goals — then produces a shopping list to match.
+Personalised meal planning app built for university students. Generates meal plans with a user-chosen start date and length (1–14 days, default 7) based on dietary preferences, cooking equipment, and goals — then produces a shopping list to match.
 
 ## Tech Stack
 
@@ -12,7 +12,7 @@ Personalised meal planning app built for university students. Generates weekly m
 ## Features
 
 - Onboarding flow: preferences, cooking equipment, dietary goals
-- Meal plan generation with per-meal nutrition breakdown
+- Meal plan generation with user-chosen start date and plan length, and per-meal nutrition breakdown
 - Meal swap functionality with nutritional comparison
 - Shopping list with per-category grouping and checklist
 - School selection and student community

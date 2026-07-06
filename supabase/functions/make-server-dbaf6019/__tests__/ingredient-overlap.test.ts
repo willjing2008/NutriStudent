@@ -186,6 +186,18 @@ describe('buildRotationSchedule', () => {
     expect(schedule.map((d) => d.dayNumber)).toEqual([1, 2, 3, 4, 5, 6, 7])
   })
 
+  // The plan length is user-chosen (1-14) since planDays shipped; the schedule
+  // must honour short and long plans, not just the historical 7.
+  it('honours a user-chosen plan length across the 1-14 range', () => {
+    for (const days of [1, 3, 14]) {
+      const schedule = buildRotationSchedule(core, 3, days)
+      expect(schedule).toHaveLength(days)
+      expect(schedule.map((d) => d.dayNumber)).toEqual(
+        Array.from({ length: days }, (_, i) => i + 1),
+      )
+    }
+  })
+
   it('fills all three slots when mealsPerDay >= 3', () => {
     const schedule = buildRotationSchedule(core, 3, 5)
     for (const day of schedule) {

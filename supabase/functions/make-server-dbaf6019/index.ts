@@ -393,7 +393,7 @@ app.post("/make-server-dbaf6019/fetch-store-ingredients", requireAuth, async (c)
 // Endpoint to generate optimal meal plan
 app.post("/make-server-dbaf6019/generate-meal-plan", requireAuth, rateLimit({ name: "generate-meal-plan", max: 15, windowSec: 60 }), requirePro, async (c) => {
   try {
-    const { storeName, mealsPerDay, budget, goal, shoppingDate, maxCookingTime, avoidIngredients, dietaryRestrictions, selectedMealSlots } = await c.req.json();
+    const { storeName, mealsPerDay, budget, goal, shoppingDate, planDays, maxCookingTime, avoidIngredients, dietaryRestrictions, selectedMealSlots } = await c.req.json();
 
     if (!mealsPerDay || !budget || !goal) {
       return c.json({ error: "Missing required parameters" }, 400);
@@ -406,9 +406,10 @@ app.post("/make-server-dbaf6019/generate-meal-plan", requireAuth, rateLimit({ na
     const safeAvoid = vStrArr(avoidIngredients, 50, 100);
     const safeSlots = vStrArr(selectedMealSlots, 10, 30);
     const safeDietary = vStrArr(dietaryRestrictions, 10, 30);
+    const safePlanDays = Math.round(vNum(planDays, 1, 14, 7));
 
-    // Always a full week starting from the shopping date
-    const cookingDays = 7;
+    // User-chosen plan length (1-14 days) starting from the shopping date
+    const cookingDays = safePlanDays;
 
     const totalMealsNeeded = cookingDays * safeMealsPerDay;
     const weeklyBudget = safeBudget;
@@ -462,7 +463,8 @@ function generateMealPlanFromRecipes(
   selectedMealSlots?: string[],
   dietaryRestrictions?: string[]
 ) {
-  const dailyBudget = weeklyBudget / 7;
+  // The budget is the total for the whole plan, so per-day = budget / plan length.
+  const dailyBudget = weeklyBudget / cookingDays;
   const totalMealsNeeded = cookingDays * mealsPerDay;
 
   // ── 1. Filter ────────────────────────────────────────────────────
@@ -506,7 +508,7 @@ function generateMealPlanFromRecipes(
 
   log(`🔗 Core: breakfast=${coreRecipes.breakfast.length}, lunch=${coreRecipes.lunch.length}, dinner=${coreRecipes.dinner.length}`);
 
-  // ── 4. Build 7-day rotation schedule ─────────────────────────────
+  // ── 4. Build N-day rotation schedule ─────────────────────────────
   const schedule = buildRotationSchedule(coreRecipes, mealsPerDay, cookingDays, selectedMealSlots);
 
   // ── 5. Convert to frontend format ────────────────────────────────

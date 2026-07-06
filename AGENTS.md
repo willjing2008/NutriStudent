@@ -50,6 +50,17 @@ This file is the project's committed home for project-intrinsic agent knowledge:
 - `MealSwapModal.onSwap` is awaited: the modal only closes when the apply resolves and shows the error on rejection — so swap-apply implementations must **throw** on failure (including a null result from `swapQueueMeal`, which swallows network errors into null), never resolve silently.
 - The dashboard's "My Recipes" section (cooked-history list with per-row Swap) was removed from the UI in July 2026; the `my-recipes` backend route still exists. If a new surface adds swapping, reuse `MealSwapModal` — its `get-swap-options` call is the Pro paywall (server-side `requirePro`); there is no client-side gate on swap buttons, and reusing the modal is what keeps the paywall consistent.
 
+## Plan length / start date (planDays)
+
+- The meal plan's length is user-chosen: `preferences.planDays` (1–14, default 7) travels in the `generate-meal-plan` payload; the handler bounds it with `vNum(planDays, 1, 14, 7)`, rounds it to an integer, and feeds it as `cookingDays`. The "Plan Start Date" card in PreferencesStep is the old "Next Shopping Date" — the internal field is still `shoppingDate` everywhere (deliberate: label-only rename).
+- **Budget is the total for the whole plan**, not weekly: the backend divides it by `cookingDays` (`dailyBudget = weeklyBudget / cookingDays`) and the UI says "Budget for this plan". The `weeklyBudget` variable/response-field name is historical; its meaning is now plan-total. Don't reintroduce `/7`.
+- `e2e/plan-days.spec.ts` (Playwright, route-mocked backend per repo e2e convention) pins the payload contract, the N-day calendar anchored on the chosen start date, and the day-scoped shopping list. The 28-day recipe-queue path is independent and still fixed-length.
+- `src/app/components/RecommendationsStep.tsx` has **mixed line endings (mostly CRLF)** committed; whole-file rewrites (or editors that normalize the dominant ending) produce a huge whitespace diff. Patch it with byte-preserving edits and check `git diff --stat` before committing.
+
+## Release-simulator smoke test without prod credentials
+
+- The web bundle hardcodes the prod Supabase URL, and un-deployed edge-function changes can't be exercised against prod. Pattern that works: temporarily repoint `src/utils/supabaseClient.ts` + `src/app/utils/apiClient.ts` at `http://127.0.0.1:8787` (loopback is ATS-exempt; serve CORS `*` and handle OPTIONS), run a small Node mock implementing `/auth/v1/token`, `/auth/v1/user` and the needed `make-server-dbaf6019/*` routes, `npm run build && npx cap sync ios`, then **revert the two files before committing** (the built bundle keeps the patch). Drive the UI headlessly by appending a self-driving `<script>` to `dist/index.html` (or directly into `App.app/public/`) that dispatches clicks/`nativeInputValueSetter` input events and renders a PASS/FAIL banner, then `simctl io booted screenshot`. The app's first screen is the welcome page ("I already have an account" → login form); the empty dashboard's button is "Create Plan", the non-empty one "Create New Plan".
+
 ## Build / CI sharp edges
 
 - `tsconfig.json` EXCLUDES `supabase/`, so `npm run typecheck` (CI) does NOT typecheck the Deno edge function. Validate edge-function changes via tests/deploy, not tsc.
