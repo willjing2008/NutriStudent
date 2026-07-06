@@ -37,7 +37,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             {this.props.label ? `${this.props.label} ran into a problem` : 'Something went wrong'}
           </h2>
           <p className="mb-4 text-sm text-red-700">
-            The rest of the app is unaffected. You can try again, or navigate elsewhere.
+            {this.props.label
+              ? 'The rest of the app is unaffected. You can try again, or navigate elsewhere.'
+              : 'Try again to reload the app.'}
           </p>
           <button
             onClick={() => this.setState({ error: null })}

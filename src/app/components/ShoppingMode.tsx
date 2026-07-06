@@ -73,9 +73,11 @@ const CATEGORY_CONFIG = {
 function deduplicateIngredients(ingredients: ShoppingIngredient[]): ShoppingIngredient[] {
   const map = new Map<string, ShoppingIngredient>();
   for (const ing of ingredients) {
-    const key = ing.name.toLowerCase().trim();
+    const name = typeof ing.name === 'string' ? ing.name.trim() : '';
+    if (!name) continue;
+    const key = name.toLowerCase();
     if (!map.has(key)) {
-      map.set(key, { ...ing });
+      map.set(key, { ...ing, name });
     }
   }
   return Array.from(map.values());
@@ -97,7 +99,7 @@ export function ShoppingMode({ ingredients, storeName, onBack, missingEssentials
   // Deduplicate first, then organize by category
   const dedupedIngredients = deduplicateIngredients(ingredients);
 
-  // Categorize by ingredient name — the backend tags every ingredient 'pantry',
+  // Categorize by ingredient name - the backend tags every ingredient 'pantry',
   // which would collapse the whole list into one section.
   const organizedIngredients = dedupedIngredients.reduce((acc, ingredient) => {
     const category = categorizeIngredient(ingredient.name);
@@ -248,7 +250,7 @@ export function ShoppingMode({ ingredients, storeName, onBack, missingEssentials
                 </span>
               </div>
 
-              {/* Category Items — name only, no amounts */}
+              {/* Category Items - name only, no amounts */}
               {items.map((ingredient) => {
                 const isChecked = checkedItems.has(`ing:${ingredient.name}`);
 

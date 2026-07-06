@@ -6,7 +6,7 @@ export type IngredientCategory =
   | 'frozen'
   | 'bakery'
 
-// Checked in order — the first category whose keyword appears in the (lowercased)
+// Checked in order - the first category whose keyword appears in the (lowercased)
 // ingredient name wins. Ordering resolves overlaps: "ice cream" is frozen before
 // dairy's "cream"; "eggplant"/"butternut" are produce before dairy's "egg"/"butter";
 // bakery beats produce for "...bread". Anything unmatched falls back to pantry.
@@ -21,7 +21,7 @@ const RULES: Array<{ category: IngredientCategory; keywords: string[] }> = [
     keywords: ['chicken', 'beef', 'pork', 'lamb', 'turkey', 'bacon', 'ham', 'sausage', 'steak', 'mince', 'salami', 'prosciutto', 'duck', 'veal', 'fish', 'salmon', 'tuna', 'cod', 'prawn', 'shrimp', 'crab', 'lobster', 'anchovy', 'mackerel', 'sardine'],
   },
   {
-    // Spice/seasoning/dry forms — checked BEFORE produce so "Garlic Powder",
+    // Spice/seasoning/dry forms - checked BEFORE produce so "Garlic Powder",
     // "Black Pepper", "Dried Oregano" etc. don't get pulled in by garlic/pepper.
     category: 'pantry',
     keywords: ['powder', 'ground', 'to taste', 'dried', 'seasoning', 'black pepper', 'peppercorn', 'baking soda', 'baking powder', 'extract', 'bouillon', 'stock cube'],
@@ -37,8 +37,8 @@ const RULES: Array<{ category: IngredientCategory; keywords: string[] }> = [
 ]
 
 /** Categorize a shopping-list ingredient by its name. Falls back to 'pantry'. */
-export function categorizeIngredient(name: string): IngredientCategory {
-  const n = name.toLowerCase().trim()
+export function categorizeIngredient(name: string | null | undefined): IngredientCategory {
+  const n = typeof name === 'string' ? name.toLowerCase().trim() : ''
   for (const { category, keywords } of RULES) {
     if (keywords.some((k) => n.includes(k))) return category
   }

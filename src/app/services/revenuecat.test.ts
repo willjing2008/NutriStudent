@@ -76,6 +76,17 @@ async function loadModule(native: boolean): Promise<RevenueCatModule> {
   return import('./revenuecat');
 }
 
+/** Load the native branch and run a successful configure before exercising SDK calls. */
+async function loadConfiguredNativeModule(): Promise<RevenueCatModule> {
+  const rc = await loadModule(true);
+  purchasesMock.setLogLevel.mockResolvedValue(undefined);
+  purchasesMock.configure.mockResolvedValue(undefined);
+  await rc.initializeRevenueCat('configured-user');
+  purchasesMock.setLogLevel.mockClear();
+  purchasesMock.configure.mockClear();
+  return rc;
+}
+
 /** Minimal CustomerInfo whose only meaningful field is the active entitlements map. */
 function customerInfoWithEntitlements(active: Record<string, unknown>): CustomerInfo {
   return {
@@ -191,7 +202,7 @@ describe('web (non-native) stub branch', () => {
   });
 });
 
-// ── Entitlement parsing (hasProEntitlement) — pure, platform-agnostic ────────────
+// ── Entitlement parsing (hasProEntitlement) - pure, platform-agnostic ────────────
 
 describe('hasProEntitlement', () => {
   it('returns true when the Pro entitlement is in the active map', async () => {
@@ -222,7 +233,7 @@ describe('hasProEntitlement', () => {
 
 // ── Native happy paths ──────────────────────────────────────────────────────────
 
-describe('native platform — happy paths', () => {
+describe('native platform - happy paths', () => {
   it('initializeRevenueCat configures the SDK exactly once', async () => {
     const rc = await loadModule(true);
     purchasesMock.setLogLevel.mockResolvedValue(undefined);
@@ -249,7 +260,7 @@ describe('native platform — happy paths', () => {
   });
 
   it('getCustomerInfo unwraps the SDK response', async () => {
-    const rc = await loadModule(true);
+    const rc = await loadConfiguredNativeModule();
     const info = customerInfoWithEntitlements({ [rc.ENTITLEMENT_ID]: {} });
     purchasesMock.getCustomerInfo.mockResolvedValue({ customerInfo: info });
 
@@ -257,7 +268,7 @@ describe('native platform — happy paths', () => {
   });
 
   it('checkProAccess reads live customer info and detects Pro', async () => {
-    const rc = await loadModule(true);
+    const rc = await loadConfiguredNativeModule();
     const info = customerInfoWithEntitlements({ [rc.ENTITLEMENT_ID]: {} });
     purchasesMock.getCustomerInfo.mockResolvedValue({ customerInfo: info });
 
@@ -265,7 +276,7 @@ describe('native platform — happy paths', () => {
   });
 
   it('addCustomerInfoListener registers the callback with the SDK', async () => {
-    const rc = await loadModule(true);
+    const rc = await loadConfiguredNativeModule();
     purchasesMock.addCustomerInfoUpdateListener.mockResolvedValue(undefined);
     const cb = vi.fn();
 
@@ -275,7 +286,7 @@ describe('native platform — happy paths', () => {
   });
 
   it('purchasePackage returns success with customerInfo', async () => {
-    const rc = await loadModule(true);
+    const rc = await loadConfiguredNativeModule();
     const info = customerInfoWithEntitlements({ [rc.ENTITLEMENT_ID]: {} });
     purchasesMock.purchasePackage.mockResolvedValue({ customerInfo: info });
 
@@ -288,7 +299,7 @@ describe('native platform — happy paths', () => {
   });
 
   it('restorePurchases returns success with customerInfo', async () => {
-    const rc = await loadModule(true);
+    const rc = await loadConfiguredNativeModule();
     const info = customerInfoWithEntitlements({});
     purchasesMock.restorePurchases.mockResolvedValue({ customerInfo: info });
 
@@ -319,7 +330,7 @@ describe('native platform — happy paths', () => {
   });
 
   it('getCurrentOffering returns the SDK current offering', async () => {
-    const rc = await loadModule(true);
+    const rc = await loadConfiguredNativeModule();
     const current = { identifier: 'default' } as unknown as PurchasesOffering;
     purchasesMock.getOfferings.mockResolvedValue({ all: {}, current });
 
@@ -335,7 +346,7 @@ describe('native platform — happy paths', () => {
 // entirely. import.meta.env is a mutable runtime object under vitest, and
 // loadModule() re-imports the module fresh, so each test controls the build mode.
 
-describe('API key resolution — initializeRevenueCat guard', () => {
+describe('API key resolution - initializeRevenueCat guard', () => {
   const originalEnv = {
     DEV: import.meta.env.DEV,
     PROD: import.meta.env.PROD,
@@ -402,13 +413,52 @@ describe('API key resolution — initializeRevenueCat guard', () => {
       expect.objectContaining({ apiKey: expect.stringMatching(/^test_/) }),
     );
   });
+
+  it('keyless production native builds never touch SDK or UI calls after init skips configure', async () => {
+    setBuildEnv({ dev: false });
+    const rc = await loadModule(true);
+    const listener = vi.fn();
+
+    await rc.initializeRevenueCat('user-1');
+
+    expect(rc.isRevenueCatConfigured()).toBe(false);
+    await expect(rc.loginUser('user-1')).resolves.toMatchObject({ activeSubscriptions: [] });
+    await expect(rc.logoutUser()).resolves.toMatchObject({ activeSubscriptions: [] });
+    await expect(rc.getCustomerInfo()).resolves.toMatchObject({ activeSubscriptions: [] });
+    await expect(rc.addCustomerInfoListener(listener)).resolves.toBeUndefined();
+    await expect(rc.getOfferings()).resolves.toMatchObject({ all: {}, current: null });
+    await expect(rc.purchasePackage({} as PurchasesPackage)).resolves.toEqual({
+      success: false,
+      error: rc.SUBSCRIPTIONS_UNAVAILABLE_MESSAGE,
+    });
+    await expect(rc.restorePurchases()).resolves.toEqual({
+      success: false,
+      error: rc.SUBSCRIPTIONS_UNAVAILABLE_MESSAGE,
+    });
+    await expect(rc.syncPurchases()).resolves.toBeUndefined();
+    await expect(rc.presentPaywall()).resolves.toBe(false);
+    await expect(rc.presentPaywallIfNeeded()).resolves.toBe(false);
+    await expect(rc.presentCustomerCenter()).resolves.toBeUndefined();
+
+    expect(purchasesMock.logIn).not.toHaveBeenCalled();
+    expect(purchasesMock.logOut).not.toHaveBeenCalled();
+    expect(purchasesMock.getCustomerInfo).not.toHaveBeenCalled();
+    expect(purchasesMock.addCustomerInfoUpdateListener).not.toHaveBeenCalled();
+    expect(purchasesMock.getOfferings).not.toHaveBeenCalled();
+    expect(purchasesMock.purchasePackage).not.toHaveBeenCalled();
+    expect(purchasesMock.restorePurchases).not.toHaveBeenCalled();
+    expect(purchasesMock.syncPurchases).not.toHaveBeenCalled();
+    expect(revenueCatUIMock.presentPaywall).not.toHaveBeenCalled();
+    expect(revenueCatUIMock.presentPaywallIfNeeded).not.toHaveBeenCalled();
+    expect(revenueCatUIMock.presentCustomerCenter).not.toHaveBeenCalled();
+  });
 });
 
 // ── Error-code mapping & error paths (native) ────────────────────────────────────
 
-describe('native platform — error handling', () => {
+describe('native platform - error handling', () => {
   it('purchasePackage maps the cancellation error code to { cancelled: true }', async () => {
-    const rc = await loadModule(true);
+    const rc = await loadConfiguredNativeModule();
     purchasesMock.purchasePackage.mockRejectedValue({
       code: rc.PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR,
       message: 'User cancelled',
@@ -421,7 +471,7 @@ describe('native platform — error handling', () => {
   });
 
   it('purchasePackage surfaces non-cancellation errors via error.message', async () => {
-    const rc = await loadModule(true);
+    const rc = await loadConfiguredNativeModule();
     purchasesMock.purchasePackage.mockRejectedValue({
       code: rc.PURCHASES_ERROR_CODE.NETWORK_ERROR,
       message: 'No connection',
@@ -434,7 +484,7 @@ describe('native platform — error handling', () => {
   });
 
   it('purchasePackage falls back to a generic message when error has no message', async () => {
-    const rc = await loadModule(true);
+    const rc = await loadConfiguredNativeModule();
     purchasesMock.purchasePackage.mockRejectedValue({
       code: rc.PURCHASES_ERROR_CODE.STORE_PROBLEM_ERROR,
     });
@@ -445,7 +495,7 @@ describe('native platform — error handling', () => {
   });
 
   it('purchasePackage handles null SDK rejections without throwing', async () => {
-    const rc = await loadModule(true);
+    const rc = await loadConfiguredNativeModule();
     purchasesMock.purchasePackage.mockRejectedValue(null);
 
     const result = await rc.purchasePackage({} as PurchasesPackage);
@@ -454,7 +504,7 @@ describe('native platform — error handling', () => {
   });
 
   it('restorePurchases reports failure with the error message', async () => {
-    const rc = await loadModule(true);
+    const rc = await loadConfiguredNativeModule();
     purchasesMock.restorePurchases.mockRejectedValue({ message: 'Restore exploded' });
 
     await expect(rc.restorePurchases()).resolves.toEqual({
@@ -464,7 +514,7 @@ describe('native platform — error handling', () => {
   });
 
   it('restorePurchases falls back to a generic message', async () => {
-    const rc = await loadModule(true);
+    const rc = await loadConfiguredNativeModule();
     purchasesMock.restorePurchases.mockRejectedValue({});
 
     await expect(rc.restorePurchases()).resolves.toEqual({
@@ -474,7 +524,7 @@ describe('native platform — error handling', () => {
   });
 
   it('restorePurchases handles null SDK rejections without throwing', async () => {
-    const rc = await loadModule(true);
+    const rc = await loadConfiguredNativeModule();
     purchasesMock.restorePurchases.mockRejectedValue(null);
 
     await expect(rc.restorePurchases()).resolves.toEqual({
@@ -492,25 +542,25 @@ describe('native platform — error handling', () => {
   });
 
   it('loginUser rethrows SDK errors', async () => {
-    const rc = await loadModule(true);
+    const rc = await loadConfiguredNativeModule();
     purchasesMock.logIn.mockRejectedValue(new Error('login boom'));
     await expect(rc.loginUser('user-x')).rejects.toThrow('login boom');
   });
 
   it('getCustomerInfo rethrows SDK errors', async () => {
-    const rc = await loadModule(true);
+    const rc = await loadConfiguredNativeModule();
     purchasesMock.getCustomerInfo.mockRejectedValue(new Error('info boom'));
     await expect(rc.getCustomerInfo()).rejects.toThrow('info boom');
   });
 
   it('getOfferings rethrows SDK errors', async () => {
-    const rc = await loadModule(true);
+    const rc = await loadConfiguredNativeModule();
     purchasesMock.getOfferings.mockRejectedValue(new Error('offerings boom'));
     await expect(rc.getOfferings()).rejects.toThrow('offerings boom');
   });
 
   it('syncPurchases swallows SDK errors (fire-and-forget)', async () => {
-    const rc = await loadModule(true);
+    const rc = await loadConfiguredNativeModule();
     purchasesMock.syncPurchases.mockRejectedValue(new Error('sync boom'));
     await expect(rc.syncPurchases()).resolves.toBeUndefined();
   });
@@ -518,9 +568,9 @@ describe('native platform — error handling', () => {
 
 // ── Paywall result mapping (native) ──────────────────────────────────────────────
 
-describe('native platform — paywall result mapping', () => {
+describe('native platform - paywall result mapping', () => {
   it('presentPaywall returns true for PURCHASED and RESTORED', async () => {
-    const rc = await loadModule(true);
+    const rc = await loadConfiguredNativeModule();
 
     revenueCatUIMock.presentPaywall.mockResolvedValueOnce({
       result: rc.PAYWALL_RESULT.PURCHASED,
@@ -534,7 +584,7 @@ describe('native platform — paywall result mapping', () => {
   });
 
   it('presentPaywall returns false for CANCELLED / ERROR / NOT_PRESENTED', async () => {
-    const rc = await loadModule(true);
+    const rc = await loadConfiguredNativeModule();
 
     for (const result of [
       rc.PAYWALL_RESULT.CANCELLED,
@@ -547,7 +597,7 @@ describe('native platform — paywall result mapping', () => {
   });
 
   it('presentPaywall forwards the offering when provided', async () => {
-    const rc = await loadModule(true);
+    const rc = await loadConfiguredNativeModule();
     const offering = { identifier: 'promo' } as unknown as PurchasesOffering;
     revenueCatUIMock.presentPaywall.mockResolvedValue({ result: rc.PAYWALL_RESULT.PURCHASED });
 
@@ -557,7 +607,7 @@ describe('native platform — paywall result mapping', () => {
   });
 
   it('presentPaywall passes empty options when no offering is provided', async () => {
-    const rc = await loadModule(true);
+    const rc = await loadConfiguredNativeModule();
     revenueCatUIMock.presentPaywall.mockResolvedValue({ result: rc.PAYWALL_RESULT.CANCELLED });
 
     await rc.presentPaywall();
@@ -566,13 +616,13 @@ describe('native platform — paywall result mapping', () => {
   });
 
   it('presentPaywall returns false when the UI call throws', async () => {
-    const rc = await loadModule(true);
+    const rc = await loadConfiguredNativeModule();
     revenueCatUIMock.presentPaywall.mockRejectedValue(new Error('paywall boom'));
     await expect(rc.presentPaywall()).resolves.toBe(false);
   });
 
   it('presentPaywallIfNeeded uses the default entitlement id and maps RESTORED to true', async () => {
-    const rc = await loadModule(true);
+    const rc = await loadConfiguredNativeModule();
     revenueCatUIMock.presentPaywallIfNeeded.mockResolvedValue({
       result: rc.PAYWALL_RESULT.RESTORED,
     });
@@ -584,7 +634,7 @@ describe('native platform — paywall result mapping', () => {
   });
 
   it('presentPaywallIfNeeded honours a custom entitlement id and maps CANCELLED to false', async () => {
-    const rc = await loadModule(true);
+    const rc = await loadConfiguredNativeModule();
     revenueCatUIMock.presentPaywallIfNeeded.mockResolvedValue({
       result: rc.PAYWALL_RESULT.CANCELLED,
     });
@@ -596,13 +646,13 @@ describe('native platform — paywall result mapping', () => {
   });
 
   it('presentPaywallIfNeeded returns false when the UI call throws', async () => {
-    const rc = await loadModule(true);
+    const rc = await loadConfiguredNativeModule();
     revenueCatUIMock.presentPaywallIfNeeded.mockRejectedValue(new Error('ifNeeded boom'));
     await expect(rc.presentPaywallIfNeeded()).resolves.toBe(false);
   });
 
   it('presentCustomerCenter delegates to the UI SDK and swallows errors', async () => {
-    const rc = await loadModule(true);
+    const rc = await loadConfiguredNativeModule();
 
     revenueCatUIMock.presentCustomerCenter.mockResolvedValueOnce(undefined);
     await expect(rc.presentCustomerCenter()).resolves.toBeUndefined();

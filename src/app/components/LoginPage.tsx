@@ -23,11 +23,12 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [signedUpUserId, setSignedUpUserId] = useState<string | null>(null);
+  const [signedUpSession, setSignedUpSession] = useState<{ user: any; accessToken: string } | null>(null);
   const [showGenderStep, setShowGenderStep] = useState(false);
   const [selectedGender, setSelectedGender] = useState<Gender>(null);
   const [showSignupPaywall, setShowSignupPaywall] = useState(false);
 
-  const { isPro, identify: rcIdentify } = useSubscription();
+  const { isPro, subscriptionsAvailable, identify: rcIdentify } = useSubscription();
   const autoLoginTriggeredRef = useRef(false);
 
   useEffect(() => {
@@ -61,6 +62,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
           setError('Subscription successful! Please sign in manually.');
           setShowSignupPaywall(false);
           setSignedUpUserId(null);
+          setSignedUpSession(null);
           setIsSignUp(false);
           return;
         }
@@ -71,16 +73,37 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
         setError('Subscription successful! Please sign in manually.');
         setShowSignupPaywall(false);
         setSignedUpUserId(null);
+        setSignedUpSession(null);
         setIsSignUp(false);
       }
     })();
   }, [isPro, showSignupPaywall, signedUpUserId, email, password, onLoginSuccess]);
+
+  const handleSignupPaywallLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error('Signup paywall sign-out failed:', err);
+    } finally {
+      setShowSignupPaywall(false);
+      setShowGenderStep(false);
+      setSignedUpUserId(null);
+      setSignedUpSession(null);
+      setSelectedGender(null);
+      setShowAuthForm(false);
+      setIsSignUp(false);
+      setError(null);
+      autoLoginTriggeredRef.current = false;
+    }
+  };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     setSuccess(null);
+    setSignedUpUserId(null);
+    setSignedUpSession(null);
 
     try {
       const response = await fetch(
@@ -103,7 +126,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
 
       // The signup route creates the user but returns no session. Sign in with
       // the same credentials now so the following onboarding steps
-      // (schools/select, auth/update-profile) have a JWT — they all go through
+      // (schools/select, auth/update-profile) have a JWT - they all go through
       // authedPost and 401 without one.
       const { data: signInData, error: signInError } =
         await supabase.auth.signInWithPassword({ email, password });
@@ -111,6 +134,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
       if (signInError || !signInData.session) {
         console.error('Post-signup sign-in failed:', signInError);
         setIsSignUp(false);
+        setSignedUpSession(null);
         setError(
           'Your account was created, but signing you in failed. Please sign in with your new email and password.'
         );
@@ -118,6 +142,10 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
       }
 
       setSignedUpUserId(data.user.id);
+      setSignedUpSession({
+        user: signInData.user,
+        accessToken: signInData.session.access_token,
+      });
     } catch (err: any) {
       console.error('Sign up error:', err);
       setError(err.message || 'Failed to create account. Please try again.');
@@ -158,7 +186,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
   // Signup Paywall (after gender selection)
   if (showSignupPaywall && signedUpUserId) {
     return (
-      <SubscriptionPage mandatory />
+      <SubscriptionPage mandatory onLogout={handleSignupPaywallLogout} />
     );
   }
 
@@ -170,6 +198,11 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
         selectedGender={selectedGender}
         onSelectGender={setSelectedGender}
         onComplete={async () => {
+          if (!subscriptionsAvailable && signedUpSession) {
+            onLoginSuccess(signedUpSession.user, signedUpSession.accessToken);
+            return;
+          }
+
           // Identify the new user with RevenueCat before showing paywall
           try {
             await rcIdentify(signedUpUserId);

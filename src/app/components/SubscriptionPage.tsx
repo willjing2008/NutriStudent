@@ -12,6 +12,7 @@ import {
   Settings,
 } from 'lucide-react';
 import { useSubscription } from '../hooks/useSubscription';
+import { SUBSCRIPTIONS_UNAVAILABLE_MESSAGE } from '../services/revenuecat';
 import type { PurchasesPackage } from '../services/revenuecat';
 
 interface SubscriptionPageProps {
@@ -67,6 +68,7 @@ export function SubscriptionPage({ onBack, mandatory = false, onLogout }: Subscr
   const {
     isPro,
     isLoading,
+    subscriptionsAvailable,
     packages,
     customerInfo,
     purchase,
@@ -141,7 +143,7 @@ export function SubscriptionPage({ onBack, mandatory = false, onLogout }: Subscr
           </div>
         </div>
 
-        {/* Bottom action — pinned */}
+        {/* Bottom action - pinned */}
         <div className="px-5 pb-6 pt-2 shrink-0">
           <button
             onClick={showCustomerCenter}
@@ -159,6 +161,14 @@ export function SubscriptionPage({ onBack, mandatory = false, onLogout }: Subscr
 
   const handlePurchase = async () => {
     setError(null);
+
+    // Subscriptions are disabled in this build (RevenueCat not configured) -
+    // never call into the SDK; an unconfigured native paywall call is fatal.
+    if (!subscriptionsAvailable) {
+      setError(SUBSCRIPTIONS_UNAVAILABLE_MESSAGE);
+      return;
+    }
+
     const pkg = packages[selectedPlan];
 
     if (!pkg) {
@@ -176,6 +186,10 @@ export function SubscriptionPage({ onBack, mandatory = false, onLogout }: Subscr
 
   const handleRestore = async () => {
     setError(null);
+    if (!subscriptionsAvailable) {
+      setError(SUBSCRIPTIONS_UNAVAILABLE_MESSAGE);
+      return;
+    }
     const result = await restore();
     if (!result.success) {
       setError(result.error ?? 'No previous purchases found.');
@@ -268,6 +282,13 @@ export function SubscriptionPage({ onBack, mandatory = false, onLogout }: Subscr
           })}
         </div>
 
+        {/* Subscriptions disabled in this build */}
+        {!subscriptionsAvailable && (
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-amber-400 text-sm text-center">
+            {SUBSCRIPTIONS_UNAVAILABLE_MESSAGE}
+          </div>
+        )}
+
         {/* Error message */}
         {error && (
           <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 text-red-400 text-sm text-center">
@@ -276,12 +297,12 @@ export function SubscriptionPage({ onBack, mandatory = false, onLogout }: Subscr
         )}
       </div>
 
-      {/* Bottom actions — pinned */}
+      {/* Bottom actions - pinned */}
       <div className="px-5 pb-6 pt-2 shrink-0 space-y-3">
         {/* Subscribe button */}
         <button
           onClick={handlePurchase}
-          disabled={isLoading}
+          disabled={isLoading || !subscriptionsAvailable}
           className="w-full py-4 bg-gradient-to-r from-[#22C55E] to-[#16A34A] text-white font-bold text-lg rounded-2xl disabled:opacity-50 transition-opacity flex items-center justify-center gap-2"
         >
           {isLoading ? (

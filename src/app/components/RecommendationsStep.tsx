@@ -126,6 +126,15 @@ const MEAL_TYPE_LABELS: Record<string, string> = {
 const LOCAL_IMAGE_FALLBACK =
   'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjI0MCIgdmlld0JveD0iMCAwIDMyMCAyNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjMyMCIgaGVpZ2h0PSIyNDAiIGZpbGw9IiMxNDJBMUQiLz48Y2lyY2xlIGN4PSIxNjAiIGN5PSIxMDAiIHI9IjQwIiBmaWxsPSIjMUU0MDI5Ii8+PHJlY3QgeD0iNzIiIHk9IjE2MiIgd2lkdGg9IjE3NiIgaGVpZ2h0PSIxMiIgcng9IjYiIGZpbGw9IiMyMkM1NUUiIG9wYWNpdHk9IjAuNzUiLz48L3N2Zz4=';
 
+const formatOptionalNumber = (value: unknown, suffix = ''): string =>
+  typeof value === 'number' && Number.isFinite(value) ? `${value}${suffix}` : '-';
+
+const safeCost = (meal: { totalCost?: unknown }): number =>
+  typeof meal.totalCost === 'number' && Number.isFinite(meal.totalCost) ? meal.totalCost : 0;
+
+const getErrorMessage = (err: unknown, fallback: string): string =>
+  err instanceof Error && err.message.trim() ? err.message : fallback;
+
 
 export function RecommendationsStep({
   preferences, onBack, onReset, onSaveMealPlan, onDeletePlan, activePlanId,
@@ -186,6 +195,7 @@ export function RecommendationsStep({
   const [scheduleEditorTab, setScheduleEditorTab] = useState<'classes' | 'exams' | 'sleep'>('classes');
   const [showCalendarImport, setShowCalendarImport] = useState(false);
   const [savingSchedule, setSavingSchedule] = useState(false);
+  const [scheduleSaveError, setScheduleSaveError] = useState<string | null>(null);
 
   // Whether we're operating in queue mode (queue exists and has meals)
   const isQueueMode = !!(currentWeekMealPlan?.meals?.length);
@@ -309,7 +319,7 @@ export function RecommendationsStep({
     if (hour < 17) return 'Good Afternoon';
     return 'Good Evening';
   }
-  
+
   const handleSavePlan = async () => {
     if (!mealPlan || !onSaveMealPlan || !user) return;
 
@@ -329,14 +339,14 @@ export function RecommendationsStep({
       setSavingPlan(false);
     }
   };
-  
+
   // Check if required preferences are set
   const hasRequiredPreferences = preferences.goal !== null;
 
   useEffect(() => {
     // Queue mode owns the rendered plan (synced from currentWeekMealPlan
     // above). Seeding from the saved plan here would render one plan while
-    // swap/mark-cooked mutate the queue — the wrong-slot P0: mutations landed
+    // swap/mark-cooked mutate the queue - the wrong-slot P0: mutations landed
     // on queue slots derived from the saved plan's unrelated day numbers.
     if (currentWeekMealPlan?.meals?.length) return;
     // If a saved plan was passed in, use it directly instead of generating a new one
@@ -365,7 +375,7 @@ export function RecommendationsStep({
       setLoading(false);
     }
   }, [initialSavedPlan]);
-  
+
   useEffect(() => {
     const getUser = async () => {
       const { data: { user: currentUser } } = await supabase.auth.getUser();
@@ -449,6 +459,21 @@ export function RecommendationsStep({
     return () => cancelAnimationFrame(raf);
   }, [selectedCalendarOffset]);
 
+  const saveScheduleOrThrow = async (
+    userId: string,
+    schedule: Omit<AcademicSchedule, 'updatedAt'>,
+    mealTimes?: MealTimes,
+  ) => {
+    if (!onSaveSchedule) {
+      throw new Error('Could not save your schedule. Please try again.');
+    }
+    const saved = await onSaveSchedule(userId, schedule, mealTimes);
+    if (!saved) {
+      throw new Error('Could not save your schedule. Please try again.');
+    }
+    return saved;
+  };
+
   // Schedule editor save
   const handleSaveSchedule = async (
     newSchedule: Omit<AcademicSchedule, 'updatedAt'>,
@@ -458,6 +483,7 @@ export function RecommendationsStep({
     if (!user || !onSaveSchedule) return;
     setSavingSchedule(true);
     try {
+      setScheduleSaveError(null);
       const effectiveMealTimes = newMealTimes || preferences.mealTimes;
       // Propagate meal time / slot changes to parent preferences
       if (onUpdatePreferences) {
@@ -466,7 +492,7 @@ export function RecommendationsStep({
         if (newSelectedSlots) updates.selectedMealSlots = newSelectedSlots;
         if (Object.keys(updates).length) onUpdatePreferences(updates);
       }
-      await onSaveSchedule(user.id, newSchedule, effectiveMealTimes);
+      await saveScheduleOrThrow(user.id, newSchedule, effectiveMealTimes);
       setShowScheduleEditor(false);
       // Check if testing period status changed and queue needs regeneration
       if (onCheckQueueTestingChange) {
@@ -484,6 +510,7 @@ export function RecommendationsStep({
       }
     } catch (err) {
       console.error('Failed to save schedule:', err);
+      setScheduleSaveError(getErrorMessage(err, 'Could not save your schedule. Please try again.'));
     } finally {
       setSavingSchedule(false);
     }
@@ -492,13 +519,14 @@ export function RecommendationsStep({
   // Persist classes imported from the system calendar. Reuses the existing
   // save-academic-schedule pipeline and PRESERVES the non-calendar fields
   // (testing periods, sleep, meal-time overrides) so focus mode, sleep dinners
-  // and conflict overrides keep working — buildAcademicSchedule replaces the
+  // and conflict overrides keep working - buildAcademicSchedule replaces the
   // whole blob, so anything omitted here would be wiped.
   const handleImportClasses = async (classes: ClassEntry[]) => {
     if (!user || !onSaveSchedule) return;
     setSavingSchedule(true);
     try {
-      await onSaveSchedule(
+      setScheduleSaveError(null);
+      await saveScheduleOrThrow(
         user.id,
         {
           classes,
@@ -511,6 +539,9 @@ export function RecommendationsStep({
       setShowCalendarImport(false);
     } catch (err) {
       console.error('Failed to import classes:', err);
+      const message = getErrorMessage(err, 'Could not import your classes. Please try again.');
+      setScheduleSaveError(message);
+      throw new Error(message);
     } finally {
       setSavingSchedule(false);
     }
@@ -597,7 +628,7 @@ export function RecommendationsStep({
         meal.id === mealId ? data.replacementMeal : meal
       );
 
-      const newTotalCost = updatedMeals.reduce((sum, meal) => sum + meal.totalCost, 0);
+      const newTotalCost = updatedMeals.reduce((sum, meal) => sum + safeCost(meal), 0);
 
       setMealPlan(({
         ...mealPlan,
@@ -624,7 +655,7 @@ export function RecommendationsStep({
     }
   };
 
-  // Called by MealSwapModal, which awaits it and only closes on success —
+  // Called by MealSwapModal, which awaits it and only closes on success -
   // a thrown error keeps the modal open and is shown to the user.
   const handleMealSwap = async (newMeal: MealPlanMeal) => {
     if (!mealPlan || !selectedMealForSwap) return;
@@ -668,7 +699,7 @@ export function RecommendationsStep({
         : meal
     );
 
-    const newTotalCost = updatedMeals.reduce((sum, meal) => sum + meal.totalCost, 0);
+    const newTotalCost = updatedMeals.reduce((sum, meal) => sum + safeCost(meal), 0);
 
     const updatedPlan = {
       ...mealPlan,
@@ -828,9 +859,9 @@ export function RecommendationsStep({
   // Group meals by day
   const groupMealsByDay = (): Record<number, MealPlanMeal[]> => {
     if (!mealPlan) return {};
-    
+
     const grouped: Record<number, MealPlanMeal[]> = {};
-    
+
     mealPlan.meals.forEach(meal => {
       const day = meal.dayNumber || 1;
       if (!grouped[day]) {
@@ -838,7 +869,7 @@ export function RecommendationsStep({
       }
       grouped[day].push(meal);
     });
-    
+
     return grouped;
   };
 
@@ -890,7 +921,7 @@ export function RecommendationsStep({
     return days;
   })();
 
-  // Calculate nutrition for selected day — only cooked/eaten meals count toward progress
+  // Calculate nutrition for selected day - only cooked/eaten meals count toward progress
   const todayNutrition = currentDayMeals
     .filter(meal => isMealCooked(meal))
     .reduce(
@@ -920,8 +951,8 @@ export function RecommendationsStep({
 
 
   // Prepare shopping list
-  const allIngredients = mealPlan?.meals.flatMap(meal => 
-    meal.ingredients.map(ing => ({
+  const allIngredients = mealPlan?.meals.flatMap(meal =>
+    (meal.ingredients ?? []).map(ing => ({
       ...ing,
       checked: false,
     }))
@@ -966,17 +997,17 @@ export function RecommendationsStep({
             </button>
           </div>
         </div>
-        
+
         {/* Bottom Navigation */}
-        <BottomNavigation 
-          activeTab={activeNavTab || 'plan'} 
+        <BottomNavigation
+          activeTab={activeNavTab || 'plan'}
           onTabChange={(tab) => {
             if (onNavTabChange) {
               onNavTabChange(tab);
             } else if (tab === 'home' && onNavigateHome) {
               onNavigateHome();
             }
-          }} 
+          }}
         />
       </div>
     );
@@ -1063,6 +1094,11 @@ export function RecommendationsStep({
               setShowScheduleEditor(true);
             }}
           />
+          {scheduleSaveError && (
+            <div role="alert" className="mx-5 mt-3 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
+              {scheduleSaveError}
+            </div>
+          )}
           {/* Calendar Import Modal (native only) */}
           {showCalendarImport && calendarImportSupported && (
             <CalendarImportModal
@@ -1087,11 +1123,11 @@ export function RecommendationsStep({
         </>
       )}
 
-      {/* Meals View — only show when on meals sub-tab */}
+      {/* Meals View - only show when on meals sub-tab */}
       {planSubView === 'meals' && (
       <>
 
-      {/* Calendar — scrollable, anchored to plan start date */}
+      {/* Calendar - scrollable, anchored to plan start date */}
       <div className="mb-4">
         {/* Month / year label for selected day */}
         <div className="px-5 mb-2 flex items-center gap-2">
@@ -1135,7 +1171,7 @@ export function RecommendationsStep({
                   <span className={`text-lg font-bold leading-none ${isSelected ? 'text-[#052E16]' : 'text-white'}`}>
                     {day.dateNum}
                   </span>
-                  {/* Dot — green for days in plan, dim for today indicator */}
+                  {/* Dot - green for days in plan, dim for today indicator */}
                   <div className={`w-1.5 h-1.5 rounded-full mt-1 ${
                     day.hasMeals
                       ? isSelected ? 'bg-[#052E16]/40' : 'bg-[#22C55E]'
@@ -1151,14 +1187,14 @@ export function RecommendationsStep({
       {/* Daily Goal Card */}
       <div className="px-5 mb-6">
         <div className="relative rounded-3xl overflow-hidden">
-          <div 
+          <div
             className="absolute inset-0 bg-cover bg-center"
             style={{
               backgroundImage: 'url(https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&h=400&fit=crop)',
             }}
           />
           <div className="absolute inset-0 bg-gradient-to-r from-[#0A1F13]/95 via-[#0A1F13]/80 to-[#0A1F13]/60" />
-          
+
           <div className="relative p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2 px-3 py-1.5 bg-[#22C55E] rounded-full">
@@ -1169,7 +1205,7 @@ export function RecommendationsStep({
                 <Flame className="w-6 h-6 text-[#22C55E]" />
                               </div>
                             </div>
-                            
+
             <h2 className="text-4xl font-bold text-white mb-1">{Math.min(caloriePercentage, 100)}%</h2>
             <p className="text-xl text-white/80 mb-2">On Track</p>
             <p className="text-[#9CA3AF] text-sm">
@@ -1180,7 +1216,7 @@ export function RecommendationsStep({
                               </div>
                             </div>
                           </div>
-                          
+
       {/* Stats Cards */}
       <div className="px-5 mb-6">
         <div className="grid grid-cols-2 gap-4">
@@ -1309,7 +1345,7 @@ export function RecommendationsStep({
             const isCooked = isMealCooked(meal);
             const mealType = meal.mealType?.toLowerCase() || 'meal';
             const mealImageCandidates = getMealImageCandidates(meal);
-            
+
             return (
               <div
                 key={meal.id}
@@ -1318,8 +1354,8 @@ export function RecommendationsStep({
                                     setShowRecipeModal(true);
                                   }}
                 className={`bg-[#142A1D] rounded-2xl overflow-hidden border transition-all cursor-pointer hover:border-[#22C55E]/50 ${
-                  isCooked 
-                    ? 'border-[#22C55E]/50 bg-[#22C55E]/5' 
+                  isCooked
+                    ? 'border-[#22C55E]/50 bg-[#22C55E]/5'
                     : 'border-[#1E4029]'
                 }`}
               >
@@ -1352,10 +1388,10 @@ export function RecommendationsStep({
                     <div className="flex flex-nowrap items-center gap-1.5 mt-2 text-[11px] text-[#6B7280] whitespace-nowrap">
                       <span className="flex items-center gap-1 shrink-0">
                         <Flame className="w-3.5 h-3.5" />
-                        {meal.nutrition?.calories} kcal
+                        {formatOptionalNumber(meal.nutrition?.calories)} kcal
                       </span>
                       <span className="shrink-0">•</span>
-                      <span className="text-[#22C55E] shrink-0">{meal.nutrition?.protein}g protein</span>
+                      <span className="text-[#22C55E] shrink-0">{formatOptionalNumber(meal.nutrition?.protein, 'g')} protein</span>
                       {meal.timesCooked !== undefined && (
                         <>
                           <span className="shrink-0">•</span>
@@ -1449,7 +1485,7 @@ export function RecommendationsStep({
       )}
       {/* End of planSubView === 'meals' conditional */}
 
-      {/* Shared Bottom Navigation — hidden when recipe details or swap modal are open */}
+      {/* Shared Bottom Navigation - hidden when recipe details or swap modal are open */}
       {!showRecipeModal && !showMealSwapModal && (
         <BottomNavigation
           activeTab={activeNavTab || 'plan'}
@@ -1541,7 +1577,7 @@ export function RecommendationsStep({
                 <X className="w-5 h-5 text-[#9CA3AF]" />
               </button>
             </div>
-            
+
             {/* Recipe Image */}
             <div className="relative h-48 bg-[#142A1D]">
               <img
@@ -1576,23 +1612,23 @@ export function RecommendationsStep({
               {/* Nutrition Grid */}
               <div className="grid grid-cols-5 gap-2">
                 <div className="bg-[#142A1D] rounded-xl p-3 text-center border border-[#1E4029]">
-                  <div className="text-lg font-bold text-white">{selectedMeal.nutrition.calories}</div>
+                  <div className="text-lg font-bold text-white">{formatOptionalNumber(selectedMeal.nutrition?.calories)}</div>
                   <div className="text-xs text-[#6B7280]">kcal</div>
                 </div>
                 <div className="bg-[#142A1D] rounded-xl p-3 text-center border border-[#1E4029]">
-                  <div className="text-lg font-bold text-[#22C55E]">{selectedMeal.nutrition.protein}g</div>
+                  <div className="text-lg font-bold text-[#22C55E]">{formatOptionalNumber(selectedMeal.nutrition?.protein, 'g')}</div>
                   <div className="text-xs text-[#6B7280]">Protein</div>
                 </div>
                 <div className="bg-[#142A1D] rounded-xl p-3 text-center border border-[#1E4029]">
-                  <div className="text-lg font-bold text-[#4ADE80]">{selectedMeal.nutrition.carbs}g</div>
+                  <div className="text-lg font-bold text-[#4ADE80]">{formatOptionalNumber(selectedMeal.nutrition?.carbs, 'g')}</div>
                   <div className="text-xs text-[#6B7280]">Carbs</div>
                 </div>
                 <div className="bg-[#142A1D] rounded-xl p-3 text-center border border-[#1E4029]">
-                  <div className="text-lg font-bold text-[#86EFAC]">{selectedMeal.nutrition.fats}g</div>
+                  <div className="text-lg font-bold text-[#86EFAC]">{formatOptionalNumber(selectedMeal.nutrition?.fats, 'g')}</div>
                   <div className="text-xs text-[#6B7280]">Fats</div>
                 </div>
                 <div className="bg-[#142A1D] rounded-xl p-3 text-center border border-[#1E4029]">
-                  <div className="text-lg font-bold text-[#BBF7D0]">{selectedMeal.nutrition.fiber || 0}g</div>
+                  <div className="text-lg font-bold text-[#BBF7D0]">{formatOptionalNumber(selectedMeal.nutrition?.fiber, 'g')}</div>
                   <div className="text-xs text-[#6B7280]">Fiber</div>
                 </div>
               </div>
@@ -1665,12 +1701,16 @@ export function RecommendationsStep({
               <div>
                 <h4 className="text-white font-semibold mb-3">Ingredients</h4>
                 <div className="space-y-2">
-                  {selectedMeal.ingredients.map((ingredient, index) => (
-                    <div key={index} className="flex items-start gap-3 px-3 py-2.5 bg-[#142A1D] rounded-xl border border-[#1E4029]">
-                      <div className="w-2 h-2 rounded-full bg-[#22C55E] mt-1.5 flex-shrink-0" />
-                      <span className="text-white text-sm leading-relaxed">{ingredient.name}</span>
-                    </div>
-                  ))}
+                  {(selectedMeal.ingredients ?? []).length ? (
+                    (selectedMeal.ingredients ?? []).map((ingredient, index) => (
+                      <div key={index} className="flex items-start gap-3 px-3 py-2.5 bg-[#142A1D] rounded-xl border border-[#1E4029]">
+                        <div className="w-2 h-2 rounded-full bg-[#22C55E] mt-1.5 flex-shrink-0" />
+                        <span className="text-white text-sm leading-relaxed">{ingredient.name || 'Unnamed ingredient'}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-[#9CA3AF] text-sm">No ingredients listed.</p>
+                  )}
                 </div>
               </div>
 
@@ -1678,14 +1718,18 @@ export function RecommendationsStep({
               <div>
                 <h4 className="text-white font-semibold mb-3">Instructions</h4>
                 <ol className="space-y-3">
-                  {selectedMeal.instructions.map((instruction, index) => (
-                    <li key={index} className="flex gap-3">
-                      <div className="flex-shrink-0 w-7 h-7 rounded-full bg-[#22C55E] text-[#052E16] flex items-center justify-center font-semibold text-sm">
-                        {index + 1}
-                      </div>
-                      <p className="text-[#9CA3AF] text-sm pt-1 flex-1">{instruction}</p>
-                    </li>
-                  ))}
+                  {(selectedMeal.instructions ?? []).length ? (
+                    (selectedMeal.instructions ?? []).map((instruction, index) => (
+                      <li key={index} className="flex gap-3">
+                        <div className="flex-shrink-0 w-7 h-7 rounded-full bg-[#22C55E] text-[#052E16] flex items-center justify-center font-semibold text-sm">
+                          {index + 1}
+                        </div>
+                        <p className="text-[#9CA3AF] text-sm pt-1 flex-1">{instruction}</p>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="text-[#9CA3AF] text-sm">No instructions listed.</li>
+                  )}
                 </ol>
               </div>
 

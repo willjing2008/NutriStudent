@@ -29,6 +29,15 @@ if (!import.meta.env.VITE_REVENUECAT_IOS_API_KEY && import.meta.env.PROD) {
 
 export const ENTITLEMENT_ID = 'NutriStudent Pro';
 
+/**
+ * User-facing message for builds where the RevenueCat SDK was never configured
+ * (production bundle without VITE_REVENUECAT_IOS_API_KEY). Purchases are
+ * deliberately disabled in those builds; the UI shows this instead of calling
+ * into the SDK.
+ */
+export const SUBSCRIPTIONS_UNAVAILABLE_MESSAGE =
+  "Subscriptions aren't available in this build yet. Please check back after the next update.";
+
 export const PRODUCT_IDS = {
   monthly: 'monthly',
   yearly: 'yearly',
@@ -74,13 +83,28 @@ const EMPTY_CUSTOMER_INFO: CustomerInfo = {
 
 let isInitialized = false;
 
+// True only after Purchases.configure succeeded on a native platform. When
+// false on native, NO RevenueCat call may reach the SDK: the native layer
+// (e.g. RevenueCatUI's PaywallView) fatalError()s a Release build when
+// Purchases is unconfigured - a JS try/catch cannot stop that. Every exported
+// function below must therefore check sdkUnavailable() before touching the SDK.
+let isConfigured = false;
+
+/** True when RevenueCat was successfully configured and purchases can be attempted. */
+export function isRevenueCatConfigured(): boolean {
+  return isConfigured;
+}
+
+/** Native platform but the SDK was never configured - all SDK calls must be skipped. */
+const sdkUnavailable = (): boolean => isNativePlatform && !isConfigured;
+
 /**
  * Initialize the RevenueCat SDK. Call this once at app startup.
  * Pass an optional `appUserID` to identify a logged-in user; omit for anonymous.
  */
 export async function initializeRevenueCat(appUserID?: string): Promise<void> {
   if (!isNativePlatform) {
-    console.info('[RevenueCat] Skipping init — running on web');
+    console.info('[RevenueCat] Skipping init - running on web');
     isInitialized = true;
     return;
   }
@@ -88,7 +112,7 @@ export async function initializeRevenueCat(appUserID?: string): Promise<void> {
 
   if (!REVENUECAT_API_KEY) {
     console.error(
-      '[RevenueCat] No API key for this build — skipping configure; subscriptions disabled.',
+      '[RevenueCat] No API key for this build - skipping configure; subscriptions disabled.',
     );
     return;
   }
@@ -100,6 +124,7 @@ export async function initializeRevenueCat(appUserID?: string): Promise<void> {
       ...(appUserID ? { appUserID } : {}),
     });
     isInitialized = true;
+    isConfigured = true;
     console.log('[RevenueCat] SDK initialized');
   } catch (error) {
     console.error('[RevenueCat] Failed to initialize:', error);
@@ -115,6 +140,7 @@ export async function initializeRevenueCat(appUserID?: string): Promise<void> {
  */
 export async function loginUser(appUserID: string): Promise<CustomerInfo> {
   if (!isNativePlatform) return EMPTY_CUSTOMER_INFO;
+  if (sdkUnavailable()) return EMPTY_CUSTOMER_INFO;
 
   try {
     const { customerInfo } = await Purchases.logIn({ appUserID });
@@ -131,6 +157,7 @@ export async function loginUser(appUserID: string): Promise<CustomerInfo> {
  */
 export async function logoutUser(): Promise<CustomerInfo> {
   if (!isNativePlatform) return EMPTY_CUSTOMER_INFO;
+  if (sdkUnavailable()) return EMPTY_CUSTOMER_INFO;
 
   try {
     const { customerInfo } = await Purchases.logOut();
@@ -149,6 +176,7 @@ export async function logoutUser(): Promise<CustomerInfo> {
  */
 export async function getCustomerInfo(): Promise<CustomerInfo> {
   if (!isNativePlatform) return EMPTY_CUSTOMER_INFO;
+  if (sdkUnavailable()) return EMPTY_CUSTOMER_INFO;
 
   try {
     const { customerInfo } = await Purchases.getCustomerInfo();
@@ -167,6 +195,7 @@ export async function addCustomerInfoListener(
   callback: (info: CustomerInfo) => void,
 ): Promise<void> {
   if (!isNativePlatform) return;
+  if (sdkUnavailable()) return;
   await Purchases.addCustomerInfoUpdateListener(callback);
 }
 
@@ -195,6 +224,7 @@ export async function checkProAccess(): Promise<boolean> {
  */
 export async function getOfferings(): Promise<PurchasesOfferings> {
   if (!isNativePlatform) return { all: {}, current: null } as unknown as PurchasesOfferings;
+  if (sdkUnavailable()) return { all: {}, current: null } as unknown as PurchasesOfferings;
 
   try {
     const offerings = await Purchases.getOfferings();
@@ -245,6 +275,9 @@ export async function purchasePackage(
   if (!isNativePlatform) {
     return { success: false, error: 'Purchases are not available on web.' };
   }
+  if (sdkUnavailable()) {
+    return { success: false, error: SUBSCRIPTIONS_UNAVAILABLE_MESSAGE };
+  }
 
   try {
     const { customerInfo } = await Purchases.purchasePackage({
@@ -263,11 +296,14 @@ export async function purchasePackage(
 // ── Restore Purchases ──────────────────────────────────────────────────────────
 
 /**
- * Restore previous purchases (user-initiated only — shows OS sign-in prompt).
+ * Restore previous purchases (user-initiated only - shows OS sign-in prompt).
  */
 export async function restorePurchases(): Promise<PurchaseResult> {
   if (!isNativePlatform) {
     return { success: false, error: 'Restore is not available on web.' };
+  }
+  if (sdkUnavailable()) {
+    return { success: false, error: SUBSCRIPTIONS_UNAVAILABLE_MESSAGE };
   }
 
   try {
@@ -280,10 +316,11 @@ export async function restorePurchases(): Promise<PurchaseResult> {
 }
 
 /**
- * Programmatic sync — safe to call silently without user interaction.
+ * Programmatic sync - safe to call silently without user interaction.
  */
 export async function syncPurchases(): Promise<void> {
   if (!isNativePlatform) return;
+  if (sdkUnavailable()) return;
 
   try {
     await Purchases.syncPurchases();
@@ -302,6 +339,13 @@ export async function presentPaywall(
 ): Promise<boolean> {
   if (!isNativePlatform) {
     console.warn('[RevenueCat] Paywalls are not available on web.');
+    return false;
+  }
+  // CRASH GUARD: RevenueCatUI's PaywallView fatalError()s a non-DEBUG build
+  // when Purchases is unconfigured (DebugErrorView releaseBehavior: .fatalError).
+  // Never present the paywall without a configured SDK.
+  if (sdkUnavailable()) {
+    console.warn('[RevenueCat] Paywall skipped - SDK not configured in this build.');
     return false;
   }
 
@@ -335,6 +379,11 @@ export async function presentPaywallIfNeeded(
     console.warn('[RevenueCat] Paywalls are not available on web.');
     return false;
   }
+  // Same native fatalError as presentPaywall - never call unconfigured.
+  if (sdkUnavailable()) {
+    console.warn('[RevenueCat] Paywall skipped - SDK not configured in this build.');
+    return false;
+  }
 
   try {
     const { result } = await RevenueCatUI.presentPaywallIfNeeded({
@@ -362,6 +411,10 @@ export async function presentPaywallIfNeeded(
 export async function presentCustomerCenter(): Promise<void> {
   if (!isNativePlatform) {
     console.warn('[RevenueCat] Customer Center is not available on web.');
+    return;
+  }
+  if (sdkUnavailable()) {
+    console.warn('[RevenueCat] Customer Center skipped - SDK not configured in this build.');
     return;
   }
 

@@ -17,6 +17,7 @@ type PurchaseResult = {
 type SubState = {
   isPro: boolean;
   isLoading: boolean;
+  subscriptionsAvailable: boolean;
   packages: { monthly?: PurchasesPackage; yearly?: PurchasesPackage };
   customerInfo: unknown;
   purchase: ReturnType<typeof vi.fn>;
@@ -58,6 +59,7 @@ function setSubState(overrides: Partial<SubState> = {}): SubState {
   const state: SubState = {
     isPro: false,
     isLoading: false,
+    subscriptionsAvailable: true,
     packages: { yearly: YEARLY_PKG, monthly: MONTHLY_PKG },
     customerInfo: null,
     purchase: vi.fn().mockResolvedValue({ success: true } as PurchaseResult),
@@ -86,7 +88,7 @@ beforeEach(() => {
   setSubState();
 });
 
-describe('SubscriptionPage — paywall view', () => {
+describe('SubscriptionPage - paywall view', () => {
   it('renders the upgrade headline and both plan options', () => {
     render(<SubscriptionPage />);
 
@@ -125,7 +127,7 @@ describe('SubscriptionPage — paywall view', () => {
   });
 });
 
-describe('SubscriptionPage — subscribe action', () => {
+describe('SubscriptionPage - subscribe action', () => {
   it('purchases the default (Yearly) package when Subscribe is pressed', async () => {
     const state = setSubState();
     render(<SubscriptionPage />);
@@ -198,9 +200,25 @@ describe('SubscriptionPage — subscribe action', () => {
     expect(subscribeBtn).not.toBeNull();
     expect(subscribeBtn).toBeDisabled();
   });
+
+  it('disables purchases and shows a clear unavailable state when RevenueCat is unconfigured', () => {
+    const state = setSubState({ subscriptionsAvailable: false });
+    render(<SubscriptionPage />);
+
+    expect(
+      screen.getByText("Subscriptions aren't available in this build yet. Please check back after the next update."),
+    ).toBeInTheDocument();
+
+    const subscribeButton = screen.getByRole('button', { name: /Subscribe Now/i });
+    expect(subscribeButton).toBeDisabled();
+    fireEvent.click(subscribeButton);
+
+    expect(state.purchase).not.toHaveBeenCalled();
+    expect(state.showPaywall).not.toHaveBeenCalled();
+  });
 });
 
-describe('SubscriptionPage — restore action', () => {
+describe('SubscriptionPage - restore action', () => {
   it('calls restore when Restore Purchases is pressed', async () => {
     const state = setSubState();
     render(<SubscriptionPage />);
@@ -227,9 +245,23 @@ describe('SubscriptionPage — restore action', () => {
 
     expect(await screen.findByText('Nothing to restore')).toBeInTheDocument();
   });
+
+  it('does not call restore when subscriptions are unavailable', async () => {
+    const state = setSubState({ subscriptionsAvailable: false });
+    render(<SubscriptionPage />);
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /Restore Purchases/i }),
+    );
+
+    expect(
+      await screen.findAllByText("Subscriptions aren't available in this build yet. Please check back after the next update."),
+    ).toHaveLength(2);
+    expect(state.restore).not.toHaveBeenCalled();
+  });
 });
 
-describe('SubscriptionPage — sign out & back', () => {
+describe('SubscriptionPage - sign out & back', () => {
   it('renders the Sign out link and fires onLogout when pressed', () => {
     const onLogout = vi.fn();
     render(<SubscriptionPage onLogout={onLogout} />);
@@ -263,7 +295,7 @@ describe('SubscriptionPage — sign out & back', () => {
   });
 });
 
-describe('SubscriptionPage — active subscriber view', () => {
+describe('SubscriptionPage - active subscriber view', () => {
   it('shows the active state and Manage Subscription instead of the paywall', () => {
     setSubState({ isPro: true });
     render(<SubscriptionPage />);

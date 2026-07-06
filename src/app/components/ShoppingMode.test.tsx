@@ -21,7 +21,7 @@ type ShoppingIngredient = {
 };
 
 // NOTE: ShoppingMode re-categorizes by ingredient *name* (categorizeIngredient),
-// not by the `category` field — the field is intentionally "wrong" here to prove
+// not by the `category` field - the field is intentionally "wrong" here to prove
 // grouping comes from the name. Names chosen to land in 4 distinct sections:
 //   Spinach -> produce, Chicken Breast -> meat, Milk -> dairy, Olive Oil -> pantry
 function makeIngredient(
@@ -51,7 +51,7 @@ function getItemButton(name: string): HTMLElement {
   return screen.getByRole('button', { name: `${name}, mark as collected` });
 }
 
-describe('ShoppingMode — grouping by category', () => {
+describe('ShoppingMode - grouping by category', () => {
   it('renders each ingredient under its name-derived category section', () => {
     render(
       <ShoppingMode
@@ -88,7 +88,7 @@ describe('ShoppingMode — grouping by category', () => {
       />,
     );
 
-    // Two produce items, one dairy item — category counters reflect group sizes.
+    // Two produce items, one dairy item - category counters reflect group sizes.
     const produceHeader = screen.getByText('Fresh Produce').closest('div');
     const dairyHeader = screen.getByText('Dairy & Eggs').closest('div');
     expect(produceHeader).not.toBeNull();
@@ -106,7 +106,7 @@ describe('ShoppingMode — grouping by category', () => {
   });
 });
 
-describe('ShoppingMode — progress + footer state', () => {
+describe('ShoppingMode - progress + footer state', () => {
   it('starts at 0 collected / 0% with all items remaining', () => {
     render(
       <ShoppingMode
@@ -197,7 +197,7 @@ describe('ShoppingMode — progress + footer state', () => {
   });
 });
 
-describe('ShoppingMode — essentials + edge cases', () => {
+describe('ShoppingMode - essentials + edge cases', () => {
   it('counts missing essentials into the total and toggles them independently', () => {
     const essentials = [
       {
@@ -247,6 +247,27 @@ describe('ShoppingMode — essentials + edge cases', () => {
     );
 
     // Collapsed to a single item -> total of 1.
+    expect(screen.getByText('0 of 1 items collected')).toBeInTheDocument();
+    expect(
+      screen.getAllByRole('button', { name: /mark as collected/ }),
+    ).toHaveLength(1);
+  });
+
+  it('skips malformed ingredients without names instead of crashing the list', () => {
+    const ingredients = [
+      makeIngredient({ name: 'Milk' }),
+      { amount: '1', category: 'pantry', estimatedPrice: 0, checked: false },
+    ] as unknown as ShoppingIngredient[];
+
+    render(
+      <ShoppingMode
+        ingredients={ingredients}
+        storeName="Tesco"
+        onBack={vi.fn()}
+      />,
+    );
+
+    expect(getItemButton('Milk')).toBeInTheDocument();
     expect(screen.getByText('0 of 1 items collected')).toBeInTheDocument();
     expect(
       screen.getAllByRole('button', { name: /mark as collected/ }),

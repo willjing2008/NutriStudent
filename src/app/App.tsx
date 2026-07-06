@@ -69,7 +69,13 @@ export default function App() {
   const [onboardingStep, setOnboardingStep] = useState(2);
 
   // RevenueCat subscription
-  const { identify: rcIdentify, reset: rcReset, isPro, isReady } = useSubscription();
+  const {
+    identify: rcIdentify,
+    reset: rcReset,
+    isPro,
+    isReady,
+    subscriptionsAvailable,
+  } = useSubscription();
 
   // Academic calendar + recipe queue
   const calendar = useAcademicCalendar();
@@ -177,7 +183,7 @@ export default function App() {
   useEffect(() => {
     let safeAreaBg = '#0A1F13';
 
-    if (isAuthenticated && isReady && !isPro) {
+    if (isAuthenticated && isReady && !isPro && subscriptionsAvailable) {
       // Mandatory paywall screen
       safeAreaBg = '#0A0A0A';
     } else if (isAuthenticated && !showAdminDashboard && !isOnboarding) {
@@ -188,7 +194,7 @@ export default function App() {
     }
 
     document.documentElement.style.setProperty('--safe-area-bg', safeAreaBg);
-  }, [isAuthenticated, showAdminDashboard, isOnboarding, activeNavTab, isPro, isReady]);
+  }, [isAuthenticated, showAdminDashboard, isOnboarding, activeNavTab, isPro, isReady, subscriptionsAvailable]);
 
   // Persist gender selection to user_metadata
   useEffect(() => {
@@ -306,7 +312,7 @@ export default function App() {
     if (!user) return;
 
     // Let errors propagate so callers can roll back optimistic UI and surface a
-    // message — a swallowed failure made deleted plans silently reappear.
+    // message - a swallowed failure made deleted plans silently reappear.
     const data = await authedPost<{ success?: boolean }>('delete-meal-plan-by-id', {
       userId: user.id,
       planId,
@@ -349,7 +355,11 @@ export default function App() {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error('Sign-out failed:', err);
+    }
 
     // Reset RevenueCat identity
     try {
@@ -430,17 +440,21 @@ export default function App() {
     return (
       <>
         <NetworkStatusBanner />
-        <LoginPage onLoginSuccess={handleLoginSuccess} />
+        <ErrorBoundary label="Login">
+          <LoginPage onLoginSuccess={handleLoginSuccess} />
+        </ErrorBoundary>
       </>
     );
   }
 
-  // Mandatory Paywall — non-Pro authenticated users
-  if (isAuthenticated && isReady && !isPro) {
+  // Mandatory Paywall - non-Pro authenticated users
+  if (isAuthenticated && isReady && !isPro && subscriptionsAvailable) {
     return (
       <>
         <NetworkStatusBanner />
-        <SubscriptionPage mandatory onLogout={handleLogout} />
+        <ErrorBoundary label="Subscription">
+          <SubscriptionPage mandatory onLogout={handleLogout} />
+        </ErrorBoundary>
       </>
     );
   }
@@ -482,45 +496,47 @@ export default function App() {
     return (
       <div className="min-h-screen bg-[#0A1F13]">
         <NetworkStatusBanner />
-        {onboardingStep === 2 && (
-          <PreferencesStep
-            preferences={preferences}
-            updatePreferences={updatePreferences}
-            onNext={() => setOnboardingStep(3)}
-            onBack={() => {
-              setIsOnboarding(false);
-              setActiveNavTab('home');
-            }}
-          />
-        )}
-        {onboardingStep === 3 && (
-          <RecommendationsStep
-            preferences={preferences}
-            onBack={() => setOnboardingStep(2)}
-            onReset={() => {
-              resetPreferences();
-              setOnboardingStep(2);
-            }}
-            onSaveMealPlan={async (mealPlan) => {
-              const success = await saveMealPlan(mealPlan, undefined, activePlanId);
-              if (success) {
+        <ErrorBoundary label="Onboarding">
+          {onboardingStep === 2 && (
+            <PreferencesStep
+              preferences={preferences}
+              updatePreferences={updatePreferences}
+              onNext={() => setOnboardingStep(3)}
+              onBack={() => {
                 setIsOnboarding(false);
                 setActiveNavTab('home');
-              }
-              return success;
-            }}
-            onDeletePlan={deleteSavedMealPlanById}
-            activePlanId={activePlanId}
-            onNavigateHome={() => {
-              setIsOnboarding(false);
-              setActiveNavTab('home');
-            }}
-            onDiscard={() => {
-              setIsOnboarding(false);
-              setActiveNavTab('home');
-            }}
-          />
-        )}
+              }}
+            />
+          )}
+          {onboardingStep === 3 && (
+            <RecommendationsStep
+              preferences={preferences}
+              onBack={() => setOnboardingStep(2)}
+              onReset={() => {
+                resetPreferences();
+                setOnboardingStep(2);
+              }}
+              onSaveMealPlan={async (mealPlan) => {
+                const success = await saveMealPlan(mealPlan, undefined, activePlanId);
+                if (success) {
+                  setIsOnboarding(false);
+                  setActiveNavTab('home');
+                }
+                return success;
+              }}
+              onDeletePlan={deleteSavedMealPlanById}
+              activePlanId={activePlanId}
+              onNavigateHome={() => {
+                setIsOnboarding(false);
+                setActiveNavTab('home');
+              }}
+              onDiscard={() => {
+                setIsOnboarding(false);
+                setActiveNavTab('home');
+              }}
+            />
+          )}
+        </ErrorBoundary>
       </div>
     );
   }
@@ -531,100 +547,110 @@ export default function App() {
       <NetworkStatusBanner />
       {/* Home Tab - Meal Plans Dashboard */}
       {activeNavTab === 'home' && (
-        <MealPlansDashboard
-          user={user}
-          savedPlans={savedPlansHistory}
-          onCreateNew={() => startOnboarding(true)}
-          onViewPlan={() => setActiveNavTab('plan')}
-          onNavigateHome={() => setActiveNavTab('home')}
-          onNavigateGrocery={() => setActiveNavTab('shop')}
-          onNavigateProfile={() => setActiveNavTab('profile')}
-          onNavTabChange={handleNavTabChange}
-          onDeletePlan={deleteSavedMealPlanById}
-          activePlan={savedMealPlan ? {
-            id: activePlanId || 'active-plan',
-            name: savedPlansHistory[0]?.name || 'Your Current Plan',
-            description: `${preferences.goal === 'study' ? 'Study focus' : preferences.goal === 'work' ? 'Work efficiency' : 'Fitness'} meal plan`,
-            image: firstMealImage(savedMealPlan.meals),
-            calories: savedMealPlan.meals?.reduce((sum: number, m: any) => sum + (m.nutrition?.calories || 0), 0) || 0,
-            protein: savedMealPlan.meals?.reduce((sum: number, m: any) => sum + (m.nutrition?.protein || 0), 0) || 0,
-            isActive: true,
-          } : null}
-          onEditPlan={() => startOnboarding()}
-        />
+        <ErrorBoundary label="Home">
+          <MealPlansDashboard
+            user={user}
+            savedPlans={savedPlansHistory}
+            onCreateNew={() => startOnboarding(true)}
+            onViewPlan={() => setActiveNavTab('plan')}
+            onNavigateHome={() => setActiveNavTab('home')}
+            onNavigateGrocery={() => setActiveNavTab('shop')}
+            onNavigateProfile={() => setActiveNavTab('profile')}
+            onNavTabChange={handleNavTabChange}
+            onDeletePlan={deleteSavedMealPlanById}
+            activePlan={savedMealPlan ? {
+              id: activePlanId || 'active-plan',
+              name: savedPlansHistory[0]?.name || 'Your Current Plan',
+              description: `${preferences.goal === 'study' ? 'Study focus' : preferences.goal === 'work' ? 'Work efficiency' : 'Fitness'} meal plan`,
+              image: firstMealImage(savedMealPlan.meals),
+              calories: savedMealPlan.meals?.reduce((sum: number, m: any) => sum + (m.nutrition?.calories || 0), 0) || 0,
+              protein: savedMealPlan.meals?.reduce((sum: number, m: any) => sum + (m.nutrition?.protein || 0), 0) || 0,
+              isActive: true,
+            } : null}
+            onEditPlan={() => startOnboarding()}
+          />
+        </ErrorBoundary>
       )}
 
       {/* Plan Tab - Weekly Meal Plan View */}
       {activeNavTab === 'plan' && (
-        <RecommendationsStep
-          preferences={preferences}
-          onBack={() => setActiveNavTab('home')}
-          onReset={startOnboarding}
-          onSaveMealPlan={(mealPlan) => saveMealPlan(mealPlan, undefined, activePlanId)}
-          onDeletePlan={deleteSavedMealPlanById}
-          activePlanId={activePlanId}
-          onNavigateHome={() => setActiveNavTab('home')}
-          activeNavTab={activeNavTab}
-          onNavTabChange={handleNavTabChange}
-          savedMealPlan={savedMealPlan}
-          // Calendar + queue props
-          academicSchedule={calendar.schedule}
-          recipeQueue={calendar.recipeQueue}
-          currentWeekMealPlan={calendar.currentWeekMealPlan}
-          isTestingPeriod={calendar.isTestingPeriod}
-          mealConflicts={calendar.mealConflicts}
-          queueShoppingList={calendar.queueShoppingList}
-          weekConflicts={calendar.weekConflicts}
-          onSaveSchedule={calendar.saveSchedule}
-          onGenerateQueue={calendar.generateQueue}
-          onSwapQueueMeal={calendar.swapQueueMeal}
-          onMarkMealConsumed={calendar.markMealConsumed}
-          onCheckQueueTestingChange={calendar.checkQueueTestingChange}
-          onSaveMealTimeOverride={calendar.saveMealTimeOverride}
-          onRemoveMealTimeOverride={calendar.removeMealTimeOverride}
-          onUpdatePreferences={updatePreferences}
-        />
+        <ErrorBoundary label="Plan">
+          <RecommendationsStep
+            preferences={preferences}
+            onBack={() => setActiveNavTab('home')}
+            onReset={startOnboarding}
+            onSaveMealPlan={(mealPlan) => saveMealPlan(mealPlan, undefined, activePlanId)}
+            onDeletePlan={deleteSavedMealPlanById}
+            activePlanId={activePlanId}
+            onNavigateHome={() => setActiveNavTab('home')}
+            activeNavTab={activeNavTab}
+            onNavTabChange={handleNavTabChange}
+            savedMealPlan={savedMealPlan}
+            // Calendar + queue props
+            academicSchedule={calendar.schedule}
+            recipeQueue={calendar.recipeQueue}
+            currentWeekMealPlan={calendar.currentWeekMealPlan}
+            isTestingPeriod={calendar.isTestingPeriod}
+            mealConflicts={calendar.mealConflicts}
+            queueShoppingList={calendar.queueShoppingList}
+            weekConflicts={calendar.weekConflicts}
+            onSaveSchedule={calendar.saveSchedule}
+            onGenerateQueue={calendar.generateQueue}
+            onSwapQueueMeal={calendar.swapQueueMeal}
+            onMarkMealConsumed={calendar.markMealConsumed}
+            onCheckQueueTestingChange={calendar.checkQueueTestingChange}
+            onSaveMealTimeOverride={calendar.saveMealTimeOverride}
+            onRemoveMealTimeOverride={calendar.removeMealTimeOverride}
+            onUpdatePreferences={updatePreferences}
+          />
+        </ErrorBoundary>
       )}
 
       {/* Shop Tab - Shopping/Grocery List */}
       {activeNavTab === 'shop' && (
-        <ShoppingMode
-          ingredients={
-            calendar.recipeQueue && calendar.queueShoppingList?.length
-              ? calendar.queueShoppingList
-              : savedMealPlan ? uniqueIngredients : []
-          }
-          storeName={preferences.selectedStores[0]?.name || 'Supermarket'}
-          onBack={() => setActiveNavTab('home')}
-          activeNavTab={activeNavTab}
-          onNavTabChange={handleNavTabChange}
-        />
+        <ErrorBoundary label="Shopping">
+          <ShoppingMode
+            ingredients={
+              calendar.recipeQueue && calendar.queueShoppingList?.length
+                ? calendar.queueShoppingList
+                : savedMealPlan ? uniqueIngredients : []
+            }
+            storeName={preferences.selectedStores[0]?.name || 'Supermarket'}
+            onBack={() => setActiveNavTab('home')}
+            activeNavTab={activeNavTab}
+            onNavTabChange={handleNavTabChange}
+          />
+        </ErrorBoundary>
       )}
 
       {/* Leaderboard Tab */}
       {activeNavTab === 'leaderboard' && (
-        <LeaderboardPage
-          user={user}
-          activeTab={activeNavTab}
-          onTabChange={handleNavTabChange}
-        />
+        <ErrorBoundary label="Leaderboard">
+          <LeaderboardPage
+            user={user}
+            activeTab={activeNavTab}
+            onTabChange={handleNavTabChange}
+          />
+        </ErrorBoundary>
       )}
 
       {/* Profile Tab */}
       {activeNavTab === 'profile' && (
-        <ProfilePage
-          user={user}
-          onLogout={handleLogout}
-          onOpenAdmin={() => setShowAdminDashboard(true)}
-          onUserUpdate={(updatedUser) => {
-            setUser(updatedUser);
-            if (updatedUser.user_metadata?.gender !== undefined) {
-              setPreferences(prev => ({ ...prev, gender: updatedUser.user_metadata.gender }));
-            }
-          }}
-          activeTab={activeNavTab}
-          onTabChange={handleNavTabChange}
-        />
+        <ErrorBoundary label="Profile">
+          <ProfilePage
+            user={user}
+            onLogout={handleLogout}
+            onOpenAdmin={() => setShowAdminDashboard(true)}
+            onUserUpdate={(updatedUser) => {
+              setUser(updatedUser);
+              if (updatedUser.user_metadata?.gender !== undefined) {
+                setPreferences(prev => ({ ...prev, gender: updatedUser.user_metadata.gender }));
+              }
+            }}
+            activeTab={activeNavTab}
+            onTabChange={handleNavTabChange}
+          />
+        </ErrorBoundary>
       )}
     </>
   );
