@@ -575,7 +575,7 @@ export default function App() {
         </ErrorBoundary>
       )}
 
-      {/* Plan Tab - Weekly Meal Plan View */}
+      {/* Plan Tab - Meal Plan View */}
       {activeNavTab === 'plan' && (
         <ErrorBoundary label="Plan">
           <RecommendationsStep

@@ -20,7 +20,7 @@ interface PreferencesStepProps {
 
 export function PreferencesStep({ preferences, updatePreferences, onNext, onBack }: PreferencesStepProps) {
   // Default the shopping date to today; never start it in the past (a stale
-  // saved value could otherwise anchor the whole plan to a past week).
+  // saved value could otherwise anchor the whole plan to past dates).
   const [shoppingDate, setShoppingDate] = useState(
     preferences.shoppingDate && preferences.shoppingDate >= getLocalTodayISO()
       ? preferences.shoppingDate

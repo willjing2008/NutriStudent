@@ -229,7 +229,7 @@ export function selectAllCoreRecipes(
   return { breakfast, lunch, dinner };
 }
 
-// ── 1d. 7-day rotation ─────────────────────────────────────────────
+// ── 1d. N-day rotation ─────────────────────────────────────────────
 
 /** Fisher-Yates shuffle (returns new array) */
 function shuffle<T>(arr: T[]): T[] {
@@ -275,7 +275,7 @@ export interface DayMeals {
 }
 
 /**
- * Build a 7-day rotation schedule from core recipes.
+ * Build a rotation schedule of `cookingDays` days from core recipes.
  * mealsPerDay: 1 = dinner only, 2 = breakfast+dinner, 3+ = breakfast+lunch+dinner (extras from dinner)
  */
 export function buildRotationSchedule(

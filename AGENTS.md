@@ -52,7 +52,7 @@ This file is the project's committed home for project-intrinsic agent knowledge:
 
 ## Plan length / start date (planDays)
 
-- The meal plan's length is user-chosen: `preferences.planDays` (1–14, default 7) travels in the `generate-meal-plan` payload; the handler bounds it with `vNum(planDays, 1, 14, 7)` and feeds it as `cookingDays`. The "Plan Start Date" card in PreferencesStep is the old "Next Shopping Date" — the internal field is still `shoppingDate` everywhere (deliberate: label-only rename).
+- The meal plan's length is user-chosen: `preferences.planDays` (1–14, default 7) travels in the `generate-meal-plan` payload; the handler bounds it with `vNum(planDays, 1, 14, 7)`, rounds it to an integer, and feeds it as `cookingDays`. The "Plan Start Date" card in PreferencesStep is the old "Next Shopping Date" — the internal field is still `shoppingDate` everywhere (deliberate: label-only rename).
 - **Budget is the total for the whole plan**, not weekly: the backend divides it by `cookingDays` (`dailyBudget = weeklyBudget / cookingDays`) and the UI says "Budget for this plan". The `weeklyBudget` variable/response-field name is historical; its meaning is now plan-total. Don't reintroduce `/7`.
 - `e2e/plan-days.spec.ts` (Playwright, route-mocked backend per repo e2e convention) pins the payload contract, the N-day calendar anchored on the chosen start date, and the day-scoped shopping list. The 28-day recipe-queue path is independent and still fixed-length.
 - `src/app/components/RecommendationsStep.tsx` has **mixed line endings (mostly CRLF)** committed; whole-file rewrites (or editors that normalize the dominant ending) produce a huge whitespace diff. Patch it with byte-preserving edits and check `git diff --stat` before committing.
