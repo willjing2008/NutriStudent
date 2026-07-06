@@ -133,6 +133,30 @@ describe('PreferencesStep — plan days', () => {
     )
   })
 
+  it('allows clearing the field while typing and defaults to 7 on blur', () => {
+    renderStep({ planDays: 3 })
+
+    fireEvent.change(daysInput(), { target: { value: '' } })
+    expect(daysInput()).toHaveValue(null)
+
+    fireEvent.change(daysInput(), { target: { value: '12' } })
+    expect(daysInput()).toHaveValue(12)
+
+    fireEvent.change(daysInput(), { target: { value: '' } })
+    fireEvent.blur(daysInput())
+    expect(daysInput()).toHaveValue(7)
+  })
+
+  it('persists 7 when continuing with an empty field', () => {
+    const updatePreferences = renderStep({ planDays: 3 })
+
+    fireEvent.change(daysInput(), { target: { value: '' } })
+    fireEvent.click(screen.getByText('Continue'))
+    expect(updatePreferences).toHaveBeenCalledWith(
+      expect.objectContaining({ planDays: 7 }),
+    )
+  })
+
   it('clamps the stepper at both bounds', () => {
     renderStep({ planDays: 14 })
     fireEvent.click(screen.getByRole('button', { name: /more days/i }))

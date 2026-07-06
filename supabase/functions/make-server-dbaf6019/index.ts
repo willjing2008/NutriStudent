@@ -406,7 +406,7 @@ app.post("/make-server-dbaf6019/generate-meal-plan", requireAuth, rateLimit({ na
     const safeAvoid = vStrArr(avoidIngredients, 50, 100);
     const safeSlots = vStrArr(selectedMealSlots, 10, 30);
     const safeDietary = vStrArr(dietaryRestrictions, 10, 30);
-    const safePlanDays = vNum(planDays, 1, 14, 7);
+    const safePlanDays = Math.round(vNum(planDays, 1, 14, 7));
 
     // User-chosen plan length (1-14 days) starting from the shopping date
     const cookingDays = safePlanDays;

@@ -54,7 +54,8 @@ describe('vNum', () => {
   })
 
   // Pins the exact bounds the generate-meal-plan handler uses for planDays:
-  // vNum(planDays, 1, 14, 7). Out-of-range clamps to 1-14, missing → 7.
+  // Math.round(vNum(planDays, 1, 14, 7)). Out-of-range clamps to 1-14,
+  // missing → 7, fractional payloads round to an integer day count.
   it('bounds planDays as used by generate-meal-plan', () => {
     expect(vNum(3, 1, 14, 7)).toBe(3)
     expect(vNum(14, 1, 14, 7)).toBe(14)
@@ -63,6 +64,8 @@ describe('vNum', () => {
     expect(vNum(99, 1, 14, 7)).toBe(14)
     expect(vNum(undefined, 1, 14, 7)).toBe(7)
     expect(vNum('not-a-number', 1, 14, 7)).toBe(7)
+    expect(Math.round(vNum(3.5, 1, 14, 7))).toBe(4)
+    expect(Math.round(vNum(14.4, 1, 14, 7))).toBe(14)
   })
 })
 

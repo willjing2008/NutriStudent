@@ -26,7 +26,10 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
       ? preferences.shoppingDate
       : getLocalTodayISO(),
   );
-  const [planDays, setPlanDays] = useState(preferences.planDays || 7);
+  // Empty string is a transient typing state; it resolves to the default on blur/Continue.
+  const [planDays, setPlanDays] = useState<number | ''>(preferences.planDays || 7);
+  const clampPlanDays = (num: number) => Math.min(14, Math.max(1, num));
+  const resolvedPlanDays = planDays === '' ? 7 : planDays;
   const [mealsPerDay, setMealsPerDay] = useState(preferences.mealsPerDay);
   const [goal, setGoal] = useState(preferences.goal);
   const [maxCookingTime, setMaxCookingTime] = useState(preferences.maxCookingTime);
@@ -81,7 +84,7 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
       : (['breakfast', 'lunch', 'dinner'] as const).filter(k => selectedMealSlots.has(k));
     updatePreferences({
       shoppingDate,
-      planDays,
+      planDays: resolvedPlanDays,
       mealsPerDay,
       goal,
       maxCookingTime,
@@ -173,7 +176,7 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
             <SectionHeader icon={CalendarDays} title="Number of Days" />
             <div className="flex items-center gap-3">
               <button
-                onClick={() => setPlanDays(prev => Math.max(1, prev - 1))}
+                onClick={() => setPlanDays(prev => clampPlanDays((prev === '' ? 7 : prev) - 1))}
                 aria-label="Fewer days"
                 className="w-14 py-4 rounded-xl font-semibold text-lg bg-[#0A1F13] text-white border border-[#2D5A3D] hover:border-[#22C55E] transition-all"
               >
@@ -187,13 +190,16 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
                 value={planDays}
                 onChange={(e) => {
                   const num = parseInt(e.target.value, 10);
-                  setPlanDays(Number.isNaN(num) ? 7 : Math.min(14, Math.max(1, num)));
+                  setPlanDays(Number.isNaN(num) ? '' : clampPlanDays(num));
+                }}
+                onBlur={() => {
+                  if (planDays === '') setPlanDays(7);
                 }}
                 aria-label="Number of days"
                 className="flex-1 px-4 py-4 bg-[#0A1F13] border border-[#2D5A3D] rounded-xl text-white text-center font-semibold text-lg focus:outline-none focus:border-[#22C55E] transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
               <button
-                onClick={() => setPlanDays(prev => Math.min(14, prev + 1))}
+                onClick={() => setPlanDays(prev => clampPlanDays((prev === '' ? 7 : prev) + 1))}
                 aria-label="More days"
                 className="w-14 py-4 rounded-xl font-semibold text-lg bg-[#0A1F13] text-white border border-[#2D5A3D] hover:border-[#22C55E] transition-all"
               >
@@ -202,7 +208,7 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
             </div>
             <div className="mt-4 p-3 bg-[#22C55E]/10 rounded-xl border border-[#22C55E]/20">
               <p className="text-sm text-[#22C55E]">
-                Your plan will cover <strong>{planDays} {planDays === 1 ? 'day' : 'days'}</strong> from the start date (1–14).
+                Your plan will cover <strong>{resolvedPlanDays} {resolvedPlanDays === 1 ? 'day' : 'days'}</strong> from the start date (1–14).
               </p>
             </div>
           </div>
