@@ -54,9 +54,12 @@ vi.mock('./CelebrationOverlay', () => ({ CelebrationOverlay: () => null }));
 // only care which queue slot RecommendationsStep resolves for the apply, and
 // whether the apply promise resolves or rejects (the modal keys its
 // success/error UI off that), so the stub records the outcome.
+const { swapBudget } = vi.hoisted(() => ({ swapBudget: { current: null as number | null } }));
 const swapOutcome: { current: null | { status: 'resolved' | 'rejected'; message?: string } } = { current: null };
 vi.mock('./MealSwapModal', () => ({
-  MealSwapModal: ({ onSwap }: { onSwap: (meal: any) => void | Promise<unknown> }) => (
+  MealSwapModal: ({ onSwap, budgetPerMealGbp }: { onSwap: (meal: any) => void | Promise<unknown>; budgetPerMealGbp: number }) => {
+    swapBudget.current = budgetPerMealGbp;
+    return (
     <button
       onClick={() => {
         Promise.resolve()
@@ -67,7 +70,8 @@ vi.mock('./MealSwapModal', () => ({
     >
       apply-test-swap
     </button>
-  ),
+    );
+  },
 }));
 
 const NEW_MEAL = {
@@ -128,6 +132,7 @@ const currentWeekMealPlan = {
     queueMeal(),
     queueMeal({ id: 'q-curry', name: 'Queue Curry', mealSlot: 'dinner', category: 'dinner', mealType: 'Dinner', dayNumber: 2, queueDayNumber: 9 }),
   ],
+  budgetPerMealGbp: 3.81,
   totalCost: 0,
   dailyBudget: 10,
   weeklyBudget: 70,
@@ -181,6 +186,7 @@ function renderPlanTab(over: Record<string, unknown> = {}) {
 }
 
 beforeEach(() => {
+  swapBudget.current = null;
   swapOutcome.current = null;
   authedPost.mockReset();
   authedPost.mockResolvedValue({});
@@ -200,6 +206,31 @@ describe('RecommendationsStep - queue mode slot targeting', () => {
     // ...and the saved plan's meals must NOT leak into the plan view (when
     // they did, mutations wrote to queue slots derived from saved-plan days).
     expect(screen.queryByText('Saved Frittata')).not.toBeInTheDocument();
+  });
+
+  it('passes the queue cap to shuffle and swap mutations', async () => {
+    authedPost.mockImplementation((endpoint: string) => {
+      if (endpoint === 'shuffle-recipe') {
+        return Promise.resolve({ replacementMeal: queueMeal({ id: 'replacement', name: 'Replacement Meal' }) });
+      }
+      return Promise.resolve({});
+    });
+    renderPlanTab();
+
+    fireEvent.click(await screen.findByText('Queue Oats'));
+    fireEvent.click(screen.getByRole('button', { name: 'Shuffle' }));
+
+    await waitFor(() =>
+      expect(authedPost).toHaveBeenCalledWith(
+        'shuffle-recipe',
+        expect.objectContaining({ budgetPerMealGbp: 3.81 }),
+      ),
+    );
+
+    fireEvent.click(await screen.findByText('Replacement Meal'));
+    fireEvent.click(screen.getByRole('button', { name: 'Swap Meal' }));
+
+    await waitFor(() => expect(swapBudget.current).toBe(3.81));
   });
 
   it('opens recipe detail without crashing when optional recipe data is missing', async () => {

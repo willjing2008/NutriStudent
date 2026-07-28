@@ -4,9 +4,11 @@ import {
   BUDGET_MIN_GBP,
   deriveLegacyBudgetPerMealGbp,
   formatBudgetGbp,
+  buildPreferenceResponse,
   normalizePreferenceBudget,
   parseBudgetPerMealGbp,
   resolveBudgetPerMealGbp,
+  resolveMutationBudgetPerMealGbp,
   toPence,
 } from '../budget-contract.ts'
 
@@ -92,6 +94,12 @@ describe('legacy budget migration', () => {
       .toEqual({ value: 3.81, source: 'legacy' })
   })
 
+  it('requires canonical context for recipe mutations', () => {
+    expect(resolveMutationBudgetPerMealGbp({ budgetPerMealGbp: 3.81 })).toBe(3.81)
+    expect(resolveMutationBudgetPerMealGbp({ budget: 80, planDays: 7, mealsPerDay: 3 })).toBeNull()
+    expect(resolveMutationBudgetPerMealGbp({})).toBeNull()
+  })
+
   it('normalizes persisted preferences to schema version 3 without ambiguous fields', () => {
     expect(normalizePreferenceBudget({
       budget: 80,
@@ -131,6 +139,34 @@ describe('legacy budget migration', () => {
       goal: 'study',
       budgetPerMealGbp: null,
       preferencesSchemaVersion: 3,
+    })
+  })
+
+  it('returns the exact legacy total alongside canonical preferences', () => {
+    expect(buildPreferenceResponse({
+      budget: 80,
+      planDays: 7,
+      mealsPerDay: 3,
+      goal: 'study',
+    })).toMatchObject({
+      budget: 80,
+      budgetPerMealGbp: 3.81,
+      planDays: 7,
+      mealsPerDay: 3,
+    })
+  })
+
+  it('derives the legacy response alias from canonical stored preferences', () => {
+    expect(buildPreferenceResponse({
+      budgetPerMealGbp: 3.81,
+      planDays: 7,
+      mealsPerDay: 3,
+      goal: 'study',
+    })).toMatchObject({
+      budget: 80.01,
+      budgetPerMealGbp: 3.81,
+      planDays: 7,
+      mealsPerDay: 3,
     })
   })
 })

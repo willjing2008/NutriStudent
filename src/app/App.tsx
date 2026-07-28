@@ -46,6 +46,7 @@ export interface UserPreferences {
   planDays: number;
   mealsPerDay: number;
   budget: number;
+  budgetPerMealGbp?: number;
   goal: 'study' | 'work' | 'fitness' | null;
   maxCookingTime: number;
   avoidIngredients: string[];

@@ -38,6 +38,11 @@ describe('launch route registration', () => {
     expect(source).toContain('preferences: normalizedPreferences,')
   })
 
+  it('uses the compatibility response shape when loading saved plans', () => {
+    expect(source).toContain('const responsePreferences = buildPreferenceResponse(data.preferences);')
+    expect(source).toContain('preferences: responsePreferences,')
+  })
+
   it('lazily persists the canonical cap on legacy recipe queues', () => {
     expect(source).toContain('const storedQueue: RecipeQueue')
     expect(source).toContain('if (storedQueue.budgetPerMealGbp !== budgetPerMealGbp)')

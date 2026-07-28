@@ -20,10 +20,12 @@ import { buildAcademicSchedule } from "./academic-schedule.ts";
 import { estimateMissingCosts } from "./recipe-backfill.ts";
 import { normalizeAllergyChoices } from "../_shared/allergy-contract.ts";
 import {
+  buildPreferenceResponse,
   LEGACY_QUEUE_BUDGET_PER_MEAL_GBP,
   normalizePreferenceBudget,
   parseBudgetPerMealGbp,
   resolveBudgetPerMealGbp,
+  resolveMutationBudgetPerMealGbp,
 } from "../_shared/budget-contract.ts";
 import {
   BudgetNoMatchError,
@@ -915,17 +917,6 @@ app.post("/make-server-dbaf6019/admin/search-recipes", requireAuth, requireAdmin
 
 // ========== SHUFFLE/REPLACE RECIPE ENDPOINT ==========
 
-// Installed clients did not send budget context for mutations. During the
-// compatibility window they receive the documented legacy £5 cap. New clients
-// that send the canonical field are validated strictly.
-function resolveMutationBudget(body: Record<string, unknown>): number | null {
-  if (Object.prototype.hasOwnProperty.call(body, "budgetPerMealGbp")) {
-    return parseBudgetPerMealGbp(body.budgetPerMealGbp);
-  }
-  const legacy = resolveBudgetPerMealGbp(body);
-  return legacy.value ?? LEGACY_QUEUE_BUDGET_PER_MEAL_GBP;
-}
-
 // Smart recipe replacement - find similar recipe by nutrition
 app.post("/make-server-dbaf6019/shuffle-recipe", requireAuth, rateLimit({ name: "shuffle-recipe", max: 30, windowSec: 60 }), requirePremiumAccess, async (c) => {
   try {
@@ -935,7 +926,7 @@ app.post("/make-server-dbaf6019/shuffle-recipe", requireAuth, rateLimit({ name: 
     if (!currentRecipeId || !goal) {
       return c.json({ error: "Missing required parameters" }, 400);
     }
-    const budgetPerMealGbp = resolveMutationBudget(body);
+    const budgetPerMealGbp = resolveMutationBudgetPerMealGbp(body);
     if (budgetPerMealGbp === null) {
       return c.json({ error: "budgetPerMealGbp must be an amount from £1.00 to £50.00 with at most two decimal places." }, 400);
     }
@@ -1016,7 +1007,7 @@ app.post("/make-server-dbaf6019/get-swap-options", requireAuth, rateLimit({ name
     if (!currentRecipeId || !goal) {
       return c.json({ error: "Missing required parameters" }, 400);
     }
-    const budgetPerMealGbp = resolveMutationBudget(body);
+    const budgetPerMealGbp = resolveMutationBudgetPerMealGbp(body);
     if (budgetPerMealGbp === null) {
       return c.json({ error: "budgetPerMealGbp must be an amount from £1.00 to £50.00 with at most two decimal places." }, 400);
     }
@@ -1947,11 +1938,12 @@ app.post("/make-server-dbaf6019/load-meal-plan-by-id", requireAuth, async (c) =>
     }
 
     log(`✅ Loaded meal plan ${planId} for user ${userId}`);
+    const responsePreferences = buildPreferenceResponse(data.preferences);
 
     return c.json({ 
       success: true,
       mealPlan: data.mealPlan,
-      preferences: normalizePreferenceBudget(data.preferences),
+      preferences: responsePreferences,
       planName: data.planName,
       savedAt: data.savedAt
     });
@@ -2012,11 +2004,12 @@ app.post("/make-server-dbaf6019/load-meal-plan", requireAuth, async (c) => {
     }
 
     log(`✅ Loaded meal plan for user ${userId}`);
+    const responsePreferences = buildPreferenceResponse(data.preferences);
 
     return c.json({ 
       hasSavedPlan: true,
       mealPlan: data.mealPlan,
-      preferences: data.preferences,
+      preferences: responsePreferences,
       savedAt: data.savedAt
     });
   } catch (error: any) {

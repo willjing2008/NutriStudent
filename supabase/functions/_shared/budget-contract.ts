@@ -92,6 +92,12 @@ export function resolveBudgetPerMealGbp(
     : { value: legacy, source: 'legacy' }
 }
 
+export function resolveMutationBudgetPerMealGbp(
+  input: Record<string, unknown> | null | undefined,
+): number | null {
+  return parseBudgetPerMealGbp(input?.budgetPerMealGbp)
+}
+
 const PERSISTED_PREFERENCE_KEYS = [
   'gender',
   'location',
@@ -132,4 +138,27 @@ export function normalizePreferenceBudget(
     budgetPerMealGbp: resolution.value,
     preferencesSchemaVersion: PREFERENCES_SCHEMA_VERSION,
   }
+}
+
+export function buildPreferenceResponse(
+  input: unknown,
+): Record<string, unknown> | null {
+  const normalized = normalizePreferenceBudget(input)
+  if (!normalized) return null
+
+  const record = input as Record<string, unknown>
+  const resolution = resolveBudgetPerMealGbp(record)
+  const planDays = finitePositiveNumber(normalized.planDays)
+  const mealsPerDay = finitePositiveNumber(normalized.mealsPerDay)
+  const canonicalBudget = parseBudgetPerMealGbp(normalized.budgetPerMealGbp)
+
+  const legacyBudget = resolution.source === 'legacy'
+    ? finitePositiveNumber(record.budget)
+    : canonicalBudget !== null && planDays !== null && mealsPerDay !== null
+      ? toPence(canonicalBudget * planDays * mealsPerDay) / 100
+      : null
+
+  return legacyBudget === null
+    ? normalized
+    : { ...normalized, budget: legacyBudget }
 }
