@@ -16,6 +16,7 @@ describe('dietaryForbiddenKeywords', () => {
   it('is case-insensitive and ignores unknown restrictions', () => {
     expect(dietaryForbiddenKeywords(['VEGAN'])).toContain('chicken')
     expect(dietaryForbiddenKeywords(['paleo-unknown'])).toEqual([])
+    expect(dietaryForbiddenKeywords(['__proto__', 'constructor'])).toEqual([])
   })
 
   it('deduplicates keywords shared across restrictions', () => {
@@ -34,6 +35,49 @@ describe('filterRecipes', () => {
     const pool = [recipe(1, ['peanut butter']), recipe(2, ['oats'])]
     const out = filterRecipes(pool, { avoidIngredients: ['peanut'] })
     expect(out.map(r => r.id)).toEqual([2])
+  })
+
+  it('expands Nuts to peanuts and tree nuts without matching coconut or butternut', () => {
+    const pool = [
+      recipe(1, ['peanut butter']),
+      recipe(2, ['almond flour']),
+      recipe(3, ['cashews']),
+      recipe(4, ['walnuts']),
+      recipe(5, ['coconut milk']),
+      recipe(6, ['butternut squash']),
+      recipe(7, ['oats']),
+      recipe(8, ['toasted coconuts']),
+      recipe(9, ['nuts']),
+    ]
+    const out = filterRecipes(pool, { avoidIngredients: ['Nuts'] })
+    expect(out.map(r => r.id)).toEqual([5, 6, 7, 8])
+  })
+
+  it('expands Seafood to fish and shellfish ingredients', () => {
+    const pool = [
+      recipe(1, ['salmon fillet']),
+      recipe(2, ['cod loin']),
+      recipe(3, ['king prawns']),
+      recipe(4, ['crab meat']),
+      recipe(5, ['scallops']),
+      recipe(6, ['clams']),
+      recipe(7, ['seaweed']),
+      recipe(8, ['tofu']),
+      recipe(9, ['seafood medley']),
+    ]
+    const out = filterRecipes(pool, { avoidIngredients: ['Seafood'] })
+    expect(out.map(r => r.id)).toEqual([7, 8])
+  })
+
+  it('normalizes legacy allergy values before filtering', () => {
+    const pool = [
+      recipe(1, ['almonds']),
+      recipe(2, ['tuna']),
+      recipe(3, ['shrimp']),
+      recipe(4, ['rice']),
+    ]
+    const out = filterRecipes(pool, { avoidIngredients: ['Tree Nuts', 'Fish'] })
+    expect(out.map(r => r.id)).toEqual([4])
   })
 
   it('excludes meat recipes for a vegan restriction', () => {

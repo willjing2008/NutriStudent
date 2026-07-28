@@ -1,4 +1,5 @@
 import { NewRecipe } from "./recipe-data.ts";
+import { UNPRICED_RECIPE_FALLBACK_GBP } from "../_shared/budget-contract.ts";
 
 // Pure helpers + the structured-output schema for per-recipe GBP cost estimation.
 // The model call and the resumable batch backfill live in recipe-backfill.ts so
@@ -8,7 +9,7 @@ import { NewRecipe } from "./recipe-data.ts";
 // ponytail: a single UK-average per-serving fallback used when a recipe hasn't
 // been priced yet or a Gemini call fails — so the budget is always a real number
 // and never hard-breaks. Per-recipe estimates replace it once the backfill runs.
-export const FLAT_FALLBACK_GBP = 2.5;
+export const FLAT_FALLBACK_GBP = UNPRICED_RECIPE_FALLBACK_GBP;
 
 export interface PricedIngredient {
   name: string;
@@ -19,7 +20,10 @@ export interface PricedIngredient {
 
 /** Per-serving cost for budget math; falls back to the flat estimate when unpriced. */
 export function recipeCostPerServing(recipe: NewRecipe): number {
-  return recipe.cost_per_serving_gbp ?? FLAT_FALLBACK_GBP;
+  const storedCost = recipe.cost_per_serving_gbp;
+  return typeof storedCost === "number" && Number.isFinite(storedCost) && storedCost > 0
+    ? storedCost
+    : FLAT_FALLBACK_GBP;
 }
 
 function parseServings(servings: string | undefined): number {

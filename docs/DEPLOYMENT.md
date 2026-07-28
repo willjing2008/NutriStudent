@@ -26,6 +26,27 @@ npx playwright install chromium
 
 Generated Playwright output (`test-results/`, `playwright-report/`) is ignored by git.
 
+Backend pure-logic modules and route-registration contracts run in Vitest.
+When Docker is available, also start the function with `npx supabase functions serve make-server-dbaf6019` and smoke-check `/health` to validate the Deno edge-runtime import graph without deploying.
+
+## Production backend source of truth
+
+Production already runs Edge Function version 97, deployed on July 28, 2026 from the approved source at divergent commit `dc55570`.
+The backend source restored to GitHub main mirrors that deployed launch behavior.
+Merging source restoration does not deploy or mutate production, and source restoration alone is not approval to redeploy.
+
+`supabase/functions/_shared/launch-config.ts` explicitly disables subscriptions and Ranks for the initial launch.
+Authenticated generation routes retain `requireAuth` and their per-user rate limits before `requirePremiumAccess`, while free mode intentionally skips RevenueCat verification.
+The `leaderboard` and `recipe-leaderboard` routes retain authentication and return 404 before their handlers while Ranks is disabled.
+
+The canonical budget is `budgetPerMealGbp`, validated from £1.00 through £50.00 with at most two decimal places and enforced as a hard cap for generation, queues, shuffle, swap options, and queue swaps.
+Current GitHub-main legacy clients remain compatible through total-budget derivation.
+Clients released before `planDays` existed are interpreted as seven-day plans, matching their historical behavior.
+Legacy queues without a persisted cap use £5.00 per meal and are migrated lazily.
+
+The dormant paid-mode middleware fails closed if RevenueCat is unavailable and uses the exact live entitlement identifier `ChefPocket Pro`.
+Do not enable subscriptions until the compatible client and production RevenueCat credentials are ready.
+
 ## Supabase Edge Function deploy
 
 Project ref: `awufigzenzypanymzoqy`.
@@ -93,9 +114,10 @@ This preserves login/session state in the simulator while refreshing web assets.
 
 Track these before release:
 
-- Replace the sandbox RevenueCat key with the production iOS public key.
-- Set `REVENUECAT_SECRET_KEY` in production: server-side entitlement enforcement (`entitlement.ts`) is implemented but fails open without it. Optionally add a RevenueCat webhook + webhook secret for push-based updates.
-- Remove the web paywall bypass in `useSubscription.tsx` once web policy is decided.
+- Keep subscriptions disabled in launch policy and leave RevenueCat credentials out of free-launch Release builds.
+- Ship the follow-up free-launch client before treating the backend policy as complete end-to-end behavior.
+- Before future paid mode, configure the production iOS public key and `REVENUECAT_SECRET_KEY`, align the client with the exact `ChefPocket Pro` entitlement, and test fail-closed enforcement.
+- Remove the web paywall bypass in `useSubscription.tsx` once paid web policy is decided.
 - Add account deletion flow and endpoint.
 - Add `PrivacyInfo.xcprivacy`, legal links, EULA, privacy labels, metadata, and screenshots.
 - Confirm bundle id, display name, version/build numbers, and App Store product ids.

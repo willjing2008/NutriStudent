@@ -13,6 +13,18 @@ describe('buildAcademicSchedule', () => {
     expect(reloaded.mealTimeOverrides).toEqual(overrides)
   })
 
+  it('preserves every schedule field through serialization', () => {
+    const body = {
+      classes: [{ id: 'class-1', name: 'Physics', dayOfWeek: 2, startTime: '09:00', endTime: '10:00' }],
+      testingPeriods: [{ id: 'exam-1', name: 'Finals', startDate: '2026-08-01', endDate: '2026-08-08' }],
+      mealTimeOverrides: [{ dayOfWeek: 2, mealSlot: 'lunch', time: '12:30' }],
+      sleepSchedule: { bedtime: '22:30', wakeTime: '06:30' },
+    }
+
+    const reloaded = JSON.parse(JSON.stringify(buildAcademicSchedule(body, 'T')))
+    expect(reloaded).toEqual({ ...body, updatedAt: 'T' })
+  })
+
   it('defaults every field consistently when body is empty', () => {
     const blob = buildAcademicSchedule({}, 'T')
     expect(blob.classes).toEqual([])

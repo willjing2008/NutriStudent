@@ -53,6 +53,7 @@ const buildQueue = (meals: QueuedMeal[]): RecipeQueue => ({
   meals,
   mealsPerDay: 1,
   goal: 'study',
+  budgetPerMealGbp: 4,
 })
 
 const fourteenDayQueue = () =>
@@ -83,16 +84,42 @@ describe('getQueueWeekAsMealPlan', () => {
     expect(week.meals.every((m) => m.mealSlot === 'dinner')).toBe(true)
   })
 
-  it('defaults the weekly budget to 100 and derives the daily budget', () => {
+  it('uses the queue-owned per-meal cap and calculates real week totals', () => {
     const week = getQueueWeekAsMealPlan(fourteenDayQueue(), 1)
-    expect(week.weeklyBudget).toBe(100)
-    expect(week.dailyBudget).toBeCloseTo(100 / 7)
+    expect(week.budgetPerMealGbp).toBe(4)
+    expect(week.totalBudgetGbp).toBe(28)
+    expect(week.totalCost).toBe(17.5)
+    expect(week.withinBudget).toBe(true)
+    expect(week.overBudgetMealCount).toBe(0)
+    // Compatibility aliases are derived rather than caller-controlled.
+    expect(week.dailyBudget).toBe(4)
+    expect(week.weeklyBudget).toBe(28)
   })
 
-  it('honours a custom weekly budget', () => {
-    const week = getQueueWeekAsMealPlan(fourteenDayQueue(), 1, 70)
-    expect(week.weeklyBudget).toBe(70)
-    expect(week.dailyBudget).toBeCloseTo(10)
+  it('keeps the persisted cap and totals after a queue swap', () => {
+    const queue = fourteenDayQueue()
+    const replacement = toMealPlanMeal(
+      makeRecipe({ id: 999, name: 'Swapped', cost_per_serving_gbp: 3.75 }),
+      1,
+      1,
+      'dinner',
+    )
+    const swapped = swapQueueMeal(queue, 1, 'dinner', replacement)
+    const week = getQueueWeekAsMealPlan(swapped, 1)
+    expect(swapped.budgetPerMealGbp).toBe(4)
+    expect(week.budgetPerMealGbp).toBe(4)
+    expect(week.totalCost).toBe(18.75)
+    expect(week.withinBudget).toBe(true)
+  })
+
+  it('uses the documented cap for a persisted legacy queue without a budget field', () => {
+    const legacyQueue = fourteenDayQueue() as RecipeQueue & { budgetPerMealGbp?: number }
+    delete legacyQueue.budgetPerMealGbp
+
+    const week = getQueueWeekAsMealPlan(legacyQueue as RecipeQueue, 1)
+    expect(week.budgetPerMealGbp).toBe(5)
+    expect(week.totalBudgetGbp).toBe(35)
+    expect(week.meals.map((meal) => meal.id)).toEqual(['1', '2', '3', '4', '5', '6', '7'])
   })
 })
 
@@ -147,6 +174,20 @@ describe('swapQueueMeal', () => {
     expect(result.meals[0].recipeId).toBe('1')
     expect(result.meals.some((m) => m.recipeId === '999')).toBe(false)
   })
+
+  it('rejects a replacement over the persisted queue cap', () => {
+    const queue = fourteenDayQueue()
+    const replacement = toMealPlanMeal(
+      makeRecipe({ id: 999, cost_per_serving_gbp: 4.01 }),
+      1,
+      1,
+      'dinner',
+    )
+    expect(() => swapQueueMeal(queue, 1, 'dinner', replacement)).toThrow(
+      'No recipes fit your £4.00 per-meal budget. Increase your budget and try again.',
+    )
+    expect(queue.meals[0].recipeId).toBe('1')
+  })
 })
 
 describe('generateRecipeQueue', () => {
@@ -173,6 +214,7 @@ describe('generateRecipeQueue', () => {
       mealsPerDay: 3,
       goal: 'study',
       focusMode: false,
+      budgetPerMealGbp: 4.25,
       queueDays: 7,
       selectedMealSlots: ['breakfast', 'lunch', 'dinner'],
     })
@@ -185,7 +227,7 @@ describe('generateRecipeQueue', () => {
   it('throws when no recipes are available', async () => {
     vi.mocked(getRecipesByFocusType).mockResolvedValue([])
     await expect(
-      generateRecipeQueue({ userId: 'u1', mealsPerDay: 3, goal: 'study', focusMode: false, queueDays: 7 }),
+      generateRecipeQueue({ userId: 'u1', mealsPerDay: 3, goal: 'study', focusMode: false, budgetPerMealGbp: 4.25, queueDays: 7 }),
     ).rejects.toThrow(/No recipes found/)
   })
 
@@ -199,12 +241,31 @@ describe('generateRecipeQueue', () => {
       mealsPerDay: 3,
       goal: 'study',
       focusMode: false,
+      budgetPerMealGbp: 4.25,
       queueDays: 7,
       avoidIngredients: ['salmon'],
       selectedMealSlots: ['breakfast', 'lunch', 'dinner'],
     })
     const allIngredients = queue.meals.flatMap((m) => m.recipe.ingredientNames)
     expect(allIngredients.some((i) => i.toLowerCase().includes('salmon'))).toBe(false)
+  })
+
+  it('never relaxes avoided ingredients when they empty the queue pool', async () => {
+    vi.mocked(getRecipesByFocusType).mockResolvedValue(
+      recipePool().map((recipe, index) => ({
+        ...recipe,
+        ingredients: [index % 2 === 0 ? 'peanuts' : 'almonds'],
+      })),
+    )
+    await expect(generateRecipeQueue({
+      userId: 'u1',
+      mealsPerDay: 3,
+      goal: 'study',
+      focusMode: false,
+      budgetPerMealGbp: 4.25,
+      queueDays: 7,
+      avoidIngredients: ['Nuts'],
+    })).rejects.toThrow(/No recipes match your dietary restrictions/)
   })
 
   it('uses larger cluster sizes for a 28-day queue', async () => {
@@ -214,6 +275,7 @@ describe('generateRecipeQueue', () => {
       mealsPerDay: 1,
       goal: 'study',
       focusMode: false,
+      budgetPerMealGbp: 4.25,
       queueDays: 28,
     })
     expect(queue.meals).toHaveLength(28) // 28 days × 1 dinner
@@ -226,6 +288,7 @@ describe('generateRecipeQueue', () => {
       mealsPerDay: 2,
       goal: 'fitness',
       focusMode: true,
+      budgetPerMealGbp: 4.25,
       queueDays: 7,
       preferSleepDinners: true,
       maxCookingTime: 60,
@@ -233,5 +296,40 @@ describe('generateRecipeQueue', () => {
     })
     expect(queue.meals.length).toBeGreaterThan(0)
     expect(queue.mealsPerDay).toBe(2)
+  })
+
+  it('never places a recipe over the hard per-meal cap', async () => {
+    vi.mocked(getRecipesByFocusType).mockResolvedValue([
+      ...recipePool().map((recipe) => ({ ...recipe, cost_per_serving_gbp: 3.5 })),
+      makeRecipe({ id: 999, recipe_category: 'Dinner', cost_per_serving_gbp: 4.26 }),
+    ])
+    const queue = await generateRecipeQueue({
+      userId: 'u1',
+      mealsPerDay: 3,
+      goal: 'study',
+      focusMode: false,
+      budgetPerMealGbp: 4.25,
+      queueDays: 7,
+      selectedMealSlots: ['breakfast', 'lunch', 'dinner'],
+    })
+    expect(queue.budgetPerMealGbp).toBe(4.25)
+    expect(queue.meals.every((meal) => meal.recipe.totalCost <= 4.25)).toBe(true)
+    expect(queue.meals.some((meal) => meal.recipeId === '999')).toBe(false)
+  })
+
+  it('fails clearly when no recipe fits the hard cap', async () => {
+    vi.mocked(getRecipesByFocusType).mockResolvedValue(
+      recipePool().map((recipe) => ({ ...recipe, cost_per_serving_gbp: 4.26 })),
+    )
+    await expect(generateRecipeQueue({
+      userId: 'u1',
+      mealsPerDay: 3,
+      goal: 'study',
+      focusMode: false,
+      budgetPerMealGbp: 4.25,
+      queueDays: 7,
+    })).rejects.toThrow(
+      'No recipes fit your £4.25 per-meal budget. Increase your budget and try again.',
+    )
   })
 })

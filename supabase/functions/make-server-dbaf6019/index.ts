@@ -4,21 +4,33 @@ import { logger } from "npm:hono/logger";
 import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
 import { requireAuth, requireAdmin, getUserId, isUuid, grantAdminByEmail } from "./auth-middleware.ts";
 import { rateLimit } from "./rate-limit.ts";
-import { requirePro } from "./entitlement.ts";
+import { requirePremiumAccess } from "./entitlement.ts";
+import { requireRanksEnabled } from "./launch-policy.ts";
 import { vStr, vNum, vStrArr, vArr, timingSafeEqual } from "./validate.ts";
 import * as kv from "./kv_store.tsx";
-import { ALL_RECIPES, NewRecipe } from "./recipe-data.ts";
+import { ALL_RECIPES } from "./recipe-data.ts";
 import { toMealPlanMeal, toSwapOption, getRecipesByMealType, getAllRecipesFromDB, getRecipesByFocusType, getSleepFriendlyRecipes } from "./recipe-adapter.ts";
 import { classifyRecipe } from "./focus-classifier.ts";
-import { generateRecipeQueue, getQueueWeekAsMealPlan, getQueueWeekShoppingList, swapQueueMeal, RecipeQueue } from "./recipe-queue.ts";
+import { generateRecipeQueue, getQueueWeekAsMealPlan, getQueueWeekShoppingList, swapQueueMeal, QueuePreferenceNoMatchError, RecipeQueue } from "./recipe-queue.ts";
 import { generateImageQuery, enhanceImageQuery } from "./image-query-helper.ts";
 import { calculateRecipeNutrition } from "./calorie-ninjas.ts";
 import { ACHIEVEMENTS } from "./achievements.ts";
-import { computeIngredientKeywords, selectAllCoreRecipes, buildRotationSchedule, ScoredRecipe } from "./ingredient-overlap.ts";
-import { filterRecipes } from "./meal-filter.ts";
-import { buildGoalBias } from "./recipe-score.ts";
+import { generateMealPlanFromRecipes } from "./meal-plan-generator.ts";
 import { buildAcademicSchedule } from "./academic-schedule.ts";
 import { estimateMissingCosts } from "./recipe-backfill.ts";
+import { normalizeAllergyChoices } from "../_shared/allergy-contract.ts";
+import {
+  LEGACY_QUEUE_BUDGET_PER_MEAL_GBP,
+  normalizePreferenceBudget,
+  parseBudgetPerMealGbp,
+  resolveBudgetPerMealGbp,
+} from "../_shared/budget-contract.ts";
+import {
+  BudgetNoMatchError,
+  filterRecipesByBudget,
+  isCostWithinBudget,
+  noBudgetMatchMessage,
+} from "./recipe-budget.ts";
 
 // Debug-gated logger: emits only when DEBUG is set, so production logs stay
 // quiet (avoids unconditional console.log per project style). console.error
@@ -391,46 +403,52 @@ app.post("/make-server-dbaf6019/fetch-store-ingredients", requireAuth, async (c)
 });
 
 // Endpoint to generate optimal meal plan
-app.post("/make-server-dbaf6019/generate-meal-plan", requireAuth, rateLimit({ name: "generate-meal-plan", max: 15, windowSec: 60 }), requirePro, async (c) => {
+app.post("/make-server-dbaf6019/generate-meal-plan", requireAuth, rateLimit({ name: "generate-meal-plan", max: 15, windowSec: 60 }), requirePremiumAccess, async (c) => {
   try {
-    const { storeName, mealsPerDay, budget, goal, shoppingDate, planDays, maxCookingTime, avoidIngredients, dietaryRestrictions, selectedMealSlots } = await c.req.json();
+    const body = await c.req.json();
+    const { mealsPerDay, goal, planDays, maxCookingTime, avoidIngredients, dietaryRestrictions, selectedMealSlots } = body;
 
-    if (!mealsPerDay || !budget || !goal) {
+    if (!mealsPerDay || !goal) {
       return c.json({ error: "Missing required parameters" }, 400);
     }
 
-    // Bound untrusted inputs (prevents CPU/memory amplification + .toLowerCase crashes).
-    const safeMealsPerDay = vNum(mealsPerDay, 1, 6, 3);
-    const safeBudget = vNum(budget, 1, 100000, 100);
+    // Bound untrusted inputs before they reach scheduling and filtering work.
+    const safeMealsPerDay = Math.round(vNum(mealsPerDay, 1, 3, 3));
     const safeMaxCookingTime = vNum(maxCookingTime, 0, 240, 0);
-    const safeAvoid = vStrArr(avoidIngredients, 50, 100);
+    const safeAvoid = normalizeAllergyChoices(vStrArr(avoidIngredients, 50, 100), 50);
     const safeSlots = vStrArr(selectedMealSlots, 10, 30);
-    const safeDietary = vStrArr(dietaryRestrictions, 10, 30);
+    const safeDietary = normalizeAllergyChoices(vStrArr(dietaryRestrictions, 10, 30), 10);
     const safePlanDays = Math.round(vNum(planDays, 1, 14, 7));
-
-    // User-chosen plan length (1-14 days) starting from the shopping date
+    const budgetResolution = resolveBudgetPerMealGbp({
+      ...body,
+      planDays: safePlanDays,
+      mealsPerDay: safeMealsPerDay,
+    });
+    if (budgetResolution.value === null) {
+      return c.json({ error: "budgetPerMealGbp must be an amount from £1.00 to £50.00 with at most two decimal places." }, 400);
+    }
+    const budgetPerMealGbp = budgetResolution.value;
     const cookingDays = safePlanDays;
 
-    const totalMealsNeeded = cookingDays * safeMealsPerDay;
-    const weeklyBudget = safeBudget;
-
-    // Fetch recipes from database by meal_type
     const mealTypeMap: Record<string, string> = { study: 'study', work: 'work', fitness: 'fitness' };
-    // Default to 'study' to match the recipe-queue path (recipe-queue.ts).
-    const mealType = mealTypeMap[goal] || 'study';
+    const safeGoal = vStr(goal, 20);
+    const mealType = mealTypeMap[safeGoal];
+    if (!mealType) {
+      return c.json({ error: "goal must be study, work, or fitness" }, 400);
+    }
     const suitableRecipes = await getRecipesByMealType(mealType);
 
     if (suitableRecipes.length === 0) {
       return c.json({ error: "No recipes found for this goal. Please run /init-recipes first." }, 400);
     }
 
-    log(`🍽️ Generating meal plan: ${cookingDays} days × ${safeMealsPerDay} meals/day = ${totalMealsNeeded} meals from ${suitableRecipes.length} ${mealType} recipes`);
+    log(`Generating meal plan: ${cookingDays} days x ${safeMealsPerDay} meals/day from ${suitableRecipes.length} ${mealType} recipes`);
 
     const mealPlan = generateMealPlanFromRecipes(
       suitableRecipes,
       safeMealsPerDay,
-      weeklyBudget,
-      mealType, // canonical goal token, so the selection bias matches the fetched pool
+      budgetPerMealGbp,
+      mealType,
       safeMaxCookingTime,
       cookingDays,
       safeAvoid,
@@ -438,103 +456,20 @@ app.post("/make-server-dbaf6019/generate-meal-plan", requireAuth, rateLimit({ na
       safeDietary
     );
 
-    // No compliant recipe survived the dietary/avoid filters — tell the user
-    // honestly rather than fall back to serving a forbidden food.
-    if (mealPlan.meals.length === 0) {
+    if (mealPlan.noMatchReason === "preferences") {
       return c.json({ error: "No recipes match your dietary restrictions. Try removing some restrictions, or check back as we add more recipes." }, 400);
     }
+    if (mealPlan.noMatchReason === "budget") {
+      return c.json({ error: noBudgetMatchMessage(budgetPerMealGbp) }, 400);
+    }
 
-    return c.json({ mealPlan });
+    const { noMatchReason: _noMatchReason, ...publicMealPlan } = mealPlan;
+    return c.json({ mealPlan: publicMealPlan });
   } catch (error: any) {
     log(`Error in /generate-meal-plan endpoint: ${error.message}`);
     return c.json({ error: "Internal server error" }, 500);
   }
 });
-
-// Helper to generate meal plan from NewRecipe[] fetched from kv_store
-function generateMealPlanFromRecipes(
-  recipes: NewRecipe[],
-  mealsPerDay: number,
-  weeklyBudget: number,
-  goal: string,
-  maxCookingTime?: number,
-  cookingDays: number = 7,
-  avoidIngredients?: string[],
-  selectedMealSlots?: string[],
-  dietaryRestrictions?: string[]
-) {
-  // The budget is the total for the whole plan, so per-day = budget / plan length.
-  const dailyBudget = weeklyBudget / cookingDays;
-  const totalMealsNeeded = cookingDays * mealsPerDay;
-
-  // ── 1. Filter ────────────────────────────────────────────────────
-  // Dietary restrictions + avoided ingredients are hard safety filters (never
-  // relaxed); maxCookingTime is relaxed only if it would empty the pool. An
-  // empty result means no compliant recipe exists — we do NOT fall back to the
-  // unfiltered pool, so the schedule below comes back empty and the caller
-  // surfaces a clear error instead of serving a forbidden food.
-  const filteredRecipes = filterRecipes(recipes, { avoidIngredients, dietaryRestrictions, maxCookingTime });
-  log(`🥗 Filtered ${filteredRecipes.length}/${recipes.length} recipes by avoid/dietary/time`);
-
-  // ── 2. Categorize into pools with ingredient keywords ────────────
-  const toScored = (r: NewRecipe): ScoredRecipe => ({ recipe: r, keywords: computeIngredientKeywords(r) });
-
-  const breakfastPool = filteredRecipes
-    .filter(r => ["Breakfast", "Brunch"].includes(r.recipe_category || ""))
-    .map(toScored);
-  const lunchPool = filteredRecipes
-    .filter(r => ["Lunch", "Salad", "Sandwich", "Soup"].includes(r.recipe_category || ""))
-    .map(toScored);
-  const dinnerPool = filteredRecipes
-    .filter(r => !["Breakfast", "Brunch", "Lunch", "Salad", "Sandwich", "Soup"].includes(r.recipe_category || ""))
-    .map(toScored);
-
-  // Cross-category fallback: if a category has 0 recipes, borrow from others
-  const allScored = filteredRecipes.map(toScored);
-  const ensurePool = (pool: ScoredRecipe[]) => pool.length > 0 ? pool : allScored;
-
-  log(`📊 Pools: breakfast=${breakfastPool.length}, lunch=${lunchPool.length}, dinner=${dinnerPool.length}`);
-
-  // ── 3. Select core clusters with maximum ingredient overlap ──────
-  // Bias selection toward the user's goal (study/work → brain-food focus,
-  // fitness → protein) while keeping ingredient overlap the dominant signal.
-  const coreRecipes = selectAllCoreRecipes(
-    ensurePool(breakfastPool),
-    ensurePool(lunchPool),
-    ensurePool(dinnerPool),
-    undefined,
-    buildGoalBias(goal)
-  );
-
-  log(`🔗 Core: breakfast=${coreRecipes.breakfast.length}, lunch=${coreRecipes.lunch.length}, dinner=${coreRecipes.dinner.length}`);
-
-  // ── 4. Build N-day rotation schedule ─────────────────────────────
-  const schedule = buildRotationSchedule(coreRecipes, mealsPerDay, cookingDays, selectedMealSlots);
-
-  // ── 5. Convert to frontend format ────────────────────────────────
-  const meals = schedule.flatMap(day =>
-    day.meals.map(m => toMealPlanMeal(m.recipe, day.dayNumber, m.mealNumber, m.slot))
-  );
-
-  // Report-only budget: sum the per-meal costs (each meal carries the recipe's
-  // per-serving cost, flat fallback until the Gemini backfill prices it). Summed
-  // from the meals array so it matches the frontend's recompute after a swap.
-  // Never gates selection.
-  const totalCost = Math.round(
-    meals.reduce((sum, m) => sum + m.totalCost, 0) * 100,
-  ) / 100;
-
-  return {
-    meals,
-    totalCost,
-    dailyBudget,
-    weeklyBudget,
-    withinBudget: totalCost <= weeklyBudget,
-    cookingDays,
-    totalMealsNeeded,
-    mealsPerDay,
-  };
-}
 
 // ========== RECIPE INITIALIZATION ==========
 
@@ -716,7 +651,7 @@ app.post(
       }
 
       const result = await grantAdminByEmail(targetEmail);
-      if (!result.ok) {
+      if (result.ok === false) {
         return c.json({ error: result.error }, result.status === 409 ? 409 : 404);
       }
 
@@ -777,7 +712,7 @@ const ADMIN_KEYS_ALLOWED_PREFIXES = [
 // Get all keys with a specific prefix (for debugging)
 app.get("/make-server-dbaf6019/admin/keys/:prefix", requireAuth, requireAdmin, async (c) => {
   try {
-    const prefix = c.req.param('prefix');
+    const prefix = vStr(c.req.param('prefix'), 100);
 
     if (!ADMIN_KEYS_ALLOWED_PREFIXES.includes(prefix)) {
       return c.json({ error: "Prefix not allowed", allowed: ADMIN_KEYS_ALLOWED_PREFIXES }, 400);
@@ -980,22 +915,41 @@ app.post("/make-server-dbaf6019/admin/search-recipes", requireAuth, requireAdmin
 
 // ========== SHUFFLE/REPLACE RECIPE ENDPOINT ==========
 
+// Installed clients did not send budget context for mutations. During the
+// compatibility window they receive the documented legacy £5 cap. New clients
+// that send the canonical field are validated strictly.
+function resolveMutationBudget(body: Record<string, unknown>): number | null {
+  if (Object.prototype.hasOwnProperty.call(body, "budgetPerMealGbp")) {
+    return parseBudgetPerMealGbp(body.budgetPerMealGbp);
+  }
+  const legacy = resolveBudgetPerMealGbp(body);
+  return legacy.value ?? LEGACY_QUEUE_BUDGET_PER_MEAL_GBP;
+}
+
 // Smart recipe replacement - find similar recipe by nutrition
-app.post("/make-server-dbaf6019/shuffle-recipe", requireAuth, rateLimit({ name: "shuffle-recipe", max: 30, windowSec: 60 }), requirePro, async (c) => {
+app.post("/make-server-dbaf6019/shuffle-recipe", requireAuth, rateLimit({ name: "shuffle-recipe", max: 30, windowSec: 60 }), requirePremiumAccess, async (c) => {
   try {
-    const { currentRecipeId, goal, currentMealIds, maxCookingTime } = await c.req.json();
+    const body = await c.req.json();
+    const { currentRecipeId, goal, currentMealIds, maxCookingTime } = body;
 
     if (!currentRecipeId || !goal) {
       return c.json({ error: "Missing required parameters" }, 400);
     }
+    const budgetPerMealGbp = resolveMutationBudget(body);
+    if (budgetPerMealGbp === null) {
+      return c.json({ error: "budgetPerMealGbp must be an amount from £1.00 to £50.00 with at most two decimal places." }, 400);
+    }
 
-    // Fetch recipes from DB by meal_type
-    const mealType = goal === 'study' ? 'study' : goal === 'work' ? 'work' : 'fitness';
-    let allRecipes = await getRecipesByMealType(mealType);
+    // Fetch recipes from DB by validated meal type.
+    const safeGoal = vStr(goal, 20);
+    if (!["study", "work", "fitness"].includes(safeGoal)) {
+      return c.json({ error: "goal must be study, work, or fitness" }, 400);
+    }
+    let allRecipes = await getRecipesByMealType(safeGoal);
 
-    // Filter by max cooking time
-    if (maxCookingTime && maxCookingTime > 0) {
-      allRecipes = allRecipes.filter(r => (r.total_time_minutes ?? r.cook_time_minutes ?? 0) <= maxCookingTime);
+    const safeMaxCookingTime = vNum(maxCookingTime, 0, 240, 0);
+    if (safeMaxCookingTime > 0) {
+      allRecipes = allRecipes.filter(r => (r.total_time_minutes ?? r.cook_time_minutes ?? 0) <= safeMaxCookingTime);
     }
 
     // Find the current recipe
@@ -1004,16 +958,19 @@ app.post("/make-server-dbaf6019/shuffle-recipe", requireAuth, rateLimit({ name: 
       return c.json({ error: "Current recipe not found" }, 404);
     }
 
-    // Exclude currently selected meals
-    const excludedIds = (currentMealIds || [currentRecipeId]).map(String);
-    let candidates = allRecipes.filter(r => !excludedIds.includes(String(r.id)));
+    // Exclude current plan meals, then apply the hard cap. Budget is never
+    // relaxed merely because the affordable alternative set is empty.
+    const excludedIds = new Set([
+      ...vStrArr(currentMealIds, 100, 100),
+      String(currentRecipeId),
+    ]);
+    const candidates = filterRecipesByBudget(
+      allRecipes.filter(r => !excludedIds.has(String(r.id))),
+      budgetPerMealGbp,
+    );
 
     if (candidates.length === 0) {
-      candidates = allRecipes.filter(r => String(r.id) !== String(currentRecipeId));
-    }
-
-    if (candidates.length === 0) {
-      return c.json({ error: "No alternative recipes available." }, 400);
+      return c.json({ error: noBudgetMatchMessage(budgetPerMealGbp) }, 400);
     }
 
     // Score by nutrition similarity
@@ -1051,19 +1008,28 @@ app.post("/make-server-dbaf6019/shuffle-recipe", requireAuth, rateLimit({ name: 
 });
 
 // Get multiple meal swap options for user to choose from
-app.post("/make-server-dbaf6019/get-swap-options", requireAuth, rateLimit({ name: "get-swap-options", max: 30, windowSec: 60 }), requirePro, async (c) => {
+app.post("/make-server-dbaf6019/get-swap-options", requireAuth, rateLimit({ name: "get-swap-options", max: 30, windowSec: 60 }), requirePremiumAccess, async (c) => {
   try {
-    const { currentRecipeId, goal, currentMealIds, maxCookingTime, limit = 6 } = await c.req.json();
+    const body = await c.req.json();
+    const { currentRecipeId, goal, currentMealIds, maxCookingTime, limit = 6 } = body;
 
     if (!currentRecipeId || !goal) {
       return c.json({ error: "Missing required parameters" }, 400);
     }
+    const budgetPerMealGbp = resolveMutationBudget(body);
+    if (budgetPerMealGbp === null) {
+      return c.json({ error: "budgetPerMealGbp must be an amount from £1.00 to £50.00 with at most two decimal places." }, 400);
+    }
 
-    const mealType = goal === 'study' ? 'study' : goal === 'work' ? 'work' : 'fitness';
-    let allRecipes = await getRecipesByMealType(mealType);
+    const safeGoal = vStr(goal, 20);
+    if (!["study", "work", "fitness"].includes(safeGoal)) {
+      return c.json({ error: "goal must be study, work, or fitness" }, 400);
+    }
+    let allRecipes = await getRecipesByMealType(safeGoal);
 
-    if (maxCookingTime && maxCookingTime > 0) {
-      allRecipes = allRecipes.filter(r => (r.total_time_minutes ?? r.cook_time_minutes ?? 0) <= maxCookingTime);
+    const safeMaxCookingTime = vNum(maxCookingTime, 0, 240, 0);
+    if (safeMaxCookingTime > 0) {
+      allRecipes = allRecipes.filter(r => (r.total_time_minutes ?? r.cook_time_minutes ?? 0) <= safeMaxCookingTime);
     }
 
     const currentRecipe = allRecipes.find(r => String(r.id) === String(currentRecipeId));
@@ -1071,18 +1037,20 @@ app.post("/make-server-dbaf6019/get-swap-options", requireAuth, rateLimit({ name
       return c.json({ error: "Current recipe not found" }, 404);
     }
 
-    const excludedIds = (currentMealIds || [currentRecipeId]).map(String);
-    let candidates = allRecipes.filter(r => !excludedIds.includes(String(r.id)));
-
-    if (candidates.length < limit) {
-      const extras = allRecipes.filter(r => String(r.id) !== String(currentRecipeId) && !excludedIds.includes(String(r.id)));
-      candidates = [...new Set([...candidates, ...extras])];
-    }
+    const excludedIds = new Set([
+      ...vStrArr(currentMealIds, 100, 100),
+      String(currentRecipeId),
+    ]);
+    const candidates = filterRecipesByBudget(
+      allRecipes.filter(r => !excludedIds.has(String(r.id))),
+      budgetPerMealGbp,
+    );
 
     if (candidates.length === 0) {
-      return c.json({ error: "No alternative recipes available." }, 400);
+      return c.json({ error: noBudgetMatchMessage(budgetPerMealGbp) }, 400);
     }
 
+    const safeLimit = Math.round(vNum(limit, 1, 20, 6));
     const currentN = currentRecipe.nutrition_per_serving;
     const scored = candidates.map(recipe => {
       const n = recipe.nutrition_per_serving;
@@ -1097,7 +1065,7 @@ app.post("/make-server-dbaf6019/get-swap-options", requireAuth, rateLimit({ name
     });
 
     scored.sort((a, b) => b.score - a.score);
-    const topOptions = scored.slice(0, limit);
+    const topOptions = scored.slice(0, safeLimit);
 
     const swapOptions = topOptions.map(option => ({
       ...toSwapOption(option.recipe),
@@ -1256,15 +1224,23 @@ app.post("/make-server-dbaf6019/get-meal-conflicts", requireAuth, async (c) => {
 // ========== RECIPE QUEUE ENDPOINTS ==========
 
 // Generate a 28-day recipe queue for a user
-app.post("/make-server-dbaf6019/generate-recipe-queue", requireAuth, rateLimit({ name: "generate-recipe-queue", max: 10, windowSec: 60 }), requirePro, async (c) => {
+app.post("/make-server-dbaf6019/generate-recipe-queue", requireAuth, rateLimit({ name: "generate-recipe-queue", max: 10, windowSec: 60 }), requirePremiumAccess, async (c) => {
   try {
-    const { mealsPerDay, goal, avoidIngredients, maxCookingTime, budget, selectedMealSlots } = await c.req.json();
+    const body = await c.req.json();
+    const { mealsPerDay, goal, avoidIngredients, dietaryRestrictions, maxCookingTime, selectedMealSlots } = body;
     const userId = getUserId(c);
     if (!mealsPerDay || !goal) {
       return c.json({ error: "Missing required parameters: mealsPerDay, goal" }, 400);
     }
-    // Bound untrusted numeric inputs.
-    const safeMealsPerDay = vNum(mealsPerDay, 1, 6, 3);
+    // Installed clients did not send a usable queue cap, so they receive the
+    // documented legacy £5 value. A supplied canonical value is strict.
+    const budgetPerMealGbp = Object.prototype.hasOwnProperty.call(body, "budgetPerMealGbp")
+      ? parseBudgetPerMealGbp(body.budgetPerMealGbp)
+      : LEGACY_QUEUE_BUDGET_PER_MEAL_GBP;
+    if (budgetPerMealGbp === null) {
+      return c.json({ error: "budgetPerMealGbp must be an amount from £1.00 to £50.00 with at most two decimal places." }, 400);
+    }
+    const safeMealsPerDay = Math.round(vNum(mealsPerDay, 1, 3, 3));
     const safeMaxCookingTime = vNum(maxCookingTime, 0, 240, 0);
 
     // Check testing period status
@@ -1279,12 +1255,19 @@ app.post("/make-server-dbaf6019/generate-recipe-queue", requireAuth, rateLimit({
 
     const preferSleepDinners = !!(schedule?.sleepSchedule?.bedtime);
 
+    const safeGoal = vStr(goal, 20);
+    if (!["study", "work", "fitness"].includes(safeGoal)) {
+      return c.json({ error: "goal must be study, work, or fitness" }, 400);
+    }
+
     const queue = await generateRecipeQueue({
       userId,
       mealsPerDay: safeMealsPerDay,
-      goal,
+      goal: safeGoal,
       focusMode,
-      avoidIngredients: vStrArr(avoidIngredients, 50, 100),
+      budgetPerMealGbp,
+      avoidIngredients: normalizeAllergyChoices(vStrArr(avoidIngredients, 50, 100), 50),
+      dietaryRestrictions: normalizeAllergyChoices(vStrArr(dietaryRestrictions, 10, 30), 10),
       maxCookingTime: safeMaxCookingTime,
       preferSleepDinners,
       selectedMealSlots: vStrArr(selectedMealSlots, 10, 30),
@@ -1295,6 +1278,9 @@ app.post("/make-server-dbaf6019/generate-recipe-queue", requireAuth, rateLimit({
     log(`📋 Generated ${queue.meals.length}-meal queue for user ${userId} (focus=${focusMode})`);
     return c.json({ queue });
   } catch (error: any) {
+    if (error instanceof BudgetNoMatchError || error instanceof QueuePreferenceNoMatchError) {
+      return c.json({ error: error.message }, 400);
+    }
     return c.json({ error: "Internal server error" }, 500);
   }
 });
@@ -1307,8 +1293,16 @@ app.post("/make-server-dbaf6019/get-recipe-queue", requireAuth, async (c) => {
     const raw = await kv.get(`recipe_queue_${userId}`);
     if (!raw) return c.json({ queue: null, needsRefresh: true });
 
-    const queue: RecipeQueue = typeof raw === "string" ? JSON.parse(raw) : raw;
+    const storedQueue: RecipeQueue = typeof raw === "string" ? JSON.parse(raw) : raw;
+    const budgetPerMealGbp = parseBudgetPerMealGbp(storedQueue.budgetPerMealGbp)
+      ?? LEGACY_QUEUE_BUDGET_PER_MEAL_GBP;
+    const queue = { ...storedQueue, budgetPerMealGbp };
     const unconsumed = queue.meals.filter((m) => !m.isConsumed).length;
+
+    // Lazy compatibility migration. Existing meals stay untouched.
+    if (storedQueue.budgetPerMealGbp !== budgetPerMealGbp) {
+      await kv.set(`recipe_queue_${userId}`, JSON.stringify(queue));
+    }
 
     return c.json({ queue, needsRefresh: unconsumed < 7 });
   } catch (error: any) {
@@ -1319,7 +1313,7 @@ app.post("/make-server-dbaf6019/get-recipe-queue", requireAuth, async (c) => {
 // Get a specific week from the queue as a MealPlan-shaped object
 app.post("/make-server-dbaf6019/get-queue-week", requireAuth, async (c) => {
   try {
-    const { weekNumber, budget } = await c.req.json();
+    const { weekNumber } = await c.req.json();
     const userId = getUserId(c);
 
     const raw = await kv.get(`recipe_queue_${userId}`);
@@ -1327,7 +1321,7 @@ app.post("/make-server-dbaf6019/get-queue-week", requireAuth, async (c) => {
 
     const queue: RecipeQueue = typeof raw === "string" ? JSON.parse(raw) : raw;
     const week = weekNumber || 1;
-    const mealPlan = getQueueWeekAsMealPlan(queue, week, budget || 100);
+    const mealPlan = getQueueWeekAsMealPlan(queue, week);
 
     return c.json({ mealPlan });
   } catch (error: any) {
@@ -1340,8 +1334,14 @@ app.post("/make-server-dbaf6019/queue-swap-meal", requireAuth, async (c) => {
   try {
     const { dayNumber, mealSlot, newRecipeId } = await c.req.json();
     const userId = getUserId(c);
-    if (!dayNumber || !mealSlot || !newRecipeId) {
-      return c.json({ error: "Missing required parameters" }, 400);
+    const safeDayNumber = typeof dayNumber === "number" && Number.isInteger(dayNumber)
+      && dayNumber >= 1 && dayNumber <= 28 ? dayNumber : null;
+    const safeMealSlot = ["breakfast", "lunch", "dinner"].includes(mealSlot)
+      ? mealSlot : null;
+    const safeRecipeId = typeof newRecipeId === "string" || typeof newRecipeId === "number"
+      ? String(newRecipeId).slice(0, 100) : "";
+    if (safeDayNumber === null || safeMealSlot === null || !safeRecipeId) {
+      return c.json({ error: "Valid dayNumber, mealSlot, and newRecipeId are required" }, 400);
     }
 
     const raw = await kv.get(`recipe_queue_${userId}`);
@@ -1351,18 +1351,23 @@ app.post("/make-server-dbaf6019/queue-swap-meal", requireAuth, async (c) => {
 
     // Fetch the new recipe
     const allRecipes = await getAllRecipesFromDB();
-    const newRecipe = allRecipes.find((r) => String(r.id) === String(newRecipeId));
+    const newRecipe = allRecipes.find((r) => String(r.id) === safeRecipeId);
     if (!newRecipe) return c.json({ error: "Recipe not found" }, 404);
 
     // Pass the slot so the swapped-in recipe's category/mealType reflect the
     // slot it now occupies (not the recipe's own category).
-    const mealObj = toMealPlanMeal(newRecipe, dayNumber, 1, mealSlot);
-    queue = swapQueueMeal(queue, dayNumber, mealSlot, mealObj);
+    const mealObj = toMealPlanMeal(newRecipe, safeDayNumber, 1, safeMealSlot);
+    const queueBudget = parseBudgetPerMealGbp(queue.budgetPerMealGbp)
+      ?? LEGACY_QUEUE_BUDGET_PER_MEAL_GBP;
+    if (!isCostWithinBudget(mealObj.totalCost, queueBudget)) {
+      return c.json({ error: noBudgetMatchMessage(queueBudget) }, 400);
+    }
+    queue = swapQueueMeal({ ...queue, budgetPerMealGbp: queueBudget }, safeDayNumber, safeMealSlot, mealObj);
 
     await kv.set(`recipe_queue_${userId}`, JSON.stringify(queue));
 
     // Return updated week
-    const weekNumber = Math.ceil(dayNumber / 7);
+    const weekNumber = Math.ceil(safeDayNumber / 7);
     const mealPlan = getQueueWeekAsMealPlan(queue, weekNumber);
 
     return c.json({ mealPlan, queue });
@@ -1772,6 +1777,10 @@ app.post("/make-server-dbaf6019/save-meal-plan", requireAuth, async (c) => {
     if (!mealPlan) {
       return c.json({ error: "Meal plan required" }, 400);
     }
+    const normalizedPreferences = normalizePreferenceBudget(preferences);
+    if (!normalizedPreferences || normalizedPreferences.budgetPerMealGbp === null) {
+      return c.json({ error: "Valid budgetPerMealGbp preferences are required" }, 400);
+    }
 
     const timestamp = new Date().toISOString();
     const isUpdate = !!existingPlanId;
@@ -1782,7 +1791,7 @@ app.post("/make-server-dbaf6019/save-meal-plan", requireAuth, async (c) => {
     await kv.set(planKey, {
       planId,
       mealPlan,
-      preferences,
+      preferences: normalizedPreferences,
       planName: planName || `Meal Plan - ${new Date().toLocaleDateString('en-GB')}`,
       savedAt: timestamp,
       userId
@@ -1942,7 +1951,7 @@ app.post("/make-server-dbaf6019/load-meal-plan-by-id", requireAuth, async (c) =>
     return c.json({ 
       success: true,
       mealPlan: data.mealPlan,
-      preferences: data.preferences,
+      preferences: normalizePreferenceBudget(data.preferences),
       planName: data.planName,
       savedAt: data.savedAt
     });
@@ -2454,7 +2463,7 @@ app.post("/make-server-dbaf6019/user-stats", requireAuth, async (c) => {
 });
 
 // Get school leaderboard ranked by best (longest) cooking day streak
-app.post("/make-server-dbaf6019/leaderboard", requireAuth, async (c) => {
+app.post("/make-server-dbaf6019/leaderboard", requireAuth, requireRanksEnabled, async (c) => {
   try {
     const { schoolId } = await c.req.json();
     // The caller's own id comes from the token so we can flag their row without
@@ -2529,7 +2538,7 @@ app.post("/make-server-dbaf6019/leaderboard", requireAuth, async (c) => {
 });
 
 // Get recipe leaderboard ranked by times cooked (school-scoped, paginated)
-app.post("/make-server-dbaf6019/recipe-leaderboard", requireAuth, async (c) => {
+app.post("/make-server-dbaf6019/recipe-leaderboard", requireAuth, requireRanksEnabled, async (c) => {
   try {
     const { schoolId, limit = 10, offset = 0 } = await c.req.json();
     // The viewer's own id (for "liked by me" enrichment) comes from the token,

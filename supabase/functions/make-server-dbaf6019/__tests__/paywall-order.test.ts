@@ -1,11 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
-// Verifies the security ordering fix (commit "rate-limit before requirePro on
-// paywalled routes"): on the four paywalled routes the chain is
-//   requireAuth -> rateLimit -> requirePro
-// so a flood of requests is throttled at the limiter BEFORE the expensive
-// RevenueCat entitlement check runs. This protects the money path from
-// denial-of-wallet by a single authenticated (non-Pro) caller.
+// Verifies the paid-mode security ordering on the four premium routes:
+//   requireAuth -> rateLimit -> requirePremiumAccess
+// When subscriptions are re-enabled, the policy delegates to requirePro, so a
+// flood is throttled before an expensive RevenueCat entitlement check.
 //
 // We exercise the REAL middleware. kv_store is the only runtime import and is
 // mocked with an in-memory store; requireAuth (JWT verify, needs Deno/Supabase)
@@ -20,7 +18,9 @@ vi.mock('../kv_store.tsx', () => ({
 }))
 
 import { rateLimit } from '../rate-limit.ts'
-import { requirePro } from '../entitlement.ts'
+import { createPremiumAccessMiddleware, requirePro } from '../entitlement.ts'
+
+const paidPremiumPolicy = createPremiumAccessMiddleware(true, requirePro)
 
 // Count RevenueCat lookups so we can prove the limiter caps them.
 let revenueCatCalls = 0
@@ -80,12 +80,28 @@ const MAX = 15 // matches generate-meal-plan's configured limit
 const USER = 'non-pro-user-123'
 
 describe('paywalled route middleware order: rateLimit before requirePro', () => {
-  it('throttles a non-Pro flood at the limiter and caps RevenueCat calls', async () => {
-    // NEW order, exactly as registered in index.ts for /generate-meal-plan.
+  it('keeps authentication and rate limiting active during free launch', async () => {
+    const freePremiumPolicy = createPremiumAccessMiddleware(false, requirePro)
     const chain: Mw[] = [
       requireAuth(USER),
       rateLimit({ name: 'generate-meal-plan', max: MAX, windowSec: 60 }),
-      requirePro,
+      freePremiumPolicy,
+      handler,
+    ]
+
+    for (let i = 1; i <= MAX + 1; i++) {
+      const res = await run(USER, chain)
+      expect(res.status).toBe(i <= MAX ? 200 : 429)
+    }
+    expect(revenueCatCalls).toBe(0)
+  })
+
+  it('throttles a non-Pro flood at the limiter and caps RevenueCat calls', async () => {
+    // Paid-mode order corresponding to /generate-meal-plan registration.
+    const chain: Mw[] = [
+      requireAuth(USER),
+      rateLimit({ name: 'generate-meal-plan', max: MAX, windowSec: 60 }),
+      paidPremiumPolicy,
       handler,
     ]
 

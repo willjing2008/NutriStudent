@@ -17,6 +17,12 @@ describe('recipeCostPerServing', () => {
   it('falls back to the flat estimate when unpriced', () => {
     expect(recipeCostPerServing(makeRecipe())).toBe(FLAT_FALLBACK_GBP)
   })
+  it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY])(
+    'falls back for invalid stored cost %s',
+    (cost) => {
+      expect(recipeCostPerServing(makeRecipe({ cost_per_serving_gbp: cost }))).toBe(FLAT_FALLBACK_GBP)
+    },
+  )
 })
 
 describe('costPerServing', () => {
