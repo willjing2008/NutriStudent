@@ -2,13 +2,12 @@ import type { Context, Next } from "npm:hono";
 import { LAUNCH_CONFIG } from "../_shared/launch-config.ts";
 
 // Server-side paywall enforcement (audit C-5). The client gate (useSubscription)
-// is cosmetic — `isPro` is even hard-coded true on web — so premium routes must
-// verify the caller's RevenueCat entitlement here, keyed by the *authenticated*
-// user id (NEVER a client-sent isPro flag). RevenueCat is identified on the
-// client with the Supabase user id (App.tsx), so the token's userId is the
-// RevenueCat app_user_id.
+// is cosmetic, so paid mode must verify the caller's RevenueCat entitlement
+// here, keyed by the authenticated user id and never by a client-sent isPro
+// flag. Free launch bypasses this verification only through the explicit
+// product-policy middleware below.
 
-// Entitlement identifier configured in RevenueCat (matches services/revenuecat.ts).
+// Exact live backend identifier. Align the client before enabling paid mode.
 const ENTITLEMENT_ID = "ChefPocket Pro";
 const RC_SUBSCRIBERS_URL = "https://api.revenuecat.com/v1/subscribers";
 

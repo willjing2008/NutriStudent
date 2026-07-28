@@ -11,15 +11,17 @@ This file is the project's committed home for project-intrinsic agent knowledge:
   - Bundle identifier `com.nutritionapp.students` (Info.plist `PRODUCT_BUNDLE_IDENTIFIER`, `project.pbxproj`, both `capacitor.config.json` `appId`) — the App Store identity; leave exactly as-is.
   - `CFBundleName` in Info.plist is `$(PRODUCT_NAME)` → `$(TARGET_NAME)` = "App" (internal executable name, not user-facing) — left unchanged.
   - Internal `package.json` `"name"`, git repo name, test fixture identifiers — not user-facing, left unchanged.
-- The live RevenueCat entitlement identifier is `"ChefPocket Pro"`, verified against the dashboard before backend version 97 shipped. The backend must preserve that exact identifier. The PR-1 client still carries the legacy `"NutriStudent Pro"` key and subscriptions remain disabled; align the client in the dedicated client PR before enabling paid mode.
+- Paid-mode RevenueCat naming intentionally differs from the legacy client until the dedicated client PR.
+  Follow the activation contract in `docs/DEPLOYMENT.md` before enabling paid mode.
 
 ## Security: backend auth & paywall
 
-- Production Edge Function version 97 was deployed on July 28, 2026 from approved divergent commit `dc55570`. The backend source on GitHub main must retain that behavior; merging source does not deploy it.
+- Backend release status and deploy boundaries are owned by `docs/DEPLOYMENT.md`; merging source does not deploy production.
 - The Supabase edge function (`supabase/functions/make-server-dbaf6019/`) runs on the service-role key (bypasses RLS), so each route's middleware IS the authorization.
   - `auth-middleware.ts`: `requireAuth` verifies the caller's JWT and sets a token-derived `userId` — handlers must use `getUserId(c)`, NEVER `body.userId`. `requireAdmin` chains after it and checks `app_metadata.role` (NOT `user_metadata`, which users can self-write).
   - Initial launch policy lives in `supabase/functions/_shared/launch-config.ts`, with subscriptions and Ranks explicitly disabled. The four premium routes retain `requireAuth` and per-user rate limiting before `requirePremiumAccess`; free mode skips RevenueCat intentionally. The two ranking routes retain `requireAuth` and return a policy 404 before any handler or service-role scan.
-  - `entitlement.ts`: dormant paid-mode enforcement uses the exact live `"ChefPocket Pro"` entitlement and fails closed when its secret or RevenueCat is unavailable. It has no runtime effect while subscriptions are disabled. Configure `REVENUECAT_SECRET_KEY`, align the client identifier, and test paid mode before changing launch policy.
+  - `entitlement.ts`: dormant paid-mode enforcement must fail closed when its secret or RevenueCat is unavailable.
+    Its activation requirements are owned by `docs/DEPLOYMENT.md`.
 - Client API calls: use `src/app/utils/apiClient.ts` — `authedFetch`/`authedPost`/`authedGet` send the real session JWT and are required for any `requireAuth` route. The anon key (`publicPost` / hand-rolled headers) is ONLY for genuinely public endpoints (`health`, `schools/search`, `recipe-image/:id`, `get-recipe-image-with-cache`, `auth/signup`, the Google-proxy location routes). Never send the anon key to an authed route.
 
 ## Error responses
@@ -55,9 +57,8 @@ This file is the project's committed home for project-intrinsic agent knowledge:
 ## Plan length / start date (planDays)
 
 - The meal plan's length is user-chosen: `preferences.planDays` (1–14, default 7) travels in the `generate-meal-plan` payload; the handler bounds it with `vNum(planDays, 1, 14, 7)`, rounds it to an integer, and feeds it as `cookingDays`. The "Plan Start Date" card in PreferencesStep is the old "Next Shopping Date" — the internal field is still `shoppingDate` everywhere (deliberate: label-only rename).
-- Backend version 97 owns a canonical hard `budgetPerMealGbp` cap from £1.00 through £50.00, compared in integer pence. Generation, queues, shuffle, swap options, and queue swaps never relax it. Unpriced recipes use the existing £2.50 fallback.
-- The PR-1 client still sends the historical total-plan `budget`; the backend compatibility adapter derives `budget / (planDays * mealsPerDay)`. A legacy client with no `planDays` is treated as the historical seven-day plan. New server behavior always prefers a supplied canonical field, and malformed supplied canonical values never fall back.
-- Queue caps persist with the queue and cannot be overridden by week readers. Legacy queues without a cap migrate lazily to £5.00 per meal.
+- The backend budget and compatibility contract is owned by `docs/DEPLOYMENT.md` and implemented in `supabase/functions/_shared/budget-contract.ts`.
+  Route handlers must use the shared helpers instead of re-deriving budget math.
 - `e2e/plan-days.spec.ts` (Playwright, route-mocked backend per repo e2e convention) pins the current legacy payload contract, the N-day calendar anchored on the chosen start date, and the day-scoped shopping list. The dedicated client PR updates that contract to canonical per-meal budget; the 28-day recipe-queue path remains fixed-length.
 - `src/app/components/RecommendationsStep.tsx` has **mixed line endings (mostly CRLF)** committed; whole-file rewrites (or editors that normalize the dominant ending) produce a huge whitespace diff. Patch it with byte-preserving edits and check `git diff --stat` before committing.
 
@@ -97,7 +98,8 @@ This file is the project's committed home for project-intrinsic agent knowledge:
 - **Build number must strictly increase on every App Store Connect upload.** App Store Connect rejects an upload whose `CFBundleVersion` (`CURRENT_PROJECT_VERSION` in `project.pbxproj`, both Debug+Release) is ≤ the last uploaded build. The last uploaded build was **6** (test uploads predating the first real submission), so v1 ships at build **7**; bump it again for every subsequent upload. `MARKETING_VERSION` (1.0) is the user-facing version and can stay across builds.
 - `ITSAppUsesNonExemptEncryption=false` in `ios/App/App/Info.plist`: the app uses only standard HTTPS, so this declares export-compliance and skips the per-build encryption prompt on every TestFlight/App Store upload. Keep it unless the app adds non-exempt crypto.
 - `ios/exportOptions.plist` is the App Store export config for `xcodebuild -exportArchive` (`method=app-store-connect`, `destination=export` → writes a signed `.ipa` locally for deliberate upload via Organizer/Transporter; switch `destination` to `upload` for direct CI upload). `teamID=7F8UL5VST3`, automatic signing. Distribution signing is Xcode cloud-managed (not shown by `security find-identity`) but resolves at export time when signed into the paid account.
-- Release build must set `VITE_REVENUECAT_IOS_API_KEY` (prod iOS public key) at build time; prod Supabase must set `REVENUECAT_SECRET_KEY` or the server paywall fails open. Neither is committed.
+- RevenueCat activation and server-secret requirements are owned by `docs/DEPLOYMENT.md`.
+  Initial free-launch Release builds leave `VITE_REVENUECAT_IOS_API_KEY` unset because subscriptions are disabled, and no secret is committed.
 - **RevenueCat kills non-DEBUG builds carrying a `test_` key.**
   purchases-ios intentionally shows a "Wrong API Key" alert and then `fatalError()`s any Release-configuration build configured with a Test Store (`test_...`) key (`Configuration.swift` `checkForSimulatedStoreAPIKeyInRelease`, `#if !DEBUG`).
   This is what killed TestFlight build 7 at launch: the web bundle was built without `VITE_REVENUECAT_IOS_API_KEY`, so the sandbox key shipped.
