@@ -85,8 +85,8 @@ describe('AcademicScheduleEditor — exam periods (focus mode driver)', () => {
     fireEvent.click(screen.getByRole('button', { name: /Exam Periods/i }));
     fireEvent.click(screen.getByRole('button', { name: /Add Exam Period/i }));
 
-    fireEvent.change(screen.getByPlaceholderText(/Name \(e\.g\., Midterm Exams\)/i), {
-      target: { value: 'Finals' },
+    fireEvent.change(screen.getByPlaceholderText(/Name \(e\.g\., Summer Exams\)/i), {
+      target: { value: 'A-Levels' },
     });
     const dateInputs = document.querySelectorAll('input[type="date"]');
     fireEvent.change(dateInputs[0], { target: { value: '2026-12-10' } });
@@ -96,7 +96,35 @@ describe('AcademicScheduleEditor — exam periods (focus mode driver)', () => {
 
     await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
     expect(onSave.mock.calls[0][0].testingPeriods).toEqual([
-      expect.objectContaining({ name: 'Finals', startDate: '2026-12-10', endDate: '2026-12-18', type: 'midterm' }),
+      expect.objectContaining({ name: 'A-Levels', startDate: '2026-12-10', endDate: '2026-12-18', type: 'exam' }),
+    ]);
+  });
+
+  it('offers the universal (non-US) exam type taxonomy', () => {
+    renderEditor({ schedule: makeSchedule([]) });
+
+    fireEvent.click(screen.getByRole('button', { name: /Exam Periods/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Add Exam Period/i }));
+
+    const options = [...document.querySelectorAll('select option')].map(o => o.textContent);
+    expect(options).toEqual(['Exam', 'Mock exam', 'Coursework deadline', 'Custom']);
+  });
+
+  it('migrates legacy US-centric stored types to the universal taxonomy on save', async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    const schedule = makeSchedule([]);
+    schedule.testingPeriods = [
+      { id: 'p1', name: 'Old midterms', startDate: '2026-10-01', endDate: '2026-10-05', type: 'midterm' },
+      { id: 'p2', name: 'Old quiz week', startDate: '2026-11-01', endDate: '2026-11-02', type: 'quiz' },
+    ];
+    renderEditor({ schedule, onSave });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+    expect(onSave.mock.calls[0][0].testingPeriods.map((p: { type: string }) => p.type)).toEqual([
+      'exam',
+      'exam',
     ]);
   });
 
@@ -126,6 +154,24 @@ describe('AcademicScheduleEditor — sleep schedule (sleep-friendly dinners driv
 
     await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
     expect(onSave.mock.calls[0][0].sleepSchedule).toMatchObject({ bedtime: '22:30' });
+  });
+});
+
+describe('AcademicScheduleEditor — in-modal save errors', () => {
+  it('renders the save error inside the modal, above the Save button', () => {
+    renderEditor({ saveError: 'Could not save your schedule. Please try again.' });
+
+    const alert = screen.getByRole('alert');
+    expect(alert).toHaveTextContent('Could not save your schedule. Please try again.');
+    // The alert and the Save button share the footer, so the error is visible
+    // even though the bottom-sheet editor covers the page underneath.
+    const saveButton = screen.getByRole('button', { name: 'Save' });
+    expect(alert.compareDocumentPosition(saveButton) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('renders no alert when there is no save error', () => {
+    renderEditor();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 });
 

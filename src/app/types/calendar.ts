@@ -10,12 +10,18 @@ export interface ClassEntry {
   color?: string;          // hex for UI blocks
 }
 
+/** Universal exam-period taxonomy (readable in any market). */
+export type TestingPeriodType = 'exam' | 'mock' | 'coursework' | 'custom';
+
+/** Values stored by the old US-centric taxonomy; still present in saved data. */
+export type LegacyTestingPeriodType = 'midterm' | 'final' | 'quiz';
+
 export interface TestingPeriod {
   id: string;
-  name: string;            // "Midterm Exams"
+  name: string;            // "Summer Exams"
   startDate: string;       // "YYYY-MM-DD"
   endDate: string;
-  type: 'midterm' | 'final' | 'quiz' | 'custom';
+  type: TestingPeriodType | LegacyTestingPeriodType;
 }
 
 export interface SleepSchedule {

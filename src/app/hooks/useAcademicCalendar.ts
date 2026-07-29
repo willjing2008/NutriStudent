@@ -127,7 +127,7 @@ export function useAcademicCalendar() {
     setWeekConflicts(wc);
   }, [loadMealConflicts, loadWeekConflicts]);
 
-  // Save academic schedule (also refreshes week conflicts)
+  // Save academic schedule (also refreshes week conflicts and the focus badge)
   const saveSchedule = useCallback(async (userId: string, newSchedule: Omit<AcademicSchedule, 'updatedAt'>, mealTimes?: MealTimes) => {
     try {
       setIsLoading(true);
@@ -137,7 +137,13 @@ export function useAcademicCalendar() {
       });
       setSchedule(data.schedule);
       setError(null);
-      await refreshAllConflicts(userId, mealTimes);
+      // Re-check the testing period so the FOCUS badge reacts to exam-period
+      // edits immediately - it was previously only checked on mount, so saving
+      // an exam period had no visible effect until an app restart.
+      await Promise.all([
+        refreshAllConflicts(userId, mealTimes),
+        checkTestingPeriod(userId),
+      ]);
       return data.schedule;
     } catch (err: unknown) {
       setError(getErrorMessage(err, CALENDAR_ERROR_MESSAGES.saveSchedule));
@@ -145,7 +151,7 @@ export function useAcademicCalendar() {
     } finally {
       setIsLoading(false);
     }
-  }, [refreshAllConflicts]);
+  }, [refreshAllConflicts, checkTestingPeriod]);
 
   // Save a meal time override for a specific day/slot, then refresh conflicts
   const saveMealTimeOverride = useCallback(async (

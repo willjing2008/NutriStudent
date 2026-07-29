@@ -12,10 +12,27 @@ export interface ImportableEvent {
   location: string | null;
   startDate: number; // epoch ms
   endDate: number;   // epoch ms
-  isAllDay: boolean;
+  /** All-day flag per the plugin's TypeScript interface. */
+  isAllDay?: boolean;
+  /**
+   * All-day flag as the plugin's iOS bridge actually serializes it
+   * (`ImplementationHelper.swift` emits `"allDay"`, not `isAllDay`).
+   * Check BOTH keys or all-day events import as fake midnight classes.
+   */
+  allDay?: boolean;
 }
 
 const COLOR_OPTIONS = ['#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#EF4444', '#06B6D4'];
+
+// A "class" spanning 16+ hours is an all-day-ish event whatever its flags say
+// (EventKit reports all-day occurrences as 00:00-23:59). Dropping these is the
+// defensive backstop for bridges that lose the all-day flag entirely.
+const MAX_CLASS_MINUTES = 16 * 60;
+
+function toMinutes(time: string): number {
+  const [h, m] = time.split(':').map(Number);
+  return h * 60 + m;
+}
 
 /** "HH:MM" (24h, zero-padded) for a Date's LOCAL wall-clock time. */
 function toHHMM(date: Date): string {
@@ -39,7 +56,7 @@ export function eventsToClasses(events: ImportableEvent[], calendarIds?: string[
   const classes: ClassEntry[] = [];
 
   for (const ev of events) {
-    if (ev.isAllDay) continue;                                    // all-day events are never classes
+    if (ev.isAllDay ?? ev.allDay) continue;                       // all-day events are never classes
     const name = (ev.title || '').trim();
     if (!name) continue;                                          // unnamed events carry no class info
     if (allow && !allow.has(ev.calendarId ?? '')) continue;       // scoped out by the calendar picker
@@ -51,6 +68,10 @@ export function eventsToClasses(events: ImportableEvent[], calendarIds?: string[
     // ponytail: drop degenerate / cross-midnight events. Classes are same-day and
     // end after they start; anything else corrupts conflict detection downstream.
     if (endTime <= startTime) continue;
+    // Drop events spanning the whole waking day - an all-day event whose flag
+    // was lost in bridge serialization would otherwise become a fake class
+    // that conflicts with every meal window on that weekday.
+    if (toMinutes(endTime) - toMinutes(startTime) >= MAX_CLASS_MINUTES) continue;
 
     const location = (ev.location || '').trim();
     classes.push({

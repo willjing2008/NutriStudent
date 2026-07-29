@@ -46,6 +46,34 @@ describe('eventsToClasses', () => {
     expect(eventsToClasses([makeEvent({ isAllDay: true })])).toEqual([]);
   });
 
+  it('skips all-day events serialized under the iOS bridge key `allDay`', () => {
+    // The plugin's iOS bridge emits `"allDay"` while its TS interface declares
+    // `isAllDay`; relying on `isAllDay` alone imported all-day events as fake
+    // midnight-to-midnight classes (P1-2).
+    expect(eventsToClasses([makeEvent({ isAllDay: undefined, allDay: true })])).toEqual([]);
+  });
+
+  it('defensively drops events spanning the whole waking day even when both all-day flags are missing', () => {
+    // EventKit reports all-day occurrences as 00:00-23:59.
+    expect(
+      eventsToClasses([
+        makeEvent({
+          isAllDay: undefined,
+          allDay: undefined,
+          startDate: at(2026, 6, 15, 0, 0),
+          endDate: at(2026, 6, 15, 23, 59),
+        }),
+      ]),
+    ).toEqual([]);
+  });
+
+  it('keeps a long but plausible same-day event (e.g. an 8-hour field trip)', () => {
+    const [cls] = eventsToClasses([
+      makeEvent({ startDate: at(2026, 6, 15, 9, 0), endDate: at(2026, 6, 15, 17, 0) }),
+    ]);
+    expect(cls).toMatchObject({ startTime: '09:00', endTime: '17:00' });
+  });
+
   it('skips events with a blank title', () => {
     expect(eventsToClasses([makeEvent({ title: '   ' })])).toEqual([]);
   });
