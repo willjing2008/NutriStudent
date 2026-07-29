@@ -89,3 +89,10 @@ This file is the project's committed home for project-intrinsic agent knowledge:
   In keyless native builds, all RevenueCat SDK and RevenueCatUI calls must be guarded by `isRevenueCatConfigured()` / `subscriptionsAvailable`, and mandatory paywalls must be bypassed so the app stays usable with subscriptions disabled.
   To exercise Test Store purchases on device/sim, pass the sandbox key explicitly (`VITE_REVENUECAT_IOS_API_KEY=test_... npm run build`) and only run it in a Debug configuration.
 - **ALWAYS smoke-test a Release-configuration launch before archiving** (`xcodebuild -configuration Release -destination 'generic/platform=iOS Simulator' …` then `simctl install`/`launch`, or Edit Scheme → Run → Release). Debug builds hide `#if !DEBUG` failure modes like the one above.
+
+## Maintaining this file
+
+Keep this file for knowledge useful to almost every future agent session in this project.
+Do not repeat what the codebase already shows; point to the authoritative file or command instead.
+Prefer rewriting or pruning existing entries over appending new ones.
+When updating this file, preserve this bar for all agents and keep entries concise.

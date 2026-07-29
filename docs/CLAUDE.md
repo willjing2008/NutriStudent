@@ -18,7 +18,8 @@ See `docs/DEPLOYMENT.md` for the full quality-gate and release workflow.
 
 ## Architecture Overview
 
-**NutriStudent** is a React + Capacitor iOS mobile app for student meal planning and nutrition. The web app (React/Vite) runs inside a native iOS shell via Capacitor's WKWebView.
+**ChefPocket** is a React + Capacitor iOS mobile app for student meal planning and nutrition.
+The web app (React/Vite) runs inside a native iOS shell via Capacitor's WKWebView.
 
 ### Stack
 
