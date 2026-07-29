@@ -20,11 +20,11 @@ const NON_CLASS_CALENDAR = /birthday|holiday/i;
 
 /** First-run default: all calendars except holiday/birthday ones. */
 export function defaultCalendarSelection(calendars: SelectableCalendar[]): Set<string> {
-  const preferred = calendars.filter(c => !NON_CLASS_CALENDAR.test(c.title || ''));
-  // If everything looked like a non-class calendar, fall back to all of them
-  // so the picker never opens with nothing selectable-looking.
-  const chosen = preferred.length > 0 ? preferred : calendars;
-  return new Set(chosen.map(c => c.id));
+  return new Set(
+    calendars
+      .filter(c => !NON_CLASS_CALENDAR.test(c.title || ''))
+      .map(c => c.id),
+  );
 }
 
 /** The persisted last-used selection, or null if absent/corrupt. */

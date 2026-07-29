@@ -22,12 +22,12 @@ describe('defaultCalendarSelection', () => {
     expect(defaultCalendarSelection(CALS)).toEqual(new Set(['school', 'personal']));
   });
 
-  it('falls back to all calendars when every calendar looks non-class', () => {
+  it('selects nothing when every calendar looks non-class', () => {
     const onlyJunk = [
       { id: 'holidays', title: 'US Holidays' },
       { id: 'bdays', title: 'Birthdays' },
     ];
-    expect(defaultCalendarSelection(onlyJunk)).toEqual(new Set(['holidays', 'bdays']));
+    expect(defaultCalendarSelection(onlyJunk)).toEqual(new Set());
   });
 
   it('handles an empty calendar list', () => {

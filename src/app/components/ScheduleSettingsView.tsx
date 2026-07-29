@@ -11,6 +11,7 @@ interface ScheduleSettingsViewProps {
   onManageClasses: () => void;
   /** Open the editor on exam periods + sleep. */
   onEditExamsSleep: () => void;
+  isSaving?: boolean;
   /**
    * Native only: delete one class. Imports are the only class source on
    * native (no manual editor), so without this an imported mistake is
@@ -34,6 +35,7 @@ export function ScheduleSettingsView({
   onImportClasses,
   onManageClasses,
   onEditExamsSleep,
+  isSaving = false,
   onDeleteClass,
 }: ScheduleSettingsViewProps) {
   const classes = [...(schedule?.classes || [])].sort(
@@ -88,8 +90,9 @@ export function ScheduleSettingsView({
                 {calendarImportSupported && onDeleteClass && (
                   <button
                     onClick={() => onDeleteClass(cls.id)}
+                    disabled={isSaving}
                     aria-label={`Delete ${cls.name || 'Untitled'}`}
-                    className="flex-shrink-0 p-1 -m-1 text-red-400/50 hover:text-red-400 transition-colors"
+                    className="flex-shrink-0 p-1 -m-1 text-red-400/50 hover:text-red-400 transition-colors disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>

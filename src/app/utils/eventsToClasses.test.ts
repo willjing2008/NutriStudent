@@ -23,7 +23,7 @@ describe('eventsToClasses', () => {
   it('maps an occurrence to a ClassEntry (day/time/name/location)', () => {
     const [cls] = eventsToClasses([makeEvent()]);
     expect(cls).toMatchObject({
-      id: 'e1',
+      id: `e1:${at(2026, 6, 15, 9, 0)}`,
       name: 'CS 101',
       dayOfWeek: 1, // Monday
       startTime: '09:00',
@@ -74,6 +74,39 @@ describe('eventsToClasses', () => {
     expect(cls).toMatchObject({ startTime: '09:00', endTime: '17:00' });
   });
 
+  it('drops events lasting at least 16 real hours', () => {
+    expect(
+      eventsToClasses([
+        makeEvent({
+          startDate: at(2026, 6, 15, 1, 0),
+          endDate: at(2026, 6, 15, 17, 0),
+        }),
+      ]),
+    ).toEqual([]);
+  });
+
+  it('drops events whose local start and end dates differ', () => {
+    expect(
+      eventsToClasses([
+        makeEvent({
+          startDate: at(2026, 6, 15, 9, 0),
+          endDate: at(2026, 6, 16, 10, 0),
+        }),
+      ]),
+    ).toEqual([]);
+  });
+
+  it('gives recurring occurrences distinct ids', () => {
+    const mondayStart = at(2026, 6, 15, 9, 0);
+    const tuesdayStart = at(2026, 6, 16, 9, 0);
+    const result = eventsToClasses([
+      makeEvent({ startDate: mondayStart, endDate: at(2026, 6, 15, 10, 30) }),
+      makeEvent({ startDate: tuesdayStart, endDate: at(2026, 6, 16, 10, 30) }),
+    ]);
+
+    expect(result.map(cls => cls.id)).toEqual([`e1:${mondayStart}`, `e1:${tuesdayStart}`]);
+  });
+
   it('skips events with a blank title', () => {
     expect(eventsToClasses([makeEvent({ title: '   ' })])).toEqual([]);
   });
@@ -101,7 +134,7 @@ describe('eventsToClasses', () => {
       makeEvent({ id: 'b', calendarId: 'cal-personal' }),
     ];
     const result = eventsToClasses(events, ['cal-school']);
-    expect(result.map(c => c.id)).toEqual(['a']);
+    expect(result.map(c => c.id)).toEqual([`a:${at(2026, 6, 15, 9, 0)}`]);
   });
 
   it('keeps all calendars when calendarIds is undefined', () => {
@@ -109,7 +142,10 @@ describe('eventsToClasses', () => {
       makeEvent({ id: 'a', calendarId: 'cal-school' }),
       makeEvent({ id: 'b', calendarId: 'cal-personal' }),
     ];
-    expect(eventsToClasses(events).map(c => c.id)).toEqual(['a', 'b']);
+    expect(eventsToClasses(events).map(c => c.id)).toEqual([
+      `a:${at(2026, 6, 15, 9, 0)}`,
+      `b:${at(2026, 6, 15, 9, 0)}`,
+    ]);
   });
 
   it('returns an empty array for no events', () => {

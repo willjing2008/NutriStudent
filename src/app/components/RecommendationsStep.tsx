@@ -555,7 +555,7 @@ export function RecommendationsStep({
   // Re-sends the non-class fields - buildAcademicSchedule REPLACES the whole
   // blob, so omitting them would wipe exam periods, sleep and overrides.
   const handleDeleteClass = async (classId: string) => {
-    if (!user || !onSaveSchedule) return;
+    if (!user || !onSaveSchedule || savingSchedule) return;
     setSavingSchedule(true);
     try {
       setScheduleSaveError(null);
@@ -1129,6 +1129,7 @@ export function RecommendationsStep({
               setScheduleEditorTab('exams');
               setShowScheduleEditor(true);
             }}
+            isSaving={savingSchedule}
             onDeleteClass={handleDeleteClass}
           />
           {scheduleSaveError && !showScheduleEditor && !showCalendarImport && (

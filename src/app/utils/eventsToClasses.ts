@@ -27,16 +27,17 @@ const COLOR_OPTIONS = ['#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#
 // A "class" spanning 16+ hours is an all-day-ish event whatever its flags say
 // (EventKit reports all-day occurrences as 00:00-23:59). Dropping these is the
 // defensive backstop for bridges that lose the all-day flag entirely.
-const MAX_CLASS_MINUTES = 16 * 60;
-
-function toMinutes(time: string): number {
-  const [h, m] = time.split(':').map(Number);
-  return h * 60 + m;
-}
+const MAX_CLASS_DURATION_MS = 16 * 60 * 60 * 1000;
 
 /** "HH:MM" (24h, zero-padded) for a Date's LOCAL wall-clock time. */
 function toHHMM(date: Date): string {
   return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+}
+
+function isSameLocalDate(start: Date, end: Date): boolean {
+  return start.getFullYear() === end.getFullYear()
+    && start.getMonth() === end.getMonth()
+    && start.getDate() === end.getDate();
 }
 
 /**
@@ -61,21 +62,21 @@ export function eventsToClasses(events: ImportableEvent[], calendarIds?: string[
     if (!name) continue;                                          // unnamed events carry no class info
     if (allow && !allow.has(ev.calendarId ?? '')) continue;       // scoped out by the calendar picker
 
+    const durationMs = ev.endDate - ev.startDate;
+    if (!Number.isFinite(durationMs) || durationMs <= 0 || durationMs >= MAX_CLASS_DURATION_MS) continue;
+
     const start = new Date(ev.startDate);
     const end = new Date(ev.endDate);
+    if (!isSameLocalDate(start, end)) continue;
+
     const startTime = toHHMM(start);
     const endTime = toHHMM(end);
     // ponytail: drop degenerate / cross-midnight events. Classes are same-day and
     // end after they start; anything else corrupts conflict detection downstream.
     if (endTime <= startTime) continue;
-    // Drop events spanning the whole waking day - an all-day event whose flag
-    // was lost in bridge serialization would otherwise become a fake class
-    // that conflicts with every meal window on that weekday.
-    if (toMinutes(endTime) - toMinutes(startTime) >= MAX_CLASS_MINUTES) continue;
-
     const location = (ev.location || '').trim();
     classes.push({
-      id: ev.id,
+      id: `${ev.id}:${ev.startDate}`,
       name,
       dayOfWeek: start.getDay(),
       startTime,

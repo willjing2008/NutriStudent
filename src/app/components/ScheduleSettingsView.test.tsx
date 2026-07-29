@@ -64,4 +64,13 @@ describe('ScheduleSettingsView — native per-class delete (P1-3)', () => {
     renderView({ onDeleteClass: undefined });
     expect(screen.queryByRole('button', { name: /^Delete / })).not.toBeInTheDocument();
   });
+
+  it('disables delete buttons while a schedule save is pending', () => {
+    const { onDeleteClass } = renderView({ isSaving: true });
+    const deleteButton = screen.getByRole('button', { name: 'Delete Biology' });
+
+    expect(deleteButton).toBeDisabled();
+    fireEvent.click(deleteButton);
+    expect(onDeleteClass).not.toHaveBeenCalled();
+  });
 });
