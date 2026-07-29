@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
+import { useState } from 'react';
 import { describe, expect, it, beforeEach } from 'vitest';
 import { NetworkStatusBanner } from './NetworkStatusBanner';
 
@@ -18,6 +19,20 @@ const goOffline = () => {
   setNavigatorOnline(false);
   window.dispatchEvent(new Event('offline'));
 };
+
+function NavigationHarness() {
+  const [screenName, setScreenName] = useState('Home');
+
+  return (
+    <>
+      <NetworkStatusBanner />
+      <button type="button" onClick={() => setScreenName('Create Plan')}>
+        Navigate
+      </button>
+      <div>{screenName}</div>
+    </>
+  );
+}
 
 beforeEach(() => {
   setNavigatorOnline(true);
@@ -71,5 +86,16 @@ describe('NetworkStatusBanner', () => {
     });
 
     expect(screen.getByRole('status')).toHaveTextContent('No internet connection');
+  });
+
+  it('stays dismissed while navigating during the same offline episode', () => {
+    setNavigatorOnline(false);
+    render(<NavigationHarness />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Navigate' }));
+
+    expect(screen.getByText('Create Plan')).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 });

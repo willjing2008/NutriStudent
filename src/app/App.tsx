@@ -55,6 +55,15 @@ export interface UserPreferences {
 }
 
 export default function App() {
+  return (
+    <>
+      <NetworkStatusBanner />
+      <AppContent />
+    </>
+  );
+}
+
+function AppContent() {
   // Auth state
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -425,7 +434,6 @@ export default function App() {
   if (checkingAuth) {
     return (
       <>
-        <NetworkStatusBanner />
         <div className="min-h-screen bg-[#0A1F13] flex items-center justify-center">
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 mb-4">
@@ -442,7 +450,6 @@ export default function App() {
   if (!isAuthenticated) {
     return (
       <>
-        <NetworkStatusBanner />
         <ErrorBoundary label="Login">
           <LoginPage onLoginSuccess={handleLoginSuccess} />
         </ErrorBoundary>
@@ -454,7 +461,6 @@ export default function App() {
   if (isAuthenticated && isReady && !isPro && subscriptionsAvailable) {
     return (
       <>
-        <NetworkStatusBanner />
         <ErrorBoundary label="Subscription">
           <SubscriptionPage mandatory onLogout={handleLogout} />
         </ErrorBoundary>
@@ -466,7 +472,6 @@ export default function App() {
   if (showAdminDashboard) {
     return (
       <div className="min-h-screen bg-[#0A1F13]">
-        <NetworkStatusBanner />
         <div className="container mx-auto px-4 py-6">
           <div className="mb-6 flex items-center justify-between bg-[#142A1D] rounded-2xl p-4 border border-[#1E4029]">
             <div className="flex items-center gap-3">
@@ -498,7 +503,6 @@ export default function App() {
   if (isOnboarding) {
     return (
       <div className="min-h-screen bg-[#0A1F13]">
-        <NetworkStatusBanner />
         <ErrorBoundary label="Onboarding">
           {onboardingStep === 2 && (
             <PreferencesStep
@@ -547,7 +551,6 @@ export default function App() {
   // Main App with Tab Navigation
   return (
     <>
-      <NetworkStatusBanner />
       {/* Home Tab - Meal Plans Dashboard */}
       {activeNavTab === 'home' && (
         <ErrorBoundary label="Home">
