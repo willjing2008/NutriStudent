@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, beforeEach } from 'vitest';
 import { NetworkStatusBanner } from './NetworkStatusBanner';
 
@@ -7,6 +7,16 @@ const setNavigatorOnline = (isOnline: boolean) => {
     configurable: true,
     value: isOnline,
   });
+};
+
+const goOnline = () => {
+  setNavigatorOnline(true);
+  window.dispatchEvent(new Event('online'));
+};
+
+const goOffline = () => {
+  setNavigatorOnline(false);
+  window.dispatchEvent(new Event('offline'));
 };
 
 beforeEach(() => {
@@ -28,10 +38,38 @@ describe('NetworkStatusBanner', () => {
     expect(screen.getByText(/saved meal plans still work/i)).toBeInTheDocument();
 
     act(() => {
-      setNavigatorOnline(true);
-      window.dispatchEvent(new Event('online'));
+      goOnline();
     });
 
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  it('hides for the rest of the offline episode when dismissed', () => {
+    setNavigatorOnline(false);
+    render(<NetworkStatusBanner />);
+
+    const banner = screen.getByRole('status');
+    expect(banner).toHaveAttribute('aria-live', 'polite');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  it('shows again for a fresh offline episode after a reconnect', () => {
+    setNavigatorOnline(false);
+    render(<NetworkStatusBanner />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+
+    act(() => {
+      goOnline();
+    });
+    act(() => {
+      goOffline();
+    });
+
+    expect(screen.getByRole('status')).toHaveTextContent('No internet connection');
   });
 });
