@@ -43,18 +43,62 @@ test('renders auth errors without leaving the sign-in screen', async ({ page }) 
   await expect(page.getByRole('heading', { name: 'Welcome Back' })).toBeVisible();
 });
 
-test('shows and clears the offline banner', async ({ page, context }) => {
-  await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Eat Smart.' })).toBeVisible();
+test.describe('mobile offline banner', () => {
+  test.use({
+    viewport: { width: 390, height: 844 },
+    deviceScaleFactor: 3,
+    hasTouch: true,
+    isMobile: true,
+  });
 
-  await context.setOffline(true);
-  await page.evaluate(() => window.dispatchEvent(new Event('offline')));
+  test('dismisses only for the current offline episode', async ({ page, context }, testInfo) => {
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: 'Eat Smart.' })).toBeVisible();
 
-  await expect(page.getByRole('status')).toContainText('No internet connection');
-  await expect(page.getByRole('status')).toContainText('Saved meal plans still work');
+    await context.setOffline(true);
+    await page.evaluate(() => window.dispatchEvent(new Event('offline')));
 
-  await context.setOffline(false);
-  await page.evaluate(() => window.dispatchEvent(new Event('online')));
+    const banner = page.getByRole('status');
+    const dismiss = page.getByRole('button', { name: 'Dismiss' });
+    await expect(banner).toContainText('No internet connection');
+    await expect(banner).toContainText('Saved meal plans still work');
+    await expect(banner).toHaveAttribute('aria-live', 'polite');
+    await expect(dismiss.locator('svg')).toHaveClass(/lucide-x/);
 
-  await expect(page.getByRole('status')).toBeHidden();
+    const dismissBox = await dismiss.boundingBox();
+    expect(dismissBox).not.toBeNull();
+    expect(dismissBox!.width).toBeGreaterThanOrEqual(44);
+    expect(dismissBox!.height).toBeGreaterThanOrEqual(44);
+
+    const bannerBox = await banner.boundingBox();
+    expect(bannerBox).not.toBeNull();
+    expect(bannerBox!.y).toBeGreaterThanOrEqual(12);
+
+    await page.screenshot({
+      path: testInfo.outputPath('offline-banner-mobile.png'),
+      fullPage: true,
+      animations: 'disabled',
+    });
+
+    await dismiss.click();
+    await expect(banner).toBeHidden();
+
+    await page.getByRole('button', { name: 'I already have an account' }).click();
+    await expect(page.getByRole('heading', { name: 'Welcome Back' })).toBeVisible();
+    await expect(banner).toBeHidden();
+
+    await context.setOffline(false);
+    await page.evaluate(() => window.dispatchEvent(new Event('online')));
+    await context.setOffline(true);
+    await page.evaluate(() => window.dispatchEvent(new Event('offline')));
+
+    await expect(banner).toContainText('No internet connection');
+    await page.evaluate(
+      () => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))),
+    );
+    await banner.screenshot({
+      path: testInfo.outputPath('offline-banner-fresh-episode-mobile.png'),
+      animations: 'disabled',
+    });
+  });
 });

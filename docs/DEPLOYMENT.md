@@ -1,6 +1,6 @@
 # Deployment and release checklist
 
-This guide captures the current NutriStudent launch workflow for web assets, the Supabase Edge Function backend, and iOS packaging.
+This guide captures the current ChefPocket launch workflow for web assets, the Supabase Edge Function backend, and iOS packaging.
 
 ## Local quality gates
 

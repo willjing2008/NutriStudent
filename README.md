@@ -1,6 +1,7 @@
-# NutriStudent
+# ChefPocket
 
-Personalised meal planning app built for university students. Generates meal plans with a user-chosen start date and length (1–14 days, default 7) based on dietary preferences, cooking equipment, and goals — then produces a shopping list to match.
+Personalised meal planning app built for university students.
+ChefPocket generates meal plans with a user-chosen start date and length (1-14 days, default 7) based on dietary preferences, cooking equipment, and goals, then produces a shopping list to match.
 
 ## Tech Stack
 
