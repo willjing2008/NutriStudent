@@ -157,7 +157,7 @@ describe('AcademicScheduleEditor — sleep schedule (sleep-friendly dinners driv
   });
 });
 
-describe('AcademicScheduleEditor — in-modal save errors', () => {
+describe('AcademicScheduleEditor - in-modal save errors', () => {
   it('renders the save error inside the modal, above the Save button', () => {
     renderEditor({ saveError: 'Could not save your schedule. Please try again.' });
 

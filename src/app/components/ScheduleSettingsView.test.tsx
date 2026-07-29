@@ -41,7 +41,7 @@ beforeEach(() => {
   calState.native = true;
 });
 
-describe('ScheduleSettingsView — native per-class delete (P1-3)', () => {
+describe('ScheduleSettingsView - native per-class delete (P1-3)', () => {
   it('shows a delete button per class on native and reports the class id', () => {
     const { onDeleteClass } = renderView();
 
