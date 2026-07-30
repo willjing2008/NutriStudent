@@ -24,6 +24,7 @@ interface MealSwapModalProps {
   };
   goal: string;
   currentMealIds: string[];
+  budgetPerMealGbp: number;
   maxCookingTime?: number;
   /**
    * Applies the swap. The modal awaits this and only closes on success; a
@@ -153,6 +154,7 @@ export function MealSwapModal({
   currentMeal,
   goal,
   currentMealIds,
+  budgetPerMealGbp,
   maxCookingTime,
   onSwap,
   onClose,
@@ -314,6 +316,7 @@ export function MealSwapModal({
         currentRecipeId: currentMeal.id,
         goal: goal,
         currentMealIds: currentMealIds,
+        budgetPerMealGbp,
         maxCookingTime: maxCookingTime,
         limit: 6,
       });

@@ -124,6 +124,7 @@ function renderModal(overrides: Partial<Parameters<typeof MealSwapModal>[0]> = {
     currentMeal,
     goal: 'bulk',
     currentMealIds: ['meal-current'],
+    budgetPerMealGbp: 3.81,
     onSwap: vi.fn(),
     onClose: vi.fn(),
     ...overrides,
@@ -157,6 +158,7 @@ describe('MealSwapModal - Browse tab', () => {
           currentRecipeId: 'meal-current',
           goal: 'bulk',
           currentMealIds: ['meal-current'],
+          budgetPerMealGbp: 3.81,
         }),
       ),
     );

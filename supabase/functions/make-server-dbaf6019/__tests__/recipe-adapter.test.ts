@@ -37,6 +37,20 @@ describe('toMealPlanMeal', () => {
     expect(meal.mealNumber).toBe(2)
   })
 
+  it('preserves the canonical recipe image URL in both installed-client fields', () => {
+    const imageUrl = 'https://images.example.test/recipe.jpg'
+    const recipe = makeRecipe({ image: { url: imageUrl, alt: 'Real food' } })
+
+    expect(toMealPlanMeal(recipe, 1, 1, 'dinner')).toMatchObject({
+      image: imageUrl,
+      imageUrl,
+    })
+    expect(toSwapOption(recipe)).toMatchObject({
+      image: imageUrl,
+      imageUrl,
+    })
+  })
+
   it('uses the assigned slot for mealType label and category', () => {
     const meal = toMealPlanMeal(makeRecipe({ recipe_category: 'Soup' }), 1, 1, 'breakfast')
     expect(meal.category).toBe('breakfast')

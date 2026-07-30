@@ -1,7 +1,19 @@
 import { NewRecipe } from "./recipe-data.ts";
-import { toMealPlanMeal, getRecipesByFocusType, getSleepFriendlyRecipes } from "./recipe-adapter.ts";
+import { toMealPlanMeal, getRecipesByFocusType } from "./recipe-adapter.ts";
 import { computeIngredientKeywords, selectAllCoreRecipes, buildRotationSchedule, ScoredRecipe } from "./ingredient-overlap.ts";
 import { classifyRecipe } from "./focus-classifier.ts";
+import { filterRecipes } from "./meal-filter.ts";
+import {
+  LEGACY_QUEUE_BUDGET_PER_MEAL_GBP,
+  parseBudgetPerMealGbp,
+} from "../_shared/budget-contract.ts";
+import {
+  assertMealsWithinBudget,
+  BudgetNoMatchError,
+  filterRecipesByBudget,
+  isCostWithinBudget,
+  summarizeMealBudget,
+} from "./recipe-budget.ts";
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -23,6 +35,7 @@ export interface RecipeQueue {
   meals: QueuedMeal[];
   mealsPerDay: number;
   goal: string;
+  budgetPerMealGbp: number;
 }
 
 export interface GenerateQueueParams {
@@ -30,7 +43,9 @@ export interface GenerateQueueParams {
   mealsPerDay: number;
   goal: string;
   focusMode: boolean;
+  budgetPerMealGbp: number;
   avoidIngredients?: string[];
+  dietaryRestrictions?: string[];
   maxCookingTime?: number;
   preferSleepDinners?: boolean;
   queueDays?: number;
@@ -52,13 +67,22 @@ function getMealSlot(mealNumber: number, mealsPerDay: number): "breakfast" | "lu
 
 // ── Queue Generation ─────────────────────────────────────────────────
 
+export class QueuePreferenceNoMatchError extends Error {
+  constructor() {
+    super("No recipes match your dietary restrictions. Try removing some restrictions, or check back as we add more recipes.");
+    this.name = "QueuePreferenceNoMatchError";
+  }
+}
+
 export async function generateRecipeQueue(params: GenerateQueueParams): Promise<RecipeQueue> {
   const {
     userId,
     mealsPerDay,
     goal,
     focusMode,
+    budgetPerMealGbp,
     avoidIngredients = [],
+    dietaryRestrictions = [],
     maxCookingTime,
     preferSleepDinners = false,
     queueDays = 28,
@@ -74,24 +98,23 @@ export async function generateRecipeQueue(params: GenerateQueueParams): Promise<
     throw new Error("No recipes found. Please run /init-recipes first.");
   }
 
-  // 2. Apply avoidIngredients filter
-  if (avoidIngredients.length > 0) {
-    const avoidLower = avoidIngredients.map((i) => i.toLowerCase());
-    const filtered = recipes.filter((r) =>
-      !avoidLower.some((avoid) =>
-        r.ingredients.some((ing) => ing.toLowerCase().includes(avoid))
-      )
-    );
-    if (filtered.length > 0) recipes = filtered;
+  // Dietary and avoided-ingredient rules are hard safety filters. The shared
+  // filter may relax only cooking time, never food safety.
+  recipes = filterRecipes(recipes, {
+    avoidIngredients,
+    dietaryRestrictions,
+    maxCookingTime,
+  });
+  if (recipes.length === 0) {
+    throw new QueuePreferenceNoMatchError();
   }
 
-  // 3. Apply maxCookingTime filter
-  if (maxCookingTime && maxCookingTime > 0) {
-    const filtered = recipes.filter(
-      (r) => (r.total_time_minutes ?? r.cook_time_minutes ?? 0) <= maxCookingTime
-    );
-    if (filtered.length > 0) recipes = filtered;
+  // Budget is a hard filter and is never relaxed.
+  const affordableRecipes = filterRecipesByBudget(recipes, budgetPerMealGbp);
+  if (affordableRecipes.length === 0) {
+    throw new BudgetNoMatchError(budgetPerMealGbp);
   }
+  recipes = affordableRecipes;
 
   // 4. Categorize into pools
   const toScored = (r: NewRecipe): ScoredRecipe => ({
@@ -158,6 +181,8 @@ export async function generateRecipeQueue(params: GenerateQueueParams): Promise<
     }
   }
 
+  assertMealsWithinBudget(meals.map((meal) => meal.recipe), budgetPerMealGbp);
+
   const queueId = crypto.randomUUID();
   return {
     userId,
@@ -167,6 +192,7 @@ export async function generateRecipeQueue(params: GenerateQueueParams): Promise<
     meals,
     mealsPerDay,
     goal,
+    budgetPerMealGbp,
   };
 }
 
@@ -176,7 +202,6 @@ export async function generateRecipeQueue(params: GenerateQueueParams): Promise<
 export function getQueueWeekAsMealPlan(
   queue: RecipeQueue,
   weekNumber: number,
-  weeklyBudget: number = 100
 ) {
   const startDay = (weekNumber - 1) * 7 + 1;
   const endDay = startDay + 6;
@@ -196,12 +221,16 @@ export function getQueueWeekAsMealPlan(
       isConsumed: m.isConsumed,
     }));
 
+  const budgetPerMealGbp = parseBudgetPerMealGbp(queue.budgetPerMealGbp)
+    ?? LEGACY_QUEUE_BUDGET_PER_MEAL_GBP;
+  const budgetSummary = summarizeMealBudget(weekMeals, budgetPerMealGbp);
+
   return {
     meals: weekMeals,
-    totalCost: 0,
-    dailyBudget: weeklyBudget / 7,
-    weeklyBudget,
-    withinBudget: true,
+    ...budgetSummary,
+    // Deprecated aliases for installed clients during the compatibility window.
+    dailyBudget: budgetSummary.totalBudgetGbp / 7,
+    weeklyBudget: budgetSummary.totalBudgetGbp,
     cookingDays: 7,
     totalMealsNeeded: 7 * queue.mealsPerDay,
     mealsPerDay: queue.mealsPerDay,
@@ -260,6 +289,12 @@ export function swapQueueMeal(
   mealSlot: string,
   newRecipe: ReturnType<typeof toMealPlanMeal>
 ): RecipeQueue {
+  const budgetPerMealGbp = parseBudgetPerMealGbp(queue.budgetPerMealGbp)
+    ?? LEGACY_QUEUE_BUDGET_PER_MEAL_GBP;
+  if (!isCostWithinBudget(newRecipe.totalCost, budgetPerMealGbp)) {
+    throw new BudgetNoMatchError(budgetPerMealGbp);
+  }
+
   const updatedMeals = queue.meals.map((m) => {
     if (m.dayNumber === dayNumber && m.mealSlot === mealSlot) {
       return {

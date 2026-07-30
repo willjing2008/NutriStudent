@@ -17,7 +17,7 @@ ChefPocket generates meal plans with a user-chosen start date and length (1-14 d
 - Meal swap functionality with nutritional comparison
 - Shopping list with per-category grouping and checklist
 - School selection and student community
-- Mandatory paywall with monthly/yearly subscription plans
+- Free initial launch with subscriptions and Ranks unavailable
 - Profile management with achievements and streak tracking
 - Multi-language support (English, Simplified Chinese)
 - Admin dashboard for recipe database management
@@ -80,7 +80,8 @@ npx cap open ios
 
 The app connects to a Supabase project for auth, database, and edge functions. Project credentials are configured in `utils/supabase/info.tsx`; deployment and secret placeholders are documented in `.env.example`.
 
-RevenueCat is configured for subscription management — see `src/app/services/revenuecat.ts` for SDK setup.
+RevenueCat integration is retained for future paid mode.
+See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the current launch policy and activation requirements.
 
 ## Deployment
 

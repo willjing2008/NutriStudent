@@ -1,8 +1,11 @@
-import { describe, it, expect } from 'vitest'
-import { isEntitlementActive } from '../entitlement.ts'
+import { describe, it, expect, vi } from 'vitest'
+import {
+  checkRevenueCatEntitlement,
+  isEntitlementActive,
+} from '../entitlement.ts'
 
 const NOW = Date.parse('2026-06-25T00:00:00Z')
-const ID = 'NutriStudent Pro'
+const ID = 'ChefPocket Pro'
 
 describe('isEntitlementActive', () => {
   it('is false when the subscriber is missing or has no entitlements', () => {
@@ -35,5 +38,75 @@ describe('isEntitlementActive', () => {
   it('only matches the configured entitlement id', () => {
     const sub = { entitlements: { 'Some Other Pro': { expires_date: null } } }
     expect(isEntitlementActive(sub, ID, NOW)).toBe(false)
+  })
+})
+
+describe('checkRevenueCatEntitlement', () => {
+  it('treats a missing RevenueCat secret as unavailable, never active', async () => {
+    const fetcher = vi.fn()
+
+    await expect(
+      checkRevenueCatEntitlement('user-1', undefined, fetcher, NOW),
+    ).resolves.toEqual({
+      status: 'unavailable',
+      reason: 'REVENUECAT_SECRET_KEY is not configured',
+    })
+    expect(fetcher).not.toHaveBeenCalled()
+  })
+
+  it('returns inactive for an unknown RevenueCat subscriber', async () => {
+    const fetcher = vi.fn().mockResolvedValue({
+      status: 404,
+      ok: false,
+      json: vi.fn(),
+    })
+
+    await expect(
+      checkRevenueCatEntitlement('user-1', 'secret', fetcher, NOW),
+    ).resolves.toEqual({ status: 'inactive' })
+  })
+
+  it('returns active when RevenueCat reports the configured entitlement', async () => {
+    const fetcher = vi.fn().mockResolvedValue({
+      status: 200,
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        subscriber: {
+          entitlements: {
+            [ID]: { expires_date: '2026-07-25T00:00:00Z' },
+          },
+        },
+      }),
+    })
+
+    await expect(
+      checkRevenueCatEntitlement('user-1', 'secret', fetcher, NOW),
+    ).resolves.toEqual({ status: 'active' })
+  })
+
+  it('treats provider errors as unavailable, never active', async () => {
+    const fetcher = vi.fn().mockResolvedValue({
+      status: 503,
+      ok: false,
+      json: vi.fn(),
+    })
+
+    await expect(
+      checkRevenueCatEntitlement('user-1', 'secret', fetcher, NOW),
+    ).resolves.toEqual({
+      status: 'unavailable',
+      reason: 'RevenueCat returned HTTP 503',
+    })
+  })
+
+  it('treats network failures as unavailable, never active', async () => {
+    const fetcher = vi.fn().mockRejectedValue(new Error('network down'))
+
+    await expect(
+      checkRevenueCatEntitlement('user-1', 'secret', fetcher, NOW),
+    ).resolves.toEqual({
+      status: 'unavailable',
+      reason: 'RevenueCat request failed',
+    })
   })
 })

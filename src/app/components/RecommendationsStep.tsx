@@ -105,6 +105,7 @@ interface MealPlanMeal {
 
 interface MealPlan {
   meals: MealPlanMeal[];
+  budgetPerMealGbp: number;
   totalCost: number;
   dailyBudget: number;
   weeklyBudget: number;
@@ -653,6 +654,7 @@ export function RecommendationsStep({
         currentRecipeId: mealId,
         goal: preferences.goal,
         currentMealIds: currentMealIds,
+        budgetPerMealGbp: mealPlan.budgetPerMealGbp ?? preferences.budgetPerMealGbp ?? mealPlan.dailyBudget,
         maxCookingTime: preferences.maxCookingTime,
       });
 
@@ -1813,6 +1815,7 @@ export function RecommendationsStep({
           currentMeal={selectedMealForSwap}
           goal={preferences.goal || 'Custom'}
           currentMealIds={mealPlan.meals.map(m => m.id)}
+          budgetPerMealGbp={mealPlan.budgetPerMealGbp ?? preferences.budgetPerMealGbp ?? mealPlan.dailyBudget}
           maxCookingTime={preferences.maxCookingTime}
           onSwap={handleMealSwap}
           onClose={() => setShowMealSwapModal(false)}

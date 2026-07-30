@@ -80,6 +80,7 @@ export interface MealConflict {
 
 export interface QueueWeekMealPlan {
   meals: any[];
+  budgetPerMealGbp: number;
   totalCost: number;
   dailyBudget: number;
   weeklyBudget: number;
