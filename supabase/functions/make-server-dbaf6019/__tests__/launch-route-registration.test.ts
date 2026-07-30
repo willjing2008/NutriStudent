@@ -33,6 +33,21 @@ describe('launch route registration', () => {
     },
   )
 
+  it('keeps the restored recipe image read paths public and image mutations authenticated', () => {
+    expect(source).toContain(
+      'app.get("/make-server-dbaf6019/recipe-image/:recipeId", async (c) =>',
+    )
+    expect(source).toContain(
+      'app.post("/make-server-dbaf6019/get-recipe-image-with-cache", async (c) =>',
+    )
+    expect(source).toContain(
+      'app.post("/make-server-dbaf6019/generate-recipe-image", requireAuth',
+    )
+    expect(source).toContain(
+      'app.post("/make-server-dbaf6019/upload-recipe-image", requireAuth',
+    )
+  })
+
   it('normalizes preferences before writing a saved plan', () => {
     expect(source).toContain(
       'const normalizedPreferences = normalizePreferenceBudgetForMealPlan(preferences, mealPlan);',

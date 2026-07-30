@@ -42,6 +42,8 @@ The `leaderboard` and `recipe-leaderboard` routes retain authentication and retu
 The canonical budget is `budgetPerMealGbp`, validated from £1.00 through £50.00 with at most two decimal places and enforced as a hard cap for generation, queues, shuffle, swap options, and queue swaps.
 Current GitHub-main legacy clients remain compatible through total-budget derivation.
 Clients released before `planDays` existed are interpreted as seven-day plans, matching their historical behavior.
+Compatibility responses keep `dailyBudget` as the full daily allowance and `weeklyBudget` as the returned plan or queue-week allowance.
+Saved preferences retain the exact legacy total-budget value for round-trip responses while storing the canonical per-meal cap.
 Legacy queues without a persisted cap use £5.00 per meal and are migrated lazily.
 
 The dormant paid-mode middleware fails closed if RevenueCat is unavailable and uses the exact live entitlement identifier `ChefPocket Pro`.
