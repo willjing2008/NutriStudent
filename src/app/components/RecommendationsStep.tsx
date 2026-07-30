@@ -19,6 +19,7 @@ import { AcademicScheduleEditor } from './AcademicScheduleEditor';
 import { CalendarImportModal } from './CalendarImportModal';
 import { calendarImportSupported, currentWeekStart } from '../utils/systemCalendar';
 import { useMealReminders } from '../hooks/useMealReminders';
+import { launchPolicy } from '../config/launchPolicy';
 import type { AcademicSchedule, ClassEntry, RecipeQueue, MealConflict, MealTimeOverride, QueueWeekMealPlan } from '../types/calendar';
 
 interface RecommendationsStepProps {
@@ -935,7 +936,7 @@ export function RecommendationsStep({
       date.setHours(0, 0, 0, 0);
       const month = date.getMonth();
       const dow = date.getDay();
-      const hasConflict = !!(weekConflicts?.has(dow) && weekConflicts.get(dow)!.length > 0);
+      const hasConflict = launchPolicy.scheduleEnabled && !!(weekConflicts?.has(dow) && weekConflicts.get(dow)!.length > 0);
       days.push({
         offset: i,
         date,
@@ -1097,20 +1098,22 @@ export function RecommendationsStep({
             </div>
 
       {/* Plan Sub-Navigation: Meals | Schedule */}
+      {launchPolicy.scheduleEnabled && (
       <PlanTabSubNav
         activeView={planSubView}
         onViewChange={setPlanSubView}
         isTestingPeriod={isTestingPeriod}
         scheduleDisabled={isNewUnsavedPlan}
       />
+      )}
 
       {/* Meal Reminder Banners */}
-      {planSubView === 'meals' && (
+      {launchPolicy.scheduleEnabled && planSubView === 'meals' && (
         <MealReminderBanner conflicts={reminderConflicts} onDismiss={dismissConflict} />
       )}
 
       {/* Schedule View */}
-      {planSubView === 'schedule' && (
+      {launchPolicy.scheduleEnabled && planSubView === 'schedule' && (
         <>
           <ScheduleSettingsView
             schedule={academicSchedule || null}

@@ -1,6 +1,6 @@
 # ChefPocket Privacy Policy
 
-Effective date: July 26, 2026
+Effective date: July 29, 2026
 
 ChefPocket helps users plan meals, organise shopping, track cooking activity, and access subscription features.
 This policy explains what information ChefPocket collects, why it is used, and the choices available to users.
@@ -11,7 +11,7 @@ ChefPocket may collect the following information when you use the app:
 
 - Account information, including your name, email address, account identifier, and authentication information.
 - Profile and preference information, including school selection, dietary preferences, allergies or restrictions, nutrition goals, meal preferences, budget, and meal timing preferences.
-- Calendar information that you choose to import, including class names, dates, and times used to organise meal plans around your schedule.
+- Calendar information that you imported while calendar import was available, including class names, dates, and times used to organise meal plans around your schedule.
 - User content and activity, including saved meal plans, recipes, likes, cooked-meal history, streaks, leaderboard activity, and other content you submit.
 - Purchase and subscription information needed to provide and restore ChefPocket Pro access.
 - Limited technical and operational information, such as app version, device or network information, request logs, and error information needed to operate, secure, and troubleshoot the service.
@@ -21,10 +21,10 @@ ChefPocket may collect the following information when you use the app:
 We use information to:
 
 - Create and manage your account.
-- Personalise meal plans, recipes, nutrition information, shopping lists, reminders, and scheduling features.
+- Personalise meal plans, recipes, nutrition information, and shopping lists and, when enabled, reminders and scheduling features.
 - Provide community, leaderboard, and saved-content features.
 - Process, verify, and restore subscriptions.
-- Provide calendar-import features when you choose to use them.
+- Provide calendar-import features when they are available and you choose to use them.
 - Maintain security, prevent abuse, diagnose problems, and improve reliability.
 - Comply with legal obligations and enforce applicable terms.
 
@@ -46,7 +46,7 @@ We use reasonable administrative, technical, and organisational safeguards, but 
 
 ## Your Choices
 
-You can decline optional calendar permissions in iOS Settings.
+When calendar import is available, you can decline optional calendar permissions in iOS Settings.
 You can edit certain profile and meal-planning information in the app.
 You can manage App Store subscriptions through your Apple account.
 You may request access, correction, or deletion of your information through the support channel below.
