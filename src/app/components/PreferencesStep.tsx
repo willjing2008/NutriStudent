@@ -1,7 +1,15 @@
 import React, { useState } from 'react';
-import { ArrowRight, ArrowLeft, X, Calendar, CalendarDays, Users, Target, Clock, AlertCircle, Sunrise, Sun, Moon, Wallet } from 'lucide-react';
+import { ArrowRight, ArrowLeft, X, Calendar, CalendarDays, ChevronDown, Users, Target, Clock, AlertCircle, Sunrise, Sun, Moon, Wallet } from 'lucide-react';
 import { UserPreferences, MealTimes } from '../App';
 import { getLocalTodayISO } from '../utils/dateUtils';
+import { parseBudgetPerMealGbp } from '../../../supabase/functions/_shared/budget-contract';
+import {
+  ALLERGY_GROUPS,
+  BROAD_ALLERGY_CHOICES,
+  normalizeAllergyChoice,
+  normalizeAllergyChoices,
+  type BroadAllergyChoice,
+} from '../../../supabase/functions/_shared/allergy-contract';
 
 // Common ingredients for autocomplete
 const COMMON_INGREDIENTS = [
@@ -33,10 +41,19 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
   const [mealsPerDay, setMealsPerDay] = useState(preferences.mealsPerDay);
   const [goal, setGoal] = useState(preferences.goal);
   const [maxCookingTime, setMaxCookingTime] = useState(preferences.maxCookingTime);
-  const [budget, setBudget] = useState(preferences.budget || 60);
-  const [avoidIngredients, setAvoidIngredients] = useState<string[]>(
-    preferences.avoidIngredients || []
+  // The per-meal budget starts EMPTY (never prefilled) and is required before
+  // Continue works; the raw string preserves what the user is typing.
+  const [budgetInput, setBudgetInput] = useState(
+    preferences.budgetPerMealGbp === null || preferences.budgetPerMealGbp === undefined
+      ? ''
+      : preferences.budgetPerMealGbp.toFixed(2),
   );
+  const budgetPerMealGbp = parseBudgetPerMealGbp(budgetInput);
+  const showBudgetError = budgetInput !== '' && budgetPerMealGbp === null;
+  const [avoidIngredients, setAvoidIngredients] = useState<string[]>(
+    normalizeAllergyChoices(preferences.avoidIngredients, 50)
+  );
+  const [expandedGroups, setExpandedGroups] = useState<Set<BroadAllergyChoice>>(new Set());
   const [searchInput, setSearchInput] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [mealTimes, setMealTimes] = useState<MealTimes>(
@@ -48,25 +65,56 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
 
   // Dietary restrictions state
   const [dietaryRestrictions, setDietaryRestrictions] = useState<string[]>(
-    preferences.dietaryRestrictions || []
+    normalizeAllergyChoices(preferences.dietaryRestrictions, 10)
   );
 
   const filteredSuggestions = COMMON_INGREDIENTS.filter(
     ingredient =>
       ingredient.toLowerCase().includes(searchInput.toLowerCase()) &&
-      !avoidIngredients.includes(ingredient)
+      !avoidIngredients.includes(normalizeAllergyChoice(ingredient))
   ).slice(0, 6);
 
   const addIngredient = (ingredient: string) => {
-    if (!avoidIngredients.includes(ingredient) && ingredient.trim()) {
-      setAvoidIngredients([...avoidIngredients, ingredient]);
-      setSearchInput('');
-      setShowSuggestions(false);
-    }
+    const normalized = normalizeAllergyChoice(ingredient);
+    if (!normalized) return;
+    setAvoidIngredients(current => normalizeAllergyChoices([...current, normalized], 50));
+    setSearchInput('');
+    setShowSuggestions(false);
   };
 
   const removeIngredient = (ingredient: string) => {
     setAvoidIngredients(avoidIngredients.filter(item => item !== ingredient));
+  };
+
+  // Selecting a broad group covers all of its sub-options, so the individual
+  // sub-selections collapse into the single group entry.
+  const toggleAllergyGroup = (group: BroadAllergyChoice) => {
+    setAvoidIngredients(current => {
+      if (current.includes(group)) return current.filter(item => item !== group);
+      const subOptions = ALLERGY_GROUPS[group] as readonly string[];
+      return normalizeAllergyChoices(
+        [...current.filter(item => !subOptions.includes(item)), group],
+        50,
+      );
+    });
+  };
+
+  // Selecting only a sub-option restricts just that one family.
+  const toggleAllergySubOption = (subOption: string) => {
+    setAvoidIngredients(current =>
+      current.includes(subOption)
+        ? current.filter(item => item !== subOption)
+        : normalizeAllergyChoices([...current, subOption], 50),
+    );
+  };
+
+  const toggleGroupExpansion = (group: BroadAllergyChoice) => {
+    setExpandedGroups(current => {
+      const next = new Set(current);
+      if (next.has(group)) next.delete(group);
+      else next.add(group);
+      return next;
+    });
   };
 
   const toggleDietaryRestriction = (restriction: string) => {
@@ -78,6 +126,7 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
   };
 
   const handleNext = () => {
+    if (budgetPerMealGbp === null) return;
     // For 3+ meals all slots are active; for <3, use the user's selection
     const activeSlots = mealsPerDay >= 3
       ? ['breakfast', 'lunch', 'dinner'] as ('breakfast' | 'lunch' | 'dinner')[]
@@ -88,16 +137,16 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
       mealsPerDay,
       goal,
       maxCookingTime,
-      budget,
-      avoidIngredients,
-      dietaryRestrictions,
+      budgetPerMealGbp,
+      avoidIngredients: normalizeAllergyChoices(avoidIngredients, 50),
+      dietaryRestrictions: normalizeAllergyChoices(dietaryRestrictions, 10),
       mealTimes,
       selectedMealSlots: activeSlots,
     });
     onNext();
   };
 
-  const canProceed = shoppingDate && goal;
+  const canProceed = Boolean(shoppingDate && goal && budgetPerMealGbp !== null);
 
   const goals = [
     { id: 'study' as const, name: 'Study Focus', description: 'Brain-boosting meals' },
@@ -356,30 +405,46 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
             </div>
           </div>
 
-          {/* Section 6: Plan Budget */}
+          {/* Section 6: Per-meal budget (typed entry only, empty until the user
+              decides - a hard cap, not a target) */}
           <div className="bg-[#142A1D] rounded-2xl p-5 border border-[#2D5A3D]">
-            <SectionHeader icon={Wallet} title="Budget for this plan" />
-            <div className="grid grid-cols-4 gap-3">
-              {[40, 60, 80, 100].map((amount) => (
-                <button
-                  key={amount}
-                  onClick={() => setBudget(amount)}
-                  aria-pressed={budget === amount}
-                  className={`py-4 rounded-xl font-semibold text-base transition-all ${
-                    budget === amount
-                      ? 'bg-[#22C55E] text-[#052E16]'
-                      : 'bg-[#0A1F13] text-white border border-[#2D5A3D] hover:border-[#22C55E]'
-                  }`}
-                >
-                  £{amount}
-                </button>
-              ))}
-            </div>
-            <div className="mt-4 p-3 bg-[#22C55E]/10 rounded-xl border border-[#22C55E]/20">
-              <p className="text-sm text-[#22C55E]">
-                We'll keep your plan's groceries around <strong>£{budget}</strong>.
+            <SectionHeader icon={Wallet} title="Budget per meal" />
+            <label className="relative block" htmlFor="budget-per-meal">
+              <span className="sr-only">Budget per meal</span>
+              <div className={`flex items-center rounded-xl border bg-[#0A1F13] transition-colors ${
+                showBudgetError ? 'border-red-400' : 'border-[#2D5A3D] focus-within:border-[#22C55E]'
+              }`}>
+                <span className="pl-4 text-xl font-semibold text-[#22C55E]">£</span>
+                <input
+                  id="budget-per-meal"
+                  type="number"
+                  inputMode="decimal"
+                  min="1"
+                  max="50"
+                  step="0.01"
+                  required
+                  value={budgetInput}
+                  onChange={(event) => setBudgetInput(event.target.value)}
+                  onBlur={() => {
+                    if (budgetPerMealGbp !== null) {
+                      setBudgetInput(budgetPerMealGbp.toFixed(2));
+                    }
+                  }}
+                  aria-invalid={showBudgetError}
+                  aria-describedby={showBudgetError ? 'budget-help budget-error' : 'budget-help'}
+                  className="w-full px-3 py-4 bg-transparent text-white text-lg font-semibold placeholder-[#6B7280] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  placeholder="4.25"
+                />
+              </div>
+            </label>
+            <p id="budget-help" className="mt-3 text-sm text-[#9CA3AF]">
+              Required - the maximum ingredient cost for one serving of each meal (£1.00 to £50.00).
+            </p>
+            {showBudgetError && (
+              <p id="budget-error" role="alert" className="mt-2 text-sm text-red-400">
+                Enter an amount from £1.00 to £50.00.
               </p>
-            </div>
+            )}
           </div>
 
           {/* Section 7: Dietary Restrictions */}
@@ -408,6 +473,70 @@ export function PreferencesStep({ preferences, updatePreferences, onNext, onBack
           {/* Section 7: Allergies & Dislikes */}
           <div className="bg-[#142A1D] rounded-2xl p-5 border border-[#2D5A3D]">
             <SectionHeader icon={AlertCircle} title="Allergies & Dislikes" optional />
+
+            {/* Hierarchical allergy picker: one-tap broad groups that expand
+                into classified sub-options. A selected group covers all of its
+                sub-options; a sub-option alone restricts just that family. */}
+            <div className="space-y-2 mb-4">
+              {BROAD_ALLERGY_CHOICES.map((group) => {
+                const subOptions = ALLERGY_GROUPS[group] as readonly string[];
+                const groupSelected = avoidIngredients.includes(group);
+                const expanded = expandedGroups.has(group);
+                return (
+                  <div key={group} className="bg-[#0A1F13] border border-[#2D5A3D] rounded-xl p-2">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => toggleAllergyGroup(group)}
+                        aria-pressed={groupSelected}
+                        className={`flex-1 px-4 py-2.5 rounded-lg text-left transition-all ${
+                          groupSelected
+                            ? 'bg-[#22C55E] text-[#052E16] font-medium'
+                            : 'text-[#9CA3AF] hover:text-white'
+                        }`}
+                      >
+                        {group}
+                        {groupSelected && subOptions.length > 0 && (
+                          <span className="ml-2 text-xs opacity-80">covers all</span>
+                        )}
+                      </button>
+                      {subOptions.length > 0 && (
+                        <button
+                          onClick={() => toggleGroupExpansion(group)}
+                          aria-label={`${expanded ? 'Hide' : 'Show'} ${group} options`}
+                          aria-expanded={expanded}
+                          className="p-2.5 rounded-lg text-[#6B7280] hover:text-white transition-colors"
+                        >
+                          <ChevronDown className={`w-4 h-4 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+                        </button>
+                      )}
+                    </div>
+                    {expanded && subOptions.length > 0 && (
+                      <div className="flex flex-wrap gap-2 px-2 pt-2 pb-1">
+                        {subOptions.map((subOption) => {
+                          const subSelected = groupSelected || avoidIngredients.includes(subOption);
+                          return (
+                            <button
+                              key={subOption}
+                              onClick={() => toggleAllergySubOption(subOption)}
+                              disabled={groupSelected}
+                              aria-pressed={subSelected}
+                              className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                                subSelected
+                                  ? 'bg-[#22C55E]/20 text-[#22C55E] border border-[#22C55E]/50'
+                                  : 'text-[#9CA3AF] border border-[#2D5A3D] hover:border-[#22C55E] hover:text-white'
+                              } ${groupSelected ? 'opacity-60 cursor-not-allowed' : ''}`}
+                            >
+                              {subOption}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
             <div className="relative">
               <input
                 type="text"

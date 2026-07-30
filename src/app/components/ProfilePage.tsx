@@ -8,6 +8,7 @@ import { ACHIEVEMENTS } from '../constants/achievements';
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
 import { authedPost } from '../utils/apiClient';
 import { Gender } from '../utils/nutritionTargets';
+import { LAUNCH_CONFIG } from '../../../supabase/functions/_shared/launch-config';
 
 interface ProfilePageProps {
   user: any;
@@ -87,7 +88,11 @@ export function ProfilePage({ user, onLogout, onOpenAdmin, onUserUpdate, activeT
     {
       title: t('account'),
       items: [
-        { icon: Crown, label: t('billing'), action: showCustomerCenter },
+        // Billing only exists in paid mode; the free launch hides all
+        // subscription UI.
+        ...(LAUNCH_CONFIG.subscriptionsEnabled
+          ? [{ icon: Crown, label: t('billing'), action: showCustomerCenter }]
+          : []),
         // Admin Dashboard entry is only shown to admins. This is cosmetic —
         // the backend remains the real authorization gate.
         ...(isAdmin ? [{ icon: Settings, label: t('adminDashboard'), action: onOpenAdmin }] : []),
@@ -114,7 +119,7 @@ export function ProfilePage({ user, onLogout, onOpenAdmin, onUserUpdate, activeT
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <h2 className="text-xl font-bold text-white">{userName}</h2>
-                {isPro && (
+                {LAUNCH_CONFIG.subscriptionsEnabled && isPro && (
                   <span className="px-2 py-0.5 bg-[#22C55E]/20 border border-[#22C55E]/50 rounded-full text-[10px] font-bold text-[#22C55E] uppercase flex items-center gap-1">
                     <Crown className="w-3 h-3" />
                     Pro

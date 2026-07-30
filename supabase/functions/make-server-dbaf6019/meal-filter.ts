@@ -1,7 +1,7 @@
 import { NewRecipe } from "./recipe-data.ts";
 import {
+  allergyKeywordsForChoice,
   BROAD_ALLERGY_KEYWORDS,
-  broadAllergyKeywords,
   normalizeAllergyChoices,
 } from "../_shared/allergy-contract.ts";
 
@@ -11,8 +11,8 @@ import {
 // not become false positives.
 const MEAT_KEYWORDS = ['chicken', 'beef', 'pork', 'lamb', 'turkey', 'bacon', 'ham', 'sausage', 'steak', 'mince', 'prosciutto', 'salami', 'duck', 'veal', 'gelatin', 'gelatine'];
 const SEAFOOD_KEYWORDS = [...BROAD_ALLERGY_KEYWORDS.Seafood];
-const DAIRY_EGG_KEYWORDS = ['milk', 'cheese', 'butter', 'cream', 'yogurt', 'yoghurt', 'egg', 'honey', 'ghee', 'custard'];
-const GLUTEN_KEYWORDS = ['wheat', 'bread', 'pasta', 'flour', 'barley', 'rye', 'couscous', 'noodle', 'cracker', 'breadcrumb', 'tortilla', 'pita', 'bagel', 'pastry'];
+const DAIRY_EGG_KEYWORDS = [...BROAD_ALLERGY_KEYWORDS.Dairy, ...BROAD_ALLERGY_KEYWORDS.Eggs, 'honey'];
+const GLUTEN_KEYWORDS = [...BROAD_ALLERGY_KEYWORDS['Gluten/Wheat'], 'breadcrumb'];
 const NUT_KEYWORDS = [...BROAD_ALLERGY_KEYWORDS.Nuts];
 // High-carb legumes named specifically (like NUT_KEYWORDS) so keto excludes
 // lentils/chickpeas/starchy beans without catching keto-friendly green beans.
@@ -25,6 +25,10 @@ const DIETARY_KEYWORDS = new Map<string, readonly string[]>([
   ['nut-free', NUT_KEYWORDS],
   ['nuts', NUT_KEYWORDS],
   ['seafood', SEAFOOD_KEYWORDS],
+  ['dairy', BROAD_ALLERGY_KEYWORDS.Dairy],
+  ['gluten/wheat', BROAD_ALLERGY_KEYWORDS['Gluten/Wheat']],
+  ['eggs', BROAD_ALLERGY_KEYWORDS.Eggs],
+  ['soy', BROAD_ALLERGY_KEYWORDS.Soy],
   ['keto', KETO_KEYWORDS],
 ]);
 
@@ -36,20 +40,24 @@ export function dietaryForbiddenKeywords(restrictions: string[]): string[] {
   return [...set];
 }
 
-const ingredientContainsKeyword = (ingredient: string, keyword: string): boolean =>
-  keyword === 'nut'
-    ? /\bnuts?\b/i.test(ingredient)
-    : ingredient.toLowerCase().includes(keyword);
+// Short stems that appear inside unrelated ingredient words get word-boundary
+// matching (coconut/butternut, eggplant, casserole); everything else matches
+// as a cautious substring.
+const WORD_BOUNDARY_PATTERNS = new Map<string, RegExp>([
+  ['nut', /\bnuts?\b/i],
+  ['egg', /\beggs?\b/i],
+  ['sole', /\bsole\b/i],
+]);
+
+const ingredientContainsKeyword = (ingredient: string, keyword: string): boolean => {
+  const pattern = WORD_BOUNDARY_PATTERNS.get(keyword);
+  return pattern ? pattern.test(ingredient) : ingredient.toLowerCase().includes(keyword);
+};
 
 const containsKeyword = (recipe: NewRecipe, keywords: readonly string[]): boolean =>
   keywords.some(keyword => recipe.ingredients.some(
     ingredient => ingredientContainsKeyword(ingredient, keyword),
   ));
-
-const containsBroadAllergy = (recipe: NewRecipe, choice: string): boolean => {
-  const broadKeywords = broadAllergyKeywords(choice);
-  return broadKeywords.length > 0 && containsKeyword(recipe, broadKeywords);
-};
 
 export interface MealFilterOptions {
   avoidIngredients?: string[];
@@ -77,9 +85,11 @@ export function filterRecipes(recipes: NewRecipe[], opts: MealFilterOptions = {}
   if (avoidIngredients && avoidIngredients.length > 0) {
     const normalizedAvoid = normalizeAllergyChoices(avoidIngredients, 50);
     dietarySafe = dietarySafe.filter(recipe => !normalizedAvoid.some((choice) => {
-      const broadKeywords = broadAllergyKeywords(choice);
-      return broadKeywords.length > 0
-        ? containsBroadAllergy(recipe, choice)
+      // Taxonomy choices carry keyword sets (a group's full union or a single
+      // sub-option family); free-text dislikes match literally by name.
+      const taxonomyKeywords = allergyKeywordsForChoice(choice);
+      return taxonomyKeywords.length > 0
+        ? containsKeyword(recipe, taxonomyKeywords)
         : containsKeyword(recipe, [choice.toLowerCase()]);
     }));
   }

@@ -19,12 +19,25 @@ describe('launch route registration', () => {
     )
   })
 
-  it.each(['leaderboard', 'recipe-leaderboard'])(
-    'keeps auth before the disabled Ranks policy on %s',
-    (route) => {
-      expect(source).toContain(`/${route}\", requireAuth, requireRanksEnabled`)
-    },
-  )
+  it('registers no Ranks routes at all (old clients get plain 404s)', () => {
+    expect(source).not.toContain('/make-server-dbaf6019/leaderboard')
+    expect(source).not.toContain('/make-server-dbaf6019/recipe-leaderboard')
+    expect(source).not.toContain('requireRanksEnabled')
+    // No service-role user scans remain outside the school-management routes.
+    expect(source.match(/listUsers/g) ?? []).toHaveLength(0)
+  })
+
+  it.each([
+    'user-stats',
+    'my-recipes',
+    'track-meal-cooked',
+    'cooked-meals',
+    'save-community-recipe',
+    'list-community-recipes',
+    'toggle-community-like',
+  ])('keeps the social/streak route %s registered behind auth', (route) => {
+    expect(source).toContain(`/${route}\", requireAuth`)
+  })
 
   it.each(['save-meal-plan', 'save-academic-schedule'])(
     'keeps authenticated ownership on %s',

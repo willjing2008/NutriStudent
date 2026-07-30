@@ -8,12 +8,13 @@ import { MealPlansDashboard } from './components/MealPlansDashboard';
 import { DEFAULT_PLAN_IMAGE, firstMealImage } from './utils/planImage';
 import { ShoppingMode } from './components/ShoppingMode';
 import { ProfilePage } from './components/ProfilePage';
-import { LeaderboardPage } from './components/LeaderboardPage';
 import { SubscriptionPage } from './components/SubscriptionPage';
 import { NetworkStatusBanner } from './components/NetworkStatusBanner';
 import { NavTab } from './components/BottomNavigation';
 import { supabase } from '../utils/supabaseClient';
 import { authedPost } from './utils/apiClient';
+import { LAUNCH_CONFIG } from '../../supabase/functions/_shared/launch-config';
+import { createDefaultUserPreferences, normalizeUserPreferences } from './utils/userPreferences';
 import { useSubscription } from './hooks/useSubscription';
 import { useAcademicCalendar } from './hooks/useAcademicCalendar';
 import { Apple, LogOut } from 'lucide-react';
@@ -45,8 +46,14 @@ export interface UserPreferences {
   shoppingDate: string;
   planDays: number;
   mealsPerDay: number;
-  budget: number;
-  budgetPerMealGbp?: number;
+  /**
+   * Hard per-meal ingredient budget cap (£1.00-£50.00, two decimals). Null
+   * until the user types one - plan generation requires it. Legacy saved
+   * plans with only a whole-plan `budget` are migrated on load via
+   * normalizeUserPreferences.
+   */
+  budgetPerMealGbp: number | null;
+  preferencesSchemaVersion?: number;
   goal: 'study' | 'work' | 'fitness' | null;
   maxCookingTime: number;
   avoidIngredients: string[];
@@ -98,22 +105,9 @@ function AppContent() {
   const [loadingSavedPlan, setLoadingSavedPlan] = useState(false);
   
   // User preferences
-  const [preferences, setPreferences] = useState<UserPreferences>({
-    gender: null,
-    location: '',
-    selectedStore: null,
-    selectedStores: [],
-    shoppingDate: '',
-    planDays: 7,
-    mealsPerDay: 3,
-    budget: 100,
-    goal: null,
-    maxCookingTime: 30,
-    avoidIngredients: [],
-    dietaryRestrictions: [],
-    mealTimes: { breakfast: '08:00', lunch: '12:00', dinner: '18:00' },
-    selectedMealSlots: ['breakfast', 'lunch', 'dinner'],
-  });
+  const [preferences, setPreferences] = useState<UserPreferences>(
+    createDefaultUserPreferences,
+  );
 
   // True once the user has edited preferences. An in-flight saved-plan load
   // must not clobber those edits with the persisted (older) preferences.
@@ -156,11 +150,13 @@ function AppContent() {
             }));
           }
 
-          // Identify returning user with RevenueCat
-          try {
-            await rcIdentify(session.user.id);
-          } catch (err) {
-            console.error('RevenueCat identify failed:', err);
+          // Identify returning user with RevenueCat (paid mode only)
+          if (LAUNCH_CONFIG.subscriptionsEnabled) {
+            try {
+              await rcIdentify(session.user.id);
+            } catch (err) {
+              console.error('RevenueCat identify failed:', err);
+            }
           }
         }
       } catch (err) {
@@ -195,12 +191,12 @@ function AppContent() {
   useEffect(() => {
     let safeAreaBg = '#0A1F13';
 
-    if (isAuthenticated && isReady && !isPro && subscriptionsAvailable) {
+    if (LAUNCH_CONFIG.subscriptionsEnabled && isAuthenticated && isReady && !isPro && subscriptionsAvailable) {
       // Mandatory paywall screen
       safeAreaBg = '#0A0A0A';
     } else if (isAuthenticated && !showAdminDashboard && !isOnboarding) {
       safeAreaBg =
-        activeNavTab === 'home' || activeNavTab === 'shop' || activeNavTab === 'leaderboard' || activeNavTab === 'profile'
+        activeNavTab === 'home' || activeNavTab === 'shop' || activeNavTab === 'profile'
           ? '#0A0A0A'
           : '#0A1F13';
     }
@@ -255,10 +251,15 @@ function AppContent() {
         // Don't overwrite preferences the user has already started editing while
         // this load was in flight (otherwise the late response wins, losing edits).
         if (planData.preferences && !preferencesEditedRef.current) {
-          setPreferences(planData.preferences);
+          // Saved preferences can predate the per-meal budget and the allergy
+          // taxonomy - normalize (and lazily migrate) them on load.
+          const normalizedPreferences = normalizeUserPreferences(planData.preferences);
+          setPreferences(normalizedPreferences);
           // Enrich plan metadata with goal from preferences
           setSavedPlansHistory(prev => prev.map((p, i) =>
-            i === 0 ? { ...p, goal: planData.preferences.goal, description: `${planData.preferences.goal || 'Custom'} plan` } : p
+            i === 0
+              ? { ...p, goal: normalizedPreferences.goal, description: `${normalizedPreferences.goal || 'Custom'} plan` }
+              : p
           ));
         }
       }
@@ -358,11 +359,13 @@ function AppContent() {
       }));
     }
 
-    // Identify user with RevenueCat
-    try {
-      await rcIdentify(loggedInUser.id);
-    } catch (err) {
-      console.error('RevenueCat identify failed:', err);
+    // Identify user with RevenueCat (paid mode only)
+    if (LAUNCH_CONFIG.subscriptionsEnabled) {
+      try {
+        await rcIdentify(loggedInUser.id);
+      } catch (err) {
+        console.error('RevenueCat identify failed:', err);
+      }
     }
   };
 
@@ -373,11 +376,13 @@ function AppContent() {
       console.error('Sign-out failed:', err);
     }
 
-    // Reset RevenueCat identity
-    try {
-      await rcReset();
-    } catch (err) {
-      console.error('RevenueCat reset failed:', err);
+    // Reset RevenueCat identity (paid mode only)
+    if (LAUNCH_CONFIG.subscriptionsEnabled) {
+      try {
+        await rcReset();
+      } catch (err) {
+        console.error('RevenueCat reset failed:', err);
+      }
     }
 
     setIsAuthenticated(false);
@@ -399,22 +404,7 @@ function AppContent() {
 
   const resetPreferences = () => {
     preferencesEditedRef.current = false;
-    setPreferences({
-      gender: null,
-      location: '',
-      selectedStore: null,
-      selectedStores: [],
-      shoppingDate: '',
-      planDays: 7,
-      mealsPerDay: 3,
-      budget: 100,
-      goal: null,
-      maxCookingTime: 30,
-      avoidIngredients: [],
-      dietaryRestrictions: [],
-      mealTimes: { breakfast: '08:00', lunch: '12:00', dinner: '18:00' },
-      selectedMealSlots: ['breakfast', 'lunch', 'dinner'],
-    });
+    setPreferences(createDefaultUserPreferences());
   };
 
   const handleNavTabChange = (tab: NavTab) => {
@@ -458,8 +448,9 @@ function AppContent() {
     );
   }
 
-  // Mandatory Paywall - non-Pro authenticated users
-  if (isAuthenticated && isReady && !isPro && subscriptionsAvailable) {
+  // Mandatory Paywall - non-Pro authenticated users (paid mode only; the free
+  // launch never shows subscription UI)
+  if (LAUNCH_CONFIG.subscriptionsEnabled && isAuthenticated && isReady && !isPro && subscriptionsAvailable) {
     return (
       <>
         <ErrorBoundary label="Subscription">
@@ -626,17 +617,6 @@ function AppContent() {
             onBack={() => setActiveNavTab('home')}
             activeNavTab={activeNavTab}
             onNavTabChange={handleNavTabChange}
-          />
-        </ErrorBoundary>
-      )}
-
-      {/* Leaderboard Tab */}
-      {activeNavTab === 'leaderboard' && (
-        <ErrorBoundary label="Leaderboard">
-          <LeaderboardPage
-            user={user}
-            activeTab={activeNavTab}
-            onTabChange={handleNavTabChange}
           />
         </ErrorBoundary>
       )}

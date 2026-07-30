@@ -168,6 +168,7 @@ test('student sees a restored recipe image and can save the generated plan', asy
   await expect(page.getByRole('heading', { name: 'Your Meal Plans' })).toBeVisible();
   await page.getByRole('button', { name: 'Create Plan' }).click();
   await page.getByRole('spinbutton', { name: 'Number of days' }).fill('1');
+  await page.getByRole('spinbutton', { name: /budget per meal/i }).fill('3.50');
   await page.getByRole('button', { name: /Study Focus/ }).click();
   await page.getByRole('button', { name: /^Continue$/ }).click();
 
@@ -194,6 +195,7 @@ test('student sees a restored recipe image and can save the generated plan', asy
     preferences: {
       planDays: 1,
       goal: 'study',
+      budgetPerMealGbp: 3.5,
     },
   });
   await page.screenshot({

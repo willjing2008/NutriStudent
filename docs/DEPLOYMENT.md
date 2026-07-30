@@ -35,9 +35,11 @@ Production already runs Edge Function version 97, deployed on July 28, 2026 from
 The backend source restored to GitHub main mirrors that deployed launch behavior.
 Merging source restoration does not deploy or mutate production, and source restoration alone is not approval to redeploy.
 
-`supabase/functions/_shared/launch-config.ts` explicitly disables subscriptions and Ranks for the initial launch.
+`supabase/functions/_shared/launch-config.ts` explicitly disables subscriptions for the initial launch.
 Authenticated generation routes retain `requireAuth` and their per-user rate limits before `requirePremiumAccess`, while free mode intentionally skips RevenueCat verification.
-The `leaderboard` and `recipe-leaderboard` routes retain authentication and return 404 before their handlers while Ranks is disabled.
+Ranks was fully eliminated (July 30, 2026 captain decision): the `leaderboard` and `recipe-leaderboard` routes and their service-role user scans are deleted from source, so old clients calling them get plain 404s.
+Deployed version 97 still carries the policy-gated routes; the next backend deploy picks up the deletion, which only changes the 404 body shape for those two paths.
+Community recipes, likes, personal streaks, achievements, and cooked history keep their own routes.
 
 The canonical budget is `budgetPerMealGbp`, validated from £1.00 through £50.00 with at most two decimal places and enforced as a hard cap for generation, queues, shuffle, swap options, and queue swaps.
 Current GitHub-main legacy clients remain compatible through total-budget derivation.

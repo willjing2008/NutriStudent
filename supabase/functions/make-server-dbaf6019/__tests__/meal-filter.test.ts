@@ -69,7 +69,7 @@ describe('filterRecipes', () => {
     expect(out.map(r => r.id)).toEqual([7, 8])
   })
 
-  it('normalizes legacy allergy values before filtering', () => {
+  it('honors sub-option granularity: Fish excludes fish but not shellfish', () => {
     const pool = [
       recipe(1, ['almonds']),
       recipe(2, ['tuna']),
@@ -77,7 +77,71 @@ describe('filterRecipes', () => {
       recipe(4, ['rice']),
     ]
     const out = filterRecipes(pool, { avoidIngredients: ['Tree Nuts', 'Fish'] })
-    expect(out.map(r => r.id)).toEqual([4])
+    expect(out.map(r => r.id)).toEqual([3, 4])
+  })
+
+  it('honors group granularity: Seafood covers both fish and shellfish', () => {
+    const pool = [
+      recipe(1, ['tuna']),
+      recipe(2, ['shrimp']),
+      recipe(3, ['rice']),
+    ]
+    const out = filterRecipes(pool, { avoidIngredients: ['Seafood'] })
+    expect(out.map(r => r.id)).toEqual([3])
+  })
+
+  it('restricts a Dairy sub-option to just that family', () => {
+    const pool = [
+      recipe(1, ['whole milk']),
+      recipe(2, ['cheddar cheese']),
+      recipe(3, ['salted butter']),
+      recipe(4, ['oats']),
+    ]
+    const out = filterRecipes(pool, { avoidIngredients: ['Milk'] })
+    expect(out.map(r => r.id)).toEqual([2, 3, 4])
+  })
+
+  it('expands the Dairy group across every sub-option family', () => {
+    const pool = [
+      recipe(1, ['whole milk']),
+      recipe(2, ['cheddar cheese']),
+      recipe(3, ['salted butter']),
+      recipe(4, ['double cream']),
+      recipe(5, ['greek yoghurt']),
+      recipe(6, ['oats']),
+    ]
+    const out = filterRecipes(pool, { avoidIngredients: ['Dairy'] })
+    expect(out.map(r => r.id)).toEqual([6])
+  })
+
+  it('filters the sub-option-less groups without false positives', () => {
+    const pool = [
+      recipe(1, ['plain flour']),
+      recipe(2, ['eggs']),
+      recipe(3, ['eggplant']),
+      recipe(4, ['tofu']),
+      recipe(5, ['rice']),
+      recipe(6, ['sole fillet']),
+      recipe(7, ['chicken casserole']),
+    ]
+    expect(filterRecipes(pool, { avoidIngredients: ['Gluten/Wheat'] }).map(r => r.id))
+      .toEqual([2, 3, 4, 5, 6, 7])
+    expect(filterRecipes(pool, { avoidIngredients: ['Eggs'] }).map(r => r.id))
+      .toEqual([1, 3, 4, 5, 6, 7])
+    expect(filterRecipes(pool, { avoidIngredients: ['Soy'] }).map(r => r.id))
+      .toEqual([1, 2, 3, 5, 6, 7])
+    expect(filterRecipes(pool, { avoidIngredients: ['Fish'] }).map(r => r.id))
+      .toEqual([1, 2, 3, 4, 5, 7])
+  })
+
+  it('normalizes legacy free-text values onto the taxonomy before filtering', () => {
+    const pool = [
+      recipe(1, ['semi-skimmed milk']),
+      recipe(2, ['wheat flour']),
+      recipe(3, ['rice']),
+    ]
+    const out = filterRecipes(pool, { avoidIngredients: ['milk', 'gluten'] })
+    expect(out.map(r => r.id)).toEqual([3])
   })
 
   it('excludes meat recipes for a vegan restriction', () => {

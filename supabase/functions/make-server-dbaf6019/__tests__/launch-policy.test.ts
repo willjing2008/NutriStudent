@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createPremiumAccessMiddleware } from '../entitlement.ts'
-import { createRanksEnabledMiddleware } from '../launch-policy.ts'
 
 type Middleware = (context: any, next: () => Promise<void>) => Promise<unknown>
 
@@ -32,25 +31,3 @@ describe('premium access launch policy', () => {
   })
 })
 
-describe('Ranks launch policy', () => {
-  it('returns 404 before the ranking handler runs', async () => {
-    const context = makeContext()
-    const next = vi.fn(async () => {})
-    const middleware = createRanksEnabledMiddleware(false)
-
-    await expect(middleware(context as any, next)).resolves.toEqual({
-      body: { error: 'Feature unavailable' },
-      status: 404,
-    })
-    expect(next).not.toHaveBeenCalled()
-  })
-
-  it('allows the dormant ranking handlers when deliberately re-enabled', async () => {
-    const next = vi.fn(async () => {})
-    const middleware = createRanksEnabledMiddleware(true)
-
-    await middleware(makeContext() as any, next)
-
-    expect(next).toHaveBeenCalledOnce()
-  })
-})

@@ -8,6 +8,8 @@ import { ShoppingMode } from './ShoppingMode';
 import { getRecipeImageWithCache } from '../utils/recipeImages';
 import { MealSwapModal } from './MealSwapModal';
 import { applyQueueMealSwap, resolveSwapSlot } from '../utils/mealSwap';
+import { formatBudgetGbp, toPence, UNPRICED_RECIPE_FALLBACK_GBP } from '../../../supabase/functions/_shared/budget-contract';
+import { normalizeAllergyChoices } from '../../../supabase/functions/_shared/allergy-contract';
 
 import { supabase } from '../../utils/supabaseClient';
 import { BottomNavigation, NavTab } from './BottomNavigation';
@@ -105,11 +107,13 @@ interface MealPlanMeal {
 
 interface MealPlan {
   meals: MealPlanMeal[];
-  budgetPerMealGbp: number;
   totalCost: number;
+  budgetPerMealGbp?: number;
+  totalBudgetGbp?: number;
   dailyBudget: number;
   weeklyBudget: number;
   withinBudget: boolean;
+  overBudgetMealCount?: number;
   cookingDays?: number;
   totalMealsNeeded?: number;
   mealsPerDay?: number;
@@ -132,10 +136,37 @@ const formatOptionalNumber = (value: unknown, suffix = ''): string =>
   typeof value === 'number' && Number.isFinite(value) ? `${value}${suffix}` : '-';
 
 const safeCost = (meal: { totalCost?: unknown }): number =>
-  typeof meal.totalCost === 'number' && Number.isFinite(meal.totalCost) ? meal.totalCost : 0;
+  typeof meal.totalCost === 'number' && Number.isFinite(meal.totalCost) && meal.totalCost > 0
+    ? meal.totalCost
+    : UNPRICED_RECIPE_FALLBACK_GBP;
 
 const getErrorMessage = (err: unknown, fallback: string): string =>
   err instanceof Error && err.message.trim() ? err.message : fallback;
+
+// Recompute the plan-level budget summary after a local mutation, comparing
+// integer pence so float artefacts can't flip the over-budget flags.
+const withBudgetSummary = (
+  mealPlan: MealPlan,
+  meals: MealPlanMeal[],
+  budgetPerMealGbp: number,
+): MealPlan => {
+  const totalCost = Math.round(meals.reduce((sum, meal) => sum + safeCost(meal), 0) * 100) / 100;
+  const overBudgetMealCount = meals.filter(
+    (meal) => toPence(safeCost(meal)) > toPence(budgetPerMealGbp),
+  ).length;
+  const totalBudgetGbp = Math.round(budgetPerMealGbp * meals.length * 100) / 100;
+  return {
+    ...mealPlan,
+    meals,
+    totalCost,
+    budgetPerMealGbp,
+    totalBudgetGbp,
+    dailyBudget: budgetPerMealGbp,
+    weeklyBudget: totalBudgetGbp,
+    withinBudget: overBudgetMealCount === 0,
+    overBudgetMealCount,
+  };
+};
 
 
 export function RecommendationsStep({
@@ -152,6 +183,7 @@ export function RecommendationsStep({
   const [mealPlan, setMealPlan] = useState<MealPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mutationError, setMutationError] = useState<string | null>(null);
   const [selectedMeal, setSelectedMeal] = useState<MealPlanMeal | null>(null);
   const [showRationaleModal, setShowRationaleModal] = useState(false);
   const [showRecipeModal, setShowRecipeModal] = useState(false);
@@ -205,6 +237,10 @@ export function RecommendationsStep({
 
   // Whether we're operating in queue mode (queue exists and has meals)
   const isQueueMode = !!(currentWeekMealPlan?.meals?.length);
+  // The hard per-meal cap for mutations and display: the rendered plan's
+  // stamped value wins over current preferences (a loaded plan may differ).
+  const effectiveBudgetPerMealGbp = mealPlan?.budgetPerMealGbp
+    ?? preferences.budgetPerMealGbp;
 
   // Use meal reminders hook
   const {
@@ -347,7 +383,8 @@ export function RecommendationsStep({
   };
 
   // Check if required preferences are set
-  const hasRequiredPreferences = preferences.goal !== null;
+  const hasRequiredPreferences = preferences.goal !== null
+    && preferences.budgetPerMealGbp !== null;
 
   useEffect(() => {
     // Queue mode owns the rendered plan (synced from currentWeekMealPlan
@@ -507,9 +544,10 @@ export function RecommendationsStep({
           await onGenerateQueue(user.id, {
             mealsPerDay: preferences.mealsPerDay,
             goal: preferences.goal,
-            avoidIngredients: preferences.avoidIngredients,
+            avoidIngredients: normalizeAllergyChoices(preferences.avoidIngredients, 50),
+            dietaryRestrictions: normalizeAllergyChoices(preferences.dietaryRestrictions, 10),
             maxCookingTime: preferences.maxCookingTime,
-            budget: preferences.budget,
+            budgetPerMealGbp: preferences.budgetPerMealGbp,
             selectedMealSlots: newSelectedSlots || preferences.selectedMealSlots,
           });
         }
@@ -584,16 +622,25 @@ export function RecommendationsStep({
     setError(null);
 
     try {
+      if (preferences.budgetPerMealGbp === null) {
+        throw new Error('Enter a budget per meal before generating your plan.');
+      }
+      const legacyPlanBudget = Math.round(
+        preferences.budgetPerMealGbp * preferences.planDays * preferences.mealsPerDay * 100,
+      ) / 100;
       const data = await authedPost<{ mealPlan?: any }>('generate-meal-plan', {
         storeName: 'Generic UK Supermarket',
         mealsPerDay: preferences.mealsPerDay,
-        budget: preferences.budget,
+        budgetPerMealGbp: preferences.budgetPerMealGbp,
+        // One-release dual-send: a rolled-back server only knows the legacy
+        // whole-plan budget. Drop this once the canonical field is universal.
+        budget: legacyPlanBudget,
         goal: preferences.goal,
         shoppingDate: preferences.shoppingDate,
         planDays: preferences.planDays,
         maxCookingTime: preferences.maxCookingTime,
-        avoidIngredients: preferences.avoidIngredients || [],
-        dietaryRestrictions: preferences.dietaryRestrictions || [],
+        avoidIngredients: normalizeAllergyChoices(preferences.avoidIngredients, 50),
+        dietaryRestrictions: normalizeAllergyChoices(preferences.dietaryRestrictions, 10),
         mealTimes: preferences.mealTimes,
         selectedMealSlots: preferences.selectedMealSlots || ['breakfast', 'lunch', 'dinner'],
       });
@@ -644,8 +691,13 @@ export function RecommendationsStep({
 
   const handleShuffleRecipe = async (mealId: string) => {
     if (!mealPlan) return;
+    if (effectiveBudgetPerMealGbp == null) {
+      setMutationError('Enter a budget per meal before changing recipes.');
+      return;
+    }
 
     setShufflingMealId(mealId);
+    setMutationError(null);
 
     try {
       const currentMealIds = mealPlan.meals.map(m => m.id);
@@ -654,7 +706,7 @@ export function RecommendationsStep({
         currentRecipeId: mealId,
         goal: preferences.goal,
         currentMealIds: currentMealIds,
-        budgetPerMealGbp: mealPlan.budgetPerMealGbp ?? preferences.budgetPerMealGbp ?? mealPlan.dailyBudget,
+        budgetPerMealGbp: effectiveBudgetPerMealGbp,
         maxCookingTime: preferences.maxCookingTime,
       });
 
@@ -662,14 +714,7 @@ export function RecommendationsStep({
         meal.id === mealId ? data.replacementMeal : meal
       );
 
-      const newTotalCost = updatedMeals.reduce((sum, meal) => sum + safeCost(meal), 0);
-
-      setMealPlan(({
-        ...mealPlan,
-        meals: updatedMeals,
-        totalCost: parseFloat(newTotalCost.toFixed(2)),
-        withinBudget: newTotalCost <= mealPlan.weeklyBudget,
-      }));
+      setMealPlan(withBudgetSummary(mealPlan, updatedMeals, effectiveBudgetPerMealGbp));
 
       const newMeal = data.replacementMeal;
       const aiImage = getMealImageCandidates(newMeal)[0] || LOCAL_IMAGE_FALLBACK;
@@ -684,6 +729,7 @@ export function RecommendationsStep({
 
     } catch (err: any) {
       console.error('Error shuffling recipe:', err);
+      setMutationError(getErrorMessage(err, 'Failed to find an affordable alternative.'));
     } finally {
       setShufflingMealId(null);
     }
@@ -692,7 +738,12 @@ export function RecommendationsStep({
   // Called by MealSwapModal, which awaits it and only closes on success -
   // a thrown error keeps the modal open and is shown to the user.
   const handleMealSwap = async (newMeal: MealPlanMeal) => {
-    if (!mealPlan || !selectedMealForSwap) return;
+    if (!mealPlan || !selectedMealForSwap) {
+      throw new Error('Swapping is unavailable right now. Please try again.');
+    }
+    if (effectiveBudgetPerMealGbp == null) {
+      throw new Error('Enter a budget per meal before changing recipes.');
+    }
 
     // Queue mode persists swaps through the queue endpoint (keyed by absolute
     // day + slot); the refreshed week plan flows back via currentWeekMealPlan.
@@ -733,14 +784,11 @@ export function RecommendationsStep({
         : meal
     );
 
-    const newTotalCost = updatedMeals.reduce((sum, meal) => sum + safeCost(meal), 0);
-
-    const updatedPlan = {
-      ...mealPlan,
-      meals: updatedMeals,
-      totalCost: parseFloat(newTotalCost.toFixed(2)),
-      withinBudget: newTotalCost <= mealPlan.weeklyBudget,
-    };
+    const updatedPlan = withBudgetSummary(
+      mealPlan,
+      updatedMeals,
+      effectiveBudgetPerMealGbp,
+    );
 
     setMealPlan(updatedPlan);
 
@@ -968,9 +1016,6 @@ export function RecommendationsStep({
       }),
       { calories: 0, protein: 0, carbs: 0, fats: 0, fiber: 0 }
     );
-
-  const dailyBudgetUsed = currentDayMeals.reduce((sum, meal) => sum + (meal.totalCost || 0), 0);
-  const dailyBudgetLimit = mealPlan?.dailyBudget || (preferences.budget / (preferences.planDays || 7));
 
   // Target nutrition based on user's gender
   const nutritionTargets = getNutritionTargets(preferences.gender);
@@ -1276,6 +1321,17 @@ export function RecommendationsStep({
                 </div>
               </div>
 
+          {/* Budget per meal */}
+          <div className="bg-[#142A1D] rounded-2xl p-4 border border-[#1E4029]">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-[#22C55E] text-lg font-bold">£</span>
+              <span className="text-[#6B7280] text-sm">Budget per meal</span>
+            </div>
+            <div className="text-2xl font-bold text-white">
+              {effectiveBudgetPerMealGbp == null ? '-' : formatBudgetGbp(effectiveBudgetPerMealGbp)}
+            </div>
+          </div>
+
                         </div>
                       </div>
 
@@ -1371,6 +1427,14 @@ export function RecommendationsStep({
                               </div>
                             </div>
 
+      {mutationError && (
+        <div className="px-5 mb-4">
+          <div role="alert" className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+            {mutationError}
+          </div>
+        </div>
+      )}
+
       {/* Today's Meals */}
       <div className="px-5 mb-6">
         <div className="flex items-center justify-between mb-4">
@@ -1389,6 +1453,9 @@ export function RecommendationsStep({
             const isCooked = isMealCooked(meal);
             const mealType = meal.mealType?.toLowerCase() || 'meal';
             const mealImageCandidates = getMealImageCandidates(meal);
+            const hasMealCost = typeof meal.totalCost === 'number' && Number.isFinite(meal.totalCost);
+            const mealWithinBudget = effectiveBudgetPerMealGbp == null || !hasMealCost
+              || toPence(meal.totalCost!) <= toPence(effectiveBudgetPerMealGbp);
 
             return (
               <div
@@ -1398,9 +1465,11 @@ export function RecommendationsStep({
                                     setShowRecipeModal(true);
                                   }}
                 className={`bg-[#142A1D] rounded-2xl overflow-hidden border transition-all cursor-pointer hover:border-[#22C55E]/50 ${
-                  isCooked
-                    ? 'border-[#22C55E]/50 bg-[#22C55E]/5'
-                    : 'border-[#1E4029]'
+                  !mealWithinBudget
+                    ? 'border-red-500/60 bg-red-500/5'
+                    : isCooked
+                      ? 'border-[#22C55E]/50 bg-[#22C55E]/5'
+                      : 'border-[#1E4029]'
                 }`}
               >
                 <div className="flex gap-4 p-4">
@@ -1436,6 +1505,14 @@ export function RecommendationsStep({
                       </span>
                       <span className="shrink-0">•</span>
                       <span className="text-[#22C55E] shrink-0">{formatOptionalNumber(meal.nutrition?.protein, 'g')} protein</span>
+                      {hasMealCost && effectiveBudgetPerMealGbp != null && (
+                        <>
+                          <span className="shrink-0">•</span>
+                          <span className={`shrink-0 font-medium ${mealWithinBudget ? 'text-[#86EFAC]' : 'text-red-400'}`}>
+                            {formatBudgetGbp(meal.totalCost!)} / {formatBudgetGbp(effectiveBudgetPerMealGbp)}
+                          </span>
+                        </>
+                      )}
                       {meal.timesCooked !== undefined && (
                         <>
                           <span className="shrink-0">•</span>
@@ -1783,11 +1860,13 @@ export function RecommendationsStep({
               <div className="flex gap-3">
                 <button
                   onClick={() => {
+                    if (effectiveBudgetPerMealGbp == null) return;
                     setSelectedMealForSwap(selectedMeal);
                     setShowRecipeModal(false);
                     setShowMealSwapModal(true);
                   }}
-                  className="flex-1 py-3 bg-[#142A1D] border border-[#2D5A3D] text-white rounded-xl font-medium flex items-center justify-center gap-2 hover:border-[#22C55E] transition-all"
+                  disabled={effectiveBudgetPerMealGbp == null}
+                  className="flex-1 py-3 bg-[#142A1D] border border-[#2D5A3D] text-white rounded-xl font-medium flex items-center justify-center gap-2 hover:border-[#22C55E] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Repeat2 className="w-4 h-4" />
                   Swap Meal
@@ -1797,7 +1876,7 @@ export function RecommendationsStep({
                     setShowRecipeModal(false);
                     handleShuffleRecipe(selectedMeal.id);
                   }}
-                  disabled={shufflingMealId === selectedMeal.id}
+                  disabled={shufflingMealId === selectedMeal.id || effectiveBudgetPerMealGbp == null}
                   className="flex-1 py-3 bg-[#22C55E] text-[#052E16] rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-[#4ADE80] transition-all disabled:opacity-50"
                 >
                   <RefreshCw className={`w-4 h-4 ${shufflingMealId === selectedMeal.id ? 'animate-spin' : ''}`} />
@@ -1810,12 +1889,12 @@ export function RecommendationsStep({
       )}
 
       {/* Meal Swap Modal */}
-      {showMealSwapModal && selectedMealForSwap && (
+      {showMealSwapModal && selectedMealForSwap && effectiveBudgetPerMealGbp != null && (
         <MealSwapModal
           currentMeal={selectedMealForSwap}
           goal={preferences.goal || 'Custom'}
           currentMealIds={mealPlan.meals.map(m => m.id)}
-          budgetPerMealGbp={mealPlan.budgetPerMealGbp ?? preferences.budgetPerMealGbp ?? mealPlan.dailyBudget}
+          budgetPerMealGbp={effectiveBudgetPerMealGbp}
           maxCookingTime={preferences.maxCookingTime}
           onSwap={handleMealSwap}
           onClose={() => setShowMealSwapModal(false)}
