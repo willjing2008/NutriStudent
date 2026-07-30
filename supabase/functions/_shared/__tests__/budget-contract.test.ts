@@ -6,6 +6,7 @@ import {
   formatBudgetGbp,
   buildPreferenceResponse,
   normalizePreferenceBudget,
+  normalizePreferenceBudgetForMealPlan,
   parseBudgetPerMealGbp,
   resolveBudgetPerMealGbp,
   resolveMutationBudgetPerMealGbp,
@@ -115,6 +116,7 @@ describe('legacy budget migration', () => {
       goal: 'study',
       avoidIngredients: ['Nuts', 'Seafood'],
       dietaryRestrictions: ['Seafood', 'vegan'],
+      legacyBudgetTotalGbp: 80,
       budgetPerMealGbp: 3.81,
       preferencesSchemaVersion: 3,
     })
@@ -129,6 +131,7 @@ describe('legacy budget migration', () => {
       planDays: 7,
       mealsPerDay: 3,
       goal: 'study',
+      legacyBudgetTotalGbp: 100,
       budgetPerMealGbp: 4.76,
       preferencesSchemaVersion: 3,
     })
@@ -154,6 +157,52 @@ describe('legacy budget migration', () => {
       planDays: 7,
       mealsPerDay: 3,
     })
+  })
+
+  it('preserves the exact legacy total through normalization and reload', () => {
+    const normalized = normalizePreferenceBudget({
+      budget: 100,
+      planDays: 7,
+      mealsPerDay: 3,
+      goal: 'study',
+    })
+
+    expect(normalized).toMatchObject({
+      legacyBudgetTotalGbp: 100,
+      budgetPerMealGbp: 4.76,
+    })
+    expect(buildPreferenceResponse(normalized)).toEqual({
+      planDays: 7,
+      mealsPerDay: 3,
+      goal: 'study',
+      budgetPerMealGbp: 4.76,
+      preferencesSchemaVersion: 3,
+      budget: 100,
+    })
+  })
+
+  it('binds saved preferences to the generated meal-plan cap', () => {
+    expect(normalizePreferenceBudgetForMealPlan(
+      {
+        budget: 120,
+        budgetPerMealGbp: 4.76,
+        planDays: 7,
+        mealsPerDay: 3,
+      },
+      { budgetPerMealGbp: 5.71 },
+    )).toMatchObject({
+      legacyBudgetTotalGbp: 120,
+      budgetPerMealGbp: 5.71,
+      planDays: 7,
+      mealsPerDay: 3,
+    })
+  })
+
+  it('rejects an explicitly invalid generated meal-plan cap', () => {
+    expect(normalizePreferenceBudgetForMealPlan(
+      { budget: 100, planDays: 7, mealsPerDay: 3 },
+      { budgetPerMealGbp: 0.5 },
+    )).toBeNull()
   })
 
   it('derives the legacy response alias from canonical stored preferences', () => {

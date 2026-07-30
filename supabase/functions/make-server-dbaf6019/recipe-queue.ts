@@ -229,7 +229,7 @@ export function getQueueWeekAsMealPlan(
     meals: weekMeals,
     ...budgetSummary,
     // Deprecated aliases for installed clients during the compatibility window.
-    dailyBudget: budgetPerMealGbp,
+    dailyBudget: budgetSummary.totalBudgetGbp / 7,
     weeklyBudget: budgetSummary.totalBudgetGbp,
     cookingDays: 7,
     totalMealsNeeded: 7 * queue.mealsPerDay,

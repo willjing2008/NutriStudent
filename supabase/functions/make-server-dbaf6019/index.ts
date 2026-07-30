@@ -22,7 +22,7 @@ import { normalizeAllergyChoices } from "../_shared/allergy-contract.ts";
 import {
   buildPreferenceResponse,
   LEGACY_QUEUE_BUDGET_PER_MEAL_GBP,
-  normalizePreferenceBudget,
+  normalizePreferenceBudgetForMealPlan,
   parseBudgetPerMealGbp,
   resolveBudgetPerMealGbp,
   resolveMutationBudgetPerMealGbp,
@@ -1768,7 +1768,7 @@ app.post("/make-server-dbaf6019/save-meal-plan", requireAuth, async (c) => {
     if (!mealPlan) {
       return c.json({ error: "Meal plan required" }, 400);
     }
-    const normalizedPreferences = normalizePreferenceBudget(preferences);
+    const normalizedPreferences = normalizePreferenceBudgetForMealPlan(preferences, mealPlan);
     if (!normalizedPreferences || normalizedPreferences.budgetPerMealGbp === null) {
       return c.json({ error: "Valid budgetPerMealGbp preferences are required" }, 400);
     }

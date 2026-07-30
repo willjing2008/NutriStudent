@@ -34,7 +34,9 @@ describe('launch route registration', () => {
   )
 
   it('normalizes preferences before writing a saved plan', () => {
-    expect(source).toContain('const normalizedPreferences = normalizePreferenceBudget(preferences);')
+    expect(source).toContain(
+      'const normalizedPreferences = normalizePreferenceBudgetForMealPlan(preferences, mealPlan);',
+    )
     expect(source).toContain('preferences: normalizedPreferences,')
   })
 

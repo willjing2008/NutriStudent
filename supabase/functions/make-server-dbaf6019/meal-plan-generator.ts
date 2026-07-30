@@ -83,7 +83,7 @@ export function generateMealPlanFromRecipes(
     meals,
     ...budgetSummary,
     // Deprecated aliases retained for installed clients during one compatibility release.
-    dailyBudget: budgetPerMealGbp,
+    dailyBudget: budgetSummary.totalBudgetGbp / cookingDays,
     weeklyBudget: budgetSummary.totalBudgetGbp,
     cookingDays,
     totalMealsNeeded,
@@ -103,7 +103,7 @@ function emptyMealPlan(
   return {
     meals: [],
     ...budgetSummary,
-    dailyBudget: budgetPerMealGbp,
+    dailyBudget: budgetSummary.totalBudgetGbp / cookingDays,
     weeklyBudget: 0,
     cookingDays,
     totalMealsNeeded,

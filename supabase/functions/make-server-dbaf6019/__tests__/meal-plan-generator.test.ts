@@ -41,6 +41,7 @@ describe('generateMealPlanFromRecipes hard cap', () => {
     expect(plan).toMatchObject({
       budgetPerMealGbp: 4.25,
       totalBudgetGbp: 25.5,
+      dailyBudget: 12.75,
       withinBudget: true,
       overBudgetMealCount: 0,
     })

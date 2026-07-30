@@ -96,6 +96,24 @@ describe('getQueueWeekAsMealPlan', () => {
     expect(week.weeklyBudget).toBe(28)
   })
 
+  it('keeps the legacy daily alias at the full daily allowance', () => {
+    const queue = {
+      ...buildQueue(
+        Array.from({ length: 21 }, (_, index) => {
+          const day = Math.floor(index / 3) + 1
+          return queuedMeal(day, mealRecipe(index + 1, day))
+        }),
+      ),
+      mealsPerDay: 3,
+      budgetPerMealGbp: 4.25,
+    }
+
+    const week = getQueueWeekAsMealPlan(queue, 1)
+
+    expect(week.totalBudgetGbp).toBe(89.25)
+    expect(week.dailyBudget).toBe(12.75)
+  })
+
   it('keeps the persisted cap and totals after a queue swap', () => {
     const queue = fourteenDayQueue()
     const replacement = toMealPlanMeal(

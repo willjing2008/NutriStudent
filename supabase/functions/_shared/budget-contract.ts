@@ -133,11 +133,44 @@ export function normalizePreferenceBudget(
   ) {
     normalized.planDays = LEGACY_DEFAULT_PLAN_DAYS
   }
+  const legacyBudgetTotalGbp =
+    finitePositiveNumber(record.legacyBudgetTotalGbp)
+    ?? finitePositiveNumber(record.budget)
   return {
     ...normalized,
+    ...(legacyBudgetTotalGbp === null ? {} : { legacyBudgetTotalGbp }),
     budgetPerMealGbp: resolution.value,
     preferencesSchemaVersion: PREFERENCES_SCHEMA_VERSION,
   }
+}
+
+export function normalizePreferenceBudgetForMealPlan(
+  preferences: unknown,
+  mealPlan: unknown,
+): Record<string, unknown> | null {
+  if (typeof mealPlan !== 'object' || mealPlan === null || Array.isArray(mealPlan)) {
+    return normalizePreferenceBudget(preferences)
+  }
+
+  const mealPlanRecord = mealPlan as Record<string, unknown>
+  if (!Object.prototype.hasOwnProperty.call(mealPlanRecord, 'budgetPerMealGbp')) {
+    return normalizePreferenceBudget(preferences)
+  }
+
+  const mealPlanBudget = parseBudgetPerMealGbp(mealPlanRecord.budgetPerMealGbp)
+  if (
+    mealPlanBudget === null
+    || typeof preferences !== 'object'
+    || preferences === null
+    || Array.isArray(preferences)
+  ) {
+    return null
+  }
+
+  return normalizePreferenceBudget({
+    ...(preferences as Record<string, unknown>),
+    budgetPerMealGbp: mealPlanBudget,
+  })
 }
 
 export function buildPreferenceResponse(
@@ -147,18 +180,21 @@ export function buildPreferenceResponse(
   if (!normalized) return null
 
   const record = input as Record<string, unknown>
-  const resolution = resolveBudgetPerMealGbp(record)
   const planDays = finitePositiveNumber(normalized.planDays)
   const mealsPerDay = finitePositiveNumber(normalized.mealsPerDay)
   const canonicalBudget = parseBudgetPerMealGbp(normalized.budgetPerMealGbp)
+  const exactLegacyBudget =
+    finitePositiveNumber(record.legacyBudgetTotalGbp)
+    ?? finitePositiveNumber(record.budget)
+  const { legacyBudgetTotalGbp: _legacyBudgetTotalGbp, ...responsePreferences } = normalized
 
-  const legacyBudget = resolution.source === 'legacy'
-    ? finitePositiveNumber(record.budget)
+  const legacyBudget = exactLegacyBudget !== null
+    ? exactLegacyBudget
     : canonicalBudget !== null && planDays !== null && mealsPerDay !== null
       ? toPence(canonicalBudget * planDays * mealsPerDay) / 100
       : null
 
   return legacyBudget === null
-    ? normalized
-    : { ...normalized, budget: legacyBudget }
+    ? responsePreferences
+    : { ...responsePreferences, budget: legacyBudget }
 }
