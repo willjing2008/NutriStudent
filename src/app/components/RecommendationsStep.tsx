@@ -155,13 +155,19 @@ const withBudgetSummary = (
     (meal) => toPence(safeCost(meal)) > toPence(budgetPerMealGbp),
   ).length;
   const totalBudgetGbp = Math.round(budgetPerMealGbp * meals.length * 100) / 100;
+  // Compatibility aliases per docs/DEPLOYMENT.md: dailyBudget is the FULL
+  // daily allowance and weeklyBudget the plan allowance, mirroring the
+  // backend's totalBudgetGbp / cookingDays derivation.
+  const cookingDays = mealPlan.cookingDays
+    ?? Math.max(1, new Set(meals.map((meal) => meal.dayNumber ?? 1)).size);
+  const dailyBudget = Math.round((totalBudgetGbp / cookingDays) * 100) / 100;
   return {
     ...mealPlan,
     meals,
     totalCost,
     budgetPerMealGbp,
     totalBudgetGbp,
-    dailyBudget: budgetPerMealGbp,
+    dailyBudget,
     weeklyBudget: totalBudgetGbp,
     withinBudget: overBudgetMealCount === 0,
     overBudgetMealCount,
@@ -708,6 +714,8 @@ export function RecommendationsStep({
         currentMealIds: currentMealIds,
         budgetPerMealGbp: effectiveBudgetPerMealGbp,
         maxCookingTime: preferences.maxCookingTime,
+        avoidIngredients: normalizeAllergyChoices(preferences.avoidIngredients, 50),
+        dietaryRestrictions: normalizeAllergyChoices(preferences.dietaryRestrictions, 10),
       });
 
       const updatedMeals = mealPlan.meals.map(meal =>
@@ -743,6 +751,13 @@ export function RecommendationsStep({
     }
     if (effectiveBudgetPerMealGbp == null) {
       throw new Error('Enter a budget per meal before changing recipes.');
+    }
+    // Hard cap holds for Community/custom recipes too; unpriced recipes count
+    // at the contract's fallback cost via safeCost.
+    if (toPence(safeCost(newMeal)) > toPence(effectiveBudgetPerMealGbp)) {
+      throw new Error(
+        `That recipe costs ${formatBudgetGbp(safeCost(newMeal))}, over your ${formatBudgetGbp(effectiveBudgetPerMealGbp)} per-meal budget.`,
+      );
     }
 
     // Queue mode persists swaps through the queue endpoint (keyed by absolute
@@ -1453,9 +1468,13 @@ export function RecommendationsStep({
             const isCooked = isMealCooked(meal);
             const mealType = meal.mealType?.toLowerCase() || 'meal';
             const mealImageCandidates = getMealImageCandidates(meal);
-            const hasMealCost = typeof meal.totalCost === 'number' && Number.isFinite(meal.totalCost);
-            const mealWithinBudget = effectiveBudgetPerMealGbp == null || !hasMealCost
-              || toPence(meal.totalCost!) <= toPence(effectiveBudgetPerMealGbp);
+            // The within-budget check always uses safeCost so unpriced meals
+            // count at the contract's fallback; the display distinguishes a
+            // genuinely priced cost from the unavailable-price placeholder.
+            const hasMealCost = typeof meal.totalCost === 'number'
+              && Number.isFinite(meal.totalCost) && meal.totalCost > 0;
+            const mealWithinBudget = effectiveBudgetPerMealGbp == null
+              || toPence(safeCost(meal)) <= toPence(effectiveBudgetPerMealGbp);
 
             return (
               <div
@@ -1505,11 +1524,11 @@ export function RecommendationsStep({
                       </span>
                       <span className="shrink-0">•</span>
                       <span className="text-[#22C55E] shrink-0">{formatOptionalNumber(meal.nutrition?.protein, 'g')} protein</span>
-                      {hasMealCost && effectiveBudgetPerMealGbp != null && (
+                      {effectiveBudgetPerMealGbp != null && (
                         <>
                           <span className="shrink-0">•</span>
                           <span className={`shrink-0 font-medium ${mealWithinBudget ? 'text-[#86EFAC]' : 'text-red-400'}`}>
-                            {formatBudgetGbp(meal.totalCost!)} / {formatBudgetGbp(effectiveBudgetPerMealGbp)}
+                            {hasMealCost ? formatBudgetGbp(meal.totalCost!) : '—'} / {formatBudgetGbp(effectiveBudgetPerMealGbp)}
                           </span>
                         </>
                       )}
@@ -1896,6 +1915,8 @@ export function RecommendationsStep({
           currentMealIds={mealPlan.meals.map(m => m.id)}
           budgetPerMealGbp={effectiveBudgetPerMealGbp}
           maxCookingTime={preferences.maxCookingTime}
+          avoidIngredients={normalizeAllergyChoices(preferences.avoidIngredients, 50)}
+          dietaryRestrictions={normalizeAllergyChoices(preferences.dietaryRestrictions, 10)}
           onSwap={handleMealSwap}
           onClose={() => setShowMealSwapModal(false)}
         />

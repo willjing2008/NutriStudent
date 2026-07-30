@@ -18,6 +18,7 @@ import { generateMealPlanFromRecipes } from "./meal-plan-generator.ts";
 import { buildAcademicSchedule } from "./academic-schedule.ts";
 import { estimateMissingCosts } from "./recipe-backfill.ts";
 import { normalizeAllergyChoices } from "../_shared/allergy-contract.ts";
+import { filterRecipes } from "./meal-filter.ts";
 import {
   buildPreferenceResponse,
   LEGACY_QUEUE_BUDGET_PER_MEAL_GBP,
@@ -920,7 +921,7 @@ app.post("/make-server-dbaf6019/admin/search-recipes", requireAuth, requireAdmin
 app.post("/make-server-dbaf6019/shuffle-recipe", requireAuth, rateLimit({ name: "shuffle-recipe", max: 30, windowSec: 60 }), requirePremiumAccess, async (c) => {
   try {
     const body = await c.req.json();
-    const { currentRecipeId, goal, currentMealIds, maxCookingTime } = body;
+    const { currentRecipeId, goal, currentMealIds, maxCookingTime, avoidIngredients, dietaryRestrictions } = body;
 
     if (!currentRecipeId || !goal) {
       return c.json({ error: "Missing required parameters" }, 400);
@@ -948,19 +949,27 @@ app.post("/make-server-dbaf6019/shuffle-recipe", requireAuth, rateLimit({ name: 
       return c.json({ error: "Current recipe not found" }, 404);
     }
 
-    // Exclude current plan meals, then apply the hard cap. Budget is never
-    // relaxed merely because the affordable alternative set is empty.
+    // Exclude current plan meals, then apply the same HARD filters the plan
+    // was generated under: allergies/dietary restrictions first, then the
+    // budget cap. Neither is ever relaxed because the pool is empty - a
+    // replacement must never violate what the plan itself excluded.
     const excludedIds = new Set([
       ...vStrArr(currentMealIds, 100, 100),
       String(currentRecipeId),
     ]);
-    const candidates = filterRecipesByBudget(
+    const dietarySafe = filterRecipes(
       allRecipes.filter(r => !excludedIds.has(String(r.id))),
-      budgetPerMealGbp,
+      {
+        avoidIngredients: normalizeAllergyChoices(vStrArr(avoidIngredients, 50, 100), 50),
+        dietaryRestrictions: normalizeAllergyChoices(vStrArr(dietaryRestrictions, 10, 30), 10),
+      },
     );
+    const candidates = filterRecipesByBudget(dietarySafe, budgetPerMealGbp);
 
     if (candidates.length === 0) {
-      return c.json({ error: noBudgetMatchMessage(budgetPerMealGbp) }, 400);
+      return dietarySafe.length === 0
+        ? c.json({ error: "No alternatives match your allergy and dietary preferences." }, 400)
+        : c.json({ error: noBudgetMatchMessage(budgetPerMealGbp) }, 400);
     }
 
     // Score by nutrition similarity
@@ -1001,7 +1010,7 @@ app.post("/make-server-dbaf6019/shuffle-recipe", requireAuth, rateLimit({ name: 
 app.post("/make-server-dbaf6019/get-swap-options", requireAuth, rateLimit({ name: "get-swap-options", max: 30, windowSec: 60 }), requirePremiumAccess, async (c) => {
   try {
     const body = await c.req.json();
-    const { currentRecipeId, goal, currentMealIds, maxCookingTime, limit = 6 } = body;
+    const { currentRecipeId, goal, currentMealIds, maxCookingTime, avoidIngredients, dietaryRestrictions, limit = 6 } = body;
 
     if (!currentRecipeId || !goal) {
       return c.json({ error: "Missing required parameters" }, 400);
@@ -1027,17 +1036,25 @@ app.post("/make-server-dbaf6019/get-swap-options", requireAuth, rateLimit({ name
       return c.json({ error: "Current recipe not found" }, 404);
     }
 
+    // Same hard-filter boundary as shuffle-recipe: allergy/dietary first,
+    // then the budget cap - swap options must never offer excluded food.
     const excludedIds = new Set([
       ...vStrArr(currentMealIds, 100, 100),
       String(currentRecipeId),
     ]);
-    const candidates = filterRecipesByBudget(
+    const dietarySafe = filterRecipes(
       allRecipes.filter(r => !excludedIds.has(String(r.id))),
-      budgetPerMealGbp,
+      {
+        avoidIngredients: normalizeAllergyChoices(vStrArr(avoidIngredients, 50, 100), 50),
+        dietaryRestrictions: normalizeAllergyChoices(vStrArr(dietaryRestrictions, 10, 30), 10),
+      },
     );
+    const candidates = filterRecipesByBudget(dietarySafe, budgetPerMealGbp);
 
     if (candidates.length === 0) {
-      return c.json({ error: noBudgetMatchMessage(budgetPerMealGbp) }, 400);
+      return dietarySafe.length === 0
+        ? c.json({ error: "No alternatives match your allergy and dietary preferences." }, 400)
+        : c.json({ error: noBudgetMatchMessage(budgetPerMealGbp) }, 400);
     }
 
     const safeLimit = Math.round(vNum(limit, 1, 20, 6));

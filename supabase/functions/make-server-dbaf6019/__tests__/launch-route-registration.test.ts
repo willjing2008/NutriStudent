@@ -73,6 +73,19 @@ describe('launch route registration', () => {
     expect(source).toContain('preferences: responsePreferences,')
   })
 
+  it('applies the hard allergy/dietary filters to replacement candidates', () => {
+    // Both replacement routes must filter candidates through filterRecipes
+    // (allergy + dietary hard filters) before the budget cap, so a swap or
+    // shuffle can never surface food the plan itself excluded.
+    expect(source).toContain('import { filterRecipes } from "./meal-filter.ts";')
+    const dietaryBoundaries = source.match(/const dietarySafe = filterRecipes\(/g) ?? []
+    expect(dietaryBoundaries).toHaveLength(2)
+    const budgetAfterDietary = source.match(
+      /const candidates = filterRecipesByBudget\(dietarySafe, budgetPerMealGbp\)/g,
+    ) ?? []
+    expect(budgetAfterDietary).toHaveLength(2)
+  })
+
   it('lazily persists the canonical cap on legacy recipe queues', () => {
     expect(source).toContain('const storedQueue: RecipeQueue')
     expect(source).toContain('if (storedQueue.budgetPerMealGbp !== budgetPerMealGbp)')

@@ -26,6 +26,10 @@ interface MealSwapModalProps {
   currentMealIds: string[];
   budgetPerMealGbp: number;
   maxCookingTime?: number;
+  // Hard safety filters: the server excludes any option violating these, so a
+  // swap can never surface food the plan itself was generated without.
+  avoidIngredients?: string[];
+  dietaryRestrictions?: string[];
   /**
    * Applies the swap. The modal awaits this and only closes on success; a
    * rejection keeps it open and shows the error, so implementations must
@@ -156,6 +160,8 @@ export function MealSwapModal({
   currentMealIds,
   budgetPerMealGbp,
   maxCookingTime,
+  avoidIngredients,
+  dietaryRestrictions,
   onSwap,
   onClose,
 }: MealSwapModalProps) {
@@ -318,6 +324,8 @@ export function MealSwapModal({
         currentMealIds: currentMealIds,
         budgetPerMealGbp,
         maxCookingTime: maxCookingTime,
+        avoidIngredients: avoidIngredients ?? [],
+        dietaryRestrictions: dietaryRestrictions ?? [],
         limit: 6,
       });
 

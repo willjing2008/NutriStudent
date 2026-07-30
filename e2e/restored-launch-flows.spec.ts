@@ -202,4 +202,11 @@ test('student sees a restored recipe image and can save the generated plan', asy
     path: path.join(evidenceDir, 'saved-plan-active-dashboard.png'),
     fullPage: true,
   });
+
+  // Captain decision: Create New Plan clears the saved per-meal budget, so
+  // the field starts empty and requires fresh entry for every new plan.
+  await page.getByRole('button', { name: 'Create New Plan AI-powered' }).click();
+  const newPlanBudget = page.getByRole('spinbutton', { name: /budget per meal/i });
+  await expect(newPlanBudget).toHaveValue('');
+  await expect(page.getByRole('button', { name: /^Continue$/ })).toBeDisabled();
 });

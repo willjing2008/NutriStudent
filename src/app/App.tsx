@@ -416,6 +416,10 @@ function AppContent() {
     if (createNew) {
       setActivePlanId(null);
       setSavedMealPlan(null);
+      // Captain decision (July 2026): every NEW plan starts with an empty
+      // budget field requiring fresh entry; editing an existing plan keeps
+      // the value being edited.
+      setPreferences(prev => ({ ...prev, budgetPerMealGbp: null }));
     }
     setIsOnboarding(true);
     setOnboardingStep(2);
