@@ -10,6 +10,7 @@ import type {
 } from '../types/calendar';
 import type { MealTimes } from '../App';
 import { getLocalTodayISO, toLocalISODate } from '../utils/dateUtils';
+import { launchPolicy } from '../config/launchPolicy';
 
 async function apiPost<T>(endpoint: string, body: object): Promise<T> {
   const res = await authedFetch(endpoint, {
@@ -320,16 +321,20 @@ export function useAcademicCalendar() {
   const initCalendar = useCallback(async (userId: string, mealTimes?: MealTimes) => {
     setIsLoading(true);
     try {
-      const [sched, testPeriod, conflicts, queueData] = await Promise.all([
-        loadSchedule(userId),
-        checkTestingPeriod(userId),
-        loadMealConflicts(userId, mealTimes),
+      // Schedule endpoints are only queried when the feature ships; the recipe
+      // queue is part of the meal plan and always loads.
+      const [queueData] = await Promise.all([
         loadQueue(userId),
+        ...(launchPolicy.scheduleEnabled
+          ? [loadSchedule(userId), checkTestingPeriod(userId), loadMealConflicts(userId, mealTimes)]
+          : []),
       ]);
 
       // Load week conflicts for calendar annotations
-      const wc = await loadWeekConflicts(userId, mealTimes);
-      setWeekConflicts(wc);
+      if (launchPolicy.scheduleEnabled) {
+        const wc = await loadWeekConflicts(userId, mealTimes);
+        setWeekConflicts(wc);
+      }
 
       // Load first week if queue exists
       if (queueData.queue) {

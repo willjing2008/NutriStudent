@@ -1,18 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { RecommendationsStep } from './RecommendationsStep';
 
-// P1-7: the week strip must centre on today whenever its scroll container
-// mounts - not only when mealPlan changes. Before the fix, switching
-// Schedule -> Meals remounted the strip DOM without a mealPlan change, so the
-// strip stayed scrolled to the window start (today minus 14 days).
+// This file deliberately does NOT mock ../config/launchPolicy: it pins the
+// shipped default (scheduleEnabled: false), asserting no schedule UI leaks
+// into the dashboard. If the flag is flipped back on, retire this file.
 
 const { authedPost } = vi.hoisted(() => ({ authedPost: vi.fn() }));
 vi.mock('../utils/apiClient', () => ({ authedPost }));
-
-// The schedule feature is launch-gated off by default - force it on so the
-// schedule sub-view is reachable.
-vi.mock('../config/launchPolicy', () => ({ launchPolicy: { scheduleEnabled: true } }));
 
 const { getUser } = vi.hoisted(() => ({ getUser: vi.fn() }));
 vi.mock('../../utils/supabaseClient', () => ({
@@ -28,14 +23,6 @@ vi.mock('../utils/systemCalendar', () => ({
   currentWeekStart: () => new Date('2026-07-05T00:00:00'),
 }));
 
-vi.mock('../hooks/useMealReminders', () => ({
-  useMealReminders: () => ({
-    activeConflicts: [],
-    dismissConflict: vi.fn(),
-    requestNotificationPermission: vi.fn(),
-  }),
-}));
-
 vi.mock('../hooks/useLanguage', () => ({
   useLanguage: () => ({
     t: (key: string) => key,
@@ -46,17 +33,15 @@ vi.mock('../hooks/useLanguage', () => ({
 
 vi.mock('./CelebrationOverlay', () => ({ CelebrationOverlay: () => null }));
 
+// Sentinel stubs: if any of these render, the launch gate has a hole.
 vi.mock('./PlanTabSubNav', () => ({
-  PlanTabSubNav: ({ onViewChange }: { onViewChange: (view: 'meals' | 'schedule') => void }) => (
-    <div>
-      <button onClick={() => onViewChange('schedule')}>show-schedule</button>
-      <button onClick={() => onViewChange('meals')}>show-meals</button>
-    </div>
-  ),
+  PlanTabSubNav: () => <div data-testid="plan-tab-sub-nav" />,
 }));
-
 vi.mock('./ScheduleSettingsView', () => ({
-  ScheduleSettingsView: () => <div>schedule-view</div>,
+  ScheduleSettingsView: () => <div data-testid="schedule-settings-view" />,
+}));
+vi.mock('./MealReminderBanner', () => ({
+  MealReminderBanner: () => <div data-testid="meal-reminder-banner" />,
 }));
 
 const preferences = {
@@ -103,7 +88,14 @@ const savedMealPlan = {
   withinBudget: true,
 };
 
-const scrollToSpy = vi.fn();
+const conflict = {
+  classId: 'class-1',
+  className: 'Maths',
+  classStart: '12:00',
+  classEnd: '13:00',
+  mealSlot: 'lunch',
+  suggestion: 'Eat lunch after 13:00',
+} as any;
 
 beforeEach(() => {
   authedPost.mockReset();
@@ -112,8 +104,7 @@ beforeEach(() => {
   getUser.mockResolvedValue({
     data: { user: { id: 'user-1', email: 'will@example.com', user_metadata: {} } },
   });
-  scrollToSpy.mockReset();
-  Element.prototype.scrollTo = scrollToSpy;
+  Element.prototype.scrollTo = vi.fn();
   window.scrollTo = vi.fn();
   vi.spyOn(console, 'error').mockImplementation(() => {});
 });
@@ -122,15 +113,8 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-/** Calls that look like the strip's instant centring (not window scroll resets). */
-function centringCalls() {
-  return scrollToSpy.mock.calls.filter(
-    ([arg]) => arg && typeof arg === 'object' && arg.behavior === 'instant',
-  );
-}
-
-describe('RecommendationsStep - week strip centring (P1-7)', () => {
-  it('centres the strip on mount and again after a Schedule -> Meals sub-view switch', async () => {
+describe('RecommendationsStep - schedule feature launch-gated off', () => {
+  it('renders the meal plan without any schedule surfaces, even with schedule data present', async () => {
     render(
       <RecommendationsStep
         preferences={preferences}
@@ -139,23 +123,27 @@ describe('RecommendationsStep - week strip centring (P1-7)', () => {
         activePlanId="plan-1"
         activeNavTab="plan"
         savedMealPlan={savedMealPlan}
-        academicSchedule={null}
+        academicSchedule={{
+          classes: [{ id: 'class-1', name: 'Maths', dayOfWeek: 1, startTime: '12:00', endTime: '13:00' }],
+          testingPeriods: [],
+          sleepSchedule: { bedtime: '23:00', wakeTime: '07:00', lastMealBeforeBed: 120 },
+          mealTimeOverrides: [],
+          updatedAt: '2026-07-28T00:00:00.000Z',
+        } as any}
+        isTestingPeriod={true}
+        mealConflicts={[conflict]}
+        weekConflicts={new Map([[1, [conflict]], [2, [conflict]], [3, [conflict]]])}
         onSaveSchedule={vi.fn()}
       />,
     );
 
-    // Initial mount: the strip centres instantly on the selected day.
-    await waitFor(() => expect(centringCalls().length).toBeGreaterThan(0));
-    const initialCentrings = centringCalls().length;
-
-    // Leaving the meals sub-view unmounts the strip DOM...
-    fireEvent.click(await screen.findByRole('button', { name: 'show-schedule' }));
-    expect(screen.getByText('schedule-view')).toBeInTheDocument();
-
-    // ...and returning remounts it. The centring effect must fire again even
-    // though mealPlan did not change (the pre-fix behavior left the strip at
-    // the far-past left edge of its 14-days-back window).
-    fireEvent.click(screen.getByRole('button', { name: 'show-meals' }));
-    await waitFor(() => expect(centringCalls().length).toBeGreaterThan(initialCentrings));
+    // The meals view itself renders...
+    expect(await screen.findByText('Oats')).toBeInTheDocument();
+    // ...but the Plan | Schedule toggle, schedule view and reminder banner do not.
+    expect(screen.queryByTestId('plan-tab-sub-nav')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('schedule-settings-view')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('meal-reminder-banner')).not.toBeInTheDocument();
+    // The week strip stays, but carries no conflict "!" badges despite conflicts.
+    expect(screen.queryByText('!')).not.toBeInTheDocument();
   });
 });

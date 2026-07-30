@@ -5,6 +5,10 @@ import { RecommendationsStep } from './RecommendationsStep';
 const { authedPost } = vi.hoisted(() => ({ authedPost: vi.fn() }));
 vi.mock('../utils/apiClient', () => ({ authedPost }));
 
+// These tests exercise the schedule feature, which is launch-gated off by
+// default - force it on so the schedule UI is reachable.
+vi.mock('../config/launchPolicy', () => ({ launchPolicy: { scheduleEnabled: true } }));
+
 const { getUser } = vi.hoisted(() => ({ getUser: vi.fn() }));
 vi.mock('../../utils/supabaseClient', () => ({
   supabase: { auth: { getUser } },

@@ -67,6 +67,14 @@ This file is the project's committed home for project-intrinsic agent knowledge:
 - Vitest runs the pure backend modules under `supabase/functions/.../__tests__/` (type-only `npm:`/`jsr:` imports are erased by esbuild, so they work in vitest). Modules needing the Deno runtime (`index.ts`, `kv_store`, `rate-limit`, `auth-middleware`, `entitlement` middleware) are covered via tests of their pure helpers + deploy, per `vitest.config.ts`.
 - If `npm run build` ever hangs or flaky-exits 1 *after* `✓ built in …`: something is keeping Node's event loop alive (a dangling socket). Check with `process._getActiveHandles()` after a `vite build`. This repo had committed malware in `postcss.config.mjs` (obfuscated `eval` after `export default {};` on one long line) that opened an outbound TLS connection at build time — keep `postcss.config.mjs` to just the clean `export default {};`.
 
+## Launch policy: schedule feature gated off
+
+- The whole academic-schedule feature (Plan|Schedule toggle, conflict banner, week-strip "!" badges, schedule settings/editor, calendar import) is soft-removed for launch behind `launchPolicy.scheduleEnabled` in `src/app/config/launchPolicy.ts` (July 2026, deliberate product deferral - revival is that one-line flip).
+  Gates live at the render sites in `RecommendationsStep.tsx` and in `useAcademicCalendar.initCalendar` (schedule/testing/conflict fetches skipped; the recipe-queue load is meal-plan-critical and always runs).
+  Nothing schedule-related was deleted: components, server routes, saved data and the Info.plist calendar permission strings all stay.
+  Tests that exercise schedule UI force the flag on via `vi.mock('../config/launchPolicy', ...)`; the shipped-off state is pinned by `RecommendationsStep.launchPolicy.test.tsx` and `e2e/schedule-gated.spec.ts` (which also asserts no schedule endpoints are fetched).
+  The FOCUS badge code is intact but dormant while the flag is off.
+
 ## System-calendar import (Feature A)
 
 - Classes come from the user's system calendar, not a manual grid. Plugin: `@ebarooni/capacitor-calendar` (Capacitor 8 line; iOS uses **Swift Package Manager**, so `cap sync ios` needs no CocoaPods/`pod install`). On iOS, EventKit federates Google/iCloud/Exchange accounts, so an EventKit read returns the student's Google class events too — no separate Google OAuth.

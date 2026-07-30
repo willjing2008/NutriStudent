@@ -8,6 +8,10 @@ vi.mock('../utils/apiClient', () => ({
   authedFetch: (...args: unknown[]) => authedFetch(...args),
 }));
 
+// The schedule feature is launch-gated off by default - force it on so
+// initCalendar's schedule/testing/conflict loads run as designed.
+vi.mock('../config/launchPolicy', () => ({ launchPolicy: { scheduleEnabled: true } }));
+
 import { useAcademicCalendar } from './useAcademicCalendar';
 import type { RecipeQueue, MealConflict } from '../types/calendar';
 import type { MealTimes } from '../App';
