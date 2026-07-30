@@ -3,6 +3,7 @@ import { X, Plus, Trash2, BookOpen, Save, Loader2, AlertTriangle, GraduationCap,
 import type { AcademicSchedule, ClassEntry, SleepSchedule, TestingPeriod } from '../types/calendar';
 import type { MealTimes } from '../App';
 import { calendarImportSupported } from '../utils/systemCalendar';
+import { TESTING_TYPE_OPTIONS, normalizeTestingType } from '../utils/testingPeriodTypes';
 
 interface ClassConflictWarning {
   classId: string;
@@ -26,6 +27,12 @@ interface AcademicScheduleEditorProps {
   selectedMealSlots?: ('breakfast' | 'lunch' | 'dinner')[];
   /** When false (web fallback), manual class entry stays available. On native, classes are imported. */
   allowClassEntry?: boolean;
+  /**
+   * Save failure message, rendered inside the modal above the Save button.
+   * The editor is a bottom sheet that covers the page, so errors rendered by
+   * the parent page are invisible while it is open.
+   */
+  saveError?: string | null;
 }
 
 const DAY_OPTIONS = [
@@ -40,13 +47,6 @@ const DAY_OPTIONS = [
 
 const COLOR_OPTIONS = ['#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#EF4444', '#06B6D4'];
 
-const TESTING_TYPES: { value: TestingPeriod['type']; label: string }[] = [
-  { value: 'midterm', label: 'Midterm' },
-  { value: 'final', label: 'Final' },
-  { value: 'quiz', label: 'Quiz' },
-  { value: 'custom', label: 'Custom' },
-];
-
 function createEmptyClass(): ClassEntry {
   return {
     id: crypto.randomUUID(),
@@ -60,7 +60,7 @@ function createEmptyClass(): ClassEntry {
 }
 
 function createEmptyTestingPeriod(): TestingPeriod {
-  return { id: crypto.randomUUID(), name: '', startDate: '', endDate: '', type: 'midterm' };
+  return { id: crypto.randomUUID(), name: '', startDate: '', endDate: '', type: 'exam' };
 }
 
 const DEFAULT_SLEEP: SleepSchedule = {
@@ -91,6 +91,7 @@ export function AcademicScheduleEditor({
   mealsPerDay = 3,
   selectedMealSlots,
   allowClassEntry = !calendarImportSupported,
+  saveError,
 }: AcademicScheduleEditorProps) {
   const [classes, setClasses] = useState<ClassEntry[]>(schedule?.classes || []);
   const [testingPeriods, setTestingPeriods] = useState<TestingPeriod[]>(schedule?.testingPeriods || []);
@@ -161,8 +162,11 @@ export function AcademicScheduleEditor({
       setActiveTab('exams');
       return;
     }
-    // Persist only usable testing periods (a date range is required to drive focus mode).
-    const cleanPeriods = testingPeriods.filter(p => p.startDate && p.endDate);
+    // Persist only usable testing periods (a date range is required to drive
+    // focus mode), migrating legacy US-centric types to the universal taxonomy.
+    const cleanPeriods = testingPeriods
+      .filter(p => p.startDate && p.endDate)
+      .map(p => ({ ...p, type: normalizeTestingType(p.type) }));
     await onSave({
       classes,
       testingPeriods: cleanPeriods,
@@ -336,7 +340,7 @@ export function AcademicScheduleEditor({
                     <input
                       value={p.name}
                       onChange={(e) => updatePeriod(p.id, 'name', e.target.value)}
-                      placeholder="Name (e.g., Midterm Exams)"
+                      placeholder="Name (e.g., Summer Exams)"
                       className="bg-transparent text-white text-sm font-medium focus:outline-none placeholder-[#6B7280] w-full"
                     />
                     <button
@@ -348,11 +352,11 @@ export function AcademicScheduleEditor({
                   </div>
 
                   <select
-                    value={p.type}
+                    value={normalizeTestingType(p.type)}
                     onChange={(e) => updatePeriod(p.id, 'type', e.target.value as TestingPeriod['type'])}
                     className="w-full bg-[#0A1F13] text-white text-xs rounded-lg px-2 py-2 border border-[#1E4029] focus:outline-none focus:border-[#22C55E]"
                   >
-                    {TESTING_TYPES.map((t) => (
+                    {TESTING_TYPE_OPTIONS.map((t) => (
                       <option key={t.value} value={t.value}>{t.label}</option>
                     ))}
                   </select>
@@ -442,6 +446,12 @@ export function AcademicScheduleEditor({
 
         {/* Footer */}
         <div className="p-4 border-t border-[#1E4029]">
+          {saveError && (
+            <div role="alert" className="mb-3 flex items-start gap-2 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              <span>{saveError}</span>
+            </div>
+          )}
           <button
             onClick={handleSave}
             disabled={saveDisabled}

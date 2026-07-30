@@ -1,4 +1,4 @@
-import { CalendarDays, GraduationCap, Plus, BookOpen, Sparkles } from 'lucide-react';
+import { CalendarDays, GraduationCap, Plus, BookOpen, Sparkles, Trash2 } from 'lucide-react';
 import type { AcademicSchedule } from '../types/calendar';
 import { calendarImportSupported } from '../utils/systemCalendar';
 
@@ -11,6 +11,13 @@ interface ScheduleSettingsViewProps {
   onManageClasses: () => void;
   /** Open the editor on exam periods + sleep. */
   onEditExamsSleep: () => void;
+  isSaving?: boolean;
+  /**
+   * Native only: delete one class. Imports are the only class source on
+   * native (no manual editor), so without this an imported mistake is
+   * permanent short of editing the real system calendar and re-importing.
+   */
+  onDeleteClass?: (classId: string) => void;
 }
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -28,6 +35,8 @@ export function ScheduleSettingsView({
   onImportClasses,
   onManageClasses,
   onEditExamsSleep,
+  isSaving = false,
+  onDeleteClass,
 }: ScheduleSettingsViewProps) {
   const classes = [...(schedule?.classes || [])].sort(
     (a, b) => a.dayOfWeek - b.dayOfWeek || a.startTime.localeCompare(b.startTime),
@@ -78,6 +87,16 @@ export function ScheduleSettingsView({
                 <span className="text-[#9CA3AF] text-xs flex-shrink-0 tabular-nums">
                   {formatTime12(cls.startTime)}–{formatTime12(cls.endTime)}
                 </span>
+                {calendarImportSupported && onDeleteClass && (
+                  <button
+                    onClick={() => onDeleteClass(cls.id)}
+                    disabled={isSaving}
+                    aria-label={`Delete ${cls.name || 'Untitled'}`}
+                    className="flex-shrink-0 p-1 -m-1 text-red-400/50 hover:text-red-400 transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
             ))}
           </div>

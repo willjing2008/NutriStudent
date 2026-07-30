@@ -47,13 +47,18 @@ vi.mock('./ScheduleSettingsView', () => ({
   ScheduleSettingsView: ({
     onImportClasses,
     onManageClasses,
+    onDeleteClass,
   }: {
     onImportClasses: () => void;
     onManageClasses: () => void;
+    onDeleteClass?: (classId: string) => void;
   }) => (
     <div>
       <button onClick={onImportClasses}>open-import</button>
       <button onClick={onManageClasses}>open-editor</button>
+      {onDeleteClass && (
+        <button onClick={() => onDeleteClass('class-old')}>trigger-delete-class</button>
+      )}
     </div>
   ),
 }));
@@ -61,21 +66,26 @@ vi.mock('./ScheduleSettingsView', () => ({
 vi.mock('./AcademicScheduleEditor', () => ({
   AcademicScheduleEditor: ({
     onSave,
+    saveError,
   }: {
     onSave: (schedule: any) => Promise<void>;
+    saveError?: string | null;
   }) => (
-    <button
-      onClick={() => {
-        void onSave({
-          classes: [],
-          testingPeriods: [],
-          sleepSchedule: { bedtime: '23:00', wakeTime: '07:00', lastMealBeforeBed: 120 },
-          mealTimeOverrides: [],
-        });
-      }}
-    >
-      trigger-save-schedule
-    </button>
+    <div>
+      {saveError && <div role="alert">{saveError}</div>}
+      <button
+        onClick={() => {
+          void onSave({
+            classes: [],
+            testingPeriods: [],
+            sleepSchedule: { bedtime: '23:00', wakeTime: '07:00', lastMealBeforeBed: 120 },
+            mealTimeOverrides: [],
+          });
+        }}
+      >
+        trigger-save-schedule
+      </button>
+    </div>
   ),
 }));
 
@@ -154,7 +164,7 @@ const savedMealPlan = {
   withinBudget: true,
 };
 
-function renderPlan(onSaveSchedule: ReturnType<typeof vi.fn>) {
+function renderPlan(onSaveSchedule: ReturnType<typeof vi.fn>, academicSchedule: any = null) {
   render(
     <RecommendationsStep
       preferences={preferences}
@@ -163,7 +173,7 @@ function renderPlan(onSaveSchedule: ReturnType<typeof vi.fn>) {
       activePlanId="plan-1"
       activeNavTab="plan"
       savedMealPlan={savedMealPlan}
-      academicSchedule={null}
+      academicSchedule={academicSchedule}
       onSaveSchedule={onSaveSchedule}
     />,
   );
@@ -234,5 +244,65 @@ describe('RecommendationsStep - schedule persistence failures', () => {
     fireEvent.click(screen.getByRole('button', { name: 'trigger-import-classes' }));
 
     await waitFor(() => expect(importOutcome.current).toBe('rejected'));
+  });
+
+  it('shows the save failure inside the schedule editor modal (P1-6)', async () => {
+    const onSaveSchedule = vi.fn().mockResolvedValue(null);
+    renderPlan(onSaveSchedule);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'show-schedule' }));
+    fireEvent.click(screen.getByRole('button', { name: 'open-editor' }));
+    fireEvent.click(screen.getByRole('button', { name: 'trigger-save-schedule' }));
+
+    await waitFor(() => expect(onSaveSchedule).toHaveBeenCalledTimes(1));
+    // Editor stays open with the error rendered inside it, not on the page
+    // underneath the bottom sheet.
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(/could not save your schedule/i);
+    expect(screen.getByRole('button', { name: 'trigger-save-schedule' })).toBeInTheDocument();
+  });
+});
+
+describe('RecommendationsStep - native per-class delete (P1-3)', () => {
+  const existingSchedule = {
+    classes: [
+      { id: 'class-old', name: 'Mock Results Day', dayOfWeek: 4, startTime: '00:00', endTime: '23:59' },
+      { id: 'class-keep', name: 'Maths', dayOfWeek: 1, startTime: '09:00', endTime: '10:00' },
+    ],
+    testingPeriods: [
+      { id: 'p1', name: 'A-Levels', startDate: '2026-07-29', endDate: '2026-08-05', type: 'exam' },
+    ],
+    sleepSchedule: { bedtime: '22:30', wakeTime: '06:45', lastMealBeforeBed: 90 },
+    mealTimeOverrides: [{ dayOfWeek: 1, mealSlot: 'lunch', time: '13:00' }],
+    updatedAt: '2026-07-28T00:00:00.000Z',
+  };
+
+  it('deletes only the chosen class and re-sends exam periods, sleep and overrides', async () => {
+    const onSaveSchedule = vi.fn().mockResolvedValue(existingSchedule);
+    renderPlan(onSaveSchedule, existingSchedule);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'show-schedule' }));
+    fireEvent.click(screen.getByRole('button', { name: 'trigger-delete-class' }));
+
+    await waitFor(() => expect(onSaveSchedule).toHaveBeenCalledTimes(1));
+    const [, payload] = onSaveSchedule.mock.calls[0];
+    expect(payload.classes.map((c: { id: string }) => c.id)).toEqual(['class-keep']);
+    // buildAcademicSchedule replaces the whole blob - anything omitted here
+    // would silently wipe focus mode, sleep dinners and conflict overrides.
+    expect(payload.testingPeriods).toEqual(existingSchedule.testingPeriods);
+    expect(payload.sleepSchedule).toEqual(existingSchedule.sleepSchedule);
+    expect(payload.mealTimeOverrides).toEqual(existingSchedule.mealTimeOverrides);
+  });
+
+  it('surfaces a delete failure instead of swallowing it', async () => {
+    const onSaveSchedule = vi.fn().mockResolvedValue(null);
+    renderPlan(onSaveSchedule, existingSchedule);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'show-schedule' }));
+    fireEvent.click(screen.getByRole('button', { name: 'trigger-delete-class' }));
+
+    await waitFor(() => expect(onSaveSchedule).toHaveBeenCalledTimes(1));
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(/could not/i);
   });
 });

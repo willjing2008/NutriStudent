@@ -369,6 +369,53 @@ describe('useAcademicCalendar — saveSchedule refreshes conflicts', () => {
     // Wed is day index 3.
     expect(result.current.weekConflicts.get(3)).toHaveLength(1);
   });
+
+  it('re-checks the testing period after a successful save so the FOCUS badge updates without a restart', async () => {
+    authedFetch.mockImplementation((endpoint: string) => {
+      if (endpoint === 'save-academic-schedule') {
+        return Promise.resolve(fakeResponse({ schedule: { classes: [], testingPeriods: [], sleepSchedule: {}, updatedAt: 'x' } }));
+      }
+      if (endpoint === 'check-testing-period') {
+        return Promise.resolve(fakeResponse({ inTestingPeriod: true }));
+      }
+      return Promise.resolve(fakeResponse(routeDefault(endpoint)));
+    });
+
+    const { result } = renderHook(() => useAcademicCalendar());
+    expect(result.current.isTestingPeriod).toBe(false);
+
+    await act(async () => {
+      await result.current.saveSchedule('user-1', {
+        classes: [],
+        testingPeriods: [{ id: 'p1', name: 'A-Levels', startDate: '2026-03-18', endDate: '2026-03-25', type: 'exam' }],
+        sleepSchedule: { bedtime: '23:00', wakeTime: '07:00', lastMealBeforeBed: 120 },
+      });
+    });
+
+    expect(decodedCalls().some(c => c.endpoint === 'check-testing-period')).toBe(true);
+    expect(result.current.isTestingPeriod).toBe(true);
+  });
+
+  it('does NOT re-check the testing period when the save itself fails', async () => {
+    authedFetch.mockImplementation((endpoint: string) => {
+      if (endpoint === 'save-academic-schedule') {
+        return Promise.reject(new Error('offline'));
+      }
+      return Promise.resolve(fakeResponse(routeDefault(endpoint)));
+    });
+
+    const { result } = renderHook(() => useAcademicCalendar());
+
+    await act(async () => {
+      await result.current.saveSchedule('user-1', {
+        classes: [],
+        testingPeriods: [],
+        sleepSchedule: { bedtime: '23:00', wakeTime: '07:00', lastMealBeforeBed: 120 },
+      });
+    });
+
+    expect(decodedCalls().some(c => c.endpoint === 'check-testing-period')).toBe(false);
+  });
 });
 
 // ── checkTestingPeriod: boolean branch + error fallback ─────────────────

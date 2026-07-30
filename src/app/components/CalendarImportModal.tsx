@@ -4,6 +4,7 @@ import type { Calendar } from '@ebarooni/capacitor-calendar';
 import type { ClassEntry } from '../types/calendar';
 import { requestAccess, listCalendars, readWeekEvents } from '../utils/systemCalendar';
 import { eventsToClasses } from '../utils/eventsToClasses';
+import { initialCalendarSelection, saveStoredCalendarSelection } from '../utils/calendarImportSelection';
 
 interface CalendarImportModalProps {
   /** Start of the week whose occurrences are read (local-midnight Sunday). */
@@ -33,7 +34,9 @@ export function CalendarImportModal({ weekStart, onImport, onClose }: CalendarIm
       const cals = await listCalendars();
       if (cancelled) return;
       setCalendars(cals);
-      setSelected(new Set(cals.map(c => c.id))); // default: all calendars count as classes
+      // Last-used selection when available, otherwise all calendars except
+      // obvious non-class ones (holidays, birthdays).
+      setSelected(initialCalendarSelection(cals));
       setPhase('picking');
     })();
     return () => { cancelled = true; };
@@ -49,6 +52,9 @@ export function CalendarImportModal({ weekStart, onImport, onClose }: CalendarIm
 
   const handleImport = async () => {
     setPhase('importing');
+    // The user confirmed this scope, so remember it for the next re-import
+    // even if this attempt turns up no events or fails to save.
+    saveStoredCalendarSelection([...selected]);
     try {
       const events = await readWeekEvents(weekStart);
       const classes = eventsToClasses(events, [...selected]);

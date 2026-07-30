@@ -168,7 +168,11 @@ export function RecommendationsStep({
     const diff = Math.round((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
     return diff > 0 ? diff : 0;
   });
-  const calendarScrollRef = useRef<HTMLDivElement>(null);
+  const calendarScrollRef = useRef<HTMLDivElement | null>(null);
+  // State mirror of the scroll container so the centre-on-today effect also
+  // re-runs when the strip DOM remounts (e.g. Schedule -> Meals sub-view
+  // switch, or a plan-less render), not only when mealPlan changes.
+  const [calendarScrollEl, setCalendarScrollEl] = useState<HTMLDivElement | null>(null);
   // Tracks whether the first instant-scroll has happened so subsequent taps use smooth scroll
   const hasDoneInitialScrollRef = useRef(false);
   const [showMealSwapModal, setShowMealSwapModal] = useState(false);
@@ -420,7 +424,7 @@ export function RecommendationsStep({
   // Instant-centre the calendar the moment the plan (and therefore the calendar DOM) first appears.
   // Uses 'instant' so there is no visible slide-in animation on page open.
   useEffect(() => {
-    if (!mealPlan || !calendarScrollRef.current) return;
+    if (!mealPlan || !calendarScrollEl) return;
     // Select the day for "today" within the plan, clamped to a real plan day so
     // the meals always display (a stale/past shopping date previously pushed the
     // index past the plan end, leaving "Today's Meals" empty).
@@ -430,7 +434,7 @@ export function RecommendationsStep({
       daysWithMeals.length,
     );
     setSelectedCalendarOffset(targetOffset);
-    const container = calendarScrollRef.current;
+    const container = calendarScrollEl;
     requestAnimationFrame(() => {
       const idx = calendarDays.findIndex(d => d.offset === targetOffset);
       if (idx < 0) return;
@@ -441,7 +445,7 @@ export function RecommendationsStep({
       });
       hasDoneInitialScrollRef.current = true;
     });
-  }, [mealPlan]); // fires whenever plan is set/replaced
+  }, [mealPlan, calendarScrollEl]); // re-fires when the plan is set/replaced or the strip remounts
 
   // Smooth-scroll when the user taps a different day (but not on the initial load)
   useEffect(() => {
@@ -542,6 +546,32 @@ export function RecommendationsStep({
       const message = getErrorMessage(err, 'Could not import your classes. Please try again.');
       setScheduleSaveError(message);
       throw new Error(message);
+    } finally {
+      setSavingSchedule(false);
+    }
+  };
+
+  // Native-only per-class delete (the manual class editor is web-only).
+  // Re-sends the non-class fields - buildAcademicSchedule REPLACES the whole
+  // blob, so omitting them would wipe exam periods, sleep and overrides.
+  const handleDeleteClass = async (classId: string) => {
+    if (!user || !onSaveSchedule || savingSchedule) return;
+    setSavingSchedule(true);
+    try {
+      setScheduleSaveError(null);
+      await saveScheduleOrThrow(
+        user.id,
+        {
+          classes: (academicSchedule?.classes ?? []).filter(c => c.id !== classId),
+          testingPeriods: academicSchedule?.testingPeriods ?? [],
+          sleepSchedule: academicSchedule?.sleepSchedule ?? { bedtime: '23:00', wakeTime: '07:00', lastMealBeforeBed: 120 },
+          mealTimeOverrides: academicSchedule?.mealTimeOverrides ?? [],
+        },
+        preferences.mealTimes,
+      );
+    } catch (err) {
+      console.error('Failed to delete class:', err);
+      setScheduleSaveError(getErrorMessage(err, 'Could not delete the class. Please try again.'));
     } finally {
       setSavingSchedule(false);
     }
@@ -1085,17 +1115,24 @@ export function RecommendationsStep({
           <ScheduleSettingsView
             schedule={academicSchedule || null}
             isTestingPeriod={isTestingPeriod}
-            onImportClasses={() => setShowCalendarImport(true)}
+            onImportClasses={() => {
+              setScheduleSaveError(null);
+              setShowCalendarImport(true);
+            }}
             onManageClasses={() => {
+              setScheduleSaveError(null);
               setScheduleEditorTab('classes');
               setShowScheduleEditor(true);
             }}
             onEditExamsSleep={() => {
+              setScheduleSaveError(null);
               setScheduleEditorTab('exams');
               setShowScheduleEditor(true);
             }}
+            isSaving={savingSchedule}
+            onDeleteClass={handleDeleteClass}
           />
-          {scheduleSaveError && (
+          {scheduleSaveError && !showScheduleEditor && !showCalendarImport && (
             <div role="alert" className="mx-5 mt-3 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
               {scheduleSaveError}
             </div>
@@ -1119,6 +1156,7 @@ export function RecommendationsStep({
               mealTimes={preferences.mealTimes}
               mealsPerDay={preferences.mealsPerDay}
               selectedMealSlots={preferences.selectedMealSlots}
+              saveError={scheduleSaveError}
             />
           )}
         </>
@@ -1139,7 +1177,7 @@ export function RecommendationsStep({
 
         {/* Scrollable day strip */}
         <div
-          ref={calendarScrollRef}
+          ref={(el) => { calendarScrollRef.current = el; setCalendarScrollEl(el); }}
           className="overflow-x-auto hide-scrollbar pb-2"
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
