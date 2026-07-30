@@ -35,7 +35,9 @@ const DIETARY_KEYWORDS = new Map<string, readonly string[]>([
 export function dietaryForbiddenKeywords(restrictions: string[]): string[] {
   const set = new Set<string>();
   for (const restriction of normalizeAllergyChoices(restrictions, 10)) {
-    for (const word of DIETARY_KEYWORDS.get(restriction.toLowerCase()) ?? []) set.add(word);
+    const words = DIETARY_KEYWORDS.get(restriction.toLowerCase())
+      ?? allergyKeywordsForChoice(restriction);
+    for (const word of words) set.add(word);
   }
   return [...set];
 }

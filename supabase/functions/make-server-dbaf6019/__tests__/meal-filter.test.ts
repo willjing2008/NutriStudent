@@ -23,6 +23,15 @@ describe('dietaryForbiddenKeywords', () => {
     const words = dietaryForbiddenKeywords(['vegetarian', 'vegan'])
     expect(words.filter(w => w === 'chicken')).toHaveLength(1)
   })
+
+  it('falls back to the allergy taxonomy for sub-option restrictions', () => {
+    const fishWords = dietaryForbiddenKeywords(['fish'])
+    expect(fishWords).toContain('salmon')
+    expect(fishWords).not.toContain('prawn')
+    const milkWords = dietaryForbiddenKeywords(['Milk'])
+    expect(milkWords).toContain('whey')
+    expect(milkWords).not.toContain('cheddar')
+  })
 })
 
 describe('filterRecipes', () => {
@@ -142,6 +151,32 @@ describe('filterRecipes', () => {
     ]
     const out = filterRecipes(pool, { avoidIngredients: ['milk', 'gluten'] })
     expect(out.map(r => r.id)).toEqual([3])
+  })
+
+  it('hard-filters legacy sub-option dietary restrictions (narrow family only)', () => {
+    const pool = [
+      recipe(1, ['salmon fillet']),
+      recipe(2, ['king prawns']),
+      recipe(3, ['rice']),
+    ]
+    const out = filterRecipes(pool, { dietaryRestrictions: ['fish'] })
+    expect(out.map(r => r.id)).toEqual([2, 3])
+  })
+
+  it('hard-filters a Milk dietary restriction without catching other dairy', () => {
+    const pool = [
+      recipe(1, ['whole milk']),
+      recipe(2, ['cheddar cheese']),
+      recipe(3, ['oats']),
+    ]
+    const out = filterRecipes(pool, { dietaryRestrictions: ['Milk'] })
+    expect(out.map(r => r.id)).toEqual([2, 3])
+  })
+
+  it('leaves the pool untouched for an unknown dietary restriction', () => {
+    const pool = [recipe(1, ['chicken']), recipe(2, ['rice'])]
+    const out = filterRecipes(pool, { dietaryRestrictions: ['paleo-unknown'] })
+    expect(out.map(r => r.id)).toEqual([1, 2])
   })
 
   it('excludes meat recipes for a vegan restriction', () => {
