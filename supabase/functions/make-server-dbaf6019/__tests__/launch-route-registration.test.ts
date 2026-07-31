@@ -19,12 +19,25 @@ describe('launch route registration', () => {
     )
   })
 
-  it.each(['leaderboard', 'recipe-leaderboard'])(
-    'keeps auth before the disabled Ranks policy on %s',
-    (route) => {
-      expect(source).toContain(`/${route}\", requireAuth, requireRanksEnabled`)
-    },
-  )
+  it('registers no Ranks routes at all (old clients get plain 404s)', () => {
+    expect(source).not.toContain('/make-server-dbaf6019/leaderboard')
+    expect(source).not.toContain('/make-server-dbaf6019/recipe-leaderboard')
+    expect(source).not.toContain('requireRanksEnabled')
+    // No service-role user scans remain outside the school-management routes.
+    expect(source.match(/listUsers/g) ?? []).toHaveLength(0)
+  })
+
+  it.each([
+    'user-stats',
+    'my-recipes',
+    'track-meal-cooked',
+    'cooked-meals',
+    'save-community-recipe',
+    'list-community-recipes',
+    'toggle-community-like',
+  ])('keeps the social/streak route %s registered behind auth', (route) => {
+    expect(source).toContain(`/${route}\", requireAuth`)
+  })
 
   it.each(['save-meal-plan', 'save-academic-schedule'])(
     'keeps authenticated ownership on %s',
@@ -58,6 +71,19 @@ describe('launch route registration', () => {
   it('uses the compatibility response shape when loading saved plans', () => {
     expect(source).toContain('const responsePreferences = buildPreferenceResponse(data.preferences);')
     expect(source).toContain('preferences: responsePreferences,')
+  })
+
+  it('applies the hard allergy/dietary filters to replacement candidates', () => {
+    // Both replacement routes must filter candidates through filterRecipes
+    // (allergy + dietary hard filters) before the budget cap, so a swap or
+    // shuffle can never surface food the plan itself excluded.
+    expect(source).toContain('import { filterRecipes } from "./meal-filter.ts";')
+    const dietaryBoundaries = source.match(/const dietarySafe = filterRecipes\(/g) ?? []
+    expect(dietaryBoundaries).toHaveLength(2)
+    const budgetAfterDietary = source.match(
+      /const candidates = filterRecipesByBudget\(dietarySafe, budgetPerMealGbp\)/g,
+    ) ?? []
+    expect(budgetAfterDietary).toHaveLength(2)
   })
 
   it('lazily persists the canonical cap on legacy recipe queues', () => {

@@ -5,7 +5,6 @@ import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
 import { requireAuth, requireAdmin, getUserId, isUuid, grantAdminByEmail } from "./auth-middleware.ts";
 import { rateLimit } from "./rate-limit.ts";
 import { requirePremiumAccess } from "./entitlement.ts";
-import { requireRanksEnabled } from "./launch-policy.ts";
 import { vStr, vNum, vStrArr, vArr, timingSafeEqual } from "./validate.ts";
 import * as kv from "./kv_store.tsx";
 import { ALL_RECIPES } from "./recipe-data.ts";
@@ -19,6 +18,7 @@ import { generateMealPlanFromRecipes } from "./meal-plan-generator.ts";
 import { buildAcademicSchedule } from "./academic-schedule.ts";
 import { estimateMissingCosts } from "./recipe-backfill.ts";
 import { normalizeAllergyChoices } from "../_shared/allergy-contract.ts";
+import { filterRecipes } from "./meal-filter.ts";
 import {
   buildPreferenceResponse,
   LEGACY_QUEUE_BUDGET_PER_MEAL_GBP,
@@ -921,7 +921,7 @@ app.post("/make-server-dbaf6019/admin/search-recipes", requireAuth, requireAdmin
 app.post("/make-server-dbaf6019/shuffle-recipe", requireAuth, rateLimit({ name: "shuffle-recipe", max: 30, windowSec: 60 }), requirePremiumAccess, async (c) => {
   try {
     const body = await c.req.json();
-    const { currentRecipeId, goal, currentMealIds, maxCookingTime } = body;
+    const { currentRecipeId, goal, currentMealIds, maxCookingTime, avoidIngredients, dietaryRestrictions } = body;
 
     if (!currentRecipeId || !goal) {
       return c.json({ error: "Missing required parameters" }, 400);
@@ -949,19 +949,27 @@ app.post("/make-server-dbaf6019/shuffle-recipe", requireAuth, rateLimit({ name: 
       return c.json({ error: "Current recipe not found" }, 404);
     }
 
-    // Exclude current plan meals, then apply the hard cap. Budget is never
-    // relaxed merely because the affordable alternative set is empty.
+    // Exclude current plan meals, then apply the same HARD filters the plan
+    // was generated under: allergies/dietary restrictions first, then the
+    // budget cap. Neither is ever relaxed because the pool is empty - a
+    // replacement must never violate what the plan itself excluded.
     const excludedIds = new Set([
       ...vStrArr(currentMealIds, 100, 100),
       String(currentRecipeId),
     ]);
-    const candidates = filterRecipesByBudget(
+    const dietarySafe = filterRecipes(
       allRecipes.filter(r => !excludedIds.has(String(r.id))),
-      budgetPerMealGbp,
+      {
+        avoidIngredients: normalizeAllergyChoices(vStrArr(avoidIngredients, 50, 100), 50),
+        dietaryRestrictions: normalizeAllergyChoices(vStrArr(dietaryRestrictions, 10, 30), 10),
+      },
     );
+    const candidates = filterRecipesByBudget(dietarySafe, budgetPerMealGbp);
 
     if (candidates.length === 0) {
-      return c.json({ error: noBudgetMatchMessage(budgetPerMealGbp) }, 400);
+      return dietarySafe.length === 0
+        ? c.json({ error: "No alternatives match your allergy and dietary preferences." }, 400)
+        : c.json({ error: noBudgetMatchMessage(budgetPerMealGbp) }, 400);
     }
 
     // Score by nutrition similarity
@@ -1002,7 +1010,7 @@ app.post("/make-server-dbaf6019/shuffle-recipe", requireAuth, rateLimit({ name: 
 app.post("/make-server-dbaf6019/get-swap-options", requireAuth, rateLimit({ name: "get-swap-options", max: 30, windowSec: 60 }), requirePremiumAccess, async (c) => {
   try {
     const body = await c.req.json();
-    const { currentRecipeId, goal, currentMealIds, maxCookingTime, limit = 6 } = body;
+    const { currentRecipeId, goal, currentMealIds, maxCookingTime, avoidIngredients, dietaryRestrictions, limit = 6 } = body;
 
     if (!currentRecipeId || !goal) {
       return c.json({ error: "Missing required parameters" }, 400);
@@ -1028,17 +1036,25 @@ app.post("/make-server-dbaf6019/get-swap-options", requireAuth, rateLimit({ name
       return c.json({ error: "Current recipe not found" }, 404);
     }
 
+    // Same hard-filter boundary as shuffle-recipe: allergy/dietary first,
+    // then the budget cap - swap options must never offer excluded food.
     const excludedIds = new Set([
       ...vStrArr(currentMealIds, 100, 100),
       String(currentRecipeId),
     ]);
-    const candidates = filterRecipesByBudget(
+    const dietarySafe = filterRecipes(
       allRecipes.filter(r => !excludedIds.has(String(r.id))),
-      budgetPerMealGbp,
+      {
+        avoidIngredients: normalizeAllergyChoices(vStrArr(avoidIngredients, 50, 100), 50),
+        dietaryRestrictions: normalizeAllergyChoices(vStrArr(dietaryRestrictions, 10, 30), 10),
+      },
     );
+    const candidates = filterRecipesByBudget(dietarySafe, budgetPerMealGbp);
 
     if (candidates.length === 0) {
-      return c.json({ error: noBudgetMatchMessage(budgetPerMealGbp) }, 400);
+      return dietarySafe.length === 0
+        ? c.json({ error: "No alternatives match your allergy and dietary preferences." }, 400)
+        : c.json({ error: noBudgetMatchMessage(budgetPerMealGbp) }, 400);
     }
 
     const safeLimit = Math.round(vNum(limit, 1, 20, 6));
@@ -2451,194 +2467,6 @@ app.post("/make-server-dbaf6019/user-stats", requireAuth, async (c) => {
     });
   } catch (error: any) {
     log(`Error in /user-stats: ${error.message}`);
-    return c.json({ error: "Internal server error" }, 500);
-  }
-});
-
-// Get school leaderboard ranked by best (longest) cooking day streak
-app.post("/make-server-dbaf6019/leaderboard", requireAuth, requireRanksEnabled, async (c) => {
-  try {
-    const { schoolId } = await c.req.json();
-    // The caller's own id comes from the token so we can flag their row without
-    // exposing raw auth UUIDs to other users.
-    const callerId = getUserId(c);
-
-    if (!schoolId) {
-      return c.json({ error: "schoolId is required" }, 400);
-    }
-
-    // Get all auth users and filter by school
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-    );
-
-    const { data: { users }, error } = await supabase.auth.admin.listUsers({ perPage: 1000 });
-    if (error) {
-      log(`Error listing users in /leaderboard: ${error.message}`);
-      return c.json({ error: "Internal server error" }, 500);
-    }
-
-    const schoolUsers = (users || []).filter(
-      (u: any) => u.user_metadata?.school_id === schoolId
-    );
-
-    // Compute longest (best) streak for each school user
-    const leaderboard = await Promise.all(
-      schoolUsers.map(async (u: any) => {
-        const entries = await getByPrefixWithKeys(`cooked_${u.id}_`);
-        const cookingDates = [...new Set(entries.map((e: any) => e.value?.date).filter(Boolean))].sort();
-
-        let longestStreak = 0;
-        if (cookingDates.length > 0) {
-          let streak = 1;
-          for (let i = 1; i < cookingDates.length; i++) {
-            const prev = new Date(cookingDates[i - 1]);
-            const curr = new Date(cookingDates[i]);
-            const diffDays = Math.round((curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24));
-            if (diffDays === 1) {
-              streak++;
-            } else {
-              longestStreak = Math.max(longestStreak, streak);
-              streak = 1;
-            }
-          }
-          longestStreak = Math.max(longestStreak, streak);
-        }
-
-        return {
-          isCurrentUser: u.id === callerId,
-          name: u.user_metadata?.name || 'Anonymous',
-          currentStreak: longestStreak,
-        };
-      })
-    );
-
-    // Sort by best streak descending, then name ascending for ties
-    leaderboard.sort((a, b) => {
-      if (b.currentStreak !== a.currentStreak) return b.currentStreak - a.currentStreak;
-      return a.name.localeCompare(b.name);
-    });
-
-    // Add rank
-    const ranked = leaderboard.map((entry, i) => ({ ...entry, rank: i + 1 }));
-
-    return c.json({ leaderboard: ranked });
-  } catch (error: any) {
-    log(`Error in /leaderboard: ${error.message}`);
-    return c.json({ error: "Internal server error" }, 500);
-  }
-});
-
-// Get recipe leaderboard ranked by times cooked (school-scoped, paginated)
-app.post("/make-server-dbaf6019/recipe-leaderboard", requireAuth, requireRanksEnabled, async (c) => {
-  try {
-    const { schoolId, limit = 10, offset = 0 } = await c.req.json();
-    // The viewer's own id (for "liked by me" enrichment) comes from the token,
-    // never the body.
-    const userId = getUserId(c);
-
-    if (!schoolId) {
-      return c.json({ error: "schoolId is required" }, 400);
-    }
-
-    // Get all auth users and filter by school
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-    );
-
-    const { data: { users }, error } = await supabase.auth.admin.listUsers({ perPage: 1000 });
-    if (error) {
-      log(`Error listing users in /recipe-leaderboard: ${error.message}`);
-      return c.json({ error: "Internal server error" }, 500);
-    }
-
-    const schoolUserIds = new Set(
-      (users || [])
-        .filter((u: any) => u.user_metadata?.school_id === schoolId)
-        .map((u: any) => u.id)
-    );
-
-    if (schoolUserIds.size === 0) {
-      return c.json({ recipes: [], total: 0, hasMore: false });
-    }
-
-    // Fetch all cooked entries globally and filter to school users
-    const allCooked = await getByPrefixWithKeys("cooked_");
-
-    // Aggregate by recipeId
-    const recipeMap = new Map<string, { name: string; category: string; count: number }>();
-
-    for (const entry of allCooked) {
-      // Key format: cooked_${userId}_${date}_${mealId}
-      const parts = entry.key.split('_');
-      const entryUserId = parts[1];
-      if (!schoolUserIds.has(entryUserId)) continue;
-
-      const val = entry.value;
-      const recipeId = val?.recipeId || val?.mealId;
-      if (!recipeId || !recipeId.startsWith('custom-')) continue;
-
-      const existing = recipeMap.get(recipeId);
-      if (existing) {
-        existing.count++;
-      } else {
-        recipeMap.set(recipeId, {
-          name: val.recipeName || 'Unknown Recipe',
-          category: val.category || '',
-          count: 1,
-        });
-      }
-    }
-
-    // Sort by count descending, then name ascending
-    const sorted = Array.from(recipeMap.entries())
-      .sort((a, b) => {
-        if (b[1].count !== a[1].count) return b[1].count - a[1].count;
-        return a[1].name.localeCompare(b[1].name);
-      });
-
-    const total = sorted.length;
-    const page = sorted.slice(offset, offset + limit);
-
-    // Enrich with community data (likes, creator, image, nutrition)
-    const likedSet = new Set<string>();
-    if (userId) {
-      const likeEntries = await getByPrefixWithKeys(`community_like_${userId}_`);
-      for (const e of likeEntries) {
-        likedSet.add(e.value.recipeId);
-      }
-    }
-
-    const recipes = await Promise.all(
-      page.map(async ([recipeId, data], i) => {
-        const communityRecipe = await kv.get(`community_recipe_${recipeId}`);
-        return {
-          rank: offset + i + 1,
-          recipeId,
-          name: communityRecipe?.name || data.name,
-          category: communityRecipe?.category || data.category,
-          timesCooked: data.count,
-          // Community social fields
-          creatorName: communityRecipe?.creatorName || null,
-          likesCount: communityRecipe?.likesCount || 0,
-          likedByMe: likedSet.has(recipeId),
-          image: communityRecipe?.imageUrl || communityRecipe?.image || null,
-          nutrition: communityRecipe?.nutrition || null,
-          cookingTime: communityRecipe?.cookingTime || null,
-          servings: communityRecipe?.servings || null,
-          difficulty: communityRecipe?.difficulty || null,
-          description: communityRecipe?.description || null,
-          ingredients: communityRecipe?.ingredientNames || communityRecipe?.ingredients || null,
-          instructions: communityRecipe?.instructions || null,
-        };
-      })
-    );
-
-    return c.json({ recipes, total, hasMore: offset + limit < total });
-  } catch (error: any) {
-    log(`Error in /recipe-leaderboard: ${error.message}`);
     return c.json({ error: "Internal server error" }, 500);
   }
 });

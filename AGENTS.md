@@ -11,7 +11,7 @@ This file is the project's committed home for project-intrinsic agent knowledge:
   - Bundle identifier `com.nutritionapp.students` (Info.plist `PRODUCT_BUNDLE_IDENTIFIER`, `project.pbxproj`, both `capacitor.config.json` `appId`) — the App Store identity; leave exactly as-is.
   - `CFBundleName` in Info.plist is `$(PRODUCT_NAME)` → `$(TARGET_NAME)` = "App" (internal executable name, not user-facing) — left unchanged.
   - Internal `package.json` `"name"`, git repo name, test fixture identifiers — not user-facing, left unchanged.
-- Paid-mode RevenueCat naming intentionally differs from the legacy client until the dedicated client PR.
+- Paid-mode RevenueCat naming is unresolved: this repo keeps entitlement `NutriStudent Pro` while the deployed v97 backend source says `ChefPocket Pro`. Do NOT rename either side until a human confirms the exact live RevenueCat dashboard identifier; subscriptions are disabled so nothing depends on it yet.
   Follow the activation contract in `docs/DEPLOYMENT.md` before enabling paid mode.
 
 ## Security: backend auth & paywall
@@ -19,7 +19,8 @@ This file is the project's committed home for project-intrinsic agent knowledge:
 - Backend release status and deploy boundaries are owned by `docs/DEPLOYMENT.md`; merging source does not deploy production.
 - The Supabase edge function (`supabase/functions/make-server-dbaf6019/`) runs on the service-role key (bypasses RLS), so each route's middleware IS the authorization.
   - `auth-middleware.ts`: `requireAuth` verifies the caller's JWT and sets a token-derived `userId` — handlers must use `getUserId(c)`, NEVER `body.userId`. `requireAdmin` chains after it and checks `app_metadata.role` (NOT `user_metadata`, which users can self-write).
-  - Initial launch policy lives in `supabase/functions/_shared/launch-config.ts`, with subscriptions and Ranks explicitly disabled. The four premium routes retain `requireAuth` and per-user rate limiting before `requirePremiumAccess`; free mode skips RevenueCat intentionally. The two ranking routes retain `requireAuth` and return a policy 404 before any handler or service-role scan.
+  - Initial launch policy lives in `supabase/functions/_shared/launch-config.ts`, with subscriptions explicitly disabled. The four premium routes retain `requireAuth` and per-user rate limiting before `requirePremiumAccess`; free mode skips RevenueCat intentionally. The client hides all subscription UI behind `LAUNCH_CONFIG.subscriptionsEnabled` (mandatory paywall, Profile billing entry, RevenueCat identify/reset); dormant paid-mode SDK calls stay guarded by `isRevenueCatConfigured()`.
+  - Ranks was FULLY eliminated (July 30, 2026 captain decision): the client tab/page and the backend `leaderboard`/`recipe-leaderboard` routes (the only service-role `listUsers` scans) are deleted, so old clients get plain 404s. Community recipes, likes (`toggle-community-like`), personal streaks (`user-stats`), achievements and cooked history keep their own routes.
   - `entitlement.ts`: dormant paid-mode enforcement must fail closed when its secret or RevenueCat is unavailable.
     Its activation requirements are owned by `docs/DEPLOYMENT.md`.
 - Client API calls: use `src/app/utils/apiClient.ts` — `authedFetch`/`authedPost`/`authedGet` send the real session JWT and are required for any `requireAuth` route. The anon key (`publicPost` / hand-rolled headers) is ONLY for genuinely public endpoints (`health`, `schools/search`, `recipe-image/:id`, `get-recipe-image-with-cache`, `auth/signup`, the Google-proxy location routes). Never send the anon key to an authed route.
@@ -29,9 +30,8 @@ This file is the project's committed home for project-intrinsic agent knowledge:
 - Edge-function handlers must NOT return raw `error.message` to clients on 5xx (it leaks internals).
   Pattern: `log(...)` the real error server-side, return `{ error: "Internal server error" }` with the 5xx status.
   Intentional 4xx validation errors keep their actionable messages.
-- The school streaks `leaderboard` route must never return raw auth UUIDs.
-  It flags the caller's own row with `isCurrentUser` (derived from `getUserId(c)`); the client highlights "(you)" off that flag, not a UUID compare.
-  `recipe-leaderboard` is keyed by `recipeId` and uses `getUserId(c)` for "liked by me", so it exposes no user UUIDs.
+- Routes that surface other users' data must never return raw auth UUIDs.
+  The deleted leaderboard routes set the pattern (see git history): flag the caller's own row server-side via `getUserId(c)` instead of letting the client compare UUIDs.
 
 ## Signup / auth flow
 
@@ -59,7 +59,9 @@ This file is the project's committed home for project-intrinsic agent knowledge:
 - The meal plan's length is user-chosen: `preferences.planDays` (1–14, default 7) travels in the `generate-meal-plan` payload; the handler bounds it with `vNum(planDays, 1, 14, 7)`, rounds it to an integer, and feeds it as `cookingDays`. The "Plan Start Date" card in PreferencesStep is the old "Next Shopping Date" — the internal field is still `shoppingDate` everywhere (deliberate: label-only rename).
 - The backend budget and compatibility contract is owned by `docs/DEPLOYMENT.md` and implemented in `supabase/functions/_shared/budget-contract.ts`.
   Route handlers must use the shared helpers instead of re-deriving budget math.
-- `e2e/plan-days.spec.ts` (Playwright, route-mocked backend per repo e2e convention) pins the current legacy payload contract, the N-day calendar anchored on the chosen start date, and the day-scoped shopping list. The dedicated client PR updates that contract to canonical per-meal budget; the 28-day recipe-queue path remains fixed-length.
+- The client is on the canonical per-meal budget (July 2026): `preferences.budgetPerMealGbp` (`number | null`, £1.00-£50.00 hard cap) replaced the whole-plan `budget`. The PreferencesStep field starts EMPTY and is required before Continue (captain decision: empty-required, typed entry only, no preset chips). `src/app/utils/userPreferences.ts` normalizes saved preferences on load, lazily migrating legacy `budget/(planDays*mealsPerDay)`. `generate-meal-plan` dual-sends the legacy whole-plan `budget` alongside `budgetPerMealGbp` for exactly one release of rollback compatibility - drop it in the release after this one. Budget comparisons go through `toPence` (integer pence), unpriced recipes cost `UNPRICED_RECIPE_FALLBACK_GBP` (£2.50) via `safeCost`.
+- Allergies are hierarchical (July 2026): `supabase/functions/_shared/allergy-contract.ts` owns the taxonomy - groups Nuts (Peanuts, Tree Nuts), Seafood (Fish, Shellfish), Dairy (Milk, Cheese, Butter, Cream, Yogurt), Gluten/Wheat, Eggs, Soy. A group choice covers every sub-option; a sub-option alone restricts just that family; unknown strings are free-text dislikes matched literally. Normalize with `normalizeAllergyChoices` at every load/request/persistence boundary and get filter keywords only via `allergyKeywordsForChoice` (legacy `fish` now maps to the narrow `Fish`, not `Seafood` - the captain-approved granularity).
+- `e2e/plan-days.spec.ts` (Playwright, route-mocked backend per repo e2e convention) pins the canonical per-meal payload contract (including the one-release dual-send), the N-day calendar anchored on the chosen start date, and the day-scoped shopping list; `e2e/launch-shell.spec.ts` pins the four-tab no-Ranks no-billing shell. The 28-day recipe-queue path remains fixed-length.
 - `src/app/components/RecommendationsStep.tsx` has **mixed line endings (mostly CRLF)** committed; whole-file rewrites (or editors that normalize the dominant ending) produce a huge whitespace diff. Patch it with byte-preserving edits and check `git diff --stat` before committing.
 
 ## Release-simulator smoke test without prod credentials

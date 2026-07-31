@@ -22,6 +22,10 @@ import {
   type PurchasesPackage,
   type PurchaseResult,
 } from '../services/revenuecat';
+import { LAUNCH_CONFIG } from '../../../supabase/functions/_shared/launch-config';
+
+const FREE_LAUNCH_SUBSCRIPTION_MESSAGE =
+  'Subscriptions are not available during the free launch.';
 
 // ── Context Types ──────────────────────────────────────────────────────────────
 
@@ -117,6 +121,13 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     if (initializedRef.current) return;
     initializedRef.current = true;
 
+    // Free launch: subscriptions are policy-disabled, so the provider reports
+    // ready without touching the RevenueCat SDK at all.
+    if (!LAUNCH_CONFIG.subscriptionsEnabled) {
+      setIsReady(true);
+      return;
+    }
+
     (async () => {
       try {
         await initializeRevenueCat();
@@ -145,6 +156,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
   // ── Actions ────────────────────────────────────────────────────────────────
 
   const identify = useCallback(async (userId: string) => {
+    if (!LAUNCH_CONFIG.subscriptionsEnabled) return;
     setIsLoading(true);
     try {
       const info = await loginUser(userId);
@@ -156,6 +168,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
   }, [processCustomerInfo, loadOfferings]);
 
   const reset = useCallback(async () => {
+    if (!LAUNCH_CONFIG.subscriptionsEnabled) return;
     setIsLoading(true);
     try {
       const info = await logoutUser();
@@ -166,6 +179,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
   }, [processCustomerInfo]);
 
   const refresh = useCallback(async () => {
+    if (!LAUNCH_CONFIG.subscriptionsEnabled) return;
     setIsLoading(true);
     try {
       const info = await getCustomerInfo();
@@ -177,6 +191,9 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
   }, [processCustomerInfo, loadOfferings]);
 
   const purchase = useCallback(async (pkg: PurchasesPackage): Promise<PurchaseResult> => {
+    if (!LAUNCH_CONFIG.subscriptionsEnabled) {
+      return { success: false, error: FREE_LAUNCH_SUBSCRIPTION_MESSAGE };
+    }
     setIsLoading(true);
     try {
       const result = await rcPurchasePackage(pkg);
@@ -190,6 +207,9 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
   }, [processCustomerInfo]);
 
   const restore = useCallback(async (): Promise<PurchaseResult> => {
+    if (!LAUNCH_CONFIG.subscriptionsEnabled) {
+      return { success: false, error: FREE_LAUNCH_SUBSCRIPTION_MESSAGE };
+    }
     setIsLoading(true);
     try {
       const result = await rcRestorePurchases();
@@ -203,18 +223,21 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
   }, [processCustomerInfo]);
 
   const showPaywall = useCallback(async (): Promise<boolean> => {
+    if (!LAUNCH_CONFIG.subscriptionsEnabled) return false;
     const purchased = await rcPresentPaywall(currentOffering ?? undefined);
     if (purchased) await refresh();
     return purchased;
   }, [currentOffering, refresh]);
 
   const showPaywallIfNeeded = useCallback(async (): Promise<boolean> => {
+    if (!LAUNCH_CONFIG.subscriptionsEnabled) return false;
     const purchased = await rcPresentPaywallIfNeeded(ENTITLEMENT_ID);
     if (purchased) await refresh();
     return purchased;
   }, [refresh]);
 
   const showCustomerCenter = useCallback(async (): Promise<void> => {
+    if (!LAUNCH_CONFIG.subscriptionsEnabled) return;
     await rcPresentCustomerCenter();
     // Refresh after managing subscription
     await refresh();

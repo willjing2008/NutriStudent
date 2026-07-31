@@ -205,19 +205,25 @@ export function useAcademicCalendar() {
   // Generate recipe queue
   const generateQueue = useCallback(async (
     userId: string,
-    params: { mealsPerDay: number; goal: string; avoidIngredients?: string[]; maxCookingTime?: number; budget?: number; selectedMealSlots?: string[] }
+    params: { mealsPerDay: number; goal: string; avoidIngredients?: string[]; dietaryRestrictions?: string[]; maxCookingTime?: number; budgetPerMealGbp?: number | null; selectedMealSlots?: string[] }
   ) => {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await apiPost<{ queue: RecipeQueue }>('generate-recipe-queue', { userId, ...params });
+      // An explicit budgetPerMealGbp is validated strictly server-side; omit
+      // the field entirely when unset so the documented legacy cap applies.
+      const { budgetPerMealGbp, ...restParams } = params;
+      const data = await apiPost<{ queue: RecipeQueue }>('generate-recipe-queue', {
+        userId,
+        ...restParams,
+        ...(budgetPerMealGbp == null ? {} : { budgetPerMealGbp }),
+      });
       setRecipeQueue(data.queue);
       setCurrentQueueWeek(1);
       // Also load first week
       const weekData = await apiPost<{ mealPlan: QueueWeekMealPlan }>('get-queue-week', {
         userId,
         weekNumber: 1,
-        budget: params.budget,
       });
       setCurrentWeekMealPlan(weekData.mealPlan);
       // Load shopping list for week 1
@@ -236,12 +242,12 @@ export function useAcademicCalendar() {
   }, []);
 
   // Load a specific queue week
-  const loadQueueWeek = useCallback(async (userId: string, weekNumber: number, budget?: number) => {
+  const loadQueueWeek = useCallback(async (userId: string, weekNumber: number) => {
     try {
       setIsLoading(true);
       setCurrentQueueWeek(weekNumber);
       const [weekData, shopData] = await Promise.all([
-        apiPost<{ mealPlan: QueueWeekMealPlan }>('get-queue-week', { userId, weekNumber, budget }),
+        apiPost<{ mealPlan: QueueWeekMealPlan }>('get-queue-week', { userId, weekNumber }),
         apiPost<{ ingredients: ShoppingIngredient[] }>('get-queue-shopping-list', { userId, weekNumber }),
       ]);
       setCurrentWeekMealPlan(weekData.mealPlan);

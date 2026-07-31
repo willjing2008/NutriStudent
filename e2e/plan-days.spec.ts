@@ -162,12 +162,16 @@ const runOnboarding = async (
   // Relabelled sections.
   await expect(page.getByRole('heading', { name: 'Plan Start Date' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Number of Days' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Budget for this plan' })).toBeVisible();
-  await expect(page.getByText(/We'll keep your plan's groceries/)).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Budget per meal' })).toBeVisible();
 
   const { iso } = localISO(startOffset);
   await page.locator('input[type="date"]').fill(iso);
   await page.getByRole('spinbutton', { name: 'Number of days' }).fill(String(planDays));
+  // The per-meal budget starts empty and is required before Continue works.
+  const budgetField = page.getByRole('spinbutton', { name: /budget per meal/i });
+  await expect(budgetField).toHaveValue('');
+  await expect(page.getByRole('button', { name: /^Continue$/ })).toBeDisabled();
+  await budgetField.fill('4.25');
   await page.getByRole('button', { name: /Study Focus/ }).click();
   await page.screenshot({
     path: path.join(process.env.EVIDENCE_DIR || 'test-results', `plan-days-${planDays}-preferences.png`),
@@ -197,9 +201,15 @@ test('3-day plan: payload carries planDays; preview shows exactly 3 days from th
   // The plan preview rendered from the generated plan.
   await expect(page.getByText('Day 1 Breakfast')).toBeVisible();
 
-  // The generate call carried the user's choices.
+  // The generate call carried the user's choices: the canonical per-meal cap
+  // plus the one-release legacy dual-send (budget = perMeal * days * meals).
   expect(generatePayloads).toHaveLength(1);
-  expect(generatePayloads[0]).toMatchObject({ planDays: 3, shoppingDate: startIso });
+  expect(generatePayloads[0]).toMatchObject({
+    planDays: 3,
+    shoppingDate: startIso,
+    budgetPerMealGbp: 4.25,
+    budget: 4.25 * 3 * 3,
+  });
 
   // Exactly 3 in-plan days on the calendar strip, anchored on the chosen date.
   const planCells = await inPlanDays(page);
@@ -229,7 +239,11 @@ test('14-day plan: preview shows exactly 14 days', async ({ page }) => {
   await runOnboarding(page, { startOffset: 2, planDays: 14 });
 
   await expect(page.getByText('Day 1 Breakfast')).toBeVisible();
-  expect(generatePayloads[0]).toMatchObject({ planDays: 14 });
+  expect(generatePayloads[0]).toMatchObject({
+    planDays: 14,
+    budgetPerMealGbp: 4.25,
+    budget: 4.25 * 14 * 3,
+  });
   expect(await inPlanDays(page)).toHaveLength(14);
   await page.screenshot({ path: path.join(evidenceDir, 'plan-days-14-preview.png'), fullPage: true });
 });

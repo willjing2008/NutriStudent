@@ -17,7 +17,7 @@ ChefPocket generates meal plans with a user-chosen start date and length (1-14 d
 - Meal swap functionality with nutritional comparison
 - Shopping list with per-category grouping and checklist
 - School selection and student community
-- Free initial launch with subscriptions and Ranks unavailable
+- Free initial launch with subscriptions unavailable
 - Profile management with achievements and streak tracking
 - Multi-language support (English, Simplified Chinese)
 - Admin dashboard for recipe database management

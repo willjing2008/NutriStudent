@@ -33,6 +33,13 @@ const rc = vi.hoisted(() => {
   };
 });
 
+// These tests exercise the dormant paid-mode behavior, so the launch policy is
+// forced on; the shipped free-launch (flag off) state is pinned in
+// useSubscription.launch.test.tsx.
+vi.mock('../../../supabase/functions/_shared/launch-config.ts', () => ({
+  LAUNCH_CONFIG: { subscriptionsEnabled: true },
+}));
+
 vi.mock('../services/revenuecat', () => ({
   initializeRevenueCat: rc.initializeRevenueCat,
   loginUser: rc.loginUser,
