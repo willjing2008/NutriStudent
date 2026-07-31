@@ -12,7 +12,7 @@ ChefPocket may collect the following information when you use the app:
 - Account information, including your name, email address, account identifier, and authentication information.
 - Profile and preference information, including school selection, dietary preferences, allergies or restrictions, nutrition goals, meal preferences, budget, and meal timing preferences.
 - Calendar information that you imported while calendar import was available, including class names, dates, and times used to organise meal plans around your schedule.
-- User content and activity, including saved meal plans, recipes, likes, cooked-meal history, streaks, leaderboard activity, and other content you submit.
+- User content and activity, including saved meal plans, recipes, likes, cooked-meal history, streaks, and other content you submit.
 - Purchase and subscription information needed to provide and restore ChefPocket Pro access.
 - Limited technical and operational information, such as app version, device or network information, request logs, and error information needed to operate, secure, and troubleshoot the service.
 
@@ -22,7 +22,7 @@ We use information to:
 
 - Create and manage your account.
 - Personalise meal plans, recipes, nutrition information, and shopping lists and, when enabled, reminders and scheduling features.
-- Provide community, leaderboard, and saved-content features.
+- Provide community and saved-content features.
 - Process, verify, and restore subscriptions.
 - Provide calendar-import features when they are available and you choose to use them.
 - Maintain security, prevent abuse, diagnose problems, and improve reliability.
