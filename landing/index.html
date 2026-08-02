@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ChefPocket - Personalized nutrition for the student lifestyle</title>
+<meta name="description" content="ChefPocket builds meal plans around your classes, budget and goals, then writes the shopping list for you. Made for university students." />
+<link rel="canonical" href="https://chefpocket.app/" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="ChefPocket" />
+<meta property="og:title" content="ChefPocket - Eat Smart. Study Hard." />
+<meta property="og:description" content="Personalized nutrition for the student lifestyle. Meal plans around your classes, budget and goals, with the shopping list written for you." />
+<meta property="og:url" content="https://chefpocket.app/" />
+<meta property="og:image" content="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1200&h=630&fit=crop&auto=format" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="ChefPocket - Eat Smart. Study Hard." />
+<meta name="twitter:description" content="Personalized nutrition for the student lifestyle. Meal plans around your classes, budget and goals, with the shopping list written for you." />
+<meta name="twitter:image" content="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1200&h=630&fit=crop&auto=format" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    /* ChefPocket Design System tokens (forest surface family) */
+    --green-300: #86EFAC;
+    --green-400: #4ADE80;
+    --green-500: #22C55E;
+    --green-600: #16A34A;
+    --green-950: #052E16;
+    --forest-950: #0A1F13;
+    --forest-900: #0D2818;
+    --forest-850: #142A1D;
+    --forest-800: #1A3625;
+    --forest-750: #1E4029;
+    --forest-700: #2D5A3D;
+    --text-1: #FFFFFF;
+    --text-2: #D1D5DB;
+    --text-3: #9CA3AF;
+    --text-4: #6B7280;
+    --orange-400: #FB923C;
+    --amber-400: #FBBF24;
+    --purple-300: #D8B4FE;
+    --font-sans: 'DM Sans', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+    --radius-xl: 16px;
+    --radius-2xl: 20px;
+    --radius-pill: 9999px;
+    --glow-primary: 0 0 40px rgb(34 197 94 / .15);
+    --shadow-hero: 0 25px 80px rgb(34 197 94 / .20);
+    --shadow-primary-lg: 0 10px 30px rgb(34 197 94 / .20);
+    --gradient-primary-cta: linear-gradient(to right, #22C55E, #16A34A);
+    --gradient-plan-card: linear-gradient(to bottom right, #1A2A1F, #0F1A14);
+    --ring-focus: 0 0 0 3px rgb(34 197 94 / .50);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--forest-950);
+    color: var(--text-1);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: inherit; text-decoration: none; }
+  img { max-width: 100%; display: block; }
+
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
+
+  button, .btn { font-family: inherit; }
+
+  :where(a, button):focus-visible { outline: none; box-shadow: var(--ring-focus); border-radius: var(--radius-pill); }
+
+  /* ── Nav ─────────────────────────────────────────── */
+  header {
+    position: sticky; top: 0; z-index: 50;
+    background: rgb(10 31 19 / .85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--forest-750);
+  }
+  .nav {
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px;
+  }
+  .wordmark { font-weight: 700; font-size: 20px; letter-spacing: -0.01em; }
+  .wordmark span { color: var(--green-500); }
+  .nav-links { display: flex; gap: 28px; align-items: center; }
+  .nav-links a:not(.btn) {
+    font-size: 14px; font-weight: 500; color: var(--text-3);
+    transition: color 200ms ease;
+  }
+  .nav-links a:not(.btn):hover { color: var(--text-1); }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    border: none; cursor: pointer;
+    border-radius: var(--radius-pill);
+    font-weight: 600; font-size: 16px;
+    transition: all 200ms ease;
+  }
+  .btn-primary {
+    background: var(--green-500); color: var(--green-950);
+    padding: 14px 32px;
+    box-shadow: var(--shadow-primary-lg);
+  }
+  .btn-primary:hover { background: var(--green-400); transform: scale(1.02); }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-secondary {
+    background: transparent; color: var(--text-2);
+    padding: 13px 32px;
+    border: 1px solid var(--forest-700);
+  }
+  .btn-secondary:hover { border-color: rgb(34 197 94 / .4); color: var(--text-1); }
+  .btn-secondary:active { transform: scale(0.98); }
+  .btn-nav { padding: 9px 20px; font-size: 14px; box-shadow: none; }
+
+  /* ── Hero ────────────────────────────────────────── */
+  .hero { padding: 72px 0 80px; }
+  .hero-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 48px; align-items: center;
+  }
+  .hero h1 {
+    font-size: clamp(2.25rem, 8.4vw, 3.35rem);
+    line-height: 1.2; font-weight: 700;
+  }
+  .hero h1 .accent { color: var(--green-500); display: block; }
+  .hero-sub {
+    color: var(--text-3);
+    font-size: clamp(1rem, 4.1vw, 1.2rem);
+    margin: 16px 0 32px; max-width: 28rem;
+  }
+  .hero-ctas { display: flex; gap: 14px; flex-wrap: wrap; }
+  .hero-meta {
+    display: flex; gap: 24px; flex-wrap: wrap;
+    margin-top: 36px;
+    font-size: 14px; color: var(--text-4);
+  }
+  .hero-meta li { list-style: none; display: flex; align-items: center; gap: 8px; }
+  .hero-meta svg { color: var(--green-500); }
+  .hero-photo-wrap { display: flex; justify-content: center; }
+  .hero-photo { position: relative; width: min(74vw, 420px); height: min(74vw, 420px); }
+  .hero-photo img {
+    width: 100%; height: 100%; object-fit: cover;
+    border-radius: 50%;
+    box-shadow: var(--shadow-hero);
+  }
+  .hero-photo::after {
+    content: ""; position: absolute; inset: 0; border-radius: 50%;
+    background: linear-gradient(to top, var(--forest-950), transparent 55%);
+  }
+  .hero-chip {
+    position: absolute; z-index: 2;
+    background: var(--forest-850);
+    border: 1px solid var(--forest-750);
+    border-radius: var(--radius-xl);
+    padding: 10px 14px;
+    display: flex; align-items: center; gap: 10px;
+    box-shadow: var(--glow-primary);
+  }
+  .hero-chip .num { font-size: 20px; font-weight: 700; line-height: 1.2; }
+  .hero-chip .lbl { font-size: 10px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-4); }
+  .chip-protein { top: 8%; right: -4%; }
+  .chip-streak { bottom: 10%; left: -6%; }
+  .chip-streak svg { color: var(--orange-400); }
+  .chip-protein svg { color: var(--green-500); }
+
+  /* ── Sections ────────────────────────────────────── */
+  section { padding: 80px 0; }
+  .section-head { text-align: center; max-width: 36rem; margin: 0 auto 48px; }
+  .section-head h2 { font-size: 30px; line-height: 1.2; font-weight: 700; margin-bottom: 12px; }
+  .section-head p { color: var(--text-3); }
+  .kicker {
+    display: inline-block;
+    font-size: 12px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+    color: var(--green-500);
+    background: rgb(34 197 94 / .10);
+    border: 1px solid rgb(34 197 94 / .30);
+    border-radius: var(--radius-pill);
+    padding: 4px 12px; margin-bottom: 16px;
+  }
+
+  /* ── Features ────────────────────────────────────── */
+  .features {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  }
+  .feature {
+    background: var(--forest-850);
+    border: 1px solid var(--forest-750);
+    border-radius: var(--radius-2xl);
+    padding: 28px 24px;
+    transition: all 200ms ease;
+  }
+  .feature:hover { background: var(--forest-800); border-color: rgb(34 197 94 / .4); }
+  .feature-icon {
+    width: 44px; height: 44px;
+    border-radius: var(--radius-xl);
+    background: rgb(34 197 94 / .10);
+    border: 1px solid rgb(34 197 94 / .30);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--green-500);
+    margin-bottom: 18px;
+  }
+  .feature-icon.orange { color: var(--orange-400); background: rgb(251 146 60 / .10); border-color: rgb(251 146 60 / .30); }
+  .feature-icon.amber { color: var(--amber-400); background: rgb(251 191 36 / .10); border-color: rgb(251 191 36 / .30); }
+  .feature-icon.purple { color: var(--purple-300); background: rgb(168 85 247 / .10); border-color: rgb(168 85 247 / .30); }
+  .feature h3 { font-size: 20px; line-height: 1.4; font-weight: 600; margin-bottom: 8px; }
+  .feature p { font-size: 14px; color: var(--text-3); }
+
+  /* ── Stats band ──────────────────────────────────── */
+  .stats-band {
+    background: var(--gradient-plan-card);
+    border: 1px solid var(--forest-750);
+    border-radius: var(--radius-2xl);
+    padding: 40px 32px;
+    display: grid; grid-template-columns: 1.2fr repeat(3, 1fr);
+    gap: 32px; align-items: center;
+  }
+  .stats-band .lead h3 { font-size: 24px; line-height: 1.3; font-weight: 700; margin-bottom: 8px; }
+  .stats-band .lead p { font-size: 14px; color: var(--text-3); }
+  .stat .value { font-size: 36px; font-weight: 700; line-height: 1.2; }
+  .stat .value em { font-style: normal; font-size: 14px; font-weight: 500; color: var(--text-3); margin-left: 2px; }
+  .stat .label { font-size: 11px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-4); margin-top: 4px; }
+  .stat .value.green { color: var(--green-500); }
+
+  /* ── How it works ────────────────────────────────── */
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .step {
+    background: var(--forest-850);
+    border: 1px solid var(--forest-750);
+    border-radius: var(--radius-2xl);
+    padding: 28px 24px;
+  }
+  .step-num {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--green-500); color: var(--green-950);
+    font-weight: 700; font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 18px;
+  }
+  .step h3 { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+  .step p { font-size: 14px; color: var(--text-3); }
+
+  /* ── Final CTA ───────────────────────────────────── */
+  .cta-band {
+    text-align: center;
+    background: var(--forest-850);
+    border: 1px solid var(--forest-750);
+    border-radius: var(--radius-2xl);
+    padding: 64px 32px;
+    box-shadow: var(--glow-primary);
+  }
+  .cta-band h2 { font-size: 30px; font-weight: 700; line-height: 1.2; margin-bottom: 12px; }
+  .cta-band p { color: var(--text-3); margin-bottom: 32px; }
+  .cta-band .fineprint { font-size: 12px; color: var(--text-4); margin: 20px 0 0; }
+
+  /* ── Footer ──────────────────────────────────────── */
+  footer {
+    border-top: 1px solid var(--forest-750);
+    padding: 32px 0 48px;
+  }
+  .foot {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 16px; flex-wrap: wrap;
+    font-size: 14px; color: var(--text-4);
+  }
+  .foot-links { display: flex; gap: 24px; }
+  .foot-links a { transition: color 200ms ease; }
+  .foot-links a:hover { color: var(--text-2); }
+
+  /* ── Responsive ──────────────────────────────────── */
+  @media (max-width: 860px) {
+    .hero { padding: 40px 0 64px; }
+    .hero-grid { grid-template-columns: 1fr; text-align: center; }
+    .hero-grid > .hero-copy { order: 2; }
+    .hero-grid > .hero-photo-wrap { order: 1; }
+    .hero-sub { margin-left: auto; margin-right: auto; }
+    .hero-ctas { justify-content: center; }
+    .hero-ctas .btn { width: 100%; max-width: 24rem; margin: 0 auto; }
+    .hero-ctas { flex-direction: column; }
+    .hero-meta { justify-content: center; }
+    .chip-protein { right: 0; }
+    .chip-streak { left: 0; }
+    .features, .steps { grid-template-columns: 1fr; }
+    .stats-band { grid-template-columns: 1fr 1fr; text-align: left; }
+    .stats-band .lead { grid-column: 1 / -1; }
+    .nav-links a:not(.btn) { display: none; }
+    section { padding: 56px 0; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a href="#" class="wordmark" aria-label="ChefPocket home">Chef<span>Pocket</span></a>
+    <nav class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#how-it-works">How It Works</a>
+      <a href="#get-started" class="btn btn-primary btn-nav">Build Your Plan</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- Hero -->
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <h1>Eat Smart.<span class="accent">Study Hard.</span></h1>
+        <p class="hero-sub">Personalized nutrition for the student lifestyle. ChefPocket plans your meals around your classes, budget and goals, then writes the shopping list for you.</p>
+        <div class="hero-ctas">
+          <a href="#get-started" class="btn btn-primary">
+            Build Your Plan
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </a>
+          <a href="#get-started" class="btn btn-secondary">I already have an account</a>
+        </div>
+        <ul class="hero-meta">
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Free at launch</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Built for iOS</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>English and 中文</li>
+        </ul>
+      </div>
+      <div class="hero-photo-wrap">
+        <div class="hero-photo">
+          <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&h=600&fit=crop&auto=format" alt="Healthy bowl" />
+          <div class="hero-chip chip-protein">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+            <div><div class="num">128g</div><div class="lbl">Protein</div></div>
+          </div>
+          <div class="hero-chip chip-streak">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+            <div><div class="num">12 days</div><div class="lbl">Streak</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="kicker">Features</span>
+        <h2>Everything Between Lecture and Dinner</h2>
+        <p>AI-powered meal planning in minutes, tuned to your kitchen, your timetable and your budget.</p>
+      </div>
+      <div class="features">
+        <div class="feature">
+          <div class="feature-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>
+          </div>
+          <h3>Plans That Fit Your Week</h3>
+          <p>Pick a start date and a length from 1 to 14 days. Every meal comes with a full nutrition breakdown.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 9 3-3 3 3"/><path d="M13 18H7a2 2 0 0 1-2-2V6"/><path d="m22 15-3 3-3-3"/><path d="M11 6h6a2 2 0 0 1 2 2v10"/></svg>
+          </div>
+          <h3>Swap Any Meal</h3>
+          <p>Not feeling it? Swap a meal and compare the nutrition side by side before you commit.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+          </div>
+          <h3>One Shopping List</h3>
+          <p>Your whole plan becomes a single checklist, grouped by aisle so you cross the shop once.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon purple">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg>
+          </div>
+          <h3>Meals Around Your Timetable</h3>
+          <p>Import your classes and exams. Focus Mode serves brain food through finals. We never change your calendar.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon orange">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+          </div>
+          <h3>Streaks and Achievements</h3>
+          <p>Keep a cooking streak alive and unlock eight achievements as you go. Small wins, every day.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon amber">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+          </div>
+          <h3>Your School Leaderboard</h3>
+          <p>Join your school's community and see how your cooking stacks up against other students.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats band -->
+  <section style="padding-top: 0;">
+    <div class="wrap">
+      <div class="stats-band">
+        <div class="lead">
+          <h3>On Track Today</h3>
+          <p>Every plan tracks calories, protein and cost per day against your goal, whether you are bulking, cutting or maintaining.</p>
+        </div>
+        <div class="stat"><div class="value">2,150</div><div class="label">Calories</div></div>
+        <div class="stat"><div class="value">128<em>g</em></div><div class="label">Protein</div></div>
+        <div class="stat"><div class="value green">£3.80</div><div class="label">Cost/Day</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section id="how-it-works" style="padding-top: 0;">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="kicker">How It Works</span>
+        <h2>Three Steps to a Full Fridge</h2>
+        <p>Set up once. ChefPocket does the thinking every week after that.</p>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <h3>Tell Us About You</h3>
+          <p>Dietary preferences, the equipment in your kitchen and your goal. This helps us set your daily nutrition targets.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <h3>Get Your Plan</h3>
+          <p>A personalised plan for the dates you choose, with every meal's calories, protein, carbs and fat laid out.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <h3>Shop and Cook</h3>
+          <p>Take the aisle-by-aisle shopping list to the store, then tick off meals as you cook to build your streak.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA -->
+  <section id="get-started" style="padding-top: 0;">
+    <div class="wrap">
+      <div class="cta-band">
+        <h2>Your First Plan Takes Two Minutes</h2>
+        <p>Free at launch. No card required.</p>
+        <a href="#" class="btn btn-primary">
+          Build Your Plan
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </a>
+        <p class="fineprint">Coming to the App Store. Available in English and 简体中文.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a href="#" class="wordmark" style="font-size: 16px;">Chef<span>Pocket</span></a>
+    <nav class="foot-links">
+      <a href="#">Privacy</a>
+    </nav>
+    <span>Made for students who cook.</span>
+  </div>
+</footer>
+
+</body>
+</html>
