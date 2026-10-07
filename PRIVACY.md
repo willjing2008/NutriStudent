@@ -13,7 +13,7 @@ This release is free and does not offer paid subscriptions or school rankings.
 - Previously imported calendar information may be retained with an existing account; this release does not import system calendar events.
 - If you upload a recipe photo, it is stored with your account and recipe.
 - Reports and blocked-creator choices are used to review community content and hide unwanted content.
-- Service logs and limited device or network information help diagnose failures and prevent abuse.
+- Service logs include network addresses, approximate city/country location, device or browser information, request timing and account identifiers to diagnose failures and prevent abuse.
 
 Photo access is optional when you choose to add a photo.
 You can change device permissions in iOS Settings.
