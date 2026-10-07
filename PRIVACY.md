@@ -1,76 +1,65 @@
 # ChefPocket Privacy Policy
 
-Effective date: July 29, 2026
+Effective date: October 7, 2026
 
-ChefPocket helps users plan meals, organise shopping, track cooking activity, and access subscription features.
-This policy explains what information ChefPocket collects, why it is used, and the choices available to users.
+ChefPocket uses your account and preferences to help you plan meals, organise shopping and keep track of cooking.
+This release is free and does not offer paid subscriptions or school rankings.
 
-## Information We Collect
+## Information used by the app
 
-ChefPocket may collect the following information when you use the app:
+- Your name, email address and account identifier support sign-in and your profile.
+- Your selected school, dietary restrictions, allergies, nutrition goals, meal budget and scheduling preferences personalise meal plans.
+- Saved plans, custom recipes, cooking history and likes support the features you choose to use.
+- Previously imported calendar information may be retained with an existing account; this release does not import system calendar events.
+- If you upload a recipe photo, it is stored with your account and recipe.
+- Reports and blocked-creator choices are used to review community content and hide unwanted content.
+- Service logs and limited device or network information help diagnose failures and prevent abuse.
 
-- Account information, including your name, email address, account identifier, and authentication information.
-- Profile and preference information, including school selection, dietary preferences, allergies or restrictions, nutrition goals, meal preferences, budget, and meal timing preferences.
-- Calendar information that you imported while calendar import was available, including class names, dates, and times used to organise meal plans around your schedule.
-- User content and activity, including saved meal plans, recipes, likes, cooked-meal history, streaks, and other content you submit.
-- Purchase and subscription information needed to provide and restore ChefPocket Pro access.
-- Limited technical and operational information, such as app version, device or network information, request logs, and error information needed to operate, secure, and troubleshoot the service.
+Photo access is optional when you choose to add a photo.
+You can change device permissions in iOS Settings.
+Profile avatars are stored on your device.
 
-## How We Use Information
+## Community content
 
-We use information to:
+Recipes are private until you choose to share them and a moderator approves them.
+Approved recipes and their photos and creator display names can be viewed by other users.
+Recipe photos are hosted at publicly accessible image URLs, so do not upload sensitive personal images.
+Reports are available to the moderation team and are not displayed to other users.
+You can report a recipe or block its creator from the community recipe picker.
 
-- Create and manage your account.
-- Personalise meal plans, recipes, nutrition information, and shopping lists and, when enabled, reminders and scheduling features.
-- Provide community and saved-content features.
-- Process, verify, and restore subscriptions.
-- Provide calendar-import features when they are available and you choose to use them.
-- Maintain security, prevent abuse, diagnose problems, and improve reliability.
-- Comply with legal obligations and enforce applicable terms.
+## Service providers
 
-## Service Providers
+Supabase provides authentication, storage and backend services.
+Recipe, image, nutrition and location providers may receive the requests needed to deliver their features, including a searched location when you look for shops.
+Apple provides app distribution and optional device services.
+Subscriptions are disabled in this release, so the app does not configure RevenueCat or send subscription requests.
 
-ChefPocket uses service providers to operate the app.
-These may include Apple for App Store purchases, RevenueCat for subscription management, Supabase for authentication and backend hosting, and content or nutrition service providers used to deliver recipes, images, and nutrition information.
-These providers process information under their own terms and privacy policies and only as needed to provide their services.
+## Tracking
 
-## Tracking and Advertising
+ChefPocket does not sell personal information, display behavioural advertising or track users across other companies' apps and websites.
 
-ChefPocket does not use your information to track you across apps or websites owned by other companies.
-ChefPocket does not sell your personal information and does not display third-party behavioural advertising.
+## Retention and deletion
 
-## Data Retention and Security
+Account data is retained while your account is active and needed to provide the app.
+To permanently delete your account, open Profile, choose Delete account and confirm with your current password.
+Deletion removes your sign-in account, saved plans, preferences, cooking history, likes, uploaded photos and shared recipes, and removes or anonymises your associated moderation records.
+If deletion is interrupted, normal account activity is blocked and you can retry from Profile.
+Existing device copies and infrastructure backups may persist for their normal retention period.
+Minimal non-content records may be retained to prevent interrupted requests from recreating deleted data.
 
-We retain information only for as long as reasonably needed to provide the service, maintain security, comply with legal obligations, and resolve disputes.
-We use reasonable administrative, technical, and organisational safeguards, but no method of electronic storage or transmission is completely secure.
+## Your choices and support
 
-## Your Choices
+You can edit your preferences, delete saved plans, decline optional permissions and delete your account in the app.
+For a privacy question, correction or access request, contact [ChefPocket support](https://github.com/willjing2008/NutriStudent/issues).
+The support tracker is public; do not post passwords, health details, payment information or other sensitive data there.
+Ask for a private contact method if your request requires personal information.
 
-When calendar import is available, you can decline optional calendar permissions in iOS Settings.
-You can edit certain profile and meal-planning information in the app.
-You can manage App Store subscriptions through your Apple account.
-You may request access, correction, or deletion of your information through the support channel below.
-Please do not post passwords, payment details, health details, or other sensitive personal information in a public support request.
+ChefPocket is not intended for children under 13.
+If you believe a child has provided personal information, contact support so it can be investigated.
+We will update this policy when the app's data practices change.
 
-## Children
+## California privacy notice
 
-ChefPocket is not directed to children under 13.
-We do not knowingly collect personal information from children under 13.
-If you believe a child has provided personal information, contact us so we can investigate and delete it when appropriate.
-
-## California Privacy Notice
-
-California residents may have rights to know, correct, delete, or obtain a copy of personal information and to receive equal service when exercising those rights.
+California residents may have rights to know, correct, delete or obtain a copy of personal information and to receive equal service when exercising those rights.
 ChefPocket does not sell or share personal information for cross-context behavioural advertising.
-You may submit a request through the support channel below.
-
-## Changes to This Policy
-
-We may update this policy when the app, our practices, or legal requirements change.
-We will update the effective date when changes are published.
-
-## Contact
-
-For privacy questions or requests, use ChefPocket support:
-
-https://github.com/willjing2008/NutriStudent/issues
+You can submit a request through the support channel above.
